@@ -1,7 +1,6 @@
 use bitcoin::secp256k1::PublicKey;
-use bitcoin::util::bip32::{ChainCode, ChildNumber, ExtendedPubKey, Fingerprint};
+use bitcoin::util::bip32::{ChainCode, ExtendedPubKey, Fingerprint};
 use bitcoin::Network;
-use gtk::prelude::DialogExt;
 use gtk::prelude::*;
 use gtk::{Button, Dialog, DialogFlags, ResponseType, ToolButton};
 use relm::{ContainerWidget, Relm, Update, Widget};
@@ -14,6 +13,43 @@ use hwi::error::Error as HwiError;
 use hwi::HWIDevice;
 use wallet::hd::schemata::DerivationBlockchain;
 use wallet::hd::{DerivationScheme, HardenedIndex, SegmentIndexes};
+
+// TODO: Move to descriptor wallet or BPro
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Display)]
+pub enum PublicNetwork {
+    #[display("mainnet")]
+    Mainnet,
+    #[display("testnet")]
+    Testnet,
+    #[display("signet")]
+    Signet,
+}
+
+impl From<PublicNetwork> for Network {
+    fn from(network: PublicNetwork) -> Self {
+        match network {
+            PublicNetwork::Mainnet => Network::Bitcoin,
+            PublicNetwork::Testnet => Network::Testnet,
+            PublicNetwork::Signet => Network::Signet,
+        }
+    }
+}
+
+impl From<PublicNetwork> for DerivationBlockchain {
+    fn from(network: PublicNetwork) -> Self {
+        match network {
+            PublicNetwork::Mainnet => DerivationBlockchain::Bitcoin,
+            PublicNetwork::Testnet => DerivationBlockchain::Testnet,
+            PublicNetwork::Signet => DerivationBlockchain::Testnet,
+        }
+    }
+}
+
+impl PublicNetwork {
+    pub fn is_testnet(self) -> bool {
+        matches!(self, PublicNetwork::Testnet | PublicNetwork::Signet)
+    }
+}
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub enum Ownership {
@@ -38,13 +74,13 @@ pub enum Error {
     /// No devices detected or some of devices are locked
     NoDevices(HwiError),
 
-    /// Device {1} ({2}, master fingerprint {0} does not support used derivation schema {3} on blockchain {4}.
+    /// Device {1} ({2}, master fingerprint {0} does not support used derivation schema {3} on {4}.
     DerivationNotSupported(
         Fingerprint,
         String,
         String,
         DerivationScheme,
-        DerivationBlockchain,
+        PublicNetwork,
         HwiError,
     ),
 }
@@ -60,37 +96,27 @@ impl Error {
 
 impl HardwareList {
     pub fn enumerate(
-        scheme: DerivationScheme,
-        testnet: bool,
+        scheme: &DerivationScheme,
+        network: PublicNetwork,
         default_account: HardenedIndex,
     ) -> Result<(HardwareList, Vec<Error>), Error> {
-        let blockchain = if testnet {
-            DerivationBlockchain::Testnet
-        } else {
-            DerivationBlockchain::Bitcoin
-        };
-
         let mut devices = bmap![];
         let mut log = vec![];
 
         for device in HWIDevice::enumerate().map_err(Error::NoDevices)? {
             let fingerprint = Fingerprint::from(&device.fingerprint[..]);
 
-            let derivation = scheme.to_account_derivation(default_account.into(), blockchain);
+            let derivation = scheme.to_account_derivation(default_account.into(), network.into());
             let derivation_string = derivation.to_string();
             match device.get_xpub(
                 &derivation_string.parse().expect(
                     "ancient bitcoin version with different derivation path implementation",
                 ),
-                testnet,
+                network.is_testnet(),
             ) {
                 Ok(hwikey) => {
                     let xpub = ExtendedPubKey {
-                        network: if testnet {
-                            Network::Testnet
-                        } else {
-                            Network::Bitcoin
-                        },
+                        network: network.into(),
                         depth: hwikey.xpub.depth,
                         parent_fingerprint: Fingerprint::from(&hwikey.xpub.parent_fingerprint[..]),
                         child_number: u32::from(hwikey.xpub.child_number).into(),
@@ -114,7 +140,7 @@ impl HardwareList {
                         device.device_type,
                         device.model,
                         scheme.clone(),
-                        blockchain,
+                        network,
                         err,
                     ));
                 }
@@ -137,9 +163,9 @@ pub struct Signer {
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub(crate) struct Model {
     pub scheme: DerivationScheme,
-    pub devices: BTreeMap<Fingerprint, HardwareDevice>,
+    pub devices: HardwareList,
     pub signers: BTreeSet<Signer>,
-    pub blockchain: DerivationBlockchain,
+    pub network: PublicNetwork,
 }
 
 impl Default for Model {
@@ -151,7 +177,7 @@ impl Default for Model {
             },
             devices: none!(),
             signers: none!(),
-            blockchain: DerivationBlockchain::Testnet,
+            network: PublicNetwork::Testnet,
         }
     }
 }
@@ -205,7 +231,29 @@ impl Update for Win {
             Msg::RefreshHw => {
                 self.widgets.refresh_dlg.show();
 
-                // self.widgets.refresh_dlg.hide();
+                let devices = match HardwareList::enumerate(
+                    &self.model.scheme,
+                    self.model.network,
+                    HardenedIndex::zero(),
+                ) {
+                    Err(_err) => {
+                        // TODO: Display message to user
+                        HardwareList::default()
+                    }
+                    Ok((devices, log)) if !log.is_empty() => {
+                        // TODO: Display log and do not hide the window
+                        devices
+                    }
+                    Ok((devices, log)) if devices.is_empty() => {
+                        // TODO: Display message to user
+                        devices
+                    }
+                    Ok((devices, _)) => devices,
+                };
+
+                self.model.devices = devices;
+
+                self.widgets.refresh_dlg.hide();
             }
             Msg::Save => {
                 self.origin_model.as_ref().map(|model| {
