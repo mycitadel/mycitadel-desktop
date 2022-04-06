@@ -116,10 +116,13 @@
   </object>
   <object class="GtkTextBuffer" id="walletDescriptor"/>
   <object class="GtkDialog" id="dialog">
-    <property name="modal">True</property>
     <property name="can-focus">False</property>
     <property name="title" translatable="yes">Wallet settings</property>
+    <property name="modal">True</property>
+    <property name="window-position">center-on-parent</property>
+    <property name="destroy-with-parent">True</property>
     <property name="type-hint">dialog</property>
+    <signal name="close" handler="close" swapped="no"/>
     <child internal-child="vbox">
       <object class="GtkBox">
         <property name="can-focus">False</property>
@@ -255,9 +258,13 @@
                     <property name="vexpand">True</property>
                     <property name="model">signersStore</property>
                     <property name="fixed-height-mode">True</property>
+                    <child internal-child="selection">
+                      <object class="GtkTreeSelection"/>
+                    </child>
                     <child>
                       <object class="GtkTreeViewColumn">
                         <property name="resizable">True</property>
+                        <property name="sizing">fixed</property>
                         <property name="title" translatable="yes">Name</property>
                         <property name="clickable">True</property>
                       </object>
@@ -265,6 +272,7 @@
                     <child>
                       <object class="GtkTreeViewColumn">
                         <property name="resizable">True</property>
+                        <property name="sizing">fixed</property>
                         <property name="title" translatable="yes">Seed fingerprint</property>
                         <property name="clickable">True</property>
                       </object>
@@ -272,6 +280,7 @@
                     <child>
                       <object class="GtkTreeViewColumn">
                         <property name="resizable">True</property>
+                        <property name="sizing">fixed</property>
                         <property name="title" translatable="yes">Key origin</property>
                         <property name="clickable">True</property>
                       </object>
@@ -279,7 +288,7 @@
                     <child>
                       <object class="GtkTreeViewColumn">
                         <property name="resizable">True</property>
-                        <property name="sizing">autosize</property>
+                        <property name="sizing">fixed</property>
                         <property name="min-width">300</property>
                         <property name="max-width">600</property>
                         <property name="title" translatable="yes">Extended key</property>
@@ -289,6 +298,7 @@
                     <child>
                       <object class="GtkTreeViewColumn">
                         <property name="resizable">True</property>
+                        <property name="sizing">fixed</property>
                         <property name="title" translatable="yes">Device</property>
                         <property name="clickable">True</property>
                       </object>
@@ -470,44 +480,6 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkButtonBox">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="layout-style">expand</property>
-                        <child>
-                          <object class="GtkToggleButton">
-                            <property name="label" translatable="yes">Mine</property>
-                            <property name="visible">True</property>
-                            <property name="can-focus">True</property>
-                            <property name="receives-default">True</property>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">True</property>
-                            <property name="position">0</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkToggleButton">
-                            <property name="label" translatable="yes">External party</property>
-                            <property name="visible">True</property>
-                            <property name="can-focus">True</property>
-                            <property name="receives-default">True</property>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">True</property>
-                            <property name="position">1</property>
-                          </packing>
-                        </child>
-                      </object>
-                      <packing>
-                        <property name="left-attach">3</property>
-                        <property name="top-attach">0</property>
-                        <property name="width">2</property>
-                      </packing>
-                    </child>
-                    <child>
                       <object class="GtkLabel">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
@@ -585,7 +557,7 @@ derivation:</property>
                           <object class="GtkImage">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
-                            <property name="stock">gtk-yes</property>
+                            <property name="icon-name">emblem-default-symbolic</property>
                           </object>
                           <packing>
                             <property name="expand">False</property>
@@ -1181,7 +1153,7 @@ derivation:</property>
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="margin-end">24</property>
-                            <property name="stock">gtk-info</property>
+                            <property name="icon-name">dialog-question-symbolic</property>
                           </object>
                           <packing>
                             <property name="expand">False</property>
@@ -1207,7 +1179,7 @@ derivation:</property>
                           <object class="GtkImage">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
-                            <property name="stock">gtk-info</property>
+                            <property name="icon-name">dialog-question-symbolic</property>
                           </object>
                           <packing>
                             <property name="expand">False</property>
@@ -1447,7 +1419,7 @@ derivation:</property>
                       <object class="GtkImage">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
-                        <property name="stock">gtk-yes</property>
+                        <property name="icon-name">emblem-default-symbolic</property>
                       </object>
                       <packing>
                         <property name="left-attach">3</property>

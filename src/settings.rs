@@ -54,9 +54,11 @@ impl Update for Win {
                 self.origin_model.as_ref().map(|model| {
                     *(model.lock().expect("wallet model locked").deref_mut()) = self.model.clone();
                 });
+                self.widgets.dialog.hide();
                 self.widgets.dialog.close();
             }
             Msg::Cancel => {
+                self.widgets.dialog.hide();
                 self.widgets.dialog.close();
             }
         }
@@ -76,18 +78,9 @@ impl Widget for Win {
         let glade_src = include_str!("../res/settings.glade");
         let widgets = Widgets::from_string(glade_src).unwrap();
 
-        connect!(
-            relm,
-            widgets.save_btn,
-            connect_clicked(_),
-            Msg::Save
-        );
-        connect!(
-            relm,
-            widgets.cancel_btn,
-            connect_clicked(_),
-            Msg::Cancel
-        );
+        connect!(relm, widgets.save_btn, connect_clicked(_), Msg::Save);
+        connect!(relm, widgets.cancel_btn, connect_clicked(_), Msg::Cancel);
+        connect!(relm, widgets.dialog, connect_destroy(_), Msg::Cancel);
 
         widgets.dialog.run();
 
