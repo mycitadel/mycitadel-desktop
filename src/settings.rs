@@ -1,4 +1,6 @@
-use bitcoin::util::bip32::{ExtendedPubKey, Fingerprint};
+use bitcoin::secp256k1::PublicKey;
+use bitcoin::util::bip32::{ChainCode, ChildNumber, ExtendedPubKey, Fingerprint};
+use bitcoin::Network;
 use gtk::prelude::DialogExt;
 use gtk::prelude::*;
 use gtk::{Button, Dialog, DialogFlags, ResponseType, ToolButton};
@@ -8,6 +10,9 @@ use std::ops::{Deref, DerefMut};
 use std::sync::{Arc, Mutex};
 
 use gladis::Gladis;
+use hwi::error::Error as HwiError;
+use hwi::HWIDevice;
+use wallet::hd::schemata::DerivationBlockchain;
 use wallet::hd::{DerivationScheme, HardenedIndex, SegmentIndexes};
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
@@ -16,10 +21,107 @@ pub enum Ownership {
     External,
 }
 
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct HardwareDevice {
-    pub line: String,
+    pub device_type: String,
     pub model: String,
+    pub default_account: HardenedIndex,
+    pub default_xpub: ExtendedPubKey,
+}
+
+#[derive(Wrapper, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default, From)]
+pub struct HardwareList(BTreeMap<Fingerprint, HardwareDevice>);
+
+#[derive(Debug, Display, Error)]
+#[display(doc_comments)]
+pub enum Error {
+    /// No devices detected or some of devices are locked
+    NoDevices(HwiError),
+
+    /// Device {1} ({2}, master fingerprint {0} does not support used derivation schema {3} on blockchain {4}.
+    DerivationNotSupported(
+        Fingerprint,
+        String,
+        String,
+        DerivationScheme,
+        DerivationBlockchain,
+        HwiError,
+    ),
+}
+
+impl Error {
+    pub fn into_hwi_error(self) -> HwiError {
+        match self {
+            Error::NoDevices(err) => err,
+            Error::DerivationNotSupported(_, _, _, _, _, err) => err,
+        }
+    }
+}
+
+impl HardwareList {
+    pub fn enumerate(
+        scheme: DerivationScheme,
+        testnet: bool,
+        default_account: HardenedIndex,
+    ) -> Result<(HardwareList, Vec<Error>), Error> {
+        let blockchain = if testnet {
+            DerivationBlockchain::Testnet
+        } else {
+            DerivationBlockchain::Bitcoin
+        };
+
+        let mut devices = bmap![];
+        let mut log = vec![];
+
+        for device in HWIDevice::enumerate().map_err(Error::NoDevices)? {
+            let fingerprint = Fingerprint::from(&device.fingerprint[..]);
+
+            let derivation = scheme.to_account_derivation(default_account.into(), blockchain);
+            let derivation_string = derivation.to_string();
+            match device.get_xpub(
+                &derivation_string.parse().expect(
+                    "ancient bitcoin version with different derivation path implementation",
+                ),
+                testnet,
+            ) {
+                Ok(hwikey) => {
+                    let xpub = ExtendedPubKey {
+                        network: if testnet {
+                            Network::Testnet
+                        } else {
+                            Network::Bitcoin
+                        },
+                        depth: hwikey.xpub.depth,
+                        parent_fingerprint: Fingerprint::from(&hwikey.xpub.parent_fingerprint[..]),
+                        child_number: u32::from(hwikey.xpub.child_number).into(),
+                        public_key: PublicKey::from_slice(&hwikey.xpub.public_key.key.serialize())
+                            .expect("secp lib used by hwi is broken"),
+                        chain_code: ChainCode::from(&hwikey.xpub.chain_code[..]),
+                    };
+                    devices.insert(
+                        fingerprint,
+                        HardwareDevice {
+                            device_type: device.device_type,
+                            model: device.model,
+                            default_account,
+                            default_xpub: xpub,
+                        },
+                    );
+                }
+                Err(err) => {
+                    log.push(Error::DerivationNotSupported(
+                        fingerprint,
+                        device.device_type,
+                        device.model,
+                        scheme.clone(),
+                        blockchain,
+                        err,
+                    ));
+                }
+            };
+        }
+        Ok((devices.into(), log))
+    }
 }
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
@@ -37,6 +139,7 @@ pub(crate) struct Model {
     pub scheme: DerivationScheme,
     pub devices: BTreeMap<Fingerprint, HardwareDevice>,
     pub signers: BTreeSet<Signer>,
+    pub blockchain: DerivationBlockchain,
 }
 
 impl Default for Model {
@@ -48,6 +151,7 @@ impl Default for Model {
             },
             devices: none!(),
             signers: none!(),
+            blockchain: DerivationBlockchain::Testnet,
         }
     }
 }
