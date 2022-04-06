@@ -3,7 +3,7 @@ use bitcoin::util::bip32::{ChainCode, ExtendedPubKey, Fingerprint};
 use bitcoin::Network;
 use gtk::prelude::*;
 use gtk::{Button, Dialog, ListStore, ToolButton, TreeView};
-use relm::{Relm, Update, Widget};
+use relm::{Channel, Relm, Sender, StreamHandle, Update, Widget};
 use std::collections::{BTreeMap, BTreeSet};
 use std::ops::{Deref, DerefMut};
 use std::sync::{Arc, Mutex};
@@ -199,6 +199,7 @@ impl Default for Model {
 pub(crate) enum Msg {
     Init(Arc<Mutex<Model>>),
     RefreshHw,
+    HwRefreshed(Result<(HardwareList, Vec<Error>), Error>),
     Save,
     Cancel,
 }
@@ -222,6 +223,7 @@ pub(crate) struct Widgets {
 pub(crate) struct Win {
     model: Model,
     origin_model: Option<Arc<Mutex<Model>>>,
+    channel: Channel<Msg>,
     widgets: Widgets,
 }
 
@@ -245,12 +247,9 @@ impl Update for Win {
             }
             Msg::RefreshHw => {
                 self.widgets.refresh_dlg.show();
-
-                self.model.devices = match HardwareList::enumerate(
-                    &self.model.scheme,
-                    self.model.network,
-                    HardenedIndex::zero(),
-                ) {
+            }
+            Msg::HwRefreshed(result) => {
+                self.model.devices = match result {
                     Err(_err) => {
                         // TODO: Display message to user
                         HardwareList::default()
@@ -325,19 +324,29 @@ impl Widget for Win {
 
         connect!(relm, widgets.save_btn, connect_clicked(_), Msg::Save);
         connect!(relm, widgets.cancel_btn, connect_clicked(_), Msg::Cancel);
-        connect!(
-            relm,
-            widgets.refresh_btn,
-            connect_clicked(_),
-            Msg::RefreshHw
-        );
-        //connect!(relm, widgets.dialog, connect_destroy(_), Msg::Close);
+
+        let stream = relm.stream().clone();
+        let (channel, sender) = Channel::new(move |msg| {
+            stream.emit(msg);
+        });
+        let scheme = model.scheme.clone();
+        widgets.refresh_btn.connect_clicked(move |_| {
+            sender.send(Msg::RefreshHw);
+            // TODO: This fixes the schema used in the wallet once and forever
+            let scheme = scheme.clone();
+            let sender = sender.clone();
+            std::thread::spawn(move || {
+                let result = HardwareList::enumerate(&scheme, model.network, HardenedIndex::zero());
+                sender.send(Msg::HwRefreshed(result));
+            });
+        });
 
         widgets.dialog.show();
 
         Win {
             model,
             widgets,
+            channel,
             origin_model: None,
         }
     }

@@ -51,6 +51,11 @@
       </object>
     </child>
   </object>
+  <object class="GtkAdjustment" id="port_adj">
+    <property name="upper">65535</property>
+    <property name="step-increment">1</property>
+    <property name="page-increment">10</property>
+  </object>
   <object class="GtkListStore" id="signers_store">
     <columns>
       <!-- column-name name -->
@@ -81,6 +86,22 @@
         <property name="visible">True</property>
         <property name="can-focus">False</property>
         <property name="label" translatable="yes">3 signatures</property>
+        <property name="use-underline">True</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+        <property name="label" translatable="yes">2 signatures</property>
+        <property name="use-underline">True</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+        <property name="label" translatable="yes">Any signature</property>
         <property name="use-underline">True</property>
       </object>
     </child>
@@ -1139,7 +1160,7 @@ derivation:</property>
                         <property name="homogeneous">True</property>
                         <property name="layout-style">expand</property>
                         <child>
-                          <object class="GtkToggleButton">
+                          <object class="GtkToggleButton" id="descr_legacy_tgl">
                             <property name="label" translatable="yes">Legacy</property>
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
@@ -1152,11 +1173,12 @@ derivation:</property>
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkToggleButton">
+                          <object class="GtkToggleButton" id="descr_segwit_tgl">
                             <property name="label" translatable="yes">Segwit v0</property>
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
                             <property name="receives-default">True</property>
+                            <property name="active">True</property>
                           </object>
                           <packing>
                             <property name="expand">False</property>
@@ -1165,8 +1187,8 @@ derivation:</property>
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkToggleButton">
-                            <property name="label" translatable="yes">Nested</property>
+                          <object class="GtkToggleButton" id="descr_taproot_tgl">
+                            <property name="label" translatable="yes">Taproot</property>
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
                             <property name="receives-default">True</property>
@@ -1178,8 +1200,8 @@ derivation:</property>
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkToggleButton">
-                            <property name="label" translatable="yes">Taproot</property>
+                          <object class="GtkToggleButton" id="descrt_nested_tgl">
+                            <property name="label" translatable="yes">Nested</property>
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
                             <property name="receives-default">True</property>
@@ -1224,6 +1246,7 @@ derivation:</property>
                               <object class="GtkRadioButton" id="scheme_bip44_tgl">
                                 <property name="label" translatable="yes">BIP44-compatible</property>
                                 <property name="visible">True</property>
+                                <property name="sensitive">False</property>
                                 <property name="can-focus">True</property>
                                 <property name="receives-default">False</property>
                                 <property name="active">True</property>
@@ -1239,6 +1262,7 @@ derivation:</property>
                               <object class="GtkRadioButton" id="scheme_lnpbp_tgl">
                                 <property name="label" translatable="yes">Multi-purpose</property>
                                 <property name="visible">True</property>
+                                <property name="sensitive">False</property>
                                 <property name="can-focus">True</property>
                                 <property name="receives-default">False</property>
                                 <property name="tooltip-text" translatable="yes">Multi-descriptor wallets allow using multiple forms of addresses, for instance SegWit, Legacy and Taproot.
@@ -1279,6 +1303,7 @@ However, they are not supported by other wallets. Wallets of this type can be us
                           <object class="GtkCheckButton">
                             <property name="label" translatable="yes">Enable tweaks</property>
                             <property name="visible">True</property>
+                            <property name="sensitive">False</property>
                             <property name="can-focus">True</property>
                             <property name="receives-default">False</property>
                             <property name="tooltip-text" translatable="yes">Allow addition of different deterministic bitcoin commitment tweaks: tapret, P2C, S2C.</property>
@@ -1441,53 +1466,61 @@ However, they are not supported by other wallets. Wallets of this type can be us
                     <property name="homogeneous">True</property>
                     <property name="layout-style">expand</property>
                     <child>
-                      <object class="GtkToggleButton">
-                        <property name="label" translatable="yes">Blockstream</property>
+                      <object class="GtkRadioButton" id="electr_mycitadel_tgl">
+                        <property name="label" translatable="yes">MyCitadel</property>
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
-                        <property name="receives-default">True</property>
+                        <property name="receives-default">False</property>
+                        <property name="active">True</property>
+                        <property name="draw-indicator">False</property>
                       </object>
                       <packing>
-                        <property name="expand">False</property>
+                        <property name="expand">True</property>
                         <property name="fill">True</property>
                         <property name="position">0</property>
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkToggleButton">
-                        <property name="label" translatable="yes">LNP/BP</property>
+                      <object class="GtkRadioButton" id="electr_blockstream_tgl">
+                        <property name="label" translatable="yes">Blockstream</property>
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
-                        <property name="receives-default">True</property>
+                        <property name="receives-default">False</property>
+                        <property name="draw-indicator">False</property>
+                        <property name="group">electr_mycitadel_tgl</property>
                       </object>
                       <packing>
-                        <property name="expand">False</property>
+                        <property name="expand">True</property>
                         <property name="fill">True</property>
                         <property name="position">1</property>
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkToggleButton">
-                        <property name="label" translatable="yes">MyCitadel</property>
+                      <object class="GtkRadioButton" id="electr_electrum_tgl">
+                        <property name="label" translatable="yes">Electrum</property>
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
-                        <property name="receives-default">True</property>
+                        <property name="receives-default">False</property>
+                        <property name="draw-indicator">False</property>
+                        <property name="group">electr_mycitadel_tgl</property>
                       </object>
                       <packing>
-                        <property name="expand">False</property>
+                        <property name="expand">True</property>
                         <property name="fill">True</property>
-                        <property name="position">3</property>
+                        <property name="position">2</property>
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkToggleButton">
+                      <object class="GtkRadioButton" id="electr_custom_tgl">
                         <property name="label" translatable="yes">Custom</property>
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
-                        <property name="receives-default">True</property>
+                        <property name="receives-default">False</property>
+                        <property name="draw-indicator">False</property>
+                        <property name="group">electr_mycitadel_tgl</property>
                       </object>
                       <packing>
-                        <property name="expand">False</property>
+                        <property name="expand">True</property>
                         <property name="fill">True</property>
                         <property name="position">3</property>
                       </packing>
@@ -1506,40 +1539,46 @@ However, they are not supported by other wallets. Wallets of this type can be us
                     <property name="homogeneous">True</property>
                     <property name="layout-style">expand</property>
                     <child>
-                      <object class="GtkToggleButton">
+                      <object class="GtkRadioButton" id="mainnet_tgl">
                         <property name="label" translatable="yes">Mainnet</property>
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
-                        <property name="receives-default">True</property>
+                        <property name="receives-default">False</property>
+                        <property name="active">True</property>
+                        <property name="draw-indicator">False</property>
                       </object>
                       <packing>
-                        <property name="expand">False</property>
+                        <property name="expand">True</property>
                         <property name="fill">True</property>
                         <property name="position">0</property>
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkToggleButton">
-                        <property name="label" translatable="yes">Testnet 3</property>
+                      <object class="GtkRadioButton" id="testnet_tgl">
+                        <property name="label" translatable="yes">Testnet</property>
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
-                        <property name="receives-default">True</property>
+                        <property name="receives-default">False</property>
+                        <property name="draw-indicator">False</property>
+                        <property name="group">mainnet_tgl</property>
                       </object>
                       <packing>
-                        <property name="expand">False</property>
+                        <property name="expand">True</property>
                         <property name="fill">True</property>
                         <property name="position">1</property>
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkToggleButton">
+                      <object class="GtkRadioButton" id="signet_tgl">
                         <property name="label" translatable="yes">Signet</property>
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
-                        <property name="receives-default">True</property>
+                        <property name="receives-default">False</property>
+                        <property name="draw-indicator">False</property>
+                        <property name="group">mainnet_tgl</property>
                       </object>
                       <packing>
-                        <property name="expand">False</property>
+                        <property name="expand">True</property>
                         <property name="fill">True</property>
                         <property name="position">2</property>
                       </packing>
@@ -1563,6 +1602,7 @@ However, they are not supported by other wallets. Wallets of this type can be us
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="hexpand">True</property>
+                        <property name="text" translatable="yes">electrum.blockstreamm.info</property>
                       </object>
                       <packing>
                         <property name="left-attach">0</property>
@@ -1588,21 +1628,24 @@ However, they are not supported by other wallets. Wallets of this type can be us
                       </object>
                       <packing>
                         <property name="left-attach">3</property>
-                        <property name="top-attach">0</property>
-                        <property name="height">2</property>
+                        <property name="top-attach">1</property>
                       </packing>
                     </child>
                     <child>
                       <object class="GtkSpinButton">
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
+                        <property name="tooltip-text" translatable="yes">Port number</property>
                         <property name="width-chars">6</property>
                         <property name="input-purpose">digits</property>
+                        <property name="adjustment">port_adj</property>
                         <property name="numeric">True</property>
+                        <property name="value">50000</property>
                       </object>
                       <packing>
                         <property name="left-attach">2</property>
                         <property name="top-attach">0</property>
+                        <property name="width">2</property>
                       </packing>
                     </child>
                     <child>
@@ -1626,29 +1669,48 @@ However, they are not supported by other wallets. Wallets of this type can be us
                         <property name="homogeneous">True</property>
                         <property name="layout-style">expand</property>
                         <child>
-                          <object class="GtkToggleButton">
+                          <object class="GtkRadioButton" id="tor_tgl">
                             <property name="label" translatable="yes">Tor</property>
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
-                            <property name="receives-default">True</property>
+                            <property name="receives-default">False</property>
+                            <property name="active">True</property>
+                            <property name="draw-indicator">False</property>
                           </object>
                           <packing>
-                            <property name="expand">False</property>
+                            <property name="expand">True</property>
                             <property name="fill">True</property>
                             <property name="position">0</property>
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkToggleButton">
+                          <object class="GtkRadioButton" id="tls_tgl">
                             <property name="label" translatable="yes">TLS</property>
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
-                            <property name="receives-default">True</property>
+                            <property name="receives-default">False</property>
+                            <property name="draw-indicator">False</property>
+                            <property name="group">tor_tgl</property>
                           </object>
                           <packing>
-                            <property name="expand">False</property>
+                            <property name="expand">True</property>
                             <property name="fill">True</property>
                             <property name="position">1</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkRadioButton" id="nosec_tgl">
+                            <property name="label" translatable="yes">None</property>
+                            <property name="visible">True</property>
+                            <property name="can-focus">True</property>
+                            <property name="receives-default">False</property>
+                            <property name="draw-indicator">False</property>
+                            <property name="group">tor_tgl</property>
+                          </object>
+                          <packing>
+                            <property name="expand">True</property>
+                            <property name="fill">True</property>
+                            <property name="position">2</property>
                           </packing>
                         </child>
                       </object>
