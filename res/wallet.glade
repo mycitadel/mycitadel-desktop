@@ -1338,7 +1338,7 @@ volumes</property>
           </packing>
         </child>
         <child>
-          <object class="GtkButton">
+          <object class="GtkButton" id="settings_btn">
             <property name="label" translatable="yes">Settings</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>

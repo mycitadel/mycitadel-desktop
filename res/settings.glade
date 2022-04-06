@@ -115,7 +115,8 @@
     <property name="text" translatable="yes">Add one or more spending conditions</property>
   </object>
   <object class="GtkTextBuffer" id="walletDescriptor"/>
-  <object class="GtkDialog">
+  <object class="GtkDialog" id="dialog">
+    <property name="modal">True</property>
     <property name="can-focus">False</property>
     <property name="title" translatable="yes">Wallet settings</property>
     <property name="type-hint">dialog</property>
@@ -131,7 +132,7 @@
             <property name="margin-end">13</property>
             <property name="layout-style">end</property>
             <child>
-              <object class="GtkButton">
+              <object class="GtkButton" id="save_btn">
                 <property name="label" translatable="yes">Save</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
@@ -144,7 +145,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkButton">
+              <object class="GtkButton" id="cancel_btn">
                 <property name="label" translatable="yes">Cancel</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
