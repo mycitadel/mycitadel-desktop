@@ -1,14 +1,15 @@
+use std::sync::{Arc, Mutex};
 use gtk::prelude::*;
 use gtk::prelude::WidgetExt;
-use gtk::{Button, Inhibit, Label, ApplicationWindow};
-use relm::{Relm, Update, Widget, WidgetTest};
+use gtk::{Button, Inhibit, ApplicationWindow};
+use relm::{Relm, Update, Widget};
 
 use gladis::Gladis;
 use crate::settings;
 
 #[derive(Default)]
 pub(crate) struct Model {
-    settings: settings::Model
+    settings: Arc<Mutex<settings::Model>>
 }
 
 #[derive(Msg)]
@@ -74,6 +75,12 @@ impl Widget for Win {
             widgets.settings_btn,
             connect_clicked(_),
             Msg::Settings
+        );
+        connect!(
+            relm,
+            widgets.window,
+            connect_delete_event(_, _),
+            return (Some(Msg::Quit), Inhibit(false))
         );
 
         widgets.window.show();
