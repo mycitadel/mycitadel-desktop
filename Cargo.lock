@@ -3,6 +3,46 @@
 version = 3
 
 [[package]]
+name = "amplify"
+version = "3.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "47cfa6a69eeb140125a63e4f5ae1156a530f8744ea1d35aa1b8b5613e4d8b41d"
+dependencies = [
+ "amplify_derive",
+ "amplify_num",
+ "amplify_syn",
+]
+
+[[package]]
+name = "amplify_derive"
+version = "2.11.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bcd9d6315c0fb32fb125a50992f64bca686a7012e8b897316cb8e30b0294315c"
+dependencies = [
+ "amplify_syn",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "amplify_num"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8d987f94e7127a80238f8f467b756d248bb72345dff59673ffe3fa213b15e503"
+
+[[package]]
+name = "amplify_syn"
+version = "1.1.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "da24db1445cc7bc3842fa072c2d51fe5b25b812b6a572d65842a4c72e87221ac"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "anyhow"
 version = "1.0.56"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -39,10 +79,117 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 
 [[package]]
+name = "base64"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b41b7ea54a0c9d92199de89e20e58d49f02f8e699814ef3fdf266f6f748d15c7"
+
+[[package]]
+name = "base64-compat"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5a8d4d2746f89841e49230dd26917df1876050f95abafafbe34f47cb534b88d7"
+dependencies = [
+ "byteorder",
+]
+
+[[package]]
+name = "bech32"
+version = "0.7.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2dabbe35f96fb9507f7330793dc490461b2962659ac5d427181e451a623751d1"
+
+[[package]]
+name = "bech32"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cf9ff0bbfd639f15c74af777d81383cf53efb7c93613f6cab67c6c11e05bbf8b"
+
+[[package]]
+name = "bitcoin"
+version = "0.25.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "aefc9be9f17185f4ebccae6575d342063f775924d57df0000edb1880c0fb7095"
+dependencies = [
+ "bech32 0.7.3",
+ "bitcoin_hashes 0.9.7",
+ "secp256k1 0.19.0",
+ "serde",
+]
+
+[[package]]
+name = "bitcoin"
+version = "0.28.0-rc.2"
+source = "git+https://github.com/rust-bitcoin/rust-bitcoin#cb4d34fd400d2c6ffefc140e9d7f06c5b3e82b0d"
+dependencies = [
+ "base64-compat",
+ "bech32 0.8.1",
+ "bitcoin_hashes 0.10.0",
+ "secp256k1 0.22.1",
+]
+
+[[package]]
+name = "bitcoin_hashes"
+version = "0.9.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7ce18265ec2324ad075345d5814fbeed4f41f0a660055dc78840b74d19b874b1"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "bitcoin_hashes"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "006cc91e1a1d99819bc5b8214be3555c1f0611b169f527a1fdc54ed1f2b745b0"
+
+[[package]]
+name = "bitcoin_hd"
+version = "0.7.0-alpha.1"
+source = "git+https://github.com/LNP-BP/descriptor-wallet#20ce4ae8463efada75874bbeab6e02ba7172aecf"
+dependencies = [
+ "amplify",
+ "bitcoin 0.28.0-rc.2",
+ "slip132",
+ "strict_encoding",
+]
+
+[[package]]
+name = "bitcoin_onchain"
+version = "0.7.0-alpha.1"
+source = "git+https://github.com/LNP-BP/descriptor-wallet#20ce4ae8463efada75874bbeab6e02ba7172aecf"
+dependencies = [
+ "amplify",
+ "bitcoin 0.28.0-rc.2",
+ "bitcoin_hd",
+ "chrono",
+ "descriptors",
+ "strict_encoding",
+]
+
+[[package]]
+name = "bitcoin_scripts"
+version = "0.7.0-beta.6"
+source = "git+https://github.com/LNP-BP/descriptor-wallet#20ce4ae8463efada75874bbeab6e02ba7172aecf"
+dependencies = [
+ "amplify",
+ "bitcoin 0.28.0-rc.2",
+ "secp256k1 0.22.1",
+ "stability",
+ "strict_encoding",
+]
+
+[[package]]
 name = "bitflags"
 version = "1.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
+
+[[package]]
+name = "byteorder"
+version = "1.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "14c189c53d098945499cdfa7ecc63567cf3886b3332b312a5b4585d8d3a6a610"
 
 [[package]]
 name = "cairo-rs"
@@ -69,6 +216,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "cc"
+version = "1.0.73"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2fff2a6927b3bb87f9595d67196a70493f627687a71d87a0d692242c33f58c11"
+
+[[package]]
 name = "cfg-expr"
 version = "0.10.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -82,6 +235,70 @@ name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
+
+[[package]]
+name = "chrono"
+version = "0.4.19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "670ad68c9088c2a963aaa298cb369688cf3f9465ce5e2d4ca10e6e0098a1ce73"
+dependencies = [
+ "libc",
+ "num-integer",
+ "num-traits",
+ "time",
+ "winapi",
+]
+
+[[package]]
+name = "commit_verify"
+version = "0.7.0-alpha.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "77d4407223e48f00990648d8dda000626a56e5efb6fa5d83b39cf0019d57909a"
+dependencies = [
+ "amplify",
+ "bitcoin_hashes 0.10.0",
+ "strict_encoding",
+]
+
+[[package]]
+name = "descriptor-wallet"
+version = "0.7.0-beta.2"
+source = "git+https://github.com/LNP-BP/descriptor-wallet#20ce4ae8463efada75874bbeab6e02ba7172aecf"
+dependencies = [
+ "amplify",
+ "bitcoin 0.28.0-rc.2",
+ "bitcoin_hd",
+ "bitcoin_onchain",
+ "bitcoin_scripts",
+ "chrono",
+ "commit_verify",
+ "psbt",
+ "slip132",
+ "strict_encoding",
+]
+
+[[package]]
+name = "descriptors"
+version = "0.7.0-beta.1"
+source = "git+https://github.com/LNP-BP/descriptor-wallet#20ce4ae8463efada75874bbeab6e02ba7172aecf"
+dependencies = [
+ "amplify",
+ "bitcoin 0.28.0-rc.2",
+ "bitcoin_hd",
+ "bitcoin_scripts",
+ "strict_encoding",
+]
+
+[[package]]
+name = "encoding_derive_helpers"
+version = "1.7.6"
+source = "git+https://github.com/LNP-BP/client_side_validation?branch=sten/bitcoin-fixes#b79108bd4541764b3f8318264009f69d2b021931"
+dependencies = [
+ "amplify",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
 
 [[package]]
 name = "field-offset"
@@ -286,7 +503,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dac4d47c544af67747652ab1865ace0ffa1155709723ac4f32e97587dd4735b2"
 dependencies = [
  "anyhow",
- "heck",
+ "heck 0.4.0",
  "proc-macro-crate",
  "proc-macro-error",
  "proc-macro2",
@@ -372,9 +589,37 @@ dependencies = [
 
 [[package]]
 name = "heck"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6d621efb26863f0e9924c6ac577e8275e5e6b77455db64ffa6c65c904e9e132c"
+dependencies = [
+ "unicode-segmentation",
+]
+
+[[package]]
+name = "heck"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2540771e65fc8cb83cd6e8a237f70c319bd5c29f78ed1084ba5d50eeac86f7f9"
+
+[[package]]
+name = "hwi"
+version = "0.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cbb6305947670b5d5eb72dcf3b8afc03c8be988526f1ed280a04e84f888546ad"
+dependencies = [
+ "base64",
+ "bitcoin 0.25.2",
+ "serde",
+ "serde_json",
+ "strum_macros",
+]
+
+[[package]]
+name = "itoa"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1aab8fc367588b89dcee83ab0fd66b72b50b72fa1904d7095045ace2b0c81c35"
 
 [[package]]
 name = "lazy_static"
@@ -407,13 +652,45 @@ dependencies = [
 ]
 
 [[package]]
+name = "miniscript"
+version = "7.0.0-rc.2"
+source = "git+https://github.com/LNP-BP/rust-miniscript?branch=canary#909f0a51c5881aafd731386a46d4756b30ee2c79"
+dependencies = [
+ "bitcoin 0.28.0-rc.2",
+]
+
+[[package]]
 name = "mycitadel-desktop"
 version = "0.1.0"
 dependencies = [
+ "amplify",
+ "bitcoin 0.28.0-rc.2",
+ "descriptor-wallet",
  "gladis",
  "gtk",
+ "hwi",
+ "miniscript",
  "relm",
  "relm-derive",
+]
+
+[[package]]
+name = "num-integer"
+version = "0.1.44"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d2cc698a63b549a70bc047073d2949cce27cd1c7b0a4a862d08a8031bc2801db"
+dependencies = [
+ "autocfg",
+ "num-traits",
+]
+
+[[package]]
+name = "num-traits"
+version = "0.2.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9a64b1ec5cda2586e284722486d802acf1f7dbdc623e2bfc57e65ca1cd099290"
+dependencies = [
+ "autocfg",
 ]
 
 [[package]]
@@ -518,6 +795,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "psbt"
+version = "0.7.0-beta.2"
+source = "git+https://github.com/LNP-BP/descriptor-wallet#20ce4ae8463efada75874bbeab6e02ba7172aecf"
+dependencies = [
+ "amplify",
+ "bitcoin 0.28.0-rc.2",
+ "bitcoin_hd",
+ "bitcoin_onchain",
+ "bitcoin_scripts",
+ "descriptors",
+ "strict_encoding",
+]
+
+[[package]]
 name = "quote"
 version = "1.0.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -564,6 +855,49 @@ dependencies = [
 ]
 
 [[package]]
+name = "ryu"
+version = "1.0.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "73b4b750c782965c211b42f022f59af1fbceabdd026623714f104152f1ec149f"
+
+[[package]]
+name = "secp256k1"
+version = "0.19.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c6179428c22c73ac0fbb7b5579a56353ce78ba29759b3b8575183336ea74cdfb"
+dependencies = [
+ "secp256k1-sys 0.3.0",
+ "serde",
+]
+
+[[package]]
+name = "secp256k1"
+version = "0.22.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "26947345339603ae8395f68e2f3d85a6b0a8ddfe6315818e80b8504415099db0"
+dependencies = [
+ "secp256k1-sys 0.5.0",
+]
+
+[[package]]
+name = "secp256k1-sys"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "11553d210db090930f4432bea123b31f70bbf693ace14504ea2a35e796c28dd2"
+dependencies = [
+ "cc",
+]
+
+[[package]]
+name = "secp256k1-sys"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "07b5b9d7322572e1f3aeed208668ce87789b3645dbb73082c5ce99a004103a35"
+dependencies = [
+ "cc",
+]
+
+[[package]]
 name = "semver"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -586,6 +920,31 @@ name = "serde"
 version = "1.0.136"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ce31e24b01e1e524df96f1c2fdd054405f8d7376249a5110886fb4b658484789"
+dependencies = [
+ "serde_derive",
+]
+
+[[package]]
+name = "serde_derive"
+version = "1.0.136"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "08597e7152fcd306f41838ed3e37be9eaeed2b61c42e2117266a554fab4662f9"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "serde_json"
+version = "1.0.79"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8e8d9fa5c3b304765ce1fd9c4c8a3de2c8db365a5b91be52f186efc675681d95"
+dependencies = [
+ "itoa",
+ "ryu",
+ "serde",
+]
 
 [[package]]
 name = "slab"
@@ -594,10 +953,65 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eb703cfe953bccee95685111adeedb76fabe4e97549a58d16f03ea7b9367bb32"
 
 [[package]]
+name = "slip132"
+version = "0.7.0-alpha.1"
+source = "git+https://github.com/LNP-BP/descriptor-wallet#20ce4ae8463efada75874bbeab6e02ba7172aecf"
+dependencies = [
+ "amplify",
+ "bitcoin 0.28.0-rc.2",
+ "strict_encoding",
+]
+
+[[package]]
 name = "smallvec"
 version = "1.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f2dd574626839106c320a323308629dcb1acfc96e32a8cba364ddc61ac23ee83"
+
+[[package]]
+name = "stability"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ebd1b177894da2a2d9120208c3386066af06a488255caabc5de8ddca22dbc3ce"
+dependencies = [
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "strict_encoding"
+version = "1.8.0-rc.10"
+source = "git+https://github.com/LNP-BP/client_side_validation?branch=sten/bitcoin-fixes#b79108bd4541764b3f8318264009f69d2b021931"
+dependencies = [
+ "amplify",
+ "bitcoin 0.28.0-rc.2",
+ "bitcoin_hashes 0.10.0",
+ "chrono",
+ "strict_encoding_derive",
+]
+
+[[package]]
+name = "strict_encoding_derive"
+version = "1.7.6"
+source = "git+https://github.com/LNP-BP/client_side_validation?branch=sten/bitcoin-fixes#b79108bd4541764b3f8318264009f69d2b021931"
+dependencies = [
+ "amplify_syn",
+ "encoding_derive_helpers",
+ "proc-macro2",
+ "syn",
+]
+
+[[package]]
+name = "strum_macros"
+version = "0.18.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "87c85aa3f8ea653bfd3ddf25f7ee357ee4d204731f6aa9ad04002306f6e2774c"
+dependencies = [
+ "heck 0.3.3",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
 
 [[package]]
 name = "syn"
@@ -617,7 +1031,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a1a45a1c4c9015217e12347f2a411b57ce2c4fc543913b14b6fe40483328e709"
 dependencies = [
  "cfg-expr",
- "heck",
+ "heck 0.4.0",
  "pkg-config",
  "toml",
  "version-compare",
@@ -644,6 +1058,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "time"
+version = "0.1.44"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6db9e6914ab8b1ae1c260a4ae7a49b6c5611b40328a735b21862567685e73255"
+dependencies = [
+ "libc",
+ "wasi",
+ "winapi",
+]
+
+[[package]]
 name = "toml"
 version = "0.5.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -657,6 +1082,12 @@ name = "ucd-trie"
 version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "56dee185309b50d1f11bfedef0fe6d036842e3fb77413abef29f8f8d1c5d4c1c"
+
+[[package]]
+name = "unicode-segmentation"
+version = "1.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7e8820f5d777f6224dc4be3632222971ac30164d4a258d595640799554ebfd99"
 
 [[package]]
 name = "unicode-xid"
@@ -675,6 +1106,12 @@ name = "version_check"
 version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
+
+[[package]]
+name = "wasi"
+version = "0.10.0+wasi-snapshot-preview1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1a143597ca7c7793eff794def352d41792a93c481eb1042423ff7ff72ba2c31f"
 
 [[package]]
 name = "winapi"

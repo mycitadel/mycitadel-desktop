@@ -1,15 +1,15 @@
-use std::sync::{Arc, Mutex};
-use gtk::prelude::*;
 use gtk::prelude::WidgetExt;
-use gtk::{Button, Inhibit, ApplicationWindow};
+use gtk::prelude::*;
+use gtk::{ApplicationWindow, Button, Inhibit};
 use relm::{Relm, Update, Widget};
+use std::sync::{Arc, Mutex};
 
-use gladis::Gladis;
 use crate::settings;
+use gladis::Gladis;
 
 #[derive(Default)]
 pub(crate) struct Model {
-    settings: Arc<Mutex<settings::Model>>
+    settings: Arc<Mutex<settings::Model>>,
 }
 
 #[derive(Msg)]
@@ -50,7 +50,9 @@ impl Update for Win {
 
     fn update(&mut self, event: Msg) {
         match event {
-            Msg::Settings => settings::Win::run(self.model.settings.clone()).expect("error in settings dialog"),
+            Msg::Settings => {
+                settings::Win::run(self.model.settings.clone()).expect("error in settings dialog")
+            }
             Msg::Quit => gtk::main_quit(),
             _ => { /* TODO: Implement main window event handling */ }
         }

@@ -1,19 +1,61 @@
+use bitcoin::util::bip32::{ExtendedPubKey, Fingerprint};
+use gtk::prelude::DialogExt;
+use gtk::prelude::*;
+use gtk::{Button, Dialog, DialogFlags, ResponseType, ToolButton};
+use relm::{ContainerWidget, Relm, Update, Widget};
+use std::collections::{BTreeMap, BTreeSet};
 use std::ops::{Deref, DerefMut};
 use std::sync::{Arc, Mutex};
-use gtk::prelude::*;
-use gtk::prelude::DialogExt;
-use gtk::{Button, Dialog};
-use relm::{Relm, Update, Widget};
 
 use gladis::Gladis;
+use wallet::hd::{DerivationScheme, HardenedIndex, SegmentIndexes};
 
-#[derive(Clone, Default)]
-pub(crate) struct Model {
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum Ownership {
+    Mine,
+    External,
 }
 
-#[derive(Msg)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default)]
+pub struct HardwareDevice {
+    pub line: String,
+    pub model: String,
+}
+
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub struct Signer {
+    pub fingerprint: Fingerprint,
+    pub device: Option<HardwareDevice>,
+    pub name: String,
+    pub xpub: ExtendedPubKey,
+    pub account: HardenedIndex,
+    pub ownership: Ownership,
+}
+
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+pub(crate) struct Model {
+    pub scheme: DerivationScheme,
+    pub devices: BTreeMap<Fingerprint, HardwareDevice>,
+    pub signers: BTreeSet<Signer>,
+}
+
+impl Default for Model {
+    fn default() -> Self {
+        Model {
+            // TODO: Add `ScriptType` to descriptor-wallet and simplify constructor
+            scheme: DerivationScheme::Bip48 {
+                script_type: HardenedIndex::from_index(2u32).unwrap(),
+            },
+            devices: none!(),
+            signers: none!(),
+        }
+    }
+}
+
+#[derive(Msg, Debug)]
 pub(crate) enum Msg {
     Init(Arc<Mutex<Model>>),
+    RefreshHw,
     Save,
     Cancel,
 }
@@ -22,8 +64,14 @@ pub(crate) enum Msg {
 #[derive(Clone, Gladis)]
 pub(crate) struct Widgets {
     dialog: Dialog,
+
+    refresh_dlg: Dialog,
+
     save_btn: Button,
     cancel_btn: Button,
+    refresh_btn: ToolButton,
+    addsign_btn: ToolButton,
+    removesign_btn: ToolButton,
 }
 
 pub(crate) struct Win {
@@ -50,16 +98,19 @@ impl Update for Win {
             Msg::Init(origin_model) => {
                 self.origin_model = Some(origin_model);
             }
+            Msg::RefreshHw => {
+                self.widgets.refresh_dlg.show();
+
+                // self.widgets.refresh_dlg.hide();
+            }
             Msg::Save => {
                 self.origin_model.as_ref().map(|model| {
                     *(model.lock().expect("wallet model locked").deref_mut()) = self.model.clone();
                 });
                 self.widgets.dialog.hide();
-                self.widgets.dialog.close();
             }
             Msg::Cancel => {
                 self.widgets.dialog.hide();
-                self.widgets.dialog.close();
             }
         }
     }
@@ -80,10 +131,20 @@ impl Widget for Win {
 
         connect!(relm, widgets.save_btn, connect_clicked(_), Msg::Save);
         connect!(relm, widgets.cancel_btn, connect_clicked(_), Msg::Cancel);
-        connect!(relm, widgets.dialog, connect_destroy(_), Msg::Cancel);
+        connect!(
+            relm,
+            widgets.refresh_btn,
+            connect_clicked(_),
+            Msg::RefreshHw
+        );
+        //connect!(relm, widgets.dialog, connect_destroy(_), Msg::Close);
 
-        widgets.dialog.run();
+        widgets.dialog.show();
 
-        Win { model, widgets, origin_model: None }
+        Win {
+            model,
+            widgets,
+            origin_model: None,
+        }
     }
 }
