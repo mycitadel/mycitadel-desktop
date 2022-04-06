@@ -190,7 +190,7 @@ impl Default for Model {
             },
             devices: none!(),
             signers: none!(),
-            network: PublicNetwork::Testnet,
+            network: PublicNetwork::Mainnet,
         }
     }
 }
