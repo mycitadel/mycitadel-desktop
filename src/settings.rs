@@ -1,10 +1,12 @@
 use bitcoin::hashes::{sha256, Hash};
 use bitcoin::secp256k1::{PublicKey, SECP256K1};
-use bitcoin::util::bip32::{ChainCode, ChildNumber, ExtendedPrivKey, ExtendedPubKey, Fingerprint};
+use bitcoin::util::bip32::{ChainCode, ChildNumber, ExtendedPubKey, Fingerprint};
 use bitcoin::{secp256k1, Network};
 use gtk::prelude::*;
-use gtk::{Button, Dialog, ListStore, TextBuffer, ToggleButton, ToolButton, TreeView};
-use relm::{Channel, Relm, Sender, StreamHandle, Update, Widget};
+use gtk::{
+    Button, Dialog, Entry, Image, Label, ListStore, TextBuffer, ToggleButton, ToolButton, TreeView,
+};
+use relm::{Channel, Relm, Update, Widget};
 use std::collections::{BTreeMap, BTreeSet};
 use std::ops::{Deref, DerefMut};
 use std::sync::{Arc, Mutex};
@@ -16,9 +18,9 @@ use hwi::HWIDevice;
 use miniscript::descriptor::{DescriptorType, Sh, TapTree, Tr, Wsh};
 use miniscript::policy::concrete::Policy;
 use miniscript::{Descriptor, Legacy, Miniscript, Segwitv0, Tap};
-use wallet::hd::{TerminalStep, XpubRef};
 use wallet::hd::schemata::DerivationBlockchain;
 use wallet::hd::{AccountStep, DerivationScheme, HardenedIndex, SegmentIndexes, TrackingAccount};
+use wallet::hd::{TerminalStep, XpubRef};
 use wallet::scripts::taproot::TreeNode;
 
 // TODO: Move to descriptor wallet or BPro
@@ -405,21 +407,32 @@ pub(crate) enum Msg {
 #[derive(Clone, Gladis)]
 pub(crate) struct Widgets {
     dialog: Dialog,
+    save_btn: Button,
+    cancel_btn: Button,
+
+    refresh_dlg: Dialog,
+    refresh_btn: ToolButton,
+    addsign_btn: ToolButton,
+    removesign_btn: ToolButton,
     signers_tree: TreeView,
     signers_store: ListStore,
+
+    name_fld: Entry,
+    fingerprint_fld: Entry,
+    xpub_fld: Entry,
+    account_stp: Entry,
+    accfp_fld: Entry,
+    derivation_fld: Entry,
+    device_lbl: Label,
+    device_status_img: Image,
+    seed_mine_tgl: ToggleButton,
+    seed_extern_tgl: ToggleButton,
+
     descriptor_buf: TextBuffer,
     descr_legacy_tgl: ToggleButton,
     descr_segwit_tgl: ToggleButton,
     descr_nested_tgl: ToggleButton,
     descr_taproot_tgl: ToggleButton,
-
-    refresh_dlg: Dialog,
-
-    save_btn: Button,
-    cancel_btn: Button,
-    refresh_btn: ToolButton,
-    addsign_btn: ToolButton,
-    removesign_btn: ToolButton,
 }
 
 impl Widgets {

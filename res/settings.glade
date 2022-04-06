@@ -2,6 +2,11 @@
 <!-- Generated with glade 3.38.2 -->
 <interface>
   <requires lib="gtk+" version="3.24"/>
+  <object class="GtkAdjustment" id="account_adj">
+    <property name="upper">2147483647</property>
+    <property name="step-increment">1</property>
+    <property name="page-increment">10</property>
+  </object>
   <object class="GtkPopover" id="calendar_popover">
     <property name="can-focus">False</property>
     <child>
@@ -463,7 +468,7 @@ for the check to finish</property>
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkEntry">
+                      <object class="GtkEntry" id="xpub_fld">
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="hexpand">True</property>
@@ -504,7 +509,7 @@ for the check to finish</property>
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkEntry">
+                      <object class="GtkEntry" id="fingerprint_fld">
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="secondary-icon-name">edit-copy</property>
@@ -517,7 +522,7 @@ for the check to finish</property>
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkEntry">
+                      <object class="GtkEntry" id="name_fld">
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="hexpand">True</property>
@@ -557,11 +562,12 @@ for the check to finish</property>
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkSpinButton">
+                      <object class="GtkSpinButton" id="account_stp">
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="width-chars">3</property>
                         <property name="input-purpose">digits</property>
+                        <property name="adjustment">account_adj</property>
                         <property name="numeric">True</property>
                       </object>
                       <packing>
@@ -583,7 +589,7 @@ for the check to finish</property>
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkEntry">
+                      <object class="GtkEntry" id="accfp_fld">
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="editable">False</property>
@@ -611,7 +617,7 @@ derivation:</property>
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkEntry">
+                      <object class="GtkEntry" id="derivation_fld">
                         <property name="height-request">50</property>
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
@@ -658,11 +664,10 @@ derivation:</property>
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkLabel">
+                          <object class="GtkLabel" id="device_lbl">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="halign">start</property>
-                            <property name="label" translatable="yes">BitBox 2 bitcoin-only edition</property>
                           </object>
                           <packing>
                             <property name="expand">False</property>
@@ -671,7 +676,7 @@ derivation:</property>
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkImage">
+                          <object class="GtkImage" id="device_status_img">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="icon-name">emblem-default-symbolic</property>
@@ -696,7 +701,7 @@ derivation:</property>
                         <property name="homogeneous">True</property>
                         <property name="layout-style">expand</property>
                         <child>
-                          <object class="GtkRadioButton" id="seed_mine_tgl1">
+                          <object class="GtkRadioButton" id="seed_mine_tgl">
                             <property name="label" translatable="yes">Mine</property>
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
@@ -711,13 +716,13 @@ derivation:</property>
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkRadioButton" id="seed_extern_tgl1">
+                          <object class="GtkRadioButton" id="seed_extern_tgl">
                             <property name="label" translatable="yes">External party</property>
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
                             <property name="receives-default">False</property>
                             <property name="draw-indicator">False</property>
-                            <property name="group">seed_mine_tgl1</property>
+                            <property name="group">seed_mine_tgl</property>
                           </object>
                           <packing>
                             <property name="expand">True</property>
@@ -1463,13 +1468,22 @@ However, they are not supported by other wallets. Wallets of this type can be us
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkTextView">
+                  <object class="GtkScrolledWindow">
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="vexpand">True</property>
-                    <property name="editable">False</property>
-                    <property name="buffer">descriptor_buf</property>
-                    <property name="monospace">True</property>
+                    <property name="hscrollbar-policy">never</property>
+                    <property name="shadow-type">etched-in</property>
+                    <child>
+                      <object class="GtkTextView">
+                        <property name="visible">True</property>
+                        <property name="can-focus">True</property>
+                        <property name="editable">False</property>
+                        <property name="wrap-mode">word-char</property>
+                        <property name="buffer">descriptor_buf</property>
+                        <property name="monospace">True</property>
+                      </object>
+                    </child>
                   </object>
                   <packing>
                     <property name="expand">False</property>
