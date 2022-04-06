@@ -3,13 +3,14 @@ use bitcoin::secp256k1::{PublicKey, SECP256K1};
 use bitcoin::util::bip32::{ChainCode, ChildNumber, ExtendedPrivKey, ExtendedPubKey, Fingerprint};
 use bitcoin::{secp256k1, Network};
 use gtk::prelude::*;
-use gtk::{Button, Dialog, ListStore, TextBuffer, ToolButton, TreeView};
+use gtk::{Button, Dialog, ListStore, TextBuffer, ToggleButton, ToolButton, TreeView};
 use relm::{Channel, Relm, Sender, StreamHandle, Update, Widget};
 use std::collections::{BTreeMap, BTreeSet};
 use std::ops::{Deref, DerefMut};
 use std::sync::{Arc, Mutex};
 
 use gladis::Gladis;
+use gtk::gdk::EventMask;
 use hwi::error::Error as HwiError;
 use hwi::HWIDevice;
 use miniscript::descriptor::{DescriptorType, Sh, TapTree, Tr, Wsh};
@@ -183,8 +184,8 @@ impl Signer {
 pub enum DescriptorClass {
     PreSegwit,
     SegwitV0,
-    SegwitLegacy,
-    Taproot,
+    NestedV0,
+    TaprootC0,
 }
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
@@ -294,8 +295,8 @@ impl Model {
                 Descriptor::Sh(Sh::new(ms).expect("miniscript composition is broken"))
             }
             DescriptorClass::SegwitV0 => Descriptor::Wsh(wsh),
-            DescriptorClass::SegwitLegacy => Descriptor::Sh(Sh::new_with_wsh(wsh)),
-            DescriptorClass::Taproot => {
+            DescriptorClass::NestedV0 => Descriptor::Sh(Sh::new_with_wsh(wsh)),
+            DescriptorClass::TaprootC0 => {
                 let mut unspendable_key =
                     secp256k1::PublicKey::from_secret_key(&SECP256K1, &secp256k1::ONE_KEY);
                 unspendable_key
@@ -372,6 +373,15 @@ impl Model {
             }
         });
     }
+
+    pub fn toggle_descr_class(&mut self, class: DescriptorClass) -> bool {
+        if self.class == class {
+            false
+        } else {
+            self.class = class;
+            true
+        }
+    }
 }
 
 #[derive(Msg, Debug)]
@@ -379,6 +389,7 @@ pub(crate) enum Msg {
     Init(Arc<Mutex<Model>>),
     RefreshHw,
     HwRefreshed(Result<(HardwareList, Vec<Error>), Error>),
+    ToggleDescr(DescriptorClass),
     Save,
     Cancel,
 }
@@ -390,6 +401,10 @@ pub(crate) struct Widgets {
     signers_tree: TreeView,
     signers_store: ListStore,
     descriptor_buf: TextBuffer,
+    descr_legacy_tgl: ToggleButton,
+    descr_segwit_tgl: ToggleButton,
+    descr_nested_tgl: ToggleButton,
+    descr_taproot_tgl: ToggleButton,
 
     refresh_dlg: Dialog,
 
@@ -424,6 +439,30 @@ impl Widgets {
             None => s!(""),
         };
         self.descriptor_buf.set_text(&text);
+    }
+
+    fn descr_class_toggle(&self, class: DescriptorClass) -> &ToggleButton {
+        match class {
+            DescriptorClass::PreSegwit => &self.descr_legacy_tgl,
+            DescriptorClass::SegwitV0 => &self.descr_segwit_tgl,
+            DescriptorClass::NestedV0 => &self.descr_nested_tgl,
+            DescriptorClass::TaprootC0 => &self.descr_taproot_tgl,
+        }
+    }
+
+    pub fn should_update_descr_class(&mut self, class: DescriptorClass) -> bool {
+        self.descr_class_toggle(class).is_active()
+    }
+
+    pub fn update_descr_class(&mut self, class: DescriptorClass) {
+        self.descr_legacy_tgl
+            .set_active(class == DescriptorClass::PreSegwit);
+        self.descr_segwit_tgl
+            .set_active(class == DescriptorClass::SegwitV0);
+        self.descr_nested_tgl
+            .set_active(class == DescriptorClass::NestedV0);
+        self.descr_taproot_tgl
+            .set_active(class == DescriptorClass::TaprootC0);
     }
 }
 
@@ -478,6 +517,13 @@ impl Update for Win {
                     .update_descriptor(self.model.descriptor.as_ref());
                 self.widgets.refresh_dlg.hide();
             }
+            Msg::ToggleDescr(class) => {
+                if self.widgets.should_update_descr_class(class)
+                    && self.model.toggle_descr_class(class)
+                {
+                    self.widgets.update_descr_class(self.model.class);
+                }
+            }
             Msg::Save => {
                 self.origin_model.as_ref().map(|model| {
                     *(model.lock().expect("wallet model locked").deref_mut()) = self.model.clone();
@@ -506,6 +552,30 @@ impl Widget for Win {
 
         connect!(relm, widgets.save_btn, connect_clicked(_), Msg::Save);
         connect!(relm, widgets.cancel_btn, connect_clicked(_), Msg::Cancel);
+        connect!(
+            relm,
+            widgets.descr_legacy_tgl,
+            connect_clicked(_),
+            Msg::ToggleDescr(DescriptorClass::PreSegwit)
+        );
+        connect!(
+            relm,
+            widgets.descr_segwit_tgl,
+            connect_clicked(_),
+            Msg::ToggleDescr(DescriptorClass::SegwitV0)
+        );
+        connect!(
+            relm,
+            widgets.descr_nested_tgl,
+            connect_clicked(_),
+            Msg::ToggleDescr(DescriptorClass::NestedV0)
+        );
+        connect!(
+            relm,
+            widgets.descr_taproot_tgl,
+            connect_clicked(_),
+            Msg::ToggleDescr(DescriptorClass::TaprootC0)
+        );
 
         let stream = relm.stream().clone();
         let (channel, sender) = Channel::new(move |msg| {

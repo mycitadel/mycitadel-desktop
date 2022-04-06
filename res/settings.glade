@@ -1261,8 +1261,8 @@ derivation:</property>
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkToggleButton" id="descr_taproot_tgl">
-                            <property name="label" translatable="yes">Taproot</property>
+                          <object class="GtkToggleButton" id="descr_nested_tgl">
+                            <property name="label" translatable="yes">Nested</property>
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
                             <property name="receives-default">True</property>
@@ -1274,8 +1274,8 @@ derivation:</property>
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkToggleButton" id="descrt_nested_tgl">
-                            <property name="label" translatable="yes">Nested</property>
+                          <object class="GtkToggleButton" id="descr_taproot_tgl">
+                            <property name="label" translatable="yes">Taproot</property>
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
                             <property name="receives-default">True</property>
