@@ -1,8 +1,9 @@
-use bitcoin::secp256k1::PublicKey;
-use bitcoin::util::bip32::{ChainCode, ExtendedPubKey, Fingerprint};
-use bitcoin::Network;
+use bitcoin::hashes::{sha256, Hash};
+use bitcoin::secp256k1::{PublicKey, SECP256K1};
+use bitcoin::util::bip32::{ChainCode, ChildNumber, ExtendedPrivKey, ExtendedPubKey, Fingerprint};
+use bitcoin::{secp256k1, Network};
 use gtk::prelude::*;
-use gtk::{Button, Dialog, ListStore, ToolButton, TreeView};
+use gtk::{Button, Dialog, ListStore, TextBuffer, ToolButton, TreeView};
 use relm::{Channel, Relm, Sender, StreamHandle, Update, Widget};
 use std::collections::{BTreeMap, BTreeSet};
 use std::ops::{Deref, DerefMut};
@@ -11,8 +12,13 @@ use std::sync::{Arc, Mutex};
 use gladis::Gladis;
 use hwi::error::Error as HwiError;
 use hwi::HWIDevice;
+use miniscript::descriptor::{DescriptorType, Sh, TapTree, Tr, Wsh};
+use miniscript::policy::concrete::Policy;
+use miniscript::{Descriptor, Legacy, Miniscript, Segwitv0, Tap};
+use wallet::bitcoin_hd::{TerminalStep, XpubRef};
 use wallet::hd::schemata::DerivationBlockchain;
-use wallet::hd::{DerivationScheme, HardenedIndex, SegmentIndexes};
+use wallet::hd::{AccountStep, DerivationScheme, HardenedIndex, SegmentIndexes, TrackingAccount};
+use wallet::scripts::taproot::TreeNode;
 
 // TODO: Move to descriptor wallet or BPro
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Display)]
@@ -173,12 +179,22 @@ impl Signer {
     }
 }
 
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
+pub enum DescriptorClass {
+    PreSegwit,
+    SegwitV0,
+    SegwitLegacy,
+    Taproot,
+}
+
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub(crate) struct Model {
     pub scheme: DerivationScheme,
     pub devices: HardwareList,
     pub signers: BTreeSet<Signer>,
     pub network: PublicNetwork,
+    pub descriptor: Option<Descriptor<TrackingAccount>>,
+    pub class: DescriptorClass,
 }
 
 impl Default for Model {
@@ -191,7 +207,170 @@ impl Default for Model {
             devices: none!(),
             signers: none!(),
             network: PublicNetwork::Mainnet,
+            descriptor: None,
+            class: DescriptorClass::SegwitV0,
         }
+    }
+}
+
+impl Model {
+    pub fn update_devices(&mut self, devices: HardwareList) {
+        self.devices = devices;
+        self.update_signers()
+    }
+
+    pub fn update_signers(&mut self) {
+        let known_xpubs = self
+            .signers
+            .iter()
+            .map(|signer| signer.xpub)
+            .collect::<BTreeSet<_>>();
+
+        self.devices
+            .iter()
+            .filter(|(_, device)| !known_xpubs.contains(&device.default_xpub))
+            .for_each(|(fingerprint, device)| {
+                self.signers
+                    .insert(Signer::with(*fingerprint, device.clone()));
+            });
+    }
+
+    pub fn update_descriptor(&mut self) {
+        let k = self.signers.len();
+        let accounts = self
+            .signers
+            .iter()
+            .map(|signer| {
+                let path: Vec<ChildNumber> = self
+                    .scheme
+                    .to_account_derivation(signer.account.into(), self.network.into())
+                    .into();
+                TrackingAccount {
+                    seed_based: true,
+                    master: XpubRef::Fingerprint(signer.fingerprint),
+                    account_path: path
+                        .into_iter()
+                        .map(AccountStep::try_from)
+                        .collect::<Result<_, _>>()
+                        .expect("inconsistency in constructed derivation path"),
+                    account_xpub: signer.xpub,
+                    revocation_seal: None,
+                    terminal_path: vec![TerminalStep::Wildcard, TerminalStep::Wildcard],
+                }
+            })
+            .collect::<Vec<_>>();
+
+        let key_policies = accounts
+            .iter()
+            .map(|key| Policy::Key(key.clone()))
+            .collect::<Vec<_>>();
+        let sig_conditions = (1..=k)
+            .into_iter()
+            .map(|n| (n, Policy::Threshold(k, key_policies.clone())))
+            .map(|(n, node)| {
+                if n > 1 {
+                    (
+                        n,
+                        Policy::And(vec![node, Policy::Older(10u32.pow(n as u32))]),
+                    )
+                } else {
+                    (n, node)
+                }
+            })
+            .collect::<Vec<_>>();
+
+        let policy = Policy::Or(sig_conditions.clone());
+        let ms_witscript = policy
+            .compile::<Segwitv0>()
+            .expect("policy composition  is broken");
+
+        let wsh = Wsh::new(ms_witscript).expect("miniscript composition is broken");
+
+        self.descriptor = Some(match self.class {
+            DescriptorClass::PreSegwit => {
+                let ms = policy
+                    .compile::<Legacy>()
+                    .expect("policy composition  is broken");
+                Descriptor::Sh(Sh::new(ms).expect("miniscript composition is broken"))
+            }
+            DescriptorClass::SegwitV0 => Descriptor::Wsh(wsh),
+            DescriptorClass::SegwitLegacy => Descriptor::Sh(Sh::new_with_wsh(wsh)),
+            DescriptorClass::Taproot => {
+                let mut unspendable_key =
+                    secp256k1::PublicKey::from_secret_key(&SECP256K1, &secp256k1::ONE_KEY);
+                unspendable_key
+                    .add_exp_assign(
+                        &SECP256K1,
+                        &sha256::Hash::hash(&unspendable_key.serialize()),
+                    )
+                    .unwrap();
+                let mut buf = Vec::with_capacity(78);
+                buf.extend(if self.network.is_testnet() {
+                    [0x04u8, 0x35, 0x87, 0xCF]
+                } else {
+                    [0x04u8, 0x88, 0xB2, 0x1E]
+                });
+                buf.extend([0u8; 4]); // ver
+                buf.extend([0u8; 5]); // depth + fingerprint
+                buf.extend([0u8; 4]); // child no
+                buf.extend(&unspendable_key.serialize());
+                buf.extend(&unspendable_key.serialize());
+                let unspendable_xkey =
+                    ExtendedPubKey::decode(&buf).expect("broken unspendable key construction");
+                let unspendable = TrackingAccount {
+                    seed_based: true,
+                    master: XpubRef::Unknown,
+                    account_path: vec![],
+                    account_xpub: unspendable_xkey,
+                    revocation_seal: None,
+                    terminal_path: vec![TerminalStep::Wildcard, TerminalStep::Wildcard],
+                };
+
+                let (tap_tree, remnant) = sig_conditions
+                    .into_iter()
+                    .map(|(depth, pol)| {
+                        (
+                            depth,
+                            pol.compile::<Tap>()
+                                .expect("tapscript construction is broken"),
+                        )
+                    })
+                    .rfold(
+                        (None, None)
+                            as (
+                                Option<TapTree<TrackingAccount>>,
+                                Option<Miniscript<TrackingAccount, Tap>>,
+                            ),
+                        |(tree, prev), (depth, ms)| match (tree, prev) {
+                            (None, None) if depth % 2 == 1 => (None, Some(ms)),
+                            (None, None) if depth % 2 == 1 => {
+                                (Some(TapTree::Leaf(Arc::new(ms))), None)
+                            }
+                            (None, Some(ms2)) => (
+                                Some(TapTree::Tree(
+                                    Arc::new(TapTree::Leaf(Arc::new(ms))),
+                                    Arc::new(TapTree::Leaf(Arc::new(ms2))),
+                                )),
+                                None,
+                            ),
+                            (Some(tree), None) => (
+                                Some(TapTree::Tree(
+                                    Arc::new(TapTree::Leaf(Arc::new(ms))),
+                                    Arc::new(tree),
+                                )),
+                                None,
+                            ),
+                            _ => unreachable!(),
+                        },
+                    );
+
+                let tap_tree = tap_tree.or_else(|| remnant.map(|ms| TapTree::Leaf(Arc::new(ms))));
+
+                Descriptor::Tr(
+                    Tr::new(unspendable, tap_tree).expect("taproot construction is broken"),
+                )
+            }
+        });
     }
 }
 
@@ -210,6 +389,7 @@ pub(crate) struct Widgets {
     dialog: Dialog,
     signers_tree: TreeView,
     signers_store: ListStore,
+    descriptor_buf: TextBuffer,
 
     refresh_dlg: Dialog,
 
@@ -218,6 +398,33 @@ pub(crate) struct Widgets {
     refresh_btn: ToolButton,
     addsign_btn: ToolButton,
     removesign_btn: ToolButton,
+}
+
+impl Widgets {
+    pub fn update_signers(&mut self, signers: &BTreeSet<Signer>) {
+        let store = &mut self.signers_store;
+        store.clear();
+        for signer in signers {
+            store.insert_with_values(
+                None,
+                &[
+                    (0, &signer.name),
+                    (1, &signer.fingerprint.to_string()),
+                    (2, &signer.account.to_string()),
+                    (3, &signer.xpub.to_string()),
+                    (4, &signer.device.clone().unwrap_or_default()),
+                ],
+            );
+        }
+    }
+
+    pub fn update_descriptor(&mut self, descriptor: Option<&Descriptor<TrackingAccount>>) {
+        let text = match descriptor {
+            Some(descriptor) => format!("{}", descriptor),
+            None => s!(""),
+        };
+        self.descriptor_buf.set_text(&text);
+    }
 }
 
 pub(crate) struct Win {
@@ -249,7 +456,7 @@ impl Update for Win {
                 self.widgets.refresh_dlg.show();
             }
             Msg::HwRefreshed(result) => {
-                self.model.devices = match result {
+                let devices = match result {
                     Err(_err) => {
                         // TODO: Display message to user
                         HardwareList::default()
@@ -265,35 +472,10 @@ impl Update for Win {
                     Ok((devices, _)) => devices,
                 };
 
-                let signers = &mut self.model.signers;
-                let known_xpubs = signers
-                    .iter()
-                    .map(|signer| signer.xpub)
-                    .collect::<BTreeSet<_>>();
-                self.model
-                    .devices
-                    .0
-                    .iter()
-                    .filter(|(_, device)| !known_xpubs.contains(&device.default_xpub))
-                    .for_each(|(fingerprint, device)| {
-                        signers.insert(Signer::with(*fingerprint, device.clone()));
-                    });
-
-                let store = &mut self.widgets.signers_store;
-                store.clear();
-                for signer in &self.model.signers {
-                    store.insert_with_values(
-                        None,
-                        &[
-                            (0, &signer.name),
-                            (1, &signer.fingerprint.to_string()),
-                            (2, &signer.account.to_string()),
-                            (3, &signer.xpub.to_string()),
-                            (4, &signer.device.clone().unwrap_or_default()),
-                        ],
-                    );
-                }
-
+                self.model.update_devices(devices);
+                self.widgets.update_signers(&self.model.signers);
+                self.widgets
+                    .update_descriptor(self.model.descriptor.as_ref());
                 self.widgets.refresh_dlg.hide();
             }
             Msg::Save => {

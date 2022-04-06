@@ -14,7 +14,7 @@
       </object>
     </child>
   </object>
-  <object class="GtkTextBuffer" id="descriptor_buff"/>
+  <object class="GtkTextBuffer" id="descriptor_buf"/>
   <object class="GtkMenu" id="lock_menu">
     <property name="visible">True</property>
     <property name="can-focus">False</property>
@@ -55,6 +55,80 @@
     <property name="upper">65535</property>
     <property name="step-increment">1</property>
     <property name="page-increment">10</property>
+  </object>
+  <object class="GtkDialog" id="refresh_dlg">
+    <property name="can-focus">False</property>
+    <property name="title" translatable="yes">Checking devices</property>
+    <property name="resizable">False</property>
+    <property name="modal">True</property>
+    <property name="window-position">center</property>
+    <property name="destroy-with-parent">True</property>
+    <property name="type-hint">dialog</property>
+    <child internal-child="vbox">
+      <object class="GtkBox">
+        <property name="can-focus">False</property>
+        <property name="margin-start">13</property>
+        <property name="margin-end">13</property>
+        <property name="margin-top">13</property>
+        <property name="margin-bottom">13</property>
+        <property name="orientation">vertical</property>
+        <child internal-child="action_area">
+          <object class="GtkButtonBox">
+            <property name="can-focus">False</property>
+            <property name="layout-style">expand</property>
+            <child>
+              <object class="GtkButton" id="cancel_refresh_btn">
+                <property name="label" translatable="yes">Cancel</property>
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="receives-default">True</property>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+            <property name="position">2</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkSpinner">
+            <property name="height-request">66</property>
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="hexpand">True</property>
+            <property name="vexpand">True</property>
+            <property name="active">True</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel">
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="margin-bottom">13</property>
+            <property name="label" translatable="yes">Please wait few moments
+for the check to finish</property>
+            <property name="justify">center</property>
+            <property name="wrap">True</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+      </object>
+    </child>
   </object>
   <object class="GtkListStore" id="signers_store">
     <columns>
@@ -106,7 +180,7 @@
       </object>
     </child>
   </object>
-  <object class="GtkTextBuffer" id="spending_buff">
+  <object class="GtkTextBuffer" id="spending_buf">
     <property name="text" translatable="yes">Add one or more alternative spending conditions</property>
   </object>
   <object class="GtkMenu" id="time_menu">
@@ -1083,7 +1157,7 @@ derivation:</property>
                     <property name="margin-bottom">13</property>
                     <property name="editable">False</property>
                     <property name="cursor-visible">False</property>
-                    <property name="buffer">spending_buff</property>
+                    <property name="buffer">spending_buf</property>
                     <property name="accepts-tab">False</property>
                   </object>
                   <packing>
@@ -1394,7 +1468,7 @@ However, they are not supported by other wallets. Wallets of this type can be us
                     <property name="can-focus">True</property>
                     <property name="vexpand">True</property>
                     <property name="editable">False</property>
-                    <property name="buffer">descriptor_buff</property>
+                    <property name="buffer">descriptor_buf</property>
                     <property name="monospace">True</property>
                   </object>
                   <packing>
@@ -1811,80 +1885,6 @@ However, they are not supported by other wallets. Wallets of this type can be us
           </object>
           <packing>
             <property name="pack-type">end</property>
-            <property name="position">1</property>
-          </packing>
-        </child>
-      </object>
-    </child>
-  </object>
-  <object class="GtkDialog" id="refresh_dlg">
-    <property name="can-focus">False</property>
-    <property name="title" translatable="yes">Checking devices</property>
-    <property name="resizable">False</property>
-    <property name="modal">True</property>
-    <property name="destroy-with-parent">True</property>
-    <property name="type-hint">dialog</property>
-    <property name="attached-to">dialog</property>
-    <child internal-child="vbox">
-      <object class="GtkBox">
-        <property name="can-focus">False</property>
-        <property name="margin-start">13</property>
-        <property name="margin-end">13</property>
-        <property name="margin-top">13</property>
-        <property name="margin-bottom">13</property>
-        <property name="orientation">vertical</property>
-        <child internal-child="action_area">
-          <object class="GtkButtonBox">
-            <property name="can-focus">False</property>
-            <property name="layout-style">end</property>
-            <child>
-              <object class="GtkButton" id="cancel_refresh_btn">
-                <property name="label" translatable="yes">Cancel</property>
-                <property name="visible">True</property>
-                <property name="can-focus">True</property>
-                <property name="receives-default">True</property>
-              </object>
-              <packing>
-                <property name="expand">True</property>
-                <property name="fill">True</property>
-                <property name="position">0</property>
-              </packing>
-            </child>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">False</property>
-            <property name="position">2</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkSpinner">
-            <property name="height-request">66</property>
-            <property name="visible">True</property>
-            <property name="can-focus">False</property>
-            <property name="hexpand">True</property>
-            <property name="vexpand">True</property>
-            <property name="active">True</property>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
-            <property name="position">0</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkLabel">
-            <property name="visible">True</property>
-            <property name="can-focus">False</property>
-            <property name="margin-bottom">13</property>
-            <property name="label" translatable="yes">Please wait few moments
-for the check to finish</property>
-            <property name="justify">center</property>
-            <property name="wrap">True</property>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
             <property name="position">1</property>
           </packing>
         </child>
