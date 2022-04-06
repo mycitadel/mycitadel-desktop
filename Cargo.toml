@@ -11,7 +11,6 @@ path = "src/main.rs"
 
 [dependencies]
 gtk = { version = "0.4.7", package = "gtk4" }
-relm4 = "0.4.4"
-relm4-macros = "0.4.4"
+relm4 = { version = "0.4.4", features = ["libadwaita", "macros"] }
 relm4-components = "0.4.4"
-gladis = "2.0.0"
+gladis4 = "0.1.0"

@@ -1,5 +1,7 @@
-use gtk::prelude::{BoxExt, ButtonExt, GtkWindowExt, OrientableExt};
-use relm4::{send, AppUpdate, Model, RelmApp, Sender, WidgetPlus, Widgets};
+use gtk::prelude::GtkWindowExt;
+use gtk::{ApplicationWindow};
+use relm4::{AppUpdate, Model, RelmApp, Sender, Widgets};
+use gladis4::Gladis;
 
 #[derive(Default)]
 struct AppModel {
@@ -31,36 +33,29 @@ impl AppUpdate for AppModel {
     }
 }
 
-#[relm4::widget]
-impl Widgets<AppModel, ()> for AppWidgets {
-    view! {
-        gtk::ApplicationWindow {
-            set_title: Some("Simple app"),
-            set_default_width: 300,
-            set_default_height: 100,
-            set_child = Some(&gtk::Box) {
-                set_orientation: gtk::Orientation::Vertical,
-                set_margin_all: 5,
-                set_spacing: 5,
+#[derive(Gladis, Clone)]
+pub struct AppWidgets {
+    pub window: ApplicationWindow,
+}
 
-                append = &gtk::Button {
-                    set_label: "Increment",
-                    connect_clicked(sender) => move |_| {
-                        send!(sender, AppMsg::Increment);
-                    },
-                },
-                append = &gtk::Button {
-                    set_label: "Decrement",
-                    connect_clicked(sender) => move |_| {
-                        send!(sender, AppMsg::Decrement);
-                    },
-                },
-                append = &gtk::Label {
-                    set_margin_all: 5,
-                    set_label: watch! { &format!("Counter: {}", model.counter) },
-                }
-            },
-        }
+impl Widgets<AppModel, ()> for AppWidgets {
+    type Root = ApplicationWindow;
+
+    fn root_widget(&self) -> Self::Root {
+        self.window.clone()
+    }
+
+    fn init_view(_model: &AppModel, _components: &(), _sender: Sender<AppMsg>) -> Self {
+        let ui_string = include_str!("view/wallet.glade");
+        let widgets = Self::from_string(ui_string).expect("broken wallet.glade");
+
+        widgets.window.present();
+
+        widgets
+    }
+
+    fn view(&mut self, _model: &AppModel, _sender: Sender<AppMsg>) {
+        // Update widgets
     }
 }
 

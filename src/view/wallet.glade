@@ -37,7 +37,7 @@
     <property name="can-focus">False</property>
     <property name="icon-name">document-properties-symbolic</property>
   </object>
-  <object class="GtkApplicationWindow" id="walletWin">
+  <object class="GtkApplicationWindow" id="window">
     <property name="width-request">1260</property>
     <property name="can-focus">False</property>
     <property name="default-width">600</property>
@@ -51,13 +51,11 @@
           <object class="GtkStatusbar">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
-            <property name="margin-left">10</property>
-            <property name="margin-right">10</property>
             <property name="margin-start">10</property>
             <property name="margin-end">10</property>
             <property name="margin-top">6</property>
             <property name="margin-bottom">6</property>
-            <property name="spacing">2</property>
+            <!-- property name="spacing">2</property -->
             <child>
               <object class="GtkBox">
                 <property name="visible">True</property>
@@ -82,7 +80,6 @@
                   <object class="GtkLabel">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
-                    <property name="margin-left">3</property>
                     <property name="margin-start">3</property>
                     <property name="label" translatable="yes">15 00 000 sat</property>
                   </object>
@@ -108,7 +105,6 @@
                   <object class="GtkSeparator">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
-                    <property name="margin-left">6</property>
                     <property name="margin-right">6</property>
                     <property name="margin-start">6</property>
                     <property name="margin-end">6</property>
@@ -149,7 +145,6 @@
                   <object class="GtkLabel">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
-                    <property name="margin-left">3</property>
                     <property name="margin-right">3</property>
                     <property name="margin-start">3</property>
                     <property name="margin-end">3</property>
@@ -167,7 +162,6 @@
                   <object class="GtkSeparator">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
-                    <property name="margin-left">6</property>
                     <property name="margin-right">6</property>
                     <property name="margin-start">6</property>
                     <property name="margin-end">6</property>
@@ -218,7 +212,6 @@
                   <object class="GtkSeparator">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
-                    <property name="margin-left">6</property>
                     <property name="margin-right">6</property>
                     <property name="margin-start">6</property>
                     <property name="margin-end">6</property>
@@ -662,7 +655,6 @@ volumes</property>
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="halign">start</property>
-                            <property name="margin-left">6</property>
                             <property name="margin-right">6</property>
                             <property name="margin-start">6</property>
                             <property name="margin-end">6</property>
@@ -686,7 +678,6 @@ volumes</property>
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="halign">start</property>
-                            <property name="margin-left">24</property>
                             <property name="margin-right">6</property>
                             <property name="margin-start">24</property>
                             <property name="margin-end">6</property>
@@ -710,7 +701,6 @@ volumes</property>
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="halign">end</property>
-                            <property name="margin-left">6</property>
                             <property name="margin-right">6</property>
                             <property name="margin-start">6</property>
                             <property name="margin-end">6</property>
@@ -732,7 +722,6 @@ volumes</property>
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="halign">end</property>
-                            <property name="margin-left">6</property>
                             <property name="margin-right">6</property>
                             <property name="margin-start">6</property>
                             <property name="margin-end">6</property>
@@ -765,7 +754,6 @@ volumes</property>
               <object class="GtkGrid">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
-                <property name="margin-left">13</property>
                 <property name="margin-right">13</property>
                 <property name="margin-start">13</property>
                 <property name="margin-end">13</property>
@@ -981,7 +969,6 @@ volumes</property>
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                         <property name="halign">end</property>
-                        <property name="margin-left">13</property>
                         <property name="margin-start">13</property>
                         <property name="label" translatable="yes">Confirmations</property>
                         <property name="justify">right</property>
