@@ -2,8 +2,8 @@ use bitcoin::secp256k1::PublicKey;
 use bitcoin::util::bip32::{ChainCode, ExtendedPubKey, Fingerprint};
 use bitcoin::Network;
 use gtk::prelude::*;
-use gtk::{Button, Dialog, DialogFlags, ResponseType, ToolButton};
-use relm::{ContainerWidget, Relm, Update, Widget};
+use gtk::{Button, Dialog, ListStore, ToolButton, TreeView};
+use relm::{Relm, Update, Widget};
 use std::collections::{BTreeMap, BTreeSet};
 use std::ops::{Deref, DerefMut};
 use std::sync::{Arc, Mutex};
@@ -153,11 +153,24 @@ impl HardwareList {
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct Signer {
     pub fingerprint: Fingerprint,
-    pub device: Option<HardwareDevice>,
+    pub device: Option<String>,
     pub name: String,
     pub xpub: ExtendedPubKey,
     pub account: HardenedIndex,
     pub ownership: Ownership,
+}
+
+impl Signer {
+    pub fn with(fingerprint: Fingerprint, device: HardwareDevice) -> Signer {
+        Signer {
+            fingerprint,
+            device: Some(device.device_type),
+            name: device.model.clone(),
+            xpub: device.default_xpub,
+            account: device.default_account,
+            ownership: Ownership::Mine,
+        }
+    }
 }
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
@@ -194,6 +207,8 @@ pub(crate) enum Msg {
 #[derive(Clone, Gladis)]
 pub(crate) struct Widgets {
     dialog: Dialog,
+    signers_tree: TreeView,
+    signers_store: ListStore,
 
     refresh_dlg: Dialog,
 
@@ -231,7 +246,7 @@ impl Update for Win {
             Msg::RefreshHw => {
                 self.widgets.refresh_dlg.show();
 
-                let devices = match HardwareList::enumerate(
+                self.model.devices = match HardwareList::enumerate(
                     &self.model.scheme,
                     self.model.network,
                     HardenedIndex::zero(),
@@ -251,7 +266,34 @@ impl Update for Win {
                     Ok((devices, _)) => devices,
                 };
 
-                self.model.devices = devices;
+                let signers = &mut self.model.signers;
+                let known_xpubs = signers
+                    .iter()
+                    .map(|signer| signer.xpub)
+                    .collect::<BTreeSet<_>>();
+                self.model
+                    .devices
+                    .0
+                    .iter()
+                    .filter(|(_, device)| !known_xpubs.contains(&device.default_xpub))
+                    .for_each(|(fingerprint, device)| {
+                        signers.insert(Signer::with(*fingerprint, device.clone()));
+                    });
+
+                let store = &mut self.widgets.signers_store;
+                store.clear();
+                for signer in &self.model.signers {
+                    store.insert_with_values(
+                        None,
+                        &[
+                            (0, &signer.name),
+                            (1, &signer.fingerprint.to_string()),
+                            (2, &signer.account.to_string()),
+                            (3, &signer.xpub.to_string()),
+                            (4, &signer.device.clone().unwrap_or_default()),
+                        ],
+                    );
+                }
 
                 self.widgets.refresh_dlg.hide();
             }
