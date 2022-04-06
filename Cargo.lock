@@ -156,7 +156,7 @@ checksum = "006cc91e1a1d99819bc5b8214be3555c1f0611b169f527a1fdc54ed1f2b745b0"
 [[package]]
 name = "bitcoin_hd"
 version = "0.7.0-alpha.1"
-source = "git+https://github.com/LNP-BP/descriptor-wallet#20ce4ae8463efada75874bbeab6e02ba7172aecf"
+source = "git+https://github.com/LNP-BP/descriptor-wallet#1ccddabfd07024cc1acfb41441a17b52446839f7"
 dependencies = [
  "amplify",
  "bitcoin 0.28.0-rc.2",
@@ -168,7 +168,7 @@ dependencies = [
 [[package]]
 name = "bitcoin_onchain"
 version = "0.7.0-alpha.1"
-source = "git+https://github.com/LNP-BP/descriptor-wallet#20ce4ae8463efada75874bbeab6e02ba7172aecf"
+source = "git+https://github.com/LNP-BP/descriptor-wallet#1ccddabfd07024cc1acfb41441a17b52446839f7"
 dependencies = [
  "amplify",
  "bitcoin 0.28.0-rc.2",
@@ -182,7 +182,7 @@ dependencies = [
 [[package]]
 name = "bitcoin_scripts"
 version = "0.7.0-beta.6"
-source = "git+https://github.com/LNP-BP/descriptor-wallet#20ce4ae8463efada75874bbeab6e02ba7172aecf"
+source = "git+https://github.com/LNP-BP/descriptor-wallet#1ccddabfd07024cc1acfb41441a17b52446839f7"
 dependencies = [
  "amplify",
  "bitcoin 0.28.0-rc.2",
@@ -286,7 +286,7 @@ dependencies = [
 [[package]]
 name = "descriptor-wallet"
 version = "0.7.0-beta.2"
-source = "git+https://github.com/LNP-BP/descriptor-wallet#20ce4ae8463efada75874bbeab6e02ba7172aecf"
+source = "git+https://github.com/LNP-BP/descriptor-wallet#1ccddabfd07024cc1acfb41441a17b52446839f7"
 dependencies = [
  "amplify",
  "bitcoin 0.28.0-rc.2",
@@ -305,7 +305,7 @@ dependencies = [
 [[package]]
 name = "descriptors"
 version = "0.7.0-beta.1"
-source = "git+https://github.com/LNP-BP/descriptor-wallet#20ce4ae8463efada75874bbeab6e02ba7172aecf"
+source = "git+https://github.com/LNP-BP/descriptor-wallet#1ccddabfd07024cc1acfb41441a17b52446839f7"
 dependencies = [
  "amplify",
  "bitcoin 0.28.0-rc.2",
@@ -696,8 +696,8 @@ dependencies = [
 
 [[package]]
 name = "miniscript"
-version = "7.0.0-rc.2"
-source = "git+https://github.com/LNP-BP/rust-miniscript?branch=canary#909f0a51c5881aafd731386a46d4756b30ee2c79"
+version = "7.0.0"
+source = "git+https://github.com/LNP-BP/rust-miniscript?branch=canary#f525f956b7932d6fb013ccff4b1677971c8089ed"
 dependencies = [
  "bitcoin 0.28.0-rc.2",
 ]
@@ -846,7 +846,7 @@ dependencies = [
 [[package]]
 name = "psbt"
 version = "0.7.0-beta.2"
-source = "git+https://github.com/LNP-BP/descriptor-wallet#20ce4ae8463efada75874bbeab6e02ba7172aecf"
+source = "git+https://github.com/LNP-BP/descriptor-wallet#1ccddabfd07024cc1acfb41441a17b52446839f7"
 dependencies = [
  "amplify",
  "bitcoin 0.28.0-rc.2",
@@ -1151,7 +1151,7 @@ checksum = "eb703cfe953bccee95685111adeedb76fabe4e97549a58d16f03ea7b9367bb32"
 [[package]]
 name = "slip132"
 version = "0.7.0-alpha.1"
-source = "git+https://github.com/LNP-BP/descriptor-wallet#20ce4ae8463efada75874bbeab6e02ba7172aecf"
+source = "git+https://github.com/LNP-BP/descriptor-wallet#1ccddabfd07024cc1acfb41441a17b52446839f7"
 dependencies = [
  "amplify",
  "bitcoin 0.28.0-rc.2",

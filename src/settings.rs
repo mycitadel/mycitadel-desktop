@@ -16,7 +16,7 @@ use hwi::HWIDevice;
 use miniscript::descriptor::{DescriptorType, Sh, TapTree, Tr, Wsh};
 use miniscript::policy::concrete::Policy;
 use miniscript::{Descriptor, Legacy, Miniscript, Segwitv0, Tap};
-use wallet::bitcoin_hd::{TerminalStep, XpubRef};
+use wallet::hd::{TerminalStep, XpubRef};
 use wallet::hd::schemata::DerivationBlockchain;
 use wallet::hd::{AccountStep, DerivationScheme, HardenedIndex, SegmentIndexes, TrackingAccount};
 use wallet::scripts::taproot::TreeNode;
@@ -234,9 +234,16 @@ impl Model {
                 self.signers
                     .insert(Signer::with(*fingerprint, device.clone()));
             });
+
+        self.update_descriptor();
     }
 
     pub fn update_descriptor(&mut self) {
+        if self.signers.is_empty() {
+            self.descriptor = None;
+            return;
+        }
+
         let k = self.signers.len();
         let accounts = self
             .signers
@@ -267,7 +274,7 @@ impl Model {
             .collect::<Vec<_>>();
         let sig_conditions = (1..=k)
             .into_iter()
-            .map(|n| (n, Policy::Threshold(k, key_policies.clone())))
+            .map(|n| (n, Policy::Threshold(k - n + 1, key_policies.clone())))
             .map(|(n, node)| {
                 if n > 1 {
                     (
