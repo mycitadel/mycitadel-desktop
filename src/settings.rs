@@ -200,6 +200,7 @@ pub(crate) struct Model {
     pub network: PublicNetwork,
     pub descriptor: Option<Descriptor<TrackingAccount>>,
     pub class: DescriptorClass,
+    pub format_lnpbp: bool
 }
 
 impl Default for Model {
@@ -214,6 +215,7 @@ impl Default for Model {
             network: PublicNetwork::Mainnet,
             descriptor: None,
             class: DescriptorClass::SegwitV0,
+            format_lnpbp: false,
         }
     }
 }
@@ -423,6 +425,7 @@ pub(crate) enum Msg {
     HwRefreshed(Result<(HardwareList, Vec<Error>), Error>),
     SignerSelect,
     ToggleDescr(DescriptorClass),
+    ExportFormat(bool),
     Save,
     Cancel,
 }
@@ -458,6 +461,8 @@ pub(crate) struct Widgets {
     descr_segwit_tgl: ToggleButton,
     descr_nested_tgl: ToggleButton,
     descr_taproot_tgl: ToggleButton,
+    export_core_tgl: ToggleButton,
+    export_lnpbp_tgl: ToggleButton,
 }
 
 impl Widgets {
@@ -501,10 +506,11 @@ impl Widgets {
         }
     }
 
-    pub fn update_descriptor(&mut self, descriptor: Option<&Descriptor<TrackingAccount>>) {
-        let text = match descriptor {
-            Some(descriptor) => format!("{:#}", descriptor),
-            None => s!(""),
+    pub fn update_descriptor(&mut self, descriptor: Option<&Descriptor<TrackingAccount>>, format: bool) {
+        let text = match (descriptor, format) {
+            (Some(descriptor), false) => format!("{:#}", descriptor),
+            (Some(descriptor), true) => format!("{}", descriptor),
+            (None, _) => s!(""),
         };
         self.descriptor_buf.set_text(&text);
     }
@@ -582,7 +588,7 @@ impl Update for Win {
                 self.model.update_devices(devices);
                 self.widgets.update_signers(&self.model.signers);
                 self.widgets
-                    .update_descriptor(self.model.descriptor.as_ref());
+                    .update_descriptor(self.model.descriptor.as_ref(), self.model.format_lnpbp);
                 self.widgets.refresh_dlg.hide();
             }
             Msg::SignerSelect => {
@@ -609,8 +615,12 @@ impl Update for Win {
                     && self.model.toggle_descr_class(class)
                 {
                     self.widgets.update_descr_class(self.model.class);
-                    self.widgets.update_descriptor(self.model.descriptor.as_ref());
+                    self.widgets.update_descriptor(self.model.descriptor.as_ref(), self.model.format_lnpbp);
                 }
+            }
+            Msg::ExportFormat(lnpbp) => {
+                self.model.format_lnpbp = lnpbp;
+                self.widgets.update_descriptor(self.model.descriptor.as_ref(), self.model.format_lnpbp);
             }
             Msg::Save => {
                 self.origin_model.as_ref().map(|model| {
@@ -646,6 +656,19 @@ impl Widget for Win {
             widgets.signers_tree,
             connect_cursor_changed(_),
             Msg::SignerSelect
+        );
+
+        connect!(
+            relm,
+            widgets.export_core_tgl,
+            connect_toggled(_),
+            Msg::ExportFormat(false)
+        );
+        connect!(
+            relm,
+            widgets.export_lnpbp_tgl,
+            connect_toggled(_),
+            Msg::ExportFormat(true)
         );
 
         connect!(
