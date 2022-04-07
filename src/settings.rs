@@ -478,10 +478,10 @@ impl Widgets {
                 .set_text(&signer.xpub.fingerprint().to_string());
             self.derivation_fld.set_text(&derivation.to_string());
         }
-        if let Some(device) = details.and_then(|(s, _)| s.device.as_ref()) {
+        if let Some((device, model)) = details.and_then(|(s, _)| s.device.as_ref().map(|d| (d, &s.name))) {
             self.device_img.set_visible(true);
             self.device_status_img.set_visible(true);
-            self.device_lbl.set_text(device);
+            self.device_lbl.set_text(&format!("{} ({})", device, model));
         } else {
             self.device_img.set_visible(false);
             self.device_status_img.set_visible(false);
