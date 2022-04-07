@@ -313,7 +313,6 @@ impl Model {
             }
         });
         let policy = policy.or(remnant).expect("zero signing accounts must be filtered");
-        println!("{}", policy);
         let ms_witscript = policy
             .compile::<Segwitv0>()
             .expect("policy composition  is broken");
@@ -344,10 +343,9 @@ impl Model {
                 } else {
                     [0x04u8, 0x88, 0xB2, 0x1E]
                 });
-                buf.extend([0u8; 4]); // ver
                 buf.extend([0u8; 5]); // depth + fingerprint
                 buf.extend([0u8; 4]); // child no
-                buf.extend(&unspendable_key.serialize());
+                buf.extend(&unspendable_key.serialize()[1..]);
                 buf.extend(&unspendable_key.serialize());
                 let unspendable_xkey =
                     ExtendedPubKey::decode(&buf).expect("broken unspendable key construction");
@@ -412,6 +410,7 @@ impl Model {
             false
         } else {
             self.class = class;
+            self.update_descriptor();
             true
         }
     }
@@ -504,7 +503,7 @@ impl Widgets {
 
     pub fn update_descriptor(&mut self, descriptor: Option<&Descriptor<TrackingAccount>>) {
         let text = match descriptor {
-            Some(descriptor) => format!("{}", descriptor),
+            Some(descriptor) => format!("{:#}", descriptor),
             None => s!(""),
         };
         self.descriptor_buf.set_text(&text);
@@ -610,6 +609,7 @@ impl Update for Win {
                     && self.model.toggle_descr_class(class)
                 {
                     self.widgets.update_descr_class(self.model.class);
+                    self.widgets.update_descriptor(self.model.descriptor.as_ref());
                 }
             }
             Msg::Save => {
