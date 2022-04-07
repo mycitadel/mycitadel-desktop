@@ -297,7 +297,23 @@ impl Model {
             })
             .collect::<Vec<_>>();
 
-        let policy = Policy::Or(sig_conditions.clone());
+        let (policy, remnant) = sig_conditions.iter().rfold((None, None) as (Option<Policy<TrackingAccount>>, Option<Policy<TrackingAccount>>), |(acc, prev), (index, pol)| {
+            match (acc, prev) {
+                (None, None) if index % 2 == 1 => (None, Some(pol.clone())),
+                (None, None) => (Some(pol.clone()), None),
+                (None, Some(prev)) => (
+                    Some(Policy::Or(vec![(*index, pol.clone()), (*index + 1, prev)])),
+                    None
+                ),
+                (Some(acc), None) => (
+                    Some(Policy::Or(vec![(*index, pol.clone()), (*index + 1, acc)])),
+                    None
+                ),
+                _ => unreachable!(),
+            }
+        });
+        let policy = policy.or(remnant).expect("zero signing accounts must be filtered");
+        println!("{}", policy);
         let ms_witscript = policy
             .compile::<Segwitv0>()
             .expect("policy composition  is broken");
