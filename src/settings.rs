@@ -4,11 +4,13 @@ use bitcoin::util::bip32::{ChainCode, ChildNumber, ExtendedPubKey, Fingerprint};
 use bitcoin::{secp256k1, Network};
 use gtk::prelude::*;
 use gtk::{
-    Button, Dialog, Entry, Image, Label, ListStore, TextBuffer, ToggleButton, ToolButton, TreeView,
+    glib, Adjustment, Button, Dialog, Entry, Image, Label, ListStore, TextBuffer, ToggleButton,
+    ToolButton, TreeSelection, TreeView,
 };
 use relm::{Channel, Relm, Update, Widget};
 use std::collections::{BTreeMap, BTreeSet};
 use std::ops::{Deref, DerefMut};
+use std::str::FromStr;
 use std::sync::{Arc, Mutex};
 
 use gladis::Gladis;
@@ -217,6 +219,29 @@ impl Default for Model {
 }
 
 impl Model {
+    pub fn signer_by(&self, xpub: ExtendedPubKey) -> Option<&Signer> {
+        self.signers.iter().find(|signer| signer.xpub == xpub)
+    }
+
+    pub fn derivation_for(&self, signer: &Signer) -> TrackingAccount {
+        let path: Vec<ChildNumber> = self
+            .scheme
+            .to_account_derivation(signer.account.into(), self.network.into())
+            .into();
+        TrackingAccount {
+            seed_based: true,
+            master: XpubRef::Fingerprint(signer.fingerprint),
+            account_path: path
+                .into_iter()
+                .map(AccountStep::try_from)
+                .collect::<Result<_, _>>()
+                .expect("inconsistency in constructed derivation path"),
+            account_xpub: signer.xpub,
+            revocation_seal: None,
+            terminal_path: vec![TerminalStep::Wildcard, TerminalStep::Wildcard],
+        }
+    }
+
     pub fn update_devices(&mut self, devices: HardwareList) {
         self.devices = devices;
         self.update_signers()
@@ -250,24 +275,7 @@ impl Model {
         let accounts = self
             .signers
             .iter()
-            .map(|signer| {
-                let path: Vec<ChildNumber> = self
-                    .scheme
-                    .to_account_derivation(signer.account.into(), self.network.into())
-                    .into();
-                TrackingAccount {
-                    seed_based: true,
-                    master: XpubRef::Fingerprint(signer.fingerprint),
-                    account_path: path
-                        .into_iter()
-                        .map(AccountStep::try_from)
-                        .collect::<Result<_, _>>()
-                        .expect("inconsistency in constructed derivation path"),
-                    account_xpub: signer.xpub,
-                    revocation_seal: None,
-                    terminal_path: vec![TerminalStep::Wildcard, TerminalStep::Wildcard],
-                }
-            })
+            .map(|signer| self.derivation_for(signer))
             .collect::<Vec<_>>();
 
         let key_policies = accounts
@@ -398,6 +406,7 @@ pub(crate) enum Msg {
     Init(Arc<Mutex<Model>>),
     RefreshHw,
     HwRefreshed(Result<(HardwareList, Vec<Error>), Error>),
+    SignerSelect,
     ToggleDescr(DescriptorClass),
     Save,
     Cancel,
@@ -420,10 +429,11 @@ pub(crate) struct Widgets {
     name_fld: Entry,
     fingerprint_fld: Entry,
     xpub_fld: Entry,
-    account_stp: Entry,
+    account_adj: Adjustment,
     accfp_fld: Entry,
     derivation_fld: Entry,
     device_lbl: Label,
+    device_img: Image,
     device_status_img: Image,
     seed_mine_tgl: ToggleButton,
     seed_extern_tgl: ToggleButton,
@@ -436,6 +446,29 @@ pub(crate) struct Widgets {
 }
 
 impl Widgets {
+    pub fn update_signer_details(&self, details: Option<(&Signer, TrackingAccount)>) {
+        if let Some((signer, ref derivation)) = details {
+            self.name_fld.set_text(&signer.name);
+            self.fingerprint_fld
+                .set_text(&signer.fingerprint.to_string());
+            self.xpub_fld.set_text(&signer.xpub.to_string());
+            self.account_adj
+                .set_value(signer.account.first_index() as f64);
+            self.accfp_fld
+                .set_text(&signer.xpub.fingerprint().to_string());
+            self.derivation_fld.set_text(&derivation.to_string());
+        }
+        if let Some(device) = details.and_then(|(s, _)| s.device.as_ref()) {
+            self.device_img.set_visible(true);
+            self.device_status_img.set_visible(true);
+            self.device_lbl.set_text(device);
+        } else {
+            self.device_img.set_visible(false);
+            self.device_status_img.set_visible(false);
+            self.device_lbl.set_text("Unknown");
+        }
+    }
+
     pub fn update_signers(&mut self, signers: &BTreeSet<Signer>) {
         let store = &mut self.signers_store;
         store.clear();
@@ -537,6 +570,25 @@ impl Update for Win {
                     .update_descriptor(self.model.descriptor.as_ref());
                 self.widgets.refresh_dlg.hide();
             }
+            Msg::SignerSelect => {
+                let signer = self
+                    .widgets
+                    .signers_tree
+                    .selection()
+                    .selected()
+                    .map(|(list_model, iter)| list_model.value(&iter, 3))
+                    .as_ref()
+                    .map(glib::Value::get::<String>)
+                    .transpose()
+                    .expect("unable to get xpub value from tree column")
+                    .as_deref()
+                    .map(ExtendedPubKey::from_str)
+                    .transpose()
+                    .expect("invalid signer xpub")
+                    .and_then(|xpub| self.model.signer_by(xpub));
+                self.widgets
+                    .update_signer_details(signer.map(|s| (s, self.model.derivation_for(s))));
+            }
             Msg::ToggleDescr(class) => {
                 if self.widgets.should_update_descr_class(class)
                     && self.model.toggle_descr_class(class)
@@ -572,6 +624,14 @@ impl Widget for Win {
 
         connect!(relm, widgets.save_btn, connect_clicked(_), Msg::Save);
         connect!(relm, widgets.cancel_btn, connect_clicked(_), Msg::Cancel);
+
+        connect!(
+            relm,
+            widgets.signers_tree,
+            connect_cursor_changed(_),
+            Msg::SignerSelect
+        );
+
         connect!(
             relm,
             widgets.descr_legacy_tgl,

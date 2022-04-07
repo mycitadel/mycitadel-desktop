@@ -19,6 +19,12 @@
       </object>
     </child>
   </object>
+  <object class="GtkAdjustment" id="date2_adj">
+    <property name="lower">1</property>
+    <property name="upper">100</property>
+    <property name="step-increment">1</property>
+    <property name="page-increment">10</property>
+  </object>
   <object class="GtkTextBuffer" id="descriptor_buf"/>
   <object class="GtkMenu" id="lock_menu">
     <property name="visible">True</property>
@@ -148,6 +154,13 @@ for the check to finish</property>
       <!-- column-name device -->
       <column type="gchararray"/>
     </columns>
+  </object>
+  <object class="GtkAdjustment" id="sigs2_adj">
+    <property name="lower">0.01</property>
+    <property name="upper">100</property>
+    <property name="value">0.01</property>
+    <property name="step-increment">1</property>
+    <property name="page-increment">10</property>
   </object>
   <object class="GtkMenu" id="singatures_menu">
     <property name="visible">True</property>
@@ -470,6 +483,7 @@ for the check to finish</property>
                     <child>
                       <object class="GtkEntry" id="xpub_fld">
                         <property name="visible">True</property>
+                        <property name="sensitive">False</property>
                         <property name="can-focus">True</property>
                         <property name="hexpand">True</property>
                         <property name="secondary-icon-name">edit-copy</property>
@@ -511,6 +525,7 @@ for the check to finish</property>
                     <child>
                       <object class="GtkEntry" id="fingerprint_fld">
                         <property name="visible">True</property>
+                        <property name="sensitive">False</property>
                         <property name="can-focus">True</property>
                         <property name="secondary-icon-name">edit-copy</property>
                         <property name="secondary-icon-tooltip-text" translatable="yes">Copy to clipboard</property>
@@ -524,6 +539,7 @@ for the check to finish</property>
                     <child>
                       <object class="GtkEntry" id="name_fld">
                         <property name="visible">True</property>
+                        <property name="sensitive">False</property>
                         <property name="can-focus">True</property>
                         <property name="hexpand">True</property>
                         <property name="secondary-icon-name">edit-copy</property>
@@ -564,6 +580,7 @@ for the check to finish</property>
                     <child>
                       <object class="GtkSpinButton" id="account_stp">
                         <property name="visible">True</property>
+                        <property name="sensitive">False</property>
                         <property name="can-focus">True</property>
                         <property name="width-chars">3</property>
                         <property name="input-purpose">digits</property>
@@ -591,6 +608,7 @@ for the check to finish</property>
                     <child>
                       <object class="GtkEntry" id="accfp_fld">
                         <property name="visible">True</property>
+                        <property name="sensitive">False</property>
                         <property name="can-focus">True</property>
                         <property name="editable">False</property>
                         <property name="secondary-icon-name">edit-copy</property>
@@ -620,6 +638,7 @@ derivation:</property>
                       <object class="GtkEntry" id="derivation_fld">
                         <property name="height-request">50</property>
                         <property name="visible">True</property>
+                        <property name="sensitive">False</property>
                         <property name="can-focus">True</property>
                         <property name="hexpand">True</property>
                         <property name="secondary-icon-name">edit-copy</property>
@@ -652,8 +671,7 @@ derivation:</property>
                         <property name="halign">start</property>
                         <property name="spacing">6</property>
                         <child>
-                          <object class="GtkImage">
-                            <property name="visible">True</property>
+                          <object class="GtkImage" id="device_img">
                             <property name="can-focus">False</property>
                             <property name="icon-name">drive-harddisk-usb-symbolic</property>
                           </object>
@@ -668,6 +686,7 @@ derivation:</property>
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="halign">start</property>
+                            <property name="label" translatable="yes">None</property>
                           </object>
                           <packing>
                             <property name="expand">False</property>
@@ -677,7 +696,6 @@ derivation:</property>
                         </child>
                         <child>
                           <object class="GtkImage" id="device_status_img">
-                            <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="icon-name">emblem-default-symbolic</property>
                           </object>
@@ -704,6 +722,7 @@ derivation:</property>
                           <object class="GtkRadioButton" id="seed_mine_tgl">
                             <property name="label" translatable="yes">Mine</property>
                             <property name="visible">True</property>
+                            <property name="sensitive">False</property>
                             <property name="can-focus">True</property>
                             <property name="receives-default">False</property>
                             <property name="active">True</property>
@@ -719,6 +738,7 @@ derivation:</property>
                           <object class="GtkRadioButton" id="seed_extern_tgl">
                             <property name="label" translatable="yes">External party</property>
                             <property name="visible">True</property>
+                            <property name="sensitive">False</property>
                             <property name="can-focus">True</property>
                             <property name="receives-default">False</property>
                             <property name="draw-indicator">False</property>
@@ -836,7 +856,7 @@ derivation:</property>
                                     <property name="popup">singatures_menu</property>
                                     <property name="use-popover">False</property>
                                     <child>
-                                      <object class="GtkLabel">
+                                      <object class="GtkLabel" id="sig1_lbl">
                                         <property name="visible">True</property>
                                         <property name="can-focus">False</property>
                                         <property name="label" translatable="yes">All signatures</property>
@@ -858,7 +878,7 @@ derivation:</property>
                                     <property name="popup">lock_menu</property>
                                     <property name="use-popover">False</property>
                                     <child>
-                                      <object class="GtkLabel">
+                                      <object class="GtkLabel" id="time1_lbl">
                                         <property name="visible">True</property>
                                         <property name="can-focus">False</property>
                                         <property name="label" translatable="yes">at any time</property>
@@ -922,7 +942,7 @@ derivation:</property>
                                     <property name="popup">singatures_menu</property>
                                     <property name="use-popover">False</property>
                                     <child>
-                                      <object class="GtkLabel">
+                                      <object class="GtkLabel" id="sig2_lbl">
                                         <property name="visible">True</property>
                                         <property name="can-focus">False</property>
                                         <property name="label" translatable="yes">At least</property>
@@ -939,6 +959,7 @@ derivation:</property>
                                   <object class="GtkSpinButton">
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
+                                    <property name="adjustment">sigs2_adj</property>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
@@ -967,7 +988,7 @@ derivation:</property>
                                     <property name="popup">lock_menu</property>
                                     <property name="use-popover">False</property>
                                     <child>
-                                      <object class="GtkLabel">
+                                      <object class="GtkLabel" id="time2_lbl">
                                         <property name="visible">True</property>
                                         <property name="can-focus">False</property>
                                         <property name="label" translatable="yes">after</property>
@@ -984,6 +1005,7 @@ derivation:</property>
                                   <object class="GtkSpinButton">
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
+                                    <property name="adjustment">date2_adj</property>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
@@ -1000,7 +1022,7 @@ derivation:</property>
                                     <property name="popup">time_menu</property>
                                     <property name="use-popover">False</property>
                                     <child>
-                                      <object class="GtkLabel">
+                                      <object class="GtkLabel" id="date2_lbl">
                                         <property name="visible">True</property>
                                         <property name="can-focus">False</property>
                                         <property name="label" translatable="yes">year</property>
@@ -1064,7 +1086,7 @@ derivation:</property>
                                     <property name="popup">singatures_menu</property>
                                     <property name="use-popover">False</property>
                                     <child>
-                                      <object class="GtkLabel">
+                                      <object class="GtkLabel" id="sig3_lbl">
                                         <property name="visible">True</property>
                                         <property name="can-focus">False</property>
                                         <property name="label" translatable="yes">Any signature</property>
@@ -1086,7 +1108,7 @@ derivation:</property>
                                     <property name="popup">lock_menu</property>
                                     <property name="use-popover">False</property>
                                     <child>
-                                      <object class="GtkLabel">
+                                      <object class="GtkLabel" id="time3_lbl">
                                         <property name="visible">True</property>
                                         <property name="can-focus">False</property>
                                         <property name="label" translatable="yes">starting from</property>
@@ -1107,10 +1129,10 @@ derivation:</property>
                                     <property name="receives-default">True</property>
                                     <property name="popover">calendar_popover</property>
                                     <child>
-                                      <object class="GtkLabel">
+                                      <object class="GtkLabel" id="date3_lbl">
                                         <property name="visible">True</property>
                                         <property name="can-focus">False</property>
-                                        <property name="label" translatable="yes">3 Apr 2025</property>
+                                        <property name="label" translatable="yes">7 Apr 2025</property>
                                       </object>
                                     </child>
                                   </object>
@@ -1686,7 +1708,7 @@ However, they are not supported by other wallets. Wallets of this type can be us
                     <property name="row-spacing">6</property>
                     <property name="column-spacing">6</property>
                     <child>
-                      <object class="GtkEntry">
+                      <object class="GtkEntry" id="electrum_fld">
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="hexpand">True</property>
@@ -1709,7 +1731,7 @@ However, they are not supported by other wallets. Wallets of this type can be us
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkImage">
+                      <object class="GtkImage" id="connection_img">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                         <property name="icon-name">emblem-default-symbolic</property>
@@ -1737,7 +1759,7 @@ However, they are not supported by other wallets. Wallets of this type can be us
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkButton">
+                      <object class="GtkButton" id="test_btn">
                         <property name="label" translatable="yes">Test connection</property>
                         <property name="name">0</property>
                         <property name="visible">True</property>
