@@ -713,6 +713,7 @@ dependencies = [
  "gtk",
  "hwi",
  "miniscript",
+ "once_cell",
  "relm",
  "relm-derive",
 ]

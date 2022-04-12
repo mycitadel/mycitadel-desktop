@@ -200,7 +200,7 @@ pub(crate) struct Model {
     pub network: PublicNetwork,
     pub descriptor: Option<Descriptor<TrackingAccount>>,
     pub class: DescriptorClass,
-    pub format_lnpbp: bool
+    pub format_lnpbp: bool,
 }
 
 impl Default for Model {
@@ -299,22 +299,29 @@ impl Model {
             })
             .collect::<Vec<_>>();
 
-        let (policy, remnant) = sig_conditions.iter().rfold((None, None) as (Option<Policy<TrackingAccount>>, Option<Policy<TrackingAccount>>), |(acc, prev), (index, pol)| {
-            match (acc, prev) {
+        let (policy, remnant) = sig_conditions.iter().rfold(
+            (None, None)
+                as (
+                    Option<Policy<TrackingAccount>>,
+                    Option<Policy<TrackingAccount>>,
+                ),
+            |(acc, prev), (index, pol)| match (acc, prev) {
                 (None, None) if index % 2 == 1 => (None, Some(pol.clone())),
                 (None, None) => (Some(pol.clone()), None),
                 (None, Some(prev)) => (
                     Some(Policy::Or(vec![(*index, pol.clone()), (*index + 1, prev)])),
-                    None
+                    None,
                 ),
                 (Some(acc), None) => (
                     Some(Policy::Or(vec![(*index, pol.clone()), (*index + 1, acc)])),
-                    None
+                    None,
                 ),
                 _ => unreachable!(),
-            }
-        });
-        let policy = policy.or(remnant).expect("zero signing accounts must be filtered");
+            },
+        );
+        let policy = policy
+            .or(remnant)
+            .expect("zero signing accounts must be filtered");
         let ms_witscript = policy
             .compile::<Segwitv0>()
             .expect("policy composition  is broken");
@@ -438,7 +445,7 @@ pub(crate) struct Widgets {
     cancel_btn: Button,
 
     refresh_dlg: Dialog,
-    refresh_btn: ToolButton,
+    devices_btn: ToolButton,
     addsign_btn: ToolButton,
     removesign_btn: ToolButton,
     signers_tree: TreeView,
@@ -478,7 +485,9 @@ impl Widgets {
                 .set_text(&signer.xpub.fingerprint().to_string());
             self.derivation_fld.set_text(&derivation.to_string());
         }
-        if let Some((device, model)) = details.and_then(|(s, _)| s.device.as_ref().map(|d| (d, &s.name))) {
+        if let Some((device, model)) =
+            details.and_then(|(s, _)| s.device.as_ref().map(|d| (d, &s.name)))
+        {
             self.device_img.set_visible(true);
             self.device_status_img.set_visible(true);
             self.device_lbl.set_text(&format!("{} ({})", device, model));
@@ -506,7 +515,11 @@ impl Widgets {
         }
     }
 
-    pub fn update_descriptor(&mut self, descriptor: Option<&Descriptor<TrackingAccount>>, format: bool) {
+    pub fn update_descriptor(
+        &mut self,
+        descriptor: Option<&Descriptor<TrackingAccount>>,
+        format: bool,
+    ) {
         let text = match (descriptor, format) {
             (Some(descriptor), false) => format!("{:#}", descriptor),
             (Some(descriptor), true) => format!("{}", descriptor),
@@ -615,12 +628,14 @@ impl Update for Win {
                     && self.model.toggle_descr_class(class)
                 {
                     self.widgets.update_descr_class(self.model.class);
-                    self.widgets.update_descriptor(self.model.descriptor.as_ref(), self.model.format_lnpbp);
+                    self.widgets
+                        .update_descriptor(self.model.descriptor.as_ref(), self.model.format_lnpbp);
                 }
             }
             Msg::ExportFormat(lnpbp) => {
                 self.model.format_lnpbp = lnpbp;
-                self.widgets.update_descriptor(self.model.descriptor.as_ref(), self.model.format_lnpbp);
+                self.widgets
+                    .update_descriptor(self.model.descriptor.as_ref(), self.model.format_lnpbp);
             }
             Msg::Save => {
                 self.origin_model.as_ref().map(|model| {
