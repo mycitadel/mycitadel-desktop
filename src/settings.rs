@@ -5,7 +5,7 @@ use bitcoin::{secp256k1, Network};
 use gtk::prelude::*;
 use gtk::{
     glib, Adjustment, Button, Dialog, Entry, Image, Label, ListStore, TextBuffer, ToggleButton,
-    ToolButton, TreeSelection, TreeView,
+    ToolButton, TreeView,
 };
 use relm::{Channel, Relm, Update, Widget};
 use std::collections::{BTreeMap, BTreeSet};
@@ -14,16 +14,14 @@ use std::str::FromStr;
 use std::sync::{Arc, Mutex};
 
 use gladis::Gladis;
-use gtk::gdk::EventMask;
 use hwi::error::Error as HwiError;
 use hwi::HWIDevice;
-use miniscript::descriptor::{DescriptorType, Sh, TapTree, Tr, Wsh};
+use miniscript::descriptor::{Sh, TapTree, Tr, Wsh};
 use miniscript::policy::concrete::Policy;
 use miniscript::{Descriptor, Legacy, Miniscript, Segwitv0, Tap};
 use wallet::hd::schemata::DerivationBlockchain;
 use wallet::hd::{AccountStep, DerivationScheme, HardenedIndex, SegmentIndexes, TrackingAccount};
 use wallet::hd::{TerminalStep, XpubRef};
-use wallet::scripts::taproot::TreeNode;
 
 // TODO: Move to descriptor wallet or BPro
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Display)]
@@ -593,7 +591,7 @@ impl Update for Win {
                         // TODO: Display log and do not hide the window
                         devices
                     }
-                    Ok((devices, log)) if devices.is_empty() => {
+                    Ok((devices, _log)) if devices.is_empty() => {
                         // TODO: Display message to user
                         devices
                     }
@@ -719,13 +717,17 @@ impl Widget for Win {
         });
         let scheme = model.scheme.clone();
         widgets.devices_btn.connect_clicked(move |_| {
-            sender.send(Msg::RefreshHw);
+            sender
+                .send(Msg::RefreshHw)
+                .expect("broken channel in settings dialog");
             // TODO: This fixes the schema used in the wallet once and forever
             let scheme = scheme.clone();
             let sender = sender.clone();
             std::thread::spawn(move || {
                 let result = HardwareList::enumerate(&scheme, model.network, HardenedIndex::zero());
-                sender.send(Msg::HwRefreshed(result));
+                sender
+                    .send(Msg::HwRefreshed(result))
+                    .expect("broken channel in settings dialog");
             });
         });
 

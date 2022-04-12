@@ -6,10 +6,9 @@ use bitcoin::{secp256k1, Network};
 
 use gladis::Gladis;
 use glib::subclass::prelude::*;
-use gtk::gdk::Device;
 use gtk::prelude::*;
 use gtk::subclass::prelude::ListModelImpl;
-use gtk::{gio, glib, prelude::*, Button, Dialog};
+use gtk::{gio, glib, Button, Dialog};
 use relm::{Channel, Relm, Update, Widget};
 use wallet::hd::{DerivationScheme, HardenedIndex, SegmentIndexes};
 
@@ -282,13 +281,17 @@ impl Widget for DeviceDlg {
         });
         let scheme = model.scheme.clone();
         widgets.refresh_btn.connect_clicked(move |_| {
-            sender.send(Msg::Refresh);
+            sender
+                .send(Msg::Refresh)
+                .expect("broken channel in devices dialog");
             // TODO: This fixes the schema used in the wallet once and forever
             let scheme = scheme.clone();
             let sender = sender.clone();
             std::thread::spawn(move || {
                 let result = HardwareList::enumerate(&scheme, model.network, HardenedIndex::zero());
-                sender.send(Msg::Devices(result));
+                sender
+                    .send(Msg::Devices(result))
+                    .expect("broken channel in devices dialog");
             });
         });
 
