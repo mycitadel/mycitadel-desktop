@@ -6,13 +6,14 @@ use bitcoin::{secp256k1, Network};
 
 use gladis::Gladis;
 use glib::subclass::prelude::*;
+use gtk::gdk::Device;
 use gtk::prelude::*;
 use gtk::subclass::prelude::ListModelImpl;
 use gtk::{gio, glib, prelude::*, Button, Dialog};
 use relm::{Channel, Relm, Update, Widget};
-use wallet::hd::HardenedIndex;
+use wallet::hd::{DerivationScheme, HardenedIndex, SegmentIndexes};
 
-use crate::settings::{Error, HardwareList};
+use crate::settings::{Error, HardwareList, PublicNetwork};
 
 // The actual data structure that stores our values. This is not accessible
 // directly from the outside.
@@ -202,10 +203,17 @@ impl DeviceModel {
     }
 }
 
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+pub(crate) struct Model {
+    pub scheme: DerivationScheme,
+    pub network: PublicNetwork,
+    pub devices: DeviceModel,
+}
+
 #[derive(Msg, Debug)]
 pub(crate) enum Msg {
     Refresh,
-    RefreshComplete(Result<(HardwareList, Vec<Error>), Error>),
+    Devices(Result<(HardwareList, Vec<Error>), Error>),
     AccountChange(u32),
     Add,
     Close,
@@ -219,27 +227,31 @@ pub(crate) struct Widgets {
 }
 
 pub(crate) struct DeviceDlg {
-    model: DeviceModel,
+    model: Model,
     channel: Channel<Msg>,
     widgets: Widgets,
 }
 
 impl Update for DeviceDlg {
     // Specify the model used for this widget.
-    type Model = DeviceModel;
+    type Model = Model;
     // Specify the model parameter used to init the model.
-    type ModelParam = ();
+    type ModelParam = (DerivationScheme, PublicNetwork);
     // Specify the type of the messages sent to the update function.
     type Msg = Msg;
 
-    fn model(_relm: &Relm<Self>, _model: Self::ModelParam) -> Self::Model {
-        DeviceModel::new()
+    fn model(_relm: &Relm<Self>, model: Self::ModelParam) -> Self::Model {
+        Model {
+            scheme: model.0,
+            network: model.1,
+            devices: DeviceModel::new(),
+        }
     }
 
     fn update(&mut self, event: Msg) {
         match event {
             Msg::Refresh => {}
-            Msg::RefreshComplete(_) => {}
+            Msg::Devices(_) => {}
             Msg::AccountChange(_) => {}
             Msg::Add => {}
             Msg::Close => {
@@ -270,13 +282,13 @@ impl Widget for DeviceDlg {
         });
         let scheme = model.scheme.clone();
         widgets.refresh_btn.connect_clicked(move |_| {
-            sender.send(Msg::RefreshHw);
+            sender.send(Msg::Refresh);
             // TODO: This fixes the schema used in the wallet once and forever
             let scheme = scheme.clone();
             let sender = sender.clone();
             std::thread::spawn(move || {
                 let result = HardwareList::enumerate(&scheme, model.network, HardenedIndex::zero());
-                sender.send(Msg::HwRefreshed(result));
+                sender.send(Msg::Devices(result));
             });
         });
 
