@@ -1,14 +1,18 @@
+use std::cell::RefCell;
+
 use bitcoin::secp256k1::PublicKey;
 use bitcoin::util::bip32::{ChainCode, ChildNumber, ExtendedPubKey, Fingerprint};
 use bitcoin::{secp256k1, Network};
-use std::cell::RefCell;
 
-use crate::settings::{Error, HardwareList};
+use gladis::Gladis;
 use glib::subclass::prelude::*;
+use gtk::prelude::*;
 use gtk::subclass::prelude::ListModelImpl;
 use gtk::{gio, glib, prelude::*, Button, Dialog};
 use relm::{Channel, Relm, Update, Widget};
 use wallet::hd::HardenedIndex;
+
+use crate::settings::{Error, HardwareList};
 
 // The actual data structure that stores our values. This is not accessible
 // directly from the outside.

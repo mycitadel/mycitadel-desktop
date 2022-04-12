@@ -7,7 +7,6 @@ extern crate relm_derive;
 
 use relm::Widget;
 
-mod devices;
 mod settings;
 mod wallet;
 

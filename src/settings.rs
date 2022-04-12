@@ -427,6 +427,7 @@ impl Model {
 
 #[derive(Msg, Debug)]
 pub(crate) enum Msg {
+    Show,
     Init(Arc<Mutex<Model>>),
     RefreshHw,
     HwRefreshed(Result<(HardwareList, Vec<Error>), Error>),
@@ -575,6 +576,7 @@ impl Update for Win {
 
     fn update(&mut self, event: Msg) {
         match event {
+            Msg::Show => self.widgets.dialog.show(),
             Msg::Init(origin_model) => {
                 self.origin_model = Some(origin_model);
             }
@@ -716,7 +718,7 @@ impl Widget for Win {
             stream.emit(msg);
         });
         let scheme = model.scheme.clone();
-        widgets.refresh_btn.connect_clicked(move |_| {
+        widgets.devices_btn.connect_clicked(move |_| {
             sender.send(Msg::RefreshHw);
             // TODO: This fixes the schema used in the wallet once and forever
             let scheme = scheme.clone();
@@ -726,8 +728,6 @@ impl Widget for Win {
                 sender.send(Msg::HwRefreshed(result));
             });
         });
-
-        widgets.dialog.show();
 
         Win {
             model,

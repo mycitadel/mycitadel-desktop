@@ -1,7 +1,7 @@
 use gtk::prelude::WidgetExt;
 use gtk::prelude::*;
 use gtk::{ApplicationWindow, Button, Inhibit};
-use relm::{Relm, Update, Widget};
+use relm::{init, Component, Relm, Update, Widget};
 use std::sync::{Arc, Mutex};
 
 use crate::settings;
@@ -34,6 +34,7 @@ pub(crate) struct Widgets {
 pub(crate) struct Win {
     model: Model,
     widgets: Widgets,
+    settings_win: Component<settings::Win>,
 }
 
 impl Update for Win {
@@ -50,9 +51,7 @@ impl Update for Win {
 
     fn update(&mut self, event: Msg) {
         match event {
-            Msg::Settings => {
-                settings::Win::run(self.model.settings.clone()).expect("error in settings dialog")
-            }
+            Msg::Settings => self.settings_win.emit(settings::Msg::Show),
             Msg::Quit => gtk::main_quit(),
             _ => { /* TODO: Implement main window event handling */ }
         }
@@ -72,6 +71,9 @@ impl Widget for Win {
         let glade_src = include_str!("../res/wallet.glade");
         let widgets = Widgets::from_string(glade_src).unwrap();
 
+        let settings_win =
+            init::<settings::Win>(model.settings.clone()).expect("error in settings dialog");
+
         connect!(
             relm,
             widgets.settings_btn,
@@ -87,6 +89,10 @@ impl Widget for Win {
 
         widgets.window.show();
 
-        Win { model, widgets }
+        Win {
+            model,
+            widgets,
+            settings_win,
+        }
     }
 }
