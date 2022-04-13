@@ -76,8 +76,12 @@
               <object class="GtkListBox" id="device_list">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
+                <property name="hexpand">True</property>
                 <property name="vexpand">True</property>
                 <property name="selection-mode">none</property>
+                <child type="placeholder">
+                  <placeholder/>
+                </child>
                 <child>
                   <object class="GtkListBoxRow" id="device_row">
                     <property name="visible">True</property>
@@ -197,9 +201,32 @@
                     </child>
                   </object>
                 </child>
+                <child type="placeholder">
+                  <object class="GtkListBoxRow" id="placeholder_row">
+                    <property name="visible">True</property>
+                    <property name="can-focus">True</property>
+                    <property name="activatable">False</property>
+                    <property name="selectable">False</property>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="margin-start">13</property>
+                        <property name="margin-end">13</property>
+                        <property name="margin-top">13</property>
+                        <property name="margin-bottom">13</property>
+                        <property name="hexpand">True</property>
+                        <property name="vexpand">True</property>
+                        <property name="label" translatable="yes">No connected hardware wallets are detected</property>
+                        <property name="justify">center</property>
+                        <property name="wrap">True</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
               </object>
               <packing>
-                <property name="expand">False</property>
+                <property name="expand">True</property>
                 <property name="fill">True</property>
                 <property name="position">0</property>
               </packing>
