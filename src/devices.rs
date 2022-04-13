@@ -8,7 +8,7 @@ use gladis::Gladis;
 use glib::subclass::prelude::*;
 use gtk::prelude::*;
 use gtk::subclass::prelude::ListModelImpl;
-use gtk::{gio, glib, Button, Dialog, ToolButton};
+use gtk::{gio, glib, Button, Dialog, ListBox, ListBoxRow, ToolButton};
 use relm::{Channel, Relm, Update, Widget};
 use wallet::hd::{DerivationScheme, HardenedIndex, SegmentIndexes};
 
@@ -227,6 +227,8 @@ pub(crate) struct Widgets {
     close_btn: Button,
     refresh_btn: ToolButton,
     refresh_dlg: Dialog,
+    device_list: ListBox,
+    device_row: ListBoxRow,
 }
 
 pub(crate) struct Win {
@@ -254,7 +256,7 @@ impl Update for Win {
     fn update(&mut self, event: Msg) {
         match event {
             Msg::Show => self.widgets.dialog.show(),
-            Msg::Refresh => {}
+            Msg::Refresh => self.widgets.refresh_dlg.show(),
             Msg::Devices(result) => {
                 let devices = match result {
                     Err(_err) => {
@@ -272,6 +274,7 @@ impl Update for Win {
                     Ok((devices, _)) => devices,
                 };
                 // TODO: Complete
+                self.widgets.refresh_dlg.hide();
             }
             Msg::AccountChange(_) => {}
             Msg::Add => {}
@@ -316,6 +319,19 @@ impl Widget for Win {
                     .expect("broken channel in devices dialog");
             });
         });
+
+        let device_row = widgets.device_row.clone();
+        widgets
+            .device_list
+            .bind_model(Some(&model.devices), move |item| {
+                let device_row = device_row.clone();
+                let device = item
+                    .downcast_ref::<DeviceData>()
+                    .expect("Row data is of wrong type");
+                // TODO: fill row with device values
+                device_row.show_all();
+                device_row.upcast::<gtk::Widget>()
+            });
 
         Win {
             model,
