@@ -7,12 +7,13 @@ use gtk::{
     glib, Adjustment, Button, Dialog, Entry, Image, Label, ListStore, TextBuffer, ToggleButton,
     ToolButton, TreeView,
 };
-use relm::{Channel, Relm, Update, Widget};
+use relm::{init, Component, Relm, Update, Widget};
 use std::collections::{BTreeMap, BTreeSet};
 use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 use std::sync::{Arc, Mutex};
 
+use crate::devices;
 use gladis::Gladis;
 use hwi::error::Error as HwiError;
 use hwi::HWIDevice;
@@ -427,8 +428,8 @@ impl Model {
 pub(crate) enum Msg {
     Show,
     Init(Arc<Mutex<Model>>),
-    RefreshHw,
-    HwRefreshed(Result<(HardwareList, Vec<Error>), Error>),
+    Devices,
+    AddDevice(HardwareDevice),
     SignerSelect,
     ToggleDescr(DescriptorClass),
     ExportFormat(bool),
@@ -443,7 +444,6 @@ pub(crate) struct Widgets {
     save_btn: Button,
     cancel_btn: Button,
 
-    refresh_dlg: Dialog,
     devices_btn: ToolButton,
     addsign_btn: ToolButton,
     removesign_btn: ToolButton,
@@ -555,8 +555,8 @@ impl Widgets {
 pub(crate) struct Win {
     model: Model,
     origin_model: Option<Arc<Mutex<Model>>>,
-    channel: Channel<Msg>,
     widgets: Widgets,
+    devices_win: Component<devices::Win>,
 }
 
 impl Update for Win {
@@ -578,31 +578,14 @@ impl Update for Win {
             Msg::Init(origin_model) => {
                 self.origin_model = Some(origin_model);
             }
-            Msg::RefreshHw => {
-                self.widgets.refresh_dlg.show();
+            Msg::Devices => {
+                self.devices_win.emit(devices::Msg::Show);
             }
-            Msg::HwRefreshed(result) => {
-                let devices = match result {
-                    Err(_err) => {
-                        // TODO: Display message to user
-                        HardwareList::default()
-                    }
-                    Ok((devices, log)) if !log.is_empty() => {
-                        // TODO: Display log and do not hide the window
-                        devices
-                    }
-                    Ok((devices, _log)) if devices.is_empty() => {
-                        // TODO: Display message to user
-                        devices
-                    }
-                    Ok((devices, _)) => devices,
-                };
-
-                self.model.update_devices(devices);
+            Msg::AddDevice(device) => {
+                // TODO: Fix self.model.update_devices(devices);
                 self.widgets.update_signers(&self.model.signers);
                 self.widgets
                     .update_descriptor(self.model.descriptor.as_ref(), self.model.format_lnpbp);
-                self.widgets.refresh_dlg.hide();
             }
             Msg::SignerSelect => {
                 let signer = self
@@ -663,8 +646,12 @@ impl Widget for Win {
         let glade_src = include_str!("../res/settings.glade");
         let widgets = Widgets::from_string(glade_src).unwrap();
 
+        let devices_win = init::<devices::Win>((model.scheme.clone(), model.network))
+            .expect("error in devices dialog");
+
         connect!(relm, widgets.save_btn, connect_clicked(_), Msg::Save);
         connect!(relm, widgets.cancel_btn, connect_clicked(_), Msg::Cancel);
+        connect!(relm, widgets.devices_btn, connect_clicked(_), Msg::Devices);
 
         connect!(
             relm,
@@ -711,30 +698,10 @@ impl Widget for Win {
             Msg::ToggleDescr(DescriptorClass::TaprootC0)
         );
 
-        let stream = relm.stream().clone();
-        let (channel, sender) = Channel::new(move |msg| {
-            stream.emit(msg);
-        });
-        let scheme = model.scheme.clone();
-        widgets.devices_btn.connect_clicked(move |_| {
-            sender
-                .send(Msg::RefreshHw)
-                .expect("broken channel in settings dialog");
-            // TODO: This fixes the schema used in the wallet once and forever
-            let scheme = scheme.clone();
-            let sender = sender.clone();
-            std::thread::spawn(move || {
-                let result = HardwareList::enumerate(&scheme, model.network, HardenedIndex::zero());
-                sender
-                    .send(Msg::HwRefreshed(result))
-                    .expect("broken channel in settings dialog");
-            });
-        });
-
         Win {
             model,
             widgets,
-            channel,
+            devices_win,
             origin_model: None,
         }
     }

@@ -8,7 +8,7 @@ use gladis::Gladis;
 use glib::subclass::prelude::*;
 use gtk::prelude::*;
 use gtk::subclass::prelude::ListModelImpl;
-use gtk::{gio, glib, Button, Dialog};
+use gtk::{gio, glib, Button, Dialog, ToolButton};
 use relm::{Channel, Relm, Update, Widget};
 use wallet::hd::{DerivationScheme, HardenedIndex, SegmentIndexes};
 
@@ -209,8 +209,11 @@ pub(crate) struct Model {
     pub devices: DeviceModel,
 }
 
+impl Model {}
+
 #[derive(Msg, Debug)]
 pub(crate) enum Msg {
+    Show,
     Refresh,
     Devices(Result<(HardwareList, Vec<Error>), Error>),
     AccountChange(u32),
@@ -222,16 +225,17 @@ pub(crate) enum Msg {
 pub(crate) struct Widgets {
     dialog: Dialog,
     close_btn: Button,
-    refresh_btn: Button,
+    refresh_btn: ToolButton,
+    refresh_dlg: Dialog,
 }
 
-pub(crate) struct DeviceDlg {
+pub(crate) struct Win {
     model: Model,
     channel: Channel<Msg>,
     widgets: Widgets,
 }
 
-impl Update for DeviceDlg {
+impl Update for Win {
     // Specify the model used for this widget.
     type Model = Model;
     // Specify the model parameter used to init the model.
@@ -249,8 +253,26 @@ impl Update for DeviceDlg {
 
     fn update(&mut self, event: Msg) {
         match event {
+            Msg::Show => self.widgets.dialog.show(),
             Msg::Refresh => {}
-            Msg::Devices(_) => {}
+            Msg::Devices(result) => {
+                let devices = match result {
+                    Err(_err) => {
+                        // TODO: Display message to user
+                        HardwareList::default()
+                    }
+                    Ok((devices, log)) if !log.is_empty() => {
+                        // TODO: Display log and do not hide the window
+                        devices
+                    }
+                    Ok((devices, _log)) if devices.is_empty() => {
+                        // TODO: Display message to user
+                        devices
+                    }
+                    Ok((devices, _)) => devices,
+                };
+                // TODO: Complete
+            }
             Msg::AccountChange(_) => {}
             Msg::Add => {}
             Msg::Close => {
@@ -260,7 +282,7 @@ impl Update for DeviceDlg {
     }
 }
 
-impl Widget for DeviceDlg {
+impl Widget for Win {
     // Specify the type of the root widget.
     type Root = Dialog;
 
@@ -270,7 +292,7 @@ impl Widget for DeviceDlg {
     }
 
     fn view(relm: &Relm<Self>, model: Self::Model) -> Self {
-        let glade_src = include_str!("../res/settings.glade");
+        let glade_src = include_str!("../res/devices.glade");
         let widgets = Widgets::from_string(glade_src).unwrap();
 
         connect!(relm, widgets.close_btn, connect_clicked(_), Msg::Close);
@@ -295,9 +317,7 @@ impl Widget for DeviceDlg {
             });
         });
 
-        widgets.dialog.show();
-
-        DeviceDlg {
+        Win {
             model,
             widgets,
             channel,
