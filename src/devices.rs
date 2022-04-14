@@ -329,6 +329,14 @@ impl RowWidgets {
             .flags(glib::BindingFlags::DEFAULT | glib::BindingFlags::SYNC_CREATE)
             .build();
         device
+            .bind_property("account", &self.account_adj, "value")
+            .flags(
+                glib::BindingFlags::DEFAULT
+                    | glib::BindingFlags::SYNC_CREATE
+                    | glib::BindingFlags::BIDIRECTIONAL,
+            )
+            .build();
+        device
             .bind_property("updating", &self.xpub_lbl, "visible")
             .flags(
                 glib::BindingFlags::DEFAULT
@@ -468,7 +476,19 @@ impl Update for Win {
                 model.set_property("updating", false);
             }
             Msg::Add(fingerprint) => {
-                let device = self.model.hwi[&fingerprint].clone();
+                let imp = self.model.devices.imp().0.borrow();
+                let model = imp
+                    .iter()
+                    .find(|device| device.fingerprint() == fingerprint)
+                    .expect("device absent in the model");
+
+                let mut device = self.model.hwi[&fingerprint].clone();
+                device.default_account =
+                    HardenedIndex::from_index(model.property::<u32>("account"))
+                        .expect("wrong account");
+                device.default_xpub = ExtendedPubKey::from_str(&model.property::<String>("xpub"))
+                    .expect("wrong xpub");
+
                 self.model
                     .sender
                     .send(settings::Msg::AddDevice(fingerprint, device))
