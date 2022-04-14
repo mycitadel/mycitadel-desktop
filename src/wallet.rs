@@ -8,12 +8,12 @@ use crate::settings;
 use gladis::Gladis;
 
 #[derive(Default)]
-pub(crate) struct Model {
+pub struct Model {
     settings: Arc<Mutex<settings::Model>>,
 }
 
 #[derive(Msg)]
-pub(crate) enum Msg {
+pub enum Msg {
     New,
     Open,
     Send,
@@ -26,12 +26,12 @@ pub(crate) enum Msg {
 
 // Create the structure that holds the widgets used in the view.
 #[derive(Clone, Gladis)]
-pub(crate) struct Widgets {
+pub struct Widgets {
     window: ApplicationWindow,
     settings_btn: Button,
 }
 
-pub(crate) struct Win {
+pub struct Win {
     model: Model,
     widgets: Widgets,
     settings_win: Component<settings::Win>,

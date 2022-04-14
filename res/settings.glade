@@ -19,7 +19,7 @@
       </object>
     </child>
   </object>
-  <object class="GtkAdjustment" id="date2_adj">
+  <object class="GtkAdjustment" id="date_adj">
     <property name="lower">1</property>
     <property name="upper">100</property>
     <property name="step-increment">1</property>
@@ -62,6 +62,46 @@
       </object>
     </child>
   </object>
+  <object class="GtkMenu" id="period_menu">
+    <property name="visible">True</property>
+    <property name="can-focus">False</property>
+    <child>
+      <object class="GtkRadioMenuItem" id="miDays">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+        <property name="label" translatable="yes">day(s)</property>
+        <property name="use-underline">True</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkRadioMenuItem" id="miWeeks">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+        <property name="label" translatable="yes">week(s)</property>
+        <property name="use-underline">True</property>
+        <property name="group">miDays</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkRadioMenuItem" id="miMonths">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+        <property name="label" translatable="yes">month(s)</property>
+        <property name="use-underline">True</property>
+        <property name="group">miDays</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkRadioMenuItem" id="miYears">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+        <property name="label" translatable="yes">year(s)</property>
+        <property name="use-underline">True</property>
+        <property name="active">True</property>
+        <property name="group">miDays</property>
+      </object>
+    </child>
+  </object>
   <object class="GtkAdjustment" id="port_adj">
     <property name="upper">65535</property>
     <property name="step-increment">1</property>
@@ -81,10 +121,10 @@
       <column type="gchararray"/>
     </columns>
   </object>
-  <object class="GtkAdjustment" id="sigs2_adj">
-    <property name="lower">0.01</property>
+  <object class="GtkAdjustment" id="sigs_adj">
+    <property name="lower">1</property>
     <property name="upper">100</property>
-    <property name="value">0.01</property>
+    <property name="value">1</property>
     <property name="step-increment">1</property>
     <property name="page-increment">10</property>
   </object>
@@ -127,46 +167,6 @@
   <object class="GtkTextBuffer" id="spending_buf">
     <property name="text" translatable="yes">Each row means alternative spending condition.
 If all of the requirements at least in a single row are satisfied, than the funds from this wallet may be spent.</property>
-  </object>
-  <object class="GtkMenu" id="time_menu">
-    <property name="visible">True</property>
-    <property name="can-focus">False</property>
-    <child>
-      <object class="GtkRadioMenuItem" id="miDays">
-        <property name="visible">True</property>
-        <property name="can-focus">False</property>
-        <property name="label" translatable="yes">day(s)</property>
-        <property name="use-underline">True</property>
-      </object>
-    </child>
-    <child>
-      <object class="GtkRadioMenuItem" id="miWeeks">
-        <property name="visible">True</property>
-        <property name="can-focus">False</property>
-        <property name="label" translatable="yes">week(s)</property>
-        <property name="use-underline">True</property>
-        <property name="group">miDays</property>
-      </object>
-    </child>
-    <child>
-      <object class="GtkRadioMenuItem" id="miMonths">
-        <property name="visible">True</property>
-        <property name="can-focus">False</property>
-        <property name="label" translatable="yes">month(s)</property>
-        <property name="use-underline">True</property>
-        <property name="group">miDays</property>
-      </object>
-    </child>
-    <child>
-      <object class="GtkRadioMenuItem" id="miYears">
-        <property name="visible">True</property>
-        <property name="can-focus">False</property>
-        <property name="label" translatable="yes">year(s)</property>
-        <property name="use-underline">True</property>
-        <property name="active">True</property>
-        <property name="group">miDays</property>
-      </object>
-    </child>
   </object>
   <object class="GtkDialog" id="dialog">
     <property name="can-focus">False</property>
@@ -713,7 +713,7 @@ derivation:</property>
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <child>
-                      <object class="GtkToolButton">
+                      <object class="GtkToolButton" id="add_btn">
                         <property name="name">condition_add_btn</property>
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
@@ -728,7 +728,7 @@ derivation:</property>
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkToolButton">
+                      <object class="GtkToolButton" id="remove_btn">
                         <property name="name">condition_remove_btn</property>
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
@@ -755,7 +755,7 @@ derivation:</property>
                     <property name="can-focus">False</property>
                     <property name="vexpand">True</property>
                     <child>
-                      <object class="GtkListBoxRow">
+                      <object class="GtkListBoxRow" id="spending_row">
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <child>
@@ -767,8 +767,6 @@ derivation:</property>
                               <object class="GtkBox">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
-                                <property name="margin-left">6</property>
-                                <property name="margin-right">6</property>
                                 <property name="margin-start">6</property>
                                 <property name="margin-end">6</property>
                                 <property name="margin-top">6</property>
@@ -783,93 +781,7 @@ derivation:</property>
                                     <property name="popup">singatures_menu</property>
                                     <property name="use-popover">False</property>
                                     <child>
-                                      <object class="GtkLabel" id="sig1_lbl">
-                                        <property name="visible">True</property>
-                                        <property name="can-focus">False</property>
-                                        <property name="label" translatable="yes">All signatures</property>
-                                      </object>
-                                    </child>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">0</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkMenuButton">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">True</property>
-                                    <property name="focus-on-click">False</property>
-                                    <property name="receives-default">True</property>
-                                    <property name="popup">lock_menu</property>
-                                    <property name="use-popover">False</property>
-                                    <child>
-                                      <object class="GtkLabel" id="time1_lbl">
-                                        <property name="visible">True</property>
-                                        <property name="can-focus">False</property>
-                                        <property name="label" translatable="yes">at any time</property>
-                                      </object>
-                                    </child>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">1</property>
-                                  </packing>
-                                </child>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">0</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkSeparator">
-                                <property name="visible">True</property>
-                                <property name="can-focus">False</property>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">1</property>
-                              </packing>
-                            </child>
-                          </object>
-                        </child>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkListBoxRow">
-                        <property name="visible">True</property>
-                        <property name="can-focus">True</property>
-                        <child>
-                          <object class="GtkBox">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="orientation">vertical</property>
-                            <child>
-                              <object class="GtkBox">
-                                <property name="visible">True</property>
-                                <property name="can-focus">False</property>
-                                <property name="margin-left">6</property>
-                                <property name="margin-right">6</property>
-                                <property name="margin-start">6</property>
-                                <property name="margin-end">6</property>
-                                <property name="margin-top">6</property>
-                                <property name="margin-bottom">6</property>
-                                <property name="spacing">6</property>
-                                <child>
-                                  <object class="GtkMenuButton">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">True</property>
-                                    <property name="focus-on-click">False</property>
-                                    <property name="receives-default">True</property>
-                                    <property name="popup">singatures_menu</property>
-                                    <property name="use-popover">False</property>
-                                    <child>
-                                      <object class="GtkLabel" id="sig2_lbl">
+                                      <object class="GtkLabel" id="sig_lbl">
                                         <property name="visible">True</property>
                                         <property name="can-focus">False</property>
                                         <property name="label" translatable="yes">At least</property>
@@ -883,10 +795,11 @@ derivation:</property>
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkSpinButton">
+                                  <object class="GtkSpinButton" id="sigs_spin">
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
-                                    <property name="adjustment">sigs2_adj</property>
+                                    <property name="adjustment">sigs_adj</property>
+                                    <property name="value">1</property>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
@@ -895,10 +808,10 @@ derivation:</property>
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkLabel">
+                                  <object class="GtkLabel" id="sigtext_lbl">
                                     <property name="visible">True</property>
                                     <property name="can-focus">False</property>
-                                    <property name="label" translatable="yes">signatures</property>
+                                    <property name="label" translatable="yes">signature(s)</property>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
@@ -907,7 +820,7 @@ derivation:</property>
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkMenuButton">
+                                  <object class="GtkMenuButton" id="lock_mbt">
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="focus-on-click">False</property>
@@ -915,7 +828,7 @@ derivation:</property>
                                     <property name="popup">lock_menu</property>
                                     <property name="use-popover">False</property>
                                     <child>
-                                      <object class="GtkLabel" id="time2_lbl">
+                                      <object class="GtkLabel" id="lock_lbl">
                                         <property name="visible">True</property>
                                         <property name="can-focus">False</property>
                                         <property name="label" translatable="yes">after</property>
@@ -929,10 +842,10 @@ derivation:</property>
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkSpinButton">
+                                  <object class="GtkSpinButton" id="date_spin">
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
-                                    <property name="adjustment">date2_adj</property>
+                                    <property name="adjustment">date_adj</property>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
@@ -941,15 +854,15 @@ derivation:</property>
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkMenuButton">
+                                  <object class="GtkMenuButton" id="period_mbt">
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="focus-on-click">False</property>
                                     <property name="receives-default">True</property>
-                                    <property name="popup">time_menu</property>
+                                    <property name="popup">period_menu</property>
                                     <property name="use-popover">False</property>
                                     <child>
-                                      <object class="GtkLabel" id="date2_lbl">
+                                      <object class="GtkLabel" id="periond_lbl">
                                         <property name="visible">True</property>
                                         <property name="can-focus">False</property>
                                         <property name="label" translatable="yes">year</property>
@@ -962,101 +875,15 @@ derivation:</property>
                                     <property name="position">5</property>
                                   </packing>
                                 </child>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">0</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkSeparator">
-                                <property name="visible">True</property>
-                                <property name="can-focus">False</property>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">1</property>
-                              </packing>
-                            </child>
-                          </object>
-                        </child>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkListBoxRow">
-                        <property name="visible">True</property>
-                        <property name="can-focus">True</property>
-                        <child>
-                          <object class="GtkBox">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="orientation">vertical</property>
-                            <child>
-                              <object class="GtkBox">
-                                <property name="visible">True</property>
-                                <property name="can-focus">False</property>
-                                <property name="margin-left">6</property>
-                                <property name="margin-right">6</property>
-                                <property name="margin-start">6</property>
-                                <property name="margin-end">6</property>
-                                <property name="margin-top">6</property>
-                                <property name="margin-bottom">6</property>
-                                <property name="spacing">6</property>
                                 <child>
-                                  <object class="GtkMenuButton">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">True</property>
-                                    <property name="focus-on-click">False</property>
-                                    <property name="receives-default">True</property>
-                                    <property name="popup">singatures_menu</property>
-                                    <property name="use-popover">False</property>
-                                    <child>
-                                      <object class="GtkLabel" id="sig3_lbl">
-                                        <property name="visible">True</property>
-                                        <property name="can-focus">False</property>
-                                        <property name="label" translatable="yes">Any signature</property>
-                                      </object>
-                                    </child>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">0</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkMenuButton">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">True</property>
-                                    <property name="focus-on-click">False</property>
-                                    <property name="receives-default">True</property>
-                                    <property name="popup">lock_menu</property>
-                                    <property name="use-popover">False</property>
-                                    <child>
-                                      <object class="GtkLabel" id="time3_lbl">
-                                        <property name="visible">True</property>
-                                        <property name="can-focus">False</property>
-                                        <property name="label" translatable="yes">starting from</property>
-                                      </object>
-                                    </child>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">1</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkMenuButton">
+                                  <object class="GtkMenuButton" id="calendar_mbt">
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="focus-on-click">False</property>
                                     <property name="receives-default">True</property>
                                     <property name="popover">calendar_popover</property>
                                     <child>
-                                      <object class="GtkLabel" id="date3_lbl">
+                                      <object class="GtkLabel" id="calendar_lbl">
                                         <property name="visible">True</property>
                                         <property name="can-focus">False</property>
                                         <property name="label" translatable="yes">7 Apr 2025</property>
@@ -1066,7 +893,7 @@ derivation:</property>
                                   <packing>
                                     <property name="expand">False</property>
                                     <property name="fill">True</property>
-                                    <property name="position">2</property>
+                                    <property name="position">6</property>
                                   </packing>
                                 </child>
                               </object>
@@ -1715,7 +1542,6 @@ However, they are not supported by other wallets. Wallets of this type can be us
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
                             <property name="receives-default">False</property>
-                            <property name="active">True</property>
                             <property name="draw-indicator">False</property>
                           </object>
                           <packing>
@@ -1730,6 +1556,7 @@ However, they are not supported by other wallets. Wallets of this type can be us
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
                             <property name="receives-default">False</property>
+                            <property name="active">True</property>
                             <property name="draw-indicator">False</property>
                             <property name="group">tor_tgl</property>
                           </object>

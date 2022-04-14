@@ -203,7 +203,7 @@ pub enum DescriptorClass {
 }
 
 #[derive(Clone)]
-pub(crate) struct Model {
+pub struct Model {
     pub scheme: DerivationScheme,
     pub devices: HardwareList,
     pub signers: BTreeSet<Signer>,
@@ -431,7 +431,7 @@ impl Model {
 }
 
 #[derive(Msg)]
-pub(crate) enum Msg {
+pub enum Msg {
     Show,
     Init(Arc<Mutex<Model>>),
     Devices,
@@ -445,7 +445,7 @@ pub(crate) enum Msg {
 
 // Create the structure that holds the widgets used in the view.
 #[derive(Clone, Gladis)]
-pub(crate) struct Widgets {
+pub struct Widgets {
     dialog: Dialog,
     save_btn: Button,
     cancel_btn: Button,
@@ -558,7 +558,7 @@ impl Widgets {
     }
 }
 
-pub(crate) struct Win {
+pub struct Win {
     model: Model,
     origin_model: Option<Arc<Mutex<Model>>>,
     widgets: Widgets,

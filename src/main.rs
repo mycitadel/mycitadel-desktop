@@ -7,8 +7,10 @@ extern crate relm_derive;
 
 use relm::Widget;
 
+mod device_row;
 mod devices;
 mod settings;
+mod spending_row;
 mod wallet;
 
 fn main() {
