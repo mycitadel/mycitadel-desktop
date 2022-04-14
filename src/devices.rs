@@ -352,11 +352,12 @@ impl Update for Win {
                         HardwareList::default()
                     }
                     Ok((devices, log)) if !log.is_empty() => {
-                        // TODO: Display log and do not hide the window
-                        devices
-                    }
-                    Ok((devices, _log)) if devices.is_empty() => {
-                        // TODO: Display message to user
+                        let err = log.into_iter().fold(s!(""), |mut err, entry| {
+                            err.push_str(&entry.to_string());
+                            err
+                        });
+                        self.widgets.error_dlg.set_secondary_text(Some(&err));
+                        self.widgets.error_dlg.show();
                         devices
                     }
                     Ok((devices, _)) => devices,
@@ -406,6 +407,9 @@ impl Widget for Win {
                     .expect("broken channel in devices dialog");
             });
         });
+
+        widgets.error_dlg.connect_close(|dlg| dlg.hide());
+        widgets.error_dlg.connect_response(|dlg, _ty| dlg.hide());
 
         widgets
             .device_list
