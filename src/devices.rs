@@ -339,7 +339,10 @@ impl Update for Win {
 
     fn update(&mut self, event: Msg) {
         match event {
-            Msg::Show => self.widgets.dialog.show(),
+            Msg::Show => {
+                self.widgets.dialog.show();
+                self.widgets.refresh_btn.emit_clicked();
+            }
             Msg::Refresh => self.widgets.refresh_dlg.show(),
             Msg::Devices(result) => {
                 self.widgets.refresh_dlg.hide();
