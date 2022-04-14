@@ -78,6 +78,15 @@ pub struct HardwareDevice {
 #[derive(Wrapper, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default, From)]
 pub struct HardwareList(BTreeMap<Fingerprint, HardwareDevice>);
 
+impl<'a> IntoIterator for &'a HardwareList {
+    type Item = (&'a Fingerprint, &'a HardwareDevice);
+    type IntoIter = std::collections::btree_map::Iter<'a, Fingerprint, HardwareDevice>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.iter()
+    }
+}
+
 #[derive(Debug, Display, Error)]
 #[display(doc_comments)]
 pub enum Error {

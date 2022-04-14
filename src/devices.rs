@@ -18,8 +18,8 @@ use crate::settings::{Error, HardwareList, PublicNetwork};
 // directly from the outside.
 pub struct DeviceDataInner {
     pub name: RefCell<String>,
-    pub fingerprint: RefCell<Fingerprint>,
-    pub xpub: RefCell<ExtendedPubKey>,
+    pub fingerprint: RefCell<String>,
+    pub xpub: RefCell<String>,
     pub account_no: RefCell<u32>,
 }
 
@@ -36,7 +36,7 @@ impl Default for DeviceDataInner {
                 child_number: ChildNumber::from_hardened_idx(0).expect("hardcoded hardened index"),
                 public_key,
                 chain_code: ChainCode::from(&[0u8; 32][..]),
-            }),
+            }.to_string()),
             account_no: RefCell::new(0),
         }
     }
@@ -68,18 +68,18 @@ impl ObjectImpl for DeviceDataInner {
                     None, // Default value
                     glib::ParamFlags::READWRITE,
                 ),
-                glib::ParamSpecObject::new(
+                glib::ParamSpecString::new(
                     "fingerprint",
                     "Fingerprint",
                     "Fingerprint",
-                    glib::Type::OBJECT,
+                    None,
                     glib::ParamFlags::READWRITE,
                 ),
-                glib::ParamSpecObject::new(
+                glib::ParamSpecString::new(
                     "xpub",
                     "XPub",
                     "XPub",
-                    glib::Type::OBJECT,
+                    None,
                     glib::ParamFlags::READWRITE,
                 ),
                 glib::ParamSpecUInt::new(
@@ -111,6 +111,18 @@ impl ObjectImpl for DeviceDataInner {
                     .expect("type conformity checked by `Object::set_property`");
                 self.name.replace(name);
             }
+            "fingerprint" => {
+                let fingerprint = value
+                    .get()
+                    .expect("type conformity checked by `Object::set_property`");
+                self.fingerprint.replace(fingerprint);
+            }
+            "xpub" => {
+                let xpub = value
+                    .get()
+                    .expect("type conformity checked by `Object::set_property`");
+                self.xpub.replace(xpub);
+            }
             "account" => {
                 let account_no = value
                     .get()
@@ -124,6 +136,8 @@ impl ObjectImpl for DeviceDataInner {
     fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
         match pspec.name() {
             "name" => self.name.borrow().to_value(),
+            "fingerprint" => self.fingerprint.borrow().to_value(),
+            "xpub" => self.xpub.borrow().to_value(),
             "account" => self.account_no.borrow().to_value(),
             _ => unimplemented!(),
         }
@@ -135,8 +149,8 @@ glib::wrapper! {
 }
 
 impl DeviceData {
-    pub fn new(name: &str, count: u32) -> DeviceData {
-        glib::Object::new(&[("name", &name), ("count", &count)]).expect("Failed to create row data")
+    pub fn new(name: &str, fingerprint: &Fingerprint, xpub: &ExtendedPubKey, account: u32) -> DeviceData {
+        glib::Object::new(&[("name", &name), ("fingerprint", &fingerprint.to_string()), ("xpub", &xpub.to_string()), ("account", &account)]).expect("Failed to create row data")
     }
 }
 
@@ -180,6 +194,14 @@ impl DeviceModel {
         glib::Object::new(&[]).expect("Failed to create DeviceModel")
     }
 
+    pub fn refresh(&self, devices: HardwareList) {
+        self.clear();
+        for (fingerprint, device) in &devices {
+            let data = DeviceData::new(&device.model, fingerprint, &device.default_xpub, device.default_account.first_index());
+            self.append(&data);
+        }
+    }
+
     pub fn append(&self, obj: &DeviceData) {
         let imp = self.imp();
         let index = {
@@ -192,6 +214,16 @@ impl DeviceModel {
         };
         // Emits a signal that 1 item was added, 0 removed at the position index
         self.items_changed(index as u32, 0, 1);
+    }
+
+    pub fn clear(&self) {
+        let imp = self.imp();
+        let n = self.n_items();
+        imp.0.borrow_mut().clear();
+        // Emits a signal that 1 item was removed, 0 added at the position index
+        for index in 0..n {
+            self.items_changed(index, 1, 0);
+        }
     }
 
     pub fn remove(&self, index: u32) {
@@ -223,6 +255,7 @@ pub(crate) enum Msg {
 
 #[derive(Clone, Gladis)]
 struct DeviceRow {
+    pub device_list: ListBox,
     pub device_row: ListBoxRow,
     name_lbl: Label,
     fingerprint_lbl: Label,
@@ -300,6 +333,7 @@ impl Update for Win {
                     }
                     Ok((devices, _)) => devices,
                 };
+                self.model.devices.refresh(devices);
                 // TODO: Complete
                 self.widgets.refresh_dlg.hide();
             }
@@ -356,6 +390,7 @@ impl Widget for Win {
                     .downcast_ref::<DeviceData>()
                     .expect("Row data is of wrong type");
                 device_row.set_device(device);
+                device_row.device_list.remove(&device_row.device_row);
                 device_row.device_row.upcast::<gtk::Widget>()
             });
 
