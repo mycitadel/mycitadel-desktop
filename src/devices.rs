@@ -10,7 +10,8 @@ use glib::subclass::prelude::*;
 use gtk::prelude::*;
 use gtk::subclass::prelude::ListModelImpl;
 use gtk::{
-    gio, glib, Adjustment, Button, Dialog, Label, ListBox, ListBoxRow, MessageDialog, Spinner,
+    gio, glib, Adjustment, Button, Dialog, Label, ListBox, ListBoxRow, MessageDialog, SpinButton,
+    Spinner,
 };
 use hwi::HWIDevice;
 use relm::{Channel, Relm, Sender, Update, Widget};
@@ -310,6 +311,7 @@ struct DeviceWidgets {
     xpub_lbl: Label,
     spinner: Spinner,
     account_adj: Adjustment,
+    account_spin: SpinButton,
     add_btn: Button,
 }
 
@@ -339,7 +341,6 @@ impl DeviceWidgets {
             .bind_property("updating", &self.spinner, "active")
             .flags(glib::BindingFlags::DEFAULT | glib::BindingFlags::SYNC_CREATE)
             .build();
-        /*
         device
             .bind_property("updating", &self.account_spin, "sensitive")
             .flags(
@@ -348,7 +349,6 @@ impl DeviceWidgets {
                     | glib::BindingFlags::INVERT_BOOLEAN,
             )
             .build();
-         */
         device
             .bind_property("updating", &self.add_btn, "sensitive")
             .flags(
@@ -431,8 +431,6 @@ impl Update for Win {
                     .find(|device| device.fingerprint() == fingerprint)
                     .expect("device absent in the model");
                 model.set_property("updating", true);
-                // disable controls
-                // set spinner
                 let derivation = self.model.scheme.to_account_derivation(
                     ChildNumber::from_hardened_idx(account).expect("wrong account number"),
                     self.model.network.into(),
@@ -458,9 +456,18 @@ impl Update for Win {
                     .iter()
                     .find(|device| device.fingerprint() == fingerprint)
                     .expect("device absent in the model");
+                model.set_property("xpub", xpub);
                 model.set_property("updating", false);
             }
-            Msg::XpubErr(fingerprint, err) => {}
+            Msg::XpubErr(fingerprint, _err) => {
+                let imp = self.model.devices.imp().0.borrow();
+                let model = imp
+                    .iter()
+                    .find(|device| device.fingerprint() == fingerprint)
+                    .expect("device absent in the model");
+                model.set_property("xpub", "error retrieving xpub");
+                model.set_property("updating", false);
+            }
             Msg::Add => {}
             Msg::Close => {
                 self.widgets.dialog.hide();
