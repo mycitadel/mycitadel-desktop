@@ -10,6 +10,8 @@
     <property name="text" translatable="yes">Error connecting devices</property>
     <property name="secondary-text" translatable="yes">error details</property>
     <property name="modal">True</property>
+    <property name="window-position">center</property>
+    <property name="destroy-with-parent">True</property>
     <child internal-child="vbox">
       <object class="GtkBox">
         <property name="can-focus">False</property>

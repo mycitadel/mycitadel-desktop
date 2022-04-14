@@ -7,7 +7,7 @@ use gtk::{
     glib, Adjustment, Button, Dialog, Entry, Image, Label, ListStore, TextBuffer, ToggleButton,
     ToolButton, TreeView,
 };
-use relm::{init, Component, Relm, Update, Widget};
+use relm::{init, Channel, Component, Relm, Update, Widget};
 use std::collections::{BTreeMap, BTreeSet};
 use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
@@ -254,11 +254,6 @@ impl Model {
         }
     }
 
-    pub fn update_devices(&mut self, devices: HardwareList) {
-        self.devices = devices;
-        self.update_signers()
-    }
-
     pub fn update_signers(&mut self) {
         let known_xpubs = self
             .signers
@@ -440,7 +435,7 @@ pub(crate) enum Msg {
     Show,
     Init(Arc<Mutex<Model>>),
     Devices,
-    AddDevice(HardwareDevice),
+    AddDevice(Fingerprint, HardwareDevice),
     SignerSelect,
     ToggleDescr(DescriptorClass),
     ExportFormat(bool),
@@ -592,8 +587,9 @@ impl Update for Win {
             Msg::Devices => {
                 self.devices_win.emit(devices::Msg::Show);
             }
-            Msg::AddDevice(device) => {
-                // TODO: Fix self.model.update_devices(devices);
+            Msg::AddDevice(fingerprint, device) => {
+                self.model.devices.insert(fingerprint, device);
+                self.model.update_signers();
                 self.widgets.update_signers(&self.model.signers);
                 self.widgets
                     .update_descriptor(self.model.descriptor.as_ref(), self.model.format_lnpbp);
@@ -657,7 +653,12 @@ impl Widget for Win {
         let glade_src = include_str!("../res/settings.glade");
         let widgets = Widgets::from_string(glade_src).expect("glade file broken");
 
-        let devices_win = init::<devices::Win>((model.scheme.clone(), model.network))
+        let stream = relm.stream().clone();
+        let (_channel, sender) = Channel::new(move |msg| {
+            stream.emit(msg);
+        });
+
+        let devices_win = init::<devices::Win>((model.scheme.clone(), model.network, sender))
             .expect("error in devices dialog");
 
         connect!(relm, widgets.save_btn, connect_clicked(_), Msg::Save);
