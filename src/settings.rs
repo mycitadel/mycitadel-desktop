@@ -644,7 +644,7 @@ impl Widget for Win {
 
     fn view(relm: &Relm<Self>, model: Self::Model) -> Self {
         let glade_src = include_str!("../res/settings.glade");
-        let widgets = Widgets::from_string(glade_src).unwrap();
+        let widgets = Widgets::from_string(glade_src).expect("glade file broken");
 
         let devices_win = init::<devices::Win>((model.scheme.clone(), model.network))
             .expect("error in devices dialog");

@@ -8,7 +8,7 @@ use gladis::Gladis;
 use glib::subclass::prelude::*;
 use gtk::prelude::*;
 use gtk::subclass::prelude::ListModelImpl;
-use gtk::{gio, glib, Button, Dialog, ListBox, ListBoxRow, ToolButton};
+use gtk::{gio, glib, Adjustment, Button, Dialog, Label, ListBox, ListBoxRow, Spinner, ToolButton};
 use relm::{Channel, Relm, Update, Widget};
 use wallet::hd::{DerivationScheme, HardenedIndex, SegmentIndexes};
 
@@ -17,10 +17,10 @@ use crate::settings::{Error, HardwareList, PublicNetwork};
 // The actual data structure that stores our values. This is not accessible
 // directly from the outside.
 pub struct DeviceDataInner {
-    name: RefCell<String>,
-    fingerprint: RefCell<Fingerprint>,
-    xpub: RefCell<ExtendedPubKey>,
-    account_no: RefCell<u32>,
+    pub name: RefCell<String>,
+    pub fingerprint: RefCell<Fingerprint>,
+    pub xpub: RefCell<ExtendedPubKey>,
+    pub account_no: RefCell<u32>,
 }
 
 impl Default for DeviceDataInner {
@@ -222,13 +222,40 @@ pub(crate) enum Msg {
 }
 
 #[derive(Clone, Gladis)]
+struct DeviceRow {
+    pub device_row: ListBoxRow,
+    name_lbl: Label,
+    fingerprint_lbl: Label,
+    xpub_lbl: Label,
+    spinner: Spinner,
+    account_adj: Adjustment,
+    add_btn: Button,
+}
+
+impl DeviceRow {
+    pub fn set_device(&self, device: &DeviceData) {
+        device
+            .bind_property("name", &self.name_lbl, "label")
+            .flags(glib::BindingFlags::DEFAULT | glib::BindingFlags::SYNC_CREATE)
+            .build();
+        device
+            .bind_property("fingerprint", &self.fingerprint_lbl, "label")
+            .flags(glib::BindingFlags::DEFAULT | glib::BindingFlags::SYNC_CREATE)
+            .build();
+        device
+            .bind_property("xpub", &self.xpub_lbl, "label")
+            .flags(glib::BindingFlags::DEFAULT | glib::BindingFlags::SYNC_CREATE)
+            .build();
+    }
+}
+
+#[derive(Clone, Gladis)]
 pub(crate) struct Widgets {
     dialog: Dialog,
     close_btn: Button,
     refresh_btn: ToolButton,
     refresh_dlg: Dialog,
     device_list: ListBox,
-    device_row: ListBoxRow,
 }
 
 pub(crate) struct Win {
@@ -296,7 +323,7 @@ impl Widget for Win {
 
     fn view(relm: &Relm<Self>, model: Self::Model) -> Self {
         let glade_src = include_str!("../res/devices.glade");
-        let widgets = Widgets::from_string(glade_src).unwrap();
+        let widgets = Widgets::from_string(glade_src).expect("glade file broken");
 
         connect!(relm, widgets.close_btn, connect_clicked(_), Msg::Close);
 
@@ -320,17 +347,16 @@ impl Widget for Win {
             });
         });
 
-        let device_row = widgets.device_row.clone();
         widgets
             .device_list
             .bind_model(Some(&model.devices), move |item| {
-                let device_row = device_row.clone();
+                let glade_src = include_str!("../res/device_row.glade");
+                let device_row = DeviceRow::from_string(glade_src).expect("glade file broken");
                 let device = item
                     .downcast_ref::<DeviceData>()
                     .expect("Row data is of wrong type");
-                // TODO: fill row with device values
-                device_row.show_all();
-                device_row.upcast::<gtk::Widget>()
+                device_row.set_device(device);
+                device_row.device_row.upcast::<gtk::Widget>()
             });
 
         Win {

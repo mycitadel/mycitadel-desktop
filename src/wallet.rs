@@ -69,7 +69,7 @@ impl Widget for Win {
 
     fn view(relm: &Relm<Self>, model: Self::Model) -> Self {
         let glade_src = include_str!("../res/wallet.glade");
-        let widgets = Widgets::from_string(glade_src).unwrap();
+        let widgets = Widgets::from_string(glade_src).expect("glade file broken");
 
         let settings_win =
             init::<settings::Win>(model.settings.clone()).expect("error in settings dialog");

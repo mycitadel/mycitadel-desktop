@@ -79,13 +79,11 @@
                 <property name="hexpand">True</property>
                 <property name="vexpand">True</property>
                 <property name="selection-mode">none</property>
-                <child type="placeholder">
-                  <placeholder/>
-                </child>
                 <child>
                   <object class="GtkListBoxRow" id="device_row">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
+                    <property name="hexpand">True</property>
                     <property name="activatable">False</property>
                     <property name="selectable">False</property>
                     <child>
@@ -103,7 +101,6 @@
                             <property name="can-focus">False</property>
                             <property name="halign">start</property>
                             <property name="label" translatable="yes">ledger nano s</property>
-                            <property name="ellipsize">middle</property>
                           </object>
                           <packing>
                             <property name="left-attach">0</property>
