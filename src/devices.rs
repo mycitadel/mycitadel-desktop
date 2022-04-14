@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use std::str::FromStr;
 
 use bitcoin::secp256k1::PublicKey;
 use bitcoin::util::bip32::{ChainCode, ChildNumber, ExtendedPubKey, Fingerprint};
@@ -10,9 +11,9 @@ use gtk::prelude::*;
 use gtk::subclass::prelude::ListModelImpl;
 use gtk::{
     gio, glib, Adjustment, Button, Dialog, Label, ListBox, ListBoxRow, MessageDialog, Spinner,
-    ToolButton,
 };
-use relm::{Channel, Relm, Update, Widget};
+use hwi::HWIDevice;
+use relm::{Channel, Relm, Sender, Update, Widget};
 use wallet::hd::{DerivationScheme, HardenedIndex, SegmentIndexes};
 
 use crate::settings::{Error, HardwareList, PublicNetwork};
@@ -24,6 +25,7 @@ pub struct DeviceDataInner {
     pub fingerprint: RefCell<String>,
     pub xpub: RefCell<String>,
     pub account_no: RefCell<u32>,
+    pub updating: RefCell<bool>,
 }
 
 impl Default for DeviceDataInner {
@@ -45,6 +47,7 @@ impl Default for DeviceDataInner {
                 .to_string(),
             ),
             account_no: RefCell::new(0),
+            updating: RefCell::new(false),
         }
     }
 }
@@ -98,6 +101,13 @@ impl ObjectImpl for DeviceDataInner {
                     0, // Allowed range and default value
                     glib::ParamFlags::READWRITE,
                 ),
+                glib::ParamSpecBoolean::new(
+                    "updating",
+                    "Updating",
+                    "Updating",
+                    false,
+                    glib::ParamFlags::READWRITE,
+                ),
             ]
         });
 
@@ -136,6 +146,12 @@ impl ObjectImpl for DeviceDataInner {
                     .expect("type conformity checked by `Object::set_property`");
                 self.account_no.replace(account_no);
             }
+            "updating" => {
+                let updating = value
+                    .get()
+                    .expect("type conformity checked by `Object::set_property`");
+                self.updating.replace(updating);
+            }
             _ => unimplemented!(),
         }
     }
@@ -146,6 +162,7 @@ impl ObjectImpl for DeviceDataInner {
             "fingerprint" => self.fingerprint.borrow().to_value(),
             "xpub" => self.xpub.borrow().to_value(),
             "account" => self.account_no.borrow().to_value(),
+            "updating" => self.updating.borrow().to_value(),
             _ => unimplemented!(),
         }
     }
@@ -161,6 +178,7 @@ impl DeviceData {
         fingerprint: &Fingerprint,
         xpub: &ExtendedPubKey,
         account: u32,
+        hwi: HWIDevice,
     ) -> DeviceData {
         glib::Object::new(&[
             ("name", &name),
@@ -169,6 +187,11 @@ impl DeviceData {
             ("account", &account),
         ])
         .expect("Failed to create row data")
+    }
+
+    pub fn fingerprint(&self) -> Fingerprint {
+        Fingerprint::from_str(&self.property::<String>("fingerprint"))
+            .expect("device fingerprint failure")
     }
 }
 
@@ -212,14 +235,15 @@ impl DeviceModel {
         glib::Object::new(&[]).expect("Failed to create DeviceModel")
     }
 
-    pub fn refresh(&self, devices: HardwareList) {
+    pub fn refresh(&self, devices: &HardwareList) {
         self.clear();
-        for (fingerprint, device) in &devices {
+        for (fingerprint, device) in devices {
             let data = DeviceData::new(
                 &device.model,
                 fingerprint,
                 &device.default_xpub,
                 device.default_account.first_index(),
+                device.device.clone(),
             );
             self.append(&data);
         }
@@ -257,27 +281,28 @@ impl DeviceModel {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+#[derive(Clone)]
 pub(crate) struct Model {
     pub scheme: DerivationScheme,
     pub network: PublicNetwork,
     pub devices: DeviceModel,
+    pub hwi: HardwareList,
 }
 
-impl Model {}
-
-#[derive(Msg, Debug)]
+#[derive(Msg)]
 pub(crate) enum Msg {
     Show,
     Refresh,
     Devices(Result<(HardwareList, Vec<Error>), Error>),
-    AccountChange(u32),
+    AccountChange(Fingerprint, u32),
+    Xpub(Fingerprint, String),
+    XpubErr(Fingerprint, hwi::error::Error),
     Add,
     Close,
 }
 
 #[derive(Clone, Gladis)]
-struct RowWidgets {
+struct DeviceWidgets {
     pub device_list: ListBox,
     pub device_row: ListBoxRow,
     name_lbl: Label,
@@ -288,7 +313,7 @@ struct RowWidgets {
     add_btn: Button,
 }
 
-impl RowWidgets {
+impl DeviceWidgets {
     pub fn set_device(&self, device: &DeviceData) {
         device
             .bind_property("name", &self.name_lbl, "label")
@@ -301,6 +326,36 @@ impl RowWidgets {
         device
             .bind_property("xpub", &self.xpub_lbl, "label")
             .flags(glib::BindingFlags::DEFAULT | glib::BindingFlags::SYNC_CREATE)
+            .build();
+        device
+            .bind_property("updating", &self.xpub_lbl, "visible")
+            .flags(
+                glib::BindingFlags::DEFAULT
+                    | glib::BindingFlags::SYNC_CREATE
+                    | glib::BindingFlags::INVERT_BOOLEAN,
+            )
+            .build();
+        device
+            .bind_property("updating", &self.spinner, "active")
+            .flags(glib::BindingFlags::DEFAULT | glib::BindingFlags::SYNC_CREATE)
+            .build();
+        /*
+        device
+            .bind_property("updating", &self.account_spin, "sensitive")
+            .flags(
+                glib::BindingFlags::DEFAULT
+                    | glib::BindingFlags::SYNC_CREATE
+                    | glib::BindingFlags::INVERT_BOOLEAN,
+            )
+            .build();
+         */
+        device
+            .bind_property("updating", &self.add_btn, "sensitive")
+            .flags(
+                glib::BindingFlags::DEFAULT
+                    | glib::BindingFlags::SYNC_CREATE
+                    | glib::BindingFlags::INVERT_BOOLEAN,
+            )
             .build();
     }
 }
@@ -318,6 +373,7 @@ pub(crate) struct Widgets {
 pub(crate) struct Win {
     model: Model,
     channel: Channel<Msg>,
+    sender: Sender<Msg>,
     widgets: Widgets,
 }
 
@@ -334,6 +390,7 @@ impl Update for Win {
             scheme: model.0,
             network: model.1,
             devices: DeviceModel::new(),
+            hwi: default!(),
         }
     }
 
@@ -346,7 +403,7 @@ impl Update for Win {
             Msg::Refresh => self.widgets.refresh_dlg.show(),
             Msg::Devices(result) => {
                 self.widgets.refresh_dlg.hide();
-                let devices = match result {
+                self.model.hwi = match result {
                     Err(err) => {
                         self.widgets
                             .error_dlg
@@ -365,9 +422,45 @@ impl Update for Win {
                     }
                     Ok((devices, _)) => devices,
                 };
-                self.model.devices.refresh(devices);
+                self.model.devices.refresh(&self.model.hwi);
             }
-            Msg::AccountChange(_) => {}
+            Msg::AccountChange(fingerprint, account) => {
+                let imp = self.model.devices.imp().0.borrow();
+                let model = imp
+                    .iter()
+                    .find(|device| device.fingerprint() == fingerprint)
+                    .expect("device absent in the model");
+                model.set_property("updating", true);
+                // disable controls
+                // set spinner
+                let derivation = self.model.scheme.to_account_derivation(
+                    ChildNumber::from_hardened_idx(account).expect("wrong account number"),
+                    self.model.network.into(),
+                );
+                let derivation_string = derivation.to_string();
+                let testnet = self.model.network.is_testnet();
+                let sender = self.sender.clone();
+                let hwi = self.model.hwi[&fingerprint].device.clone();
+                std::thread::spawn(move || {
+                    let derivation = derivation_string.parse().expect(
+                        "ancient bitcoin version with different derivation path implementation",
+                    );
+                    let msg = match hwi.get_xpub(&derivation, testnet) {
+                        Ok(xpub) => Msg::Xpub(fingerprint, xpub.xpub.to_string()),
+                        Err(err) => Msg::XpubErr(fingerprint, err),
+                    };
+                    sender.send(msg).expect("message channel");
+                });
+            }
+            Msg::Xpub(fingerprint, xpub) => {
+                let imp = self.model.devices.imp().0.borrow();
+                let model = imp
+                    .iter()
+                    .find(|device| device.fingerprint() == fingerprint)
+                    .expect("device absent in the model");
+                model.set_property("updating", false);
+            }
+            Msg::XpubErr(fingerprint, err) => {}
             Msg::Add => {}
             Msg::Close => {
                 self.widgets.dialog.hide();
@@ -396,13 +489,14 @@ impl Widget for Win {
             stream.emit(msg);
         });
         let scheme = model.scheme.clone();
+        let sender2 = sender.clone();
         widgets.refresh_btn.connect_clicked(move |_| {
-            sender
+            sender2
                 .send(Msg::Refresh)
                 .expect("broken channel in devices dialog");
             // TODO: This fixes the schema used in the wallet once and forever
             let scheme = scheme.clone();
-            let sender = sender.clone();
+            let sender = sender2.clone();
             std::thread::spawn(move || {
                 let result = HardwareList::enumerate(&scheme, model.network, HardenedIndex::zero());
                 sender
@@ -414,23 +508,38 @@ impl Widget for Win {
         widgets.error_dlg.connect_close(|dlg| dlg.hide());
         widgets.error_dlg.connect_response(|dlg, _ty| dlg.hide());
 
+        let stream = relm.stream().clone();
         widgets
             .device_list
             .bind_model(Some(&model.devices), move |item| {
                 let glade_src = include_str!("../res/device_row.glade");
-                let device_row = RowWidgets::from_string(glade_src).expect("glade file broken");
+                let device_widgets =
+                    DeviceWidgets::from_string(glade_src).expect("glade file broken");
                 let device = item
                     .downcast_ref::<DeviceData>()
                     .expect("Row data is of wrong type");
-                device_row.set_device(device);
-                device_row.device_list.remove(&device_row.device_row);
-                device_row.device_row.upcast::<gtk::Widget>()
+                device_widgets.set_device(device);
+                let fingerprint = device.fingerprint();
+                let stream = stream.clone();
+
+                device_widgets
+                    .account_adj
+                    .connect_value_changed(move |adj| {
+                        let account = adj.value() as u32;
+                        stream.emit(Msg::AccountChange(fingerprint, account))
+                    });
+
+                device_widgets
+                    .device_list
+                    .remove(&device_widgets.device_row);
+                device_widgets.device_row.upcast::<gtk::Widget>()
             });
 
         Win {
             model,
             widgets,
             channel,
+            sender,
         }
     }
 }

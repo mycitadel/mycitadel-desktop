@@ -67,15 +67,16 @@ pub enum Ownership {
     External,
 }
 
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+#[derive(Clone)]
 pub struct HardwareDevice {
+    pub device: HWIDevice,
     pub device_type: String,
     pub model: String,
     pub default_account: HardenedIndex,
     pub default_xpub: ExtendedPubKey,
 }
 
-#[derive(Wrapper, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default, From)]
+#[derive(Wrapper, Clone, Default, From)]
 pub struct HardwareList(BTreeMap<Fingerprint, HardwareDevice>);
 
 impl<'a> IntoIterator for &'a HardwareList {
@@ -146,8 +147,9 @@ impl HardwareList {
                     devices.insert(
                         fingerprint,
                         HardwareDevice {
-                            device_type: device.device_type,
-                            model: device.model,
+                            device_type: device.device_type.clone(),
+                            model: device.model.clone(),
+                            device,
                             default_account,
                             default_xpub: xpub,
                         },
@@ -200,7 +202,7 @@ pub enum DescriptorClass {
     TaprootC0,
 }
 
-#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+#[derive(Clone)]
 pub(crate) struct Model {
     pub scheme: DerivationScheme,
     pub devices: HardwareList,
@@ -433,7 +435,7 @@ impl Model {
     }
 }
 
-#[derive(Msg, Debug)]
+#[derive(Msg)]
 pub(crate) enum Msg {
     Show,
     Init(Arc<Mutex<Model>>),
