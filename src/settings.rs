@@ -93,7 +93,7 @@ pub enum Error {
     /// No devices detected or some of devices are locked
     NoDevices(HwiError),
 
-    /// Device {1} ({2}, master fingerprint {0} does not support used derivation schema {3} on {4}.
+    /// Device {1} ({2}, master fingerprint {0}) does not support used derivation schema {3} on {4}.
     DerivationNotSupported(
         Fingerprint,
         String,

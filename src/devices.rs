@@ -8,7 +8,10 @@ use gladis::Gladis;
 use glib::subclass::prelude::*;
 use gtk::prelude::*;
 use gtk::subclass::prelude::ListModelImpl;
-use gtk::{gio, glib, Adjustment, Button, Dialog, Label, ListBox, ListBoxRow, Spinner, ToolButton};
+use gtk::{
+    gio, glib, Adjustment, Button, Dialog, Label, ListBox, ListBoxRow, MessageDialog, Spinner,
+    ToolButton,
+};
 use relm::{Channel, Relm, Update, Widget};
 use wallet::hd::{DerivationScheme, HardenedIndex, SegmentIndexes};
 
@@ -29,14 +32,18 @@ impl Default for DeviceDataInner {
         DeviceDataInner {
             name: RefCell::new("".to_string()),
             fingerprint: RefCell::new(Default::default()),
-            xpub: RefCell::new(ExtendedPubKey {
-                network: Network::Bitcoin,
-                depth: 0,
-                parent_fingerprint: Default::default(),
-                child_number: ChildNumber::from_hardened_idx(0).expect("hardcoded hardened index"),
-                public_key,
-                chain_code: ChainCode::from(&[0u8; 32][..]),
-            }.to_string()),
+            xpub: RefCell::new(
+                ExtendedPubKey {
+                    network: Network::Bitcoin,
+                    depth: 0,
+                    parent_fingerprint: Default::default(),
+                    child_number: ChildNumber::from_hardened_idx(0)
+                        .expect("hardcoded hardened index"),
+                    public_key,
+                    chain_code: ChainCode::from(&[0u8; 32][..]),
+                }
+                .to_string(),
+            ),
             account_no: RefCell::new(0),
         }
     }
@@ -149,8 +156,19 @@ glib::wrapper! {
 }
 
 impl DeviceData {
-    pub fn new(name: &str, fingerprint: &Fingerprint, xpub: &ExtendedPubKey, account: u32) -> DeviceData {
-        glib::Object::new(&[("name", &name), ("fingerprint", &fingerprint.to_string()), ("xpub", &xpub.to_string()), ("account", &account)]).expect("Failed to create row data")
+    pub fn new(
+        name: &str,
+        fingerprint: &Fingerprint,
+        xpub: &ExtendedPubKey,
+        account: u32,
+    ) -> DeviceData {
+        glib::Object::new(&[
+            ("name", &name),
+            ("fingerprint", &fingerprint.to_string()),
+            ("xpub", &xpub.to_string()),
+            ("account", &account),
+        ])
+        .expect("Failed to create row data")
     }
 }
 
@@ -197,7 +215,12 @@ impl DeviceModel {
     pub fn refresh(&self, devices: HardwareList) {
         self.clear();
         for (fingerprint, device) in &devices {
-            let data = DeviceData::new(&device.model, fingerprint, &device.default_xpub, device.default_account.first_index());
+            let data = DeviceData::new(
+                &device.model,
+                fingerprint,
+                &device.default_xpub,
+                device.default_account.first_index(),
+            );
             self.append(&data);
         }
     }
@@ -254,7 +277,7 @@ pub(crate) enum Msg {
 }
 
 #[derive(Clone, Gladis)]
-struct DeviceRow {
+struct RowWidgets {
     pub device_list: ListBox,
     pub device_row: ListBoxRow,
     name_lbl: Label,
@@ -265,7 +288,7 @@ struct DeviceRow {
     add_btn: Button,
 }
 
-impl DeviceRow {
+impl RowWidgets {
     pub fn set_device(&self, device: &DeviceData) {
         device
             .bind_property("name", &self.name_lbl, "label")
@@ -286,9 +309,10 @@ impl DeviceRow {
 pub(crate) struct Widgets {
     dialog: Dialog,
     close_btn: Button,
-    refresh_btn: ToolButton,
+    refresh_btn: Button,
     refresh_dlg: Dialog,
     device_list: ListBox,
+    error_dlg: MessageDialog,
 }
 
 pub(crate) struct Win {
@@ -318,9 +342,13 @@ impl Update for Win {
             Msg::Show => self.widgets.dialog.show(),
             Msg::Refresh => self.widgets.refresh_dlg.show(),
             Msg::Devices(result) => {
+                self.widgets.refresh_dlg.hide();
                 let devices = match result {
-                    Err(_err) => {
-                        // TODO: Display message to user
+                    Err(err) => {
+                        self.widgets
+                            .error_dlg
+                            .set_secondary_text(Some(&err.to_string()));
+                        self.widgets.error_dlg.show();
                         HardwareList::default()
                     }
                     Ok((devices, log)) if !log.is_empty() => {
@@ -334,8 +362,6 @@ impl Update for Win {
                     Ok((devices, _)) => devices,
                 };
                 self.model.devices.refresh(devices);
-                // TODO: Complete
-                self.widgets.refresh_dlg.hide();
             }
             Msg::AccountChange(_) => {}
             Msg::Add => {}
@@ -385,7 +411,7 @@ impl Widget for Win {
             .device_list
             .bind_model(Some(&model.devices), move |item| {
                 let glade_src = include_str!("../res/device_row.glade");
-                let device_row = DeviceRow::from_string(glade_src).expect("glade file broken");
+                let device_row = RowWidgets::from_string(glade_src).expect("glade file broken");
                 let device = item
                     .downcast_ref::<DeviceData>()
                     .expect("Row data is of wrong type");
