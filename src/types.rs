@@ -67,7 +67,8 @@ pub enum Error {
     /// No devices detected or some of devices are locked
     NoDevices(HwiError),
 
-    /// Device {1} ({2}, master fingerprint {0}) does not support used derivation schema {3} on {4}.
+    /// Device {1} ({2}, master fingerprint {0}) does not support used derivation schema {3} on
+    /// {4}.
     DerivationNotSupported(
         Fingerprint,
         String,
@@ -94,9 +95,7 @@ impl<'a> IntoIterator for &'a HardwareList {
     type Item = (&'a Fingerprint, &'a HardwareDevice);
     type IntoIter = std::collections::btree_map::Iter<'a, Fingerprint, HardwareDevice>;
 
-    fn into_iter(self) -> Self::IntoIter {
-        self.0.iter()
-    }
+    fn into_iter(self) -> Self::IntoIter { self.0.iter() }
 }
 
 impl HardwareList {
@@ -129,16 +128,13 @@ impl HardwareList {
                             .expect("secp lib used by hwi is broken"),
                         chain_code: ChainCode::from(&hwikey.xpub.chain_code[..]),
                     };
-                    devices.insert(
-                        fingerprint,
-                        HardwareDevice {
-                            device_type: device.device_type.clone(),
-                            model: device.model.clone(),
-                            device,
-                            default_account,
-                            default_xpub: xpub,
-                        },
-                    );
+                    devices.insert(fingerprint, HardwareDevice {
+                        device_type: device.device_type.clone(),
+                        model: device.model.clone(),
+                        device,
+                        default_account,
+                        default_xpub: xpub,
+                    });
                 }
                 Err(err) => {
                     log.push(Error::DerivationNotSupported(
@@ -196,9 +192,7 @@ pub enum SigsReq {
 }
 
 impl Default for SigsReq {
-    fn default() -> Self {
-        SigsReq::All
-    }
+    fn default() -> Self { SigsReq::All }
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
@@ -211,9 +205,7 @@ pub enum TimelockReq {
 }
 
 impl Default for TimelockReq {
-    fn default() -> Self {
-        TimelockReq::Anytime
-    }
+    fn default() -> Self { TimelockReq::Anytime }
 }
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default)]

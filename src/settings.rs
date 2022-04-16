@@ -3,28 +3,27 @@ use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 use std::sync::{Arc, Mutex};
 
+use bitcoin::hashes::{sha256, Hash};
+use bitcoin::secp256k1::{self, SECP256K1};
+use bitcoin::util::bip32::{ChildNumber, ExtendedPubKey, Fingerprint};
 use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{
     glib, Adjustment, Button, Dialog, Entry, Image, Label, ListBox, ListStore, TextBuffer,
     ToggleButton, ToolButton, TreeView,
 };
-use relm::{init, Channel, Component, Relm, Update, Widget};
-
-use bitcoin::hashes::{sha256, Hash};
-use bitcoin::secp256k1::{self, SECP256K1};
-use bitcoin::util::bip32::{ChildNumber, ExtendedPubKey, Fingerprint};
 use miniscript::descriptor::{Sh, TapTree, Tr, Wsh};
 use miniscript::policy::concrete::Policy;
 use miniscript::{Descriptor, Legacy, Miniscript, Segwitv0, Tap};
-use wallet::hd::{AccountStep, DerivationScheme, HardenedIndex, SegmentIndexes, TrackingAccount};
-use wallet::hd::{TerminalStep, XpubRef};
-
-use crate::{devices, spending_row};
-use crate::spending_row::SpendingModel;
-use crate::types::{
-    DescriptorClass, HardwareDevice, HardwareList, PublicNetwork, Signer,
+use relm::{init, Channel, Component, Relm, Update, Widget};
+use wallet::hd::{
+    AccountStep, DerivationScheme, HardenedIndex, SegmentIndexes, TerminalStep, TrackingAccount,
+    XpubRef,
 };
+
+use crate::spending_row::SpendingModel;
+use crate::types::{DescriptorClass, HardwareDevice, HardwareList, PublicNetwork, Signer};
+use crate::{devices, spending_row};
 
 #[derive(Clone)]
 pub struct Model {
@@ -335,16 +334,13 @@ impl Widgets {
         let store = &mut self.signers_store;
         store.clear();
         for signer in signers {
-            store.insert_with_values(
-                None,
-                &[
-                    (0, &signer.name),
-                    (1, &signer.fingerprint.to_string()),
-                    (2, &signer.account.to_string()),
-                    (3, &signer.xpub.to_string()),
-                    (4, &signer.device.clone().unwrap_or_default()),
-                ],
-            );
+            store.insert_with_values(None, &[
+                (0, &signer.name),
+                (1, &signer.fingerprint.to_string()),
+                (2, &signer.account.to_string()),
+                (3, &signer.xpub.to_string()),
+                (4, &signer.device.clone().unwrap_or_default()),
+            ]);
         }
     }
 
@@ -473,9 +469,7 @@ impl Widget for Win {
     type Root = Dialog;
 
     // Return the root widget.
-    fn root(&self) -> Self::Root {
-        self.widgets.dialog.clone()
-    }
+    fn root(&self) -> Self::Root { self.widgets.dialog.clone() }
 
     fn view(relm: &Relm<Self>, model: Self::Model) -> Self {
         let glade_src = include_str!("../res/settings.glade");

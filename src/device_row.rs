@@ -4,8 +4,6 @@ use std::str::FromStr;
 use bitcoin::secp256k1::PublicKey;
 use bitcoin::util::bip32::{ChainCode, ChildNumber, ExtendedPubKey, Fingerprint};
 use bitcoin::{secp256k1, Network};
-
-use crate::devices;
 use gladis::Gladis;
 use glib::subclass::prelude::*;
 use gtk::prelude::*;
@@ -14,6 +12,7 @@ use gtk::{gio, glib, Adjustment, Button, Label, ListBox, ListBoxRow, SpinButton,
 use relm::StreamHandle;
 use wallet::hd::SegmentIndexes;
 
+use crate::devices;
 use crate::types::HardwareList;
 
 // The actual data structure that stores our values. This is not accessible
@@ -207,12 +206,8 @@ impl ObjectSubclass for DeviceModelInner {
 impl ObjectImpl for DeviceModelInner {}
 
 impl ListModelImpl for DeviceModelInner {
-    fn item_type(&self, _list_model: &Self::Type) -> glib::Type {
-        DeviceData::static_type()
-    }
-    fn n_items(&self, _list_model: &Self::Type) -> u32 {
-        self.0.borrow().len() as u32
-    }
+    fn item_type(&self, _list_model: &Self::Type) -> glib::Type { DeviceData::static_type() }
+    fn n_items(&self, _list_model: &Self::Type) -> u32 { self.0.borrow().len() as u32 }
     fn item(&self, _list_model: &Self::Type, position: u32) -> Option<glib::Object> {
         self.0
             .borrow()
@@ -228,9 +223,7 @@ glib::wrapper! {
 
 impl DeviceModel {
     #[allow(clippy::new_without_default)]
-    pub fn new() -> DeviceModel {
-        glib::Object::new(&[]).expect("Failed to create DeviceModel")
-    }
+    pub fn new() -> DeviceModel { glib::Object::new(&[]).expect("Failed to create DeviceModel") }
 
     pub fn refresh(&self, devices: &HardwareList) {
         self.clear();

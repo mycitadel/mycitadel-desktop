@@ -17,6 +17,4 @@ mod spending_row;
 mod types;
 mod wallet;
 
-fn main() {
-    wallet::Win::run(()).expect("wallet::Win::run failed");
-}
+fn main() { wallet::Win::run(()).expect("wallet::Win::run failed"); }

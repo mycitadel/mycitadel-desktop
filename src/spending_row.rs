@@ -11,19 +11,15 @@ use gtk::{
 };
 use relm::StreamHandle;
 
-use crate::{devices, settings};
 use crate::types::{Signer, SigsReq, TimelockReq};
+use crate::{devices, settings};
 
 // The actual data structure that stores our values. This is not accessible
 // directly from the outside.
-pub struct ConditionInner {
-}
+pub struct ConditionInner {}
 
 impl Default for ConditionInner {
-    fn default() -> Self {
-        ConditionInner {
-        }
-    }
+    fn default() -> Self { ConditionInner {} }
 }
 
 // Basic declaration of our type for the GObject type system
@@ -43,10 +39,7 @@ impl ObjectSubclass for ConditionInner {
 impl ObjectImpl for ConditionInner {
     fn properties() -> &'static [glib::ParamSpec] {
         use once_cell::sync::Lazy;
-        static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
-            vec![
-            ]
-        });
+        static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| vec![]);
 
         PROPERTIES.as_ref()
     }
@@ -75,10 +68,7 @@ glib::wrapper! {
 }
 
 impl Default for Condition {
-    fn default() -> Self {
-        glib::Object::new(&[])
-            .expect("Failed to create row data")
-    }
+    fn default() -> Self { glib::Object::new(&[]).expect("Failed to create row data") }
 }
 
 #[derive(Debug, Default)]
@@ -99,12 +89,8 @@ impl ObjectSubclass for SpendingModelInner {
 impl ObjectImpl for SpendingModelInner {}
 
 impl ListModelImpl for SpendingModelInner {
-    fn item_type(&self, _list_model: &Self::Type) -> glib::Type {
-        Condition::static_type()
-    }
-    fn n_items(&self, _list_model: &Self::Type) -> u32 {
-        self.conditions.borrow().len() as u32
-    }
+    fn item_type(&self, _list_model: &Self::Type) -> glib::Type { Condition::static_type() }
+    fn n_items(&self, _list_model: &Self::Type) -> u32 { self.conditions.borrow().len() as u32 }
     fn item(&self, _list_model: &Self::Type, position: u32) -> Option<glib::Object> {
         self.conditions
             .borrow()
@@ -121,7 +107,8 @@ glib::wrapper! {
 impl SpendingModel {
     #[allow(clippy::new_without_default)]
     pub fn new() -> SpendingModel {
-        let mut model: SpendingModel = glib::Object::new(&[]).expect("Failed to create SpendingModel");
+        let mut model: SpendingModel =
+            glib::Object::new(&[]).expect("Failed to create SpendingModel");
         model.append(&Condition::default());
         model
     }

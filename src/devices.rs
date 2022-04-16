@@ -1,7 +1,6 @@
 use std::str::FromStr;
 
 use bitcoin::util::bip32::{ChildNumber, ExtendedPubKey, Fingerprint};
-
 use gladis::Gladis;
 use glib::subclass::prelude::*;
 use gtk::prelude::*;
@@ -173,9 +172,7 @@ impl Widget for Win {
     type Root = Dialog;
 
     // Return the root widget.
-    fn root(&self) -> Self::Root {
-        self.widgets.dialog.clone()
-    }
+    fn root(&self) -> Self::Root { self.widgets.dialog.clone() }
 
     fn view(relm: &Relm<Self>, model: Self::Model) -> Self {
         let glade_src = include_str!("../res/devices.glade");

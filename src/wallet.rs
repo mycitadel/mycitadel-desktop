@@ -1,11 +1,11 @@
-use gtk::prelude::WidgetExt;
-use gtk::prelude::*;
-use gtk::{ApplicationWindow, Button, Inhibit};
-use relm::{init, Component, Relm, Update, Widget};
 use std::sync::{Arc, Mutex};
 
-use crate::settings;
 use gladis::Gladis;
+use gtk::prelude::{WidgetExt, *};
+use gtk::{ApplicationWindow, Button, Inhibit};
+use relm::{init, Component, Relm, Update, Widget};
+
+use crate::settings;
 
 #[derive(Default)]
 pub struct Model {
@@ -45,9 +45,7 @@ impl Update for Win {
     // Specify the type of the messages sent to the update function.
     type Msg = Msg;
 
-    fn model(_: &Relm<Self>, _: ()) -> Model {
-        Model::default()
-    }
+    fn model(_: &Relm<Self>, _: ()) -> Model { Model::default() }
 
     fn update(&mut self, event: Msg) {
         match event {
@@ -63,9 +61,7 @@ impl Widget for Win {
     type Root = ApplicationWindow;
 
     // Return the root widget.
-    fn root(&self) -> Self::Root {
-        self.widgets.window.clone()
-    }
+    fn root(&self) -> Self::Root { self.widgets.window.clone() }
 
     fn view(relm: &Relm<Self>, model: Self::Model) -> Self {
         let glade_src = include_str!("../res/wallet.glade");
