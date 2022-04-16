@@ -1,4 +1,6 @@
-# MyCitadel Desktop Application
+# MyCitadel Desktop Wallet
+
+Bitcoin & RGB wallet based on GTK framework; part of MyCitadel software suite.
 
 # Installation
 
