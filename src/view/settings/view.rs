@@ -28,6 +28,7 @@ use wallet::hd::{SegmentIndexes, TrackingAccount};
 use super::{spending_row, Msg, ViewModel};
 use crate::model::{DescriptorClass, Signer};
 use crate::view::devices;
+use crate::view::settings::spending_row::Condition;
 
 // Create the structure that holds the widgets used in the view.
 #[derive(Clone, Gladis)]
@@ -43,6 +44,8 @@ pub struct Widgets {
     signers_store: ListStore,
 
     spending_list: ListBox,
+    addcond_btn: ToolButton,
+    removecond_btn: ToolButton,
 
     name_fld: Entry,
     fingerprint_fld: Entry,
@@ -153,6 +156,20 @@ pub struct Win {
     devices_win: Component<devices::Win>,
 }
 
+impl Win {
+    fn update_descriptor(&mut self) {
+        self.model.update_descriptor();
+        self.widgets
+            .update_descriptor(self.model.descriptor.as_ref(), self.model.format_lnpbp);
+    }
+
+    fn condition_selection_change(&mut self) {
+        let removable = self.widgets.spending_list.selected_row().is_some()
+            && self.model.spendings.n_items() > 1;
+        self.widgets.removecond_btn.set_sensitive(removable);
+    }
+}
+
 impl Update for Win {
     // Specify the model used for this widget.
     type Model = ViewModel;
@@ -224,10 +241,25 @@ impl Update for Win {
             Msg::Cancel => {
                 self.widgets.dialog.hide();
             }
+            Msg::SpendingConditionAdd => {
+                self.model.spendings.append(&Condition::default());
+                self.condition_selection_change();
+                self.update_descriptor();
+            }
+            Msg::SpendingConditionRemove => {
+                let index = if let Some(row) = self.widgets.spending_list.selected_row() {
+                    row.index()
+                } else {
+                    return;
+                };
+                self.model.spendings.remove(index as u32);
+                self.update_descriptor();
+            }
+            Msg::SpendingConditionSelect => {
+                self.condition_selection_change();
+            }
             Msg::SpendingConditionChange => {
-                self.model.update_descriptor();
-                self.widgets
-                    .update_descriptor(self.model.descriptor.as_ref(), self.model.format_lnpbp);
+                self.update_descriptor();
             }
         }
     }
@@ -301,6 +333,25 @@ impl Widget for Win {
             widgets.descr_taproot_tgl,
             connect_clicked(_),
             Msg::ToggleDescr(DescriptorClass::TaprootC0)
+        );
+
+        connect!(
+            relm,
+            widgets.addcond_btn,
+            connect_clicked(_),
+            Msg::SpendingConditionAdd
+        );
+        connect!(
+            relm,
+            widgets.removecond_btn,
+            connect_clicked(_),
+            Msg::SpendingConditionRemove
+        );
+        connect!(
+            relm,
+            widgets.spending_list,
+            connect_selected_rows_changed(_),
+            Msg::SpendingConditionSelect
         );
 
         let stream = relm.stream().clone();

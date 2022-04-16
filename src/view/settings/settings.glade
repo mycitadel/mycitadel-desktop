@@ -571,8 +571,7 @@ derivation:</property>
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <child>
-                      <object class="GtkToolButton" id="add_btn">
-                        <property name="name">condition_add_btn</property>
+                      <object class="GtkToolButton" id="addcond_btn">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                         <property name="is-important">True</property>
@@ -586,9 +585,9 @@ derivation:</property>
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkToolButton" id="remove_btn">
-                        <property name="name">condition_remove_btn</property>
+                      <object class="GtkToolButton" id="removecond_btn">
                         <property name="visible">True</property>
+                        <property name="sensitive">False</property>
                         <property name="can-focus">False</property>
                         <property name="is-important">True</property>
                         <property name="label" translatable="yes">Remove condition</property>
@@ -1212,7 +1211,6 @@ However, they are not supported by other wallets. Wallets of this type can be us
                     <child>
                       <object class="GtkButton" id="test_btn">
                         <property name="label" translatable="yes">Test connection</property>
-                        <property name="name">0</property>
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="receives-default">True</property>

@@ -54,7 +54,7 @@ pub struct RowWidgets {
 }
 
 impl RowWidgets {
-    pub fn init(stream_: StreamHandle<settings::Msg>, item: &glib::Object) -> gtk::Widget {
+    pub fn init(stream: StreamHandle<settings::Msg>, item: &glib::Object) -> gtk::Widget {
         let glade_src = include_str!("spending_row.glade");
         let row_widgets = RowWidgets::from_string(glade_src).expect("glade file broken");
 
@@ -63,12 +63,15 @@ impl RowWidgets {
             .expect("Row data is of wrong type");
         row_widgets.bind_model(condition);
 
-        let stream = stream_.clone();
+        condition.connect_notify(None, move |_, _| {
+            // TODO: Change msg to avoid non-Send data and uncomment next line
+            // stream.emit(settings::Msg::SpendingConditionChange)
+        });
+
         // We use hack re-utilizing `can-default` property, since updates to `active` property are
         // not working in GTK3
         let toggle = move |mi: &RadioMenuItem| {
             mi.set_property("can-default", mi.is_active());
-            stream.emit(settings::Msg::SpendingConditionChange);
         };
 
         row_widgets.sigs_all_item.connect_toggled(toggle.clone());
