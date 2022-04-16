@@ -10,7 +10,9 @@
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
 mod types;
+mod wallet;
 
+pub use self::wallet::Wallet;
 pub use types::{
     DescriptorClass, Error, HardwareDevice, HardwareList, Ownership, PublicNetwork, Signer,
     SigsReq, SpendingCondition, TimelockReq,

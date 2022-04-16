@@ -130,7 +130,7 @@ dependencies = [
 [[package]]
 name = "bitcoin"
 version = "0.28.0-rc.2"
-source = "git+https://github.com/rust-bitcoin/rust-bitcoin#cb4d34fd400d2c6ffefc140e9d7f06c5b3e82b0d"
+source = "git+https://github.com/rust-bitcoin/rust-bitcoin#8ca18f75ddba7c741e293be2e79342337bd500c1"
 dependencies = [
  "base64-compat",
  "bech32 0.8.1",
@@ -672,9 +672,9 @@ checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 
 [[package]]
 name = "libc"
-version = "0.2.121"
+version = "0.2.123"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "efaa7b300f3b5fe8eb6bf21ce3895e1751d9665086af2d64b42f19701015ff4f"
+checksum = "cb691a747a7ab48abc15c5b42066eaafde10dc427e3b6ee2a1cf43db04c763bd"
 
 [[package]]
 name = "log"
@@ -862,9 +862,9 @@ dependencies = [
 
 [[package]]
 name = "quote"
-version = "1.0.17"
+version = "1.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "632d02bff7f874a36f33ea8bb416cd484b90cc66c1194b1a1110d067a7013f58"
+checksum = "a1feb54ed693b93a84e14094943b84b7c4eae204c512b7ccb95ab0c66d278ad1"
 dependencies = [
  "proc-macro2",
 ]
@@ -1269,9 +1269,9 @@ dependencies = [
 
 [[package]]
 name = "toml"
-version = "0.5.8"
+version = "0.5.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a31142970826733df8241ef35dc040ef98c679ab14d7c3e54d827099b3acecaa"
+checksum = "8d82e1a7758622a465f8cee077614c73484dac5b836c02ff6a40d5d1010324d7"
 dependencies = [
  "serde",
 ]
