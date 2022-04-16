@@ -17,15 +17,25 @@ use gtk::prelude::*;
 use gtk::subclass::prelude::ListModelImpl;
 use gtk::{gio, glib};
 
-use crate::model::Signer;
+use crate::model::{Signer, SigsReq};
 
 // The actual data structure that stores our values. This is not accessible
 // directly from the outside.
-pub struct ConditionInner {}
+pub struct ConditionInner {
+    sigs_all: RefCell<bool>,
+    sigs_at_least: RefCell<bool>,
+    sigs_any: RefCell<bool>,
+    sigs_no: RefCell<u32>,
+}
 
 impl Default for ConditionInner {
     fn default() -> Self {
-        ConditionInner {}
+        ConditionInner {
+            sigs_all: RefCell::new(true),
+            sigs_at_least: RefCell::new(false),
+            sigs_any: RefCell::new(false),
+            sigs_no: RefCell::new(2),
+        }
     }
 }
 
@@ -46,7 +56,47 @@ impl ObjectSubclass for ConditionInner {
 impl ObjectImpl for ConditionInner {
     fn properties() -> &'static [glib::ParamSpec] {
         use once_cell::sync::Lazy;
-        static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| vec![]);
+        static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
+            vec![
+                glib::ParamSpecString::new(
+                    "sigsName",
+                    "SigsName",
+                    "SigsName",
+                    None, // Default value
+                    glib::ParamFlags::READABLE,
+                ),
+                glib::ParamSpecBoolean::new(
+                    "sigsAll",
+                    "SigsAll",
+                    "SigsAll",
+                    true, // Default value
+                    glib::ParamFlags::READWRITE,
+                ),
+                glib::ParamSpecBoolean::new(
+                    "sigsAtLeast",
+                    "SigsAtLeast",
+                    "SigsAtLeast",
+                    true, // Default value
+                    glib::ParamFlags::READWRITE,
+                ),
+                glib::ParamSpecBoolean::new(
+                    "sigsAny",
+                    "SigsAny",
+                    "SigsAny",
+                    true, // Default value
+                    glib::ParamFlags::READWRITE,
+                ),
+                glib::ParamSpecUInt::new(
+                    "sigsNo",
+                    "SigsNo",
+                    "SigsNo",
+                    2,
+                    100,
+                    2, // Allowed range and default value
+                    glib::ParamFlags::READWRITE,
+                ),
+            ]
+        });
 
         PROPERTIES.as_ref()
     }
@@ -59,13 +109,64 @@ impl ObjectImpl for ConditionInner {
         pspec: &glib::ParamSpec,
     ) {
         match pspec.name() {
+            "sigsAll" => {
+                let value = value
+                    .get()
+                    .expect("type conformity checked by `Object::set_property`");
+                self.sigs_all.replace(value);
+            }
+            "sigsAtLeast" => {
+                let value = value
+                    .get()
+                    .expect("type conformity checked by `Object::set_property`");
+                self.sigs_at_least.replace(value);
+            }
+            "sigsAny" => {
+                let value = value
+                    .get()
+                    .expect("type conformity checked by `Object::set_property`");
+                self.sigs_any.replace(value);
+            }
+            "sigsNo" => {
+                let value = value
+                    .get()
+                    .expect("type conformity checked by `Object::set_property`");
+                self.sigs_no.replace(value);
+            }
             _ => unimplemented!(),
         }
     }
 
     fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
         match pspec.name() {
+            "sigsName" => self.sigs_name().to_value(),
+            "sigsAll" => self.sigs_all.borrow().to_value(),
+            "sigsAtLeast" => self.sigs_at_least.borrow().to_value(),
+            "sigsAny" => self.sigs_any.borrow().to_value(),
+            "sigsNo" => self.sigs_no.borrow().to_value(),
             _ => unimplemented!(),
+        }
+    }
+}
+
+impl ConditionInner {
+    pub fn sigs_req(&self) -> SigsReq {
+        if *self.sigs_all.borrow() {
+            SigsReq::All
+        } else if *self.sigs_any.borrow() {
+            SigsReq::Any
+        } else {
+            SigsReq::AtLeast(*self.sigs_no.borrow() as u16)
+        }
+    }
+
+    pub fn sigs_name(&self) -> &'static str {
+        match self.sigs_req() {
+            SigsReq::All => "All signatures",
+            SigsReq::AtLeast(_) => "At least",
+            // TODO: Add specific amount of signatures to the menu
+            SigsReq::Specific(_) => "Exactly",
+            SigsReq::Any => "Any signature",
         }
     }
 }
@@ -77,6 +178,18 @@ glib::wrapper! {
 impl Default for Condition {
     fn default() -> Self {
         glib::Object::new(&[]).expect("Failed to create row data")
+    }
+}
+
+impl Condition {
+    pub fn sigs_req(&self) -> SigsReq {
+        if self.property("sigsAll") {
+            SigsReq::All
+        } else if self.property("sigsAny") {
+            SigsReq::Any
+        } else {
+            SigsReq::AtLeast(self.property::<u32>("sigs_no") as u16)
+        }
     }
 }
 

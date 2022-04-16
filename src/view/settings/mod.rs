@@ -29,6 +29,7 @@ pub enum Msg {
     Devices,
     AddDevice(Fingerprint, HardwareDevice),
     SignerSelect,
+    SpendingConditionChange,
     ToggleDescr(DescriptorClass),
     ExportFormat(bool),
     Save,

@@ -56,7 +56,7 @@ impl RowWidgets {
         row_widgets.device_row.upcast::<gtk::Widget>()
     }
 
-    pub fn set_device(&self, device: &DeviceData) {
+    fn set_device(&self, device: &DeviceData) {
         device
             .bind_property("name", &self.name_lbl, "label")
             .flags(glib::BindingFlags::DEFAULT | glib::BindingFlags::SYNC_CREATE)

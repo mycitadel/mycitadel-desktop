@@ -224,6 +224,11 @@ impl Update for Win {
             Msg::Cancel => {
                 self.widgets.dialog.hide();
             }
+            Msg::SpendingConditionChange => {
+                self.model.update_descriptor();
+                self.widgets
+                    .update_descriptor(self.model.descriptor.as_ref(), self.model.format_lnpbp);
+            }
         }
     }
 }

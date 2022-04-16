@@ -56,35 +56,53 @@ impl RowWidgets {
     pub fn init(stream_: StreamHandle<settings::Msg>, item: &glib::Object) -> gtk::Widget {
         let glade_src = include_str!("spending_row.glade");
         let row_widgets = RowWidgets::from_string(glade_src).expect("glade file broken");
+        row_widgets.spending_list.remove(&row_widgets.spending_row);
 
         let condition = item
             .downcast_ref::<Condition>()
             .expect("Row data is of wrong type");
         row_widgets.set_condition(condition);
 
-        /*
         let stream = stream_.clone();
-        row_widgets.account_adj.connect_value_changed(move |adj| {
-            let account = adj.value() as u32;
-            stream.emit(devices::Msg::AccountChange(fingerprint, account))
+        row_widgets.sigs_all_item.connect_toggled(move |_| {
+            stream.emit(settings::Msg::SpendingConditionChange);
         });
 
-        let stream = stream_.clone();
-        row_widgets.add_btn.connect_clicked(move |_| {
-            stream.emit(devices::Msg::Add(fingerprint));
-        });
-         */
-
-        row_widgets.spending_list.remove(&row_widgets.spending_row);
         row_widgets.spending_row.upcast::<gtk::Widget>()
     }
 
-    pub fn set_condition(&self, condition: &Condition) {
-        /*
-        device
-            .bind_property("name", &self.name_lbl, "label")
-            .flags(glib::BindingFlags::DEFAULT | glib::BindingFlags::SYNC_CREATE)
+    fn set_condition(&self, condition: &Condition) {
+        let flags_ro = glib::BindingFlags::DEFAULT | glib::BindingFlags::SYNC_CREATE;
+        let flags_all = glib::BindingFlags::DEFAULT
+            | glib::BindingFlags::SYNC_CREATE
+            | glib::BindingFlags::BIDIRECTIONAL;
+        self.sigs_all_item
+            .bind_property("active", condition, "sigsAll")
+            .flags(flags_ro)
             .build();
-         */
+        self.sigs_any_item
+            .bind_property("active", condition, "sigsAny")
+            .flags(flags_ro)
+            .build();
+        self.sigs_atleast_item
+            .bind_property("active", condition, "sigsAtLeast")
+            .flags(flags_ro)
+            .build();
+        condition
+            .bind_property("sigsNo", &self.sigs_adj, "value")
+            .flags(flags_all)
+            .build();
+        condition
+            .bind_property("sigsAtLeast", &self.sigs_spin, "visible")
+            .flags(flags_ro)
+            .build();
+        condition
+            .bind_property("sigsAtLeast", &self.sigtext_lbl, "visible")
+            .flags(flags_ro)
+            .build();
+        condition
+            .bind_property("sigsName", &self.sig_lbl, "label")
+            .flags(flags_ro)
+            .build();
     }
 }
