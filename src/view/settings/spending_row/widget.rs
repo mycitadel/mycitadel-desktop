@@ -54,7 +54,7 @@ pub struct RowWidgets {
 }
 
 impl RowWidgets {
-    pub fn init(stream: StreamHandle<settings::Msg>, item: &glib::Object) -> gtk::Widget {
+    pub fn init(_stream: StreamHandle<settings::Msg>, item: &glib::Object) -> gtk::Widget {
         let glade_src = include_str!("spending_row.glade");
         let row_widgets = RowWidgets::from_string(glade_src).expect("glade file broken");
 

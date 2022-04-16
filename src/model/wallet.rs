@@ -15,15 +15,16 @@ use wallet::psbt::Psbt;
 
 use crate::model::{PublicNetwork, Signer, SpendingCondition};
 
-#[derive(Clone, Eq, PartialEq, Debug)]
+#[derive(Getters, Clone, Eq, PartialEq, Debug, Default)]
 pub struct Wallet {
+    #[getter(as_clone)]
     descriptor: WalletDescriptor,
     state: WalletState,
     history: Vec<Psbt>,
     wip: Vec<Psbt>,
 }
 
-#[derive(Clone, Eq, PartialEq, Hash, Debug)]
+#[derive(Clone, Eq, PartialEq, Hash, Debug, Default)]
 pub struct WalletDescriptor {
     format: WalletFormat,
     signers: BTreeSet<Signer>,
@@ -36,6 +37,12 @@ pub struct WalletDescriptor {
 pub enum WalletFormat {
     LnpBp(DescrVariants),
     Bip43(Bip43Format),
+}
+
+impl Default for WalletFormat {
+    fn default() -> Self {
+        WalletFormat::Bip43(Bip43Format::Bip48Native)
+    }
 }
 
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
@@ -90,10 +97,10 @@ pub enum Bip43Format {
     Bip87,
 }
 
-#[derive(Clone, Eq, PartialEq, Hash, Debug)]
+#[derive(Clone, Eq, PartialEq, Hash, Debug, Default)]
 pub struct WalletState {
     balance: Sats,
 }
 
-#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
+#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
 pub struct Sats(u64);

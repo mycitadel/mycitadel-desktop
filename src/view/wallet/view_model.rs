@@ -9,8 +9,12 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
-mod view_model;
-mod widget;
+use crate::model::Wallet;
 
-pub use view_model::{DeviceData, DeviceModel};
-pub use widget::RowWidgets;
+pub struct ViewModel {}
+
+impl From<Wallet> for ViewModel {
+    fn from(_wallet: Wallet) -> Self {
+        ViewModel {}
+    }
+}

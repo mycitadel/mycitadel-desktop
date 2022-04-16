@@ -24,9 +24,8 @@ use wallet::hd::{
 };
 
 use super::spending_row::SpendingModel;
-use crate::model::{DescriptorClass, HardwareList, PublicNetwork, Signer};
+use crate::model::{DescriptorClass, HardwareList, PublicNetwork, Signer, WalletDescriptor};
 
-#[derive(Clone)]
 pub struct ViewModel {
     pub scheme: DerivationScheme,
     pub devices: HardwareList,
@@ -53,6 +52,20 @@ impl Default for ViewModel {
             class: DescriptorClass::SegwitV0,
             format_lnpbp: false,
         }
+    }
+}
+
+impl From<&WalletDescriptor> for ViewModel {
+    fn from(_descr: &WalletDescriptor) -> Self {
+        // TODO Fix it
+        ViewModel::default()
+    }
+}
+
+impl From<&ViewModel> for WalletDescriptor {
+    fn from(_model: &ViewModel) -> Self {
+        // TODO Fix it
+        WalletDescriptor::default()
     }
 }
 

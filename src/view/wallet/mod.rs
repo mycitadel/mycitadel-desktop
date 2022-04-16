@@ -9,6 +9,23 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
-mod wallet;
+mod component;
+mod view_model;
 
-pub use self::wallet::Win;
+pub use self::component::Component;
+use crate::model::WalletDescriptor;
+pub(self) use view_model::ViewModel;
+
+#[derive(Msg)]
+pub enum Msg {
+    New,
+    Open,
+    Settings,
+    Update(WalletDescriptor),
+    Send,
+    Receive,
+    Refresh,
+    Select(usize),
+    Create,
+    Quit,
+}

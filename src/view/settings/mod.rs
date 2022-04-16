@@ -9,14 +9,14 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
+mod component;
 pub mod spending_row;
-mod view;
 mod view_model;
+mod widget;
 
-pub use view::Win;
-pub use view_model::ViewModel;
-
-use std::sync::{Arc, Mutex};
+pub use component::Component;
+pub(self) use view_model::ViewModel;
+pub(self) use widget::Widgets;
 
 use bitcoin::util::bip32::Fingerprint;
 
@@ -24,17 +24,17 @@ use crate::model::{DescriptorClass, HardwareDevice};
 
 #[derive(Msg)]
 pub enum Msg {
-    Show,
-    Init(Arc<Mutex<ViewModel>>),
-    Devices,
-    AddDevice(Fingerprint, HardwareDevice),
+    New,
+    View,
+    DevicesList,
+    SignerAddDevice(Fingerprint, HardwareDevice),
     SignerSelect,
-    SpendingConditionAdd,
-    SpendingConditionRemove,
-    SpendingConditionSelect,
-    SpendingConditionChange,
-    ToggleDescr(DescriptorClass),
+    ConditionAdd,
+    ConditionRemove,
+    ConditionSelect,
+    ConditionChange,
+    ToggleClass(DescriptorClass),
     ExportFormat(bool),
-    Save,
-    Cancel,
+    Update,
+    Hide,
 }

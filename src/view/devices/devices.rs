@@ -157,7 +157,7 @@ impl Update for Win {
 
                 self.model
                     .sender
-                    .send(settings::Msg::AddDevice(fingerprint, device))
+                    .send(settings::Msg::SignerAddDevice(fingerprint, device))
                     .expect("communication with parent window");
             }
             Msg::Close => {
@@ -172,7 +172,9 @@ impl Widget for Win {
     type Root = Dialog;
 
     // Return the root widget.
-    fn root(&self) -> Self::Root { self.widgets.dialog.clone() }
+    fn root(&self) -> Self::Root {
+        self.widgets.dialog.clone()
+    }
 
     fn view(relm: &Relm<Self>, model: Self::Model) -> Self {
         let glade_src = include_str!("devices.glade");

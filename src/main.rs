@@ -18,11 +18,12 @@ extern crate relm;
 #[macro_use]
 extern crate relm_derive;
 
+use crate::model::Wallet;
 use relm::Widget;
 
 mod model;
 mod view;
 
 fn main() {
-    view::wallet::Win::run(()).expect("wallet::Win::run failed");
+    view::wallet::Component::run(Wallet::default()).expect("wallet::Win::run failed");
 }
