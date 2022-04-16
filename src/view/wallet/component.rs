@@ -14,7 +14,7 @@ use gtk::prelude::{WidgetExt, *};
 use gtk::{ApplicationWindow, Button, Inhibit};
 use relm::{init, Relm, Update, Widget};
 
-use super::{Msg, ViewModel};
+use super::{ModelParam, Msg, ViewModel};
 use crate::model::Wallet;
 use crate::view::settings;
 
@@ -36,18 +36,34 @@ impl Update for Component {
     // Specify the model used for this widget.
     type Model = Wallet;
     // Specify the model parameter used to init the model.
-    type ModelParam = Wallet;
+    type ModelParam = ModelParam;
     // Specify the type of the messages sent to the update function.
     type Msg = Msg;
 
-    fn model(_: &Relm<Self>, wallet: Self::ModelParam) -> Self::Model {
-        wallet
+    fn model(relm: &Relm<Self>, param: Self::ModelParam) -> Self::Model {
+        match param {
+            ModelParam::Open(_) => {
+                // TODO: Implement
+                Wallet::default()
+            }
+            ModelParam::New(descr) => {
+                relm.stream().emit(Msg::Create);
+                Wallet::with(descr)
+            }
+        }
     }
 
     fn update(&mut self, event: Msg) {
         match event {
-            Msg::Create => self.settings.emit(settings::Msg::New),
+            Msg::Create => {
+                self.widgets.window.hide();
+                self.settings.emit(settings::Msg::New)
+            }
             Msg::Settings => self.settings.emit(settings::Msg::View),
+            Msg::Update(descr) => {
+                self.model.set_descriptor(descr);
+                self.widgets.window.show();
+            }
             Msg::Quit => gtk::main_quit(),
             _ => { /* TODO: Implement main window event handling */ }
         }
@@ -69,6 +85,7 @@ impl Widget for Component {
 
         let settings =
             init::<settings::Component>(model.descriptor()).expect("error in settings component");
+        settings.emit(settings::Msg::SetParent(relm.stream().clone()));
 
         connect!(relm, widgets.settings_btn, connect_clicked(_), Msg::Create);
         connect!(

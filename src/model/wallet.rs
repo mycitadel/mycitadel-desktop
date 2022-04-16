@@ -24,6 +24,22 @@ pub struct Wallet {
     wip: Vec<Psbt>,
 }
 
+impl Wallet {
+    pub fn with(descriptor: WalletDescriptor) -> Self {
+        Wallet {
+            descriptor,
+            ..default!()
+        }
+    }
+
+    pub fn set_descriptor(&mut self, descr: WalletDescriptor) {
+        self.state = WalletState::default();
+        self.history.clear();
+        self.wip.clear();
+        self.descriptor = descr;
+    }
+}
+
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Default)]
 pub struct WalletDescriptor {
     format: WalletFormat,

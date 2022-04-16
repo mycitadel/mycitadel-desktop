@@ -117,6 +117,9 @@ impl Update for Component {
             Msg::ConditionChange => {
                 self.update_descriptor();
             }
+            Msg::SetParent(stream) => {
+                self.parent_stream = Some(stream);
+            }
         }
     }
 }

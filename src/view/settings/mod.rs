@@ -19,8 +19,10 @@ pub(self) use view_model::ViewModel;
 pub(self) use widget::Widgets;
 
 use bitcoin::util::bip32::Fingerprint;
+use relm::StreamHandle;
 
 use crate::model::{DescriptorClass, HardwareDevice};
+use crate::view::wallet;
 
 #[derive(Msg)]
 pub enum Msg {
@@ -37,4 +39,5 @@ pub enum Msg {
     ExportFormat(bool),
     Update,
     Hide,
+    SetParent(StreamHandle<wallet::Msg>),
 }
