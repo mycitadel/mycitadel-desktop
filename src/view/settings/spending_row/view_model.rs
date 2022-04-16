@@ -58,36 +58,29 @@ impl ObjectImpl for ConditionInner {
         use once_cell::sync::Lazy;
         static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
             vec![
-                glib::ParamSpecString::new(
-                    "sigsName",
-                    "SigsName",
-                    "SigsName",
-                    None, // Default value
-                    glib::ParamFlags::READABLE,
-                ),
                 glib::ParamSpecBoolean::new(
-                    "sigsAll",
+                    "sigs-all",
                     "SigsAll",
                     "SigsAll",
                     true, // Default value
                     glib::ParamFlags::READWRITE,
                 ),
                 glib::ParamSpecBoolean::new(
-                    "sigsAtLeast",
+                    "sigs-at-least",
                     "SigsAtLeast",
                     "SigsAtLeast",
                     true, // Default value
                     glib::ParamFlags::READWRITE,
                 ),
                 glib::ParamSpecBoolean::new(
-                    "sigsAny",
+                    "sigs-any",
                     "SigsAny",
                     "SigsAny",
                     true, // Default value
                     glib::ParamFlags::READWRITE,
                 ),
                 glib::ParamSpecUInt::new(
-                    "sigsNo",
+                    "sigs-no",
                     "SigsNo",
                     "SigsNo",
                     2,
@@ -109,25 +102,25 @@ impl ObjectImpl for ConditionInner {
         pspec: &glib::ParamSpec,
     ) {
         match pspec.name() {
-            "sigsAll" => {
+            "sigs-all" => {
                 let value = value
                     .get()
                     .expect("type conformity checked by `Object::set_property`");
                 self.sigs_all.replace(value);
             }
-            "sigsAtLeast" => {
+            "sigs-at-least" => {
                 let value = value
                     .get()
                     .expect("type conformity checked by `Object::set_property`");
                 self.sigs_at_least.replace(value);
             }
-            "sigsAny" => {
+            "sigs-any" => {
                 let value = value
                     .get()
                     .expect("type conformity checked by `Object::set_property`");
                 self.sigs_any.replace(value);
             }
-            "sigsNo" => {
+            "sigs-no" => {
                 let value = value
                     .get()
                     .expect("type conformity checked by `Object::set_property`");
@@ -139,11 +132,10 @@ impl ObjectImpl for ConditionInner {
 
     fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
         match pspec.name() {
-            "sigsName" => self.sigs_name().to_value(),
-            "sigsAll" => self.sigs_all.borrow().to_value(),
-            "sigsAtLeast" => self.sigs_at_least.borrow().to_value(),
-            "sigsAny" => self.sigs_any.borrow().to_value(),
-            "sigsNo" => self.sigs_no.borrow().to_value(),
+            "sigs-all" => self.sigs_all.borrow().to_value(),
+            "sigs-at-least" => self.sigs_at_least.borrow().to_value(),
+            "sigs-any" => self.sigs_any.borrow().to_value(),
+            "sigs-no" => self.sigs_no.borrow().to_value(),
             _ => unimplemented!(),
         }
     }
@@ -157,16 +149,6 @@ impl ConditionInner {
             SigsReq::Any
         } else {
             SigsReq::AtLeast(*self.sigs_no.borrow() as u16)
-        }
-    }
-
-    pub fn sigs_name(&self) -> &'static str {
-        match self.sigs_req() {
-            SigsReq::All => "All signatures",
-            SigsReq::AtLeast(_) => "At least",
-            // TODO: Add specific amount of signatures to the menu
-            SigsReq::Specific(_) => "Exactly",
-            SigsReq::Any => "Any signature",
         }
     }
 }
@@ -183,12 +165,12 @@ impl Default for Condition {
 
 impl Condition {
     pub fn sigs_req(&self) -> SigsReq {
-        if self.property("sigsAll") {
+        if self.property("sigs-all") {
             SigsReq::All
-        } else if self.property("sigsAny") {
+        } else if self.property("sigs-any") {
             SigsReq::Any
         } else {
-            SigsReq::AtLeast(self.property::<u32>("sigs_no") as u16)
+            SigsReq::AtLeast(self.property::<u32>("sigs-no") as u16)
         }
     }
 }

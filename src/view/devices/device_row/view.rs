@@ -39,7 +39,7 @@ impl RowWidgets {
             .downcast_ref::<DeviceData>()
             .expect("Row data is of wrong type");
         let fingerprint = device.fingerprint();
-        row_widgets.set_device(device);
+        row_widgets.bind_model(device);
 
         let stream = stream_.clone();
         row_widgets.account_adj.connect_value_changed(move |adj| {
@@ -56,7 +56,7 @@ impl RowWidgets {
         row_widgets.device_row.upcast::<gtk::Widget>()
     }
 
-    fn set_device(&self, device: &DeviceData) {
+    fn bind_model(&self, device: &DeviceData) {
         device
             .bind_property("name", &self.name_lbl, "label")
             .flags(glib::BindingFlags::DEFAULT | glib::BindingFlags::SYNC_CREATE)

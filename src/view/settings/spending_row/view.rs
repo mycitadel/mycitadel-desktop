@@ -12,8 +12,7 @@
 use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{
-    glib, Adjustment, Calendar, Label, ListBox, ListBoxRow, Menu, MenuButton, RadioMenuItem,
-    SpinButton,
+    glib, Adjustment, Calendar, Label, ListBoxRow, Menu, MenuButton, RadioMenuItem, SpinButton,
 };
 use relm::StreamHandle;
 
@@ -22,8 +21,7 @@ use crate::view::settings;
 
 #[derive(Clone, Gladis)]
 pub struct RowWidgets {
-    pub spending_list: ListBox,
-    pub spending_row: ListBoxRow,
+    spending_row: ListBoxRow,
     sig_lbl: Label,
     sigs_menu: Menu,
     sigs_all_item: RadioMenuItem,
@@ -56,53 +54,88 @@ impl RowWidgets {
     pub fn init(stream_: StreamHandle<settings::Msg>, item: &glib::Object) -> gtk::Widget {
         let glade_src = include_str!("spending_row.glade");
         let row_widgets = RowWidgets::from_string(glade_src).expect("glade file broken");
-        row_widgets.spending_list.remove(&row_widgets.spending_row);
 
         let condition = item
             .downcast_ref::<Condition>()
             .expect("Row data is of wrong type");
-        row_widgets.set_condition(condition);
+        row_widgets.bind_model(condition);
 
         let stream = stream_.clone();
-        row_widgets.sigs_all_item.connect_toggled(move |_| {
+        // We use hack re-utilizing `can-default` property, since updates to `active` property are
+        // not working in GTK3
+        let toggle = move |mi: &RadioMenuItem| {
+            mi.set_property("can-default", mi.is_active());
             stream.emit(settings::Msg::SpendingConditionChange);
-        });
+        };
+        row_widgets.sigs_all_item.connect_toggled(toggle.clone());
+        row_widgets.sigs_any_item.connect_toggled(toggle.clone());
+        row_widgets.sigs_atleast_item.connect_toggled(toggle);
+        row_widgets.sigs_all_item.set_property("can-default", true);
 
         row_widgets.spending_row.upcast::<gtk::Widget>()
     }
 
-    fn set_condition(&self, condition: &Condition) {
+    fn bind_model(&self, condition: &Condition) {
         let flags_ro = glib::BindingFlags::DEFAULT | glib::BindingFlags::SYNC_CREATE;
         let flags_all = glib::BindingFlags::DEFAULT
             | glib::BindingFlags::SYNC_CREATE
             | glib::BindingFlags::BIDIRECTIONAL;
         self.sigs_all_item
-            .bind_property("active", condition, "sigsAll")
+            .bind_property("can-default", condition, "sigs-all")
             .flags(flags_ro)
             .build();
         self.sigs_any_item
-            .bind_property("active", condition, "sigsAny")
+            .bind_property("can-default", condition, "sigs-any")
             .flags(flags_ro)
             .build();
         self.sigs_atleast_item
-            .bind_property("active", condition, "sigsAtLeast")
+            .bind_property("can-default", condition, "sigs-at-least")
             .flags(flags_ro)
             .build();
         condition
-            .bind_property("sigsNo", &self.sigs_adj, "value")
+            .bind_property("sigs-no", &self.sigs_adj, "value")
             .flags(flags_all)
             .build();
         condition
-            .bind_property("sigsAtLeast", &self.sigs_spin, "visible")
+            .bind_property("sigs-at-least", &self.sigs_spin, "visible")
             .flags(flags_ro)
             .build();
         condition
-            .bind_property("sigsAtLeast", &self.sigtext_lbl, "visible")
+            .bind_property("sigs-at-least", &self.sigtext_lbl, "visible")
             .flags(flags_ro)
             .build();
         condition
-            .bind_property("sigsName", &self.sig_lbl, "label")
+            .bind_property("sigs-all", &self.sig_lbl, "label")
             .flags(flags_ro)
+            .transform_to(|_, val| {
+                if val.get().unwrap() {
+                    Some("All signatures".to_value())
+                } else {
+                    None
+                }
+            })
+            .build();
+        condition
+            .bind_property("sigs-any", &self.sig_lbl, "label")
+            .flags(flags_ro)
+            .transform_to(|_, val| {
+                if val.get().unwrap() {
+                    Some("Any signature".to_value())
+                } else {
+                    None
+                }
+            })
+            .build();
+        condition
+            .bind_property("sigs-at-least", &self.sig_lbl, "label")
+            .flags(flags_ro)
+            .transform_to(|_, val| {
+                if val.get().unwrap() {
+                    Some("At least".to_value())
+                } else {
+                    None
+                }
+            })
             .build();
     }
 }
