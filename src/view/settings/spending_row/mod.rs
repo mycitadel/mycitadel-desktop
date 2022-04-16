@@ -9,6 +9,8 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
-mod wallet;
+mod view;
+mod view_model;
 
-pub use self::wallet::Win;
+pub use view::RowWidgets;
+pub use view_model::{Condition, SpendingModel};

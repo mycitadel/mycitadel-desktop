@@ -1370,7 +1370,7 @@ volumes</property>
           <object class="GtkImage">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
-            <property name="pixbuf">res/assets/applogo.png</property>
+            <property name="pixbuf">res/applogo.png</property>
           </object>
         </child>
         <child>

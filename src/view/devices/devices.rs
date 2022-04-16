@@ -8,12 +8,12 @@ use gtk::{glib, Button, Dialog, ListBox, MessageDialog};
 use relm::{Channel, Relm, Sender, Update, Widget};
 use wallet::hd::{DerivationScheme, HardenedIndex, SegmentIndexes};
 
-use crate::device_row::{DeviceModel, RowWidgets};
-use crate::settings;
-use crate::types::{Error, HardwareList, PublicNetwork};
+use super::device_row::{DeviceModel, RowWidgets};
+use crate::model::{Error, HardwareList, PublicNetwork};
+use crate::view::settings;
 
 #[derive(Clone)]
-pub struct Model {
+pub struct ViewModel {
     pub scheme: DerivationScheme,
     pub network: PublicNetwork,
     pub devices: DeviceModel,
@@ -44,21 +44,21 @@ pub struct Widgets {
 }
 
 pub struct Win {
-    model: Model,
+    model: ViewModel,
     sender: Sender<Msg>,
     widgets: Widgets,
 }
 
 impl Update for Win {
     // Specify the model used for this widget.
-    type Model = Model;
+    type Model = ViewModel;
     // Specify the model parameter used to init the model.
     type ModelParam = (DerivationScheme, PublicNetwork, Sender<settings::Msg>);
     // Specify the type of the messages sent to the update function.
     type Msg = Msg;
 
     fn model(_relm: &Relm<Self>, model: Self::ModelParam) -> Self::Model {
-        Model {
+        ViewModel {
             scheme: model.0,
             network: model.1,
             devices: DeviceModel::new(),
@@ -175,7 +175,7 @@ impl Widget for Win {
     fn root(&self) -> Self::Root { self.widgets.dialog.clone() }
 
     fn view(relm: &Relm<Self>, model: Self::Model) -> Self {
-        let glade_src = include_str!("../res/devices.glade");
+        let glade_src = include_str!("devices.glade");
         let widgets = Widgets::from_string(glade_src).expect("glade file broken");
 
         connect!(relm, widgets.close_btn, connect_clicked(_), Msg::Close);
