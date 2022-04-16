@@ -7,6 +7,9 @@ extern crate relm_derive;
 
 use relm::Widget;
 
+mod model;
+mod view;
+
 mod device_row;
 mod devices;
 mod settings;
