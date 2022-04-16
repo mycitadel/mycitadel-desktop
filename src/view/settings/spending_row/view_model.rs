@@ -34,6 +34,9 @@ pub struct ConditionInner {
     period_weeks: RefCell<bool>,
     period_days: RefCell<bool>,
     period_span: RefCell<u32>,
+    after_day: RefCell<u32>,
+    after_month: RefCell<u32>,
+    after_year: RefCell<u32>,
 }
 
 impl Default for ConditionInner {
@@ -51,6 +54,9 @@ impl Default for ConditionInner {
             period_weeks: RefCell::new(false),
             period_days: RefCell::new(false),
             period_span: RefCell::new(1),
+            after_day: RefCell::new(1),
+            after_month: RefCell::new(1),
+            after_year: RefCell::new(2025),
         }
     }
 }
@@ -117,6 +123,17 @@ impl ObjectImpl for ConditionInner {
                     1,
                     100,
                     1,
+                    flag,
+                ),
+                glib::ParamSpecUInt::new("after-day", "AfterDay", "AfterDay", 1, 31, 1, flag),
+                glib::ParamSpecUInt::new("after-month", "AfterMonth", "AfterMonth", 1, 12, 1, flag),
+                glib::ParamSpecUInt::new(
+                    "after-year",
+                    "AfterYear",
+                    "AfterYear",
+                    2022,
+                    2222,
+                    2025,
                     flag,
                 ),
             ]
@@ -205,6 +222,24 @@ impl ObjectImpl for ConditionInner {
                     .expect("type conformity checked by `Object::set_property`");
                 self.period_span.replace(value);
             }
+            "after-day" => {
+                let value = value
+                    .get()
+                    .expect("type conformity checked by `Object::set_property`");
+                self.after_day.replace(value);
+            }
+            "after-month" => {
+                let value = value
+                    .get()
+                    .expect("type conformity checked by `Object::set_property`");
+                self.after_month.replace(value);
+            }
+            "after-year" => {
+                let value = value
+                    .get()
+                    .expect("type conformity checked by `Object::set_property`");
+                self.after_year.replace(value);
+            }
             _ => unimplemented!(),
         }
     }
@@ -223,6 +258,9 @@ impl ObjectImpl for ConditionInner {
             "period-weeks" => self.period_weeks.borrow().to_value(),
             "period-days" => self.period_days.borrow().to_value(),
             "period-span" => self.period_span.borrow().to_value(),
+            "after-day" => self.after_day.borrow().to_value(),
+            "after-month" => self.after_month.borrow().to_value(),
+            "after-year" => self.after_year.borrow().to_value(),
             _ => unimplemented!(),
         }
     }

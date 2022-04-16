@@ -10,9 +10,11 @@
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
 use gladis::Gladis;
+use gtk::glib::Binding;
 use gtk::prelude::*;
 use gtk::{
-    glib, Adjustment, Calendar, Label, ListBoxRow, Menu, MenuButton, RadioMenuItem, SpinButton,
+    glib, Adjustment, Calendar, Label, ListBoxRow, Menu, MenuButton, Popover, RadioMenuItem,
+    SpinButton,
 };
 use relm::StreamHandle;
 
@@ -48,6 +50,7 @@ pub struct RowWidgets {
     calendar_mbt: MenuButton,
     calendar_lbl: Label,
     calendar: Calendar,
+    calendar_popover: Popover,
 }
 
 impl RowWidgets {
@@ -97,6 +100,25 @@ impl RowWidgets {
         row_widgets
             .period_years_item
             .set_property("can-default", true);
+
+        let c = condition.clone();
+        row_widgets
+            .calendar
+            .connect_month_changed(move |cal| c.set_property("after-month", cal.date().1));
+        let c = condition.clone();
+        row_widgets
+            .calendar
+            .connect_next_year(move |cal| c.set_property("after-year", cal.date().0));
+        let c = condition.clone();
+        row_widgets
+            .calendar
+            .connect_prev_year(move |cal| c.set_property("after-year", cal.date().0));
+
+        row_widgets
+            .calendar
+            .connect_day_selected_double_click(move |_| {
+                row_widgets.calendar_popover.hide();
+            });
 
         row_widgets.spending_row.upcast::<gtk::Widget>()
     }
@@ -285,6 +307,42 @@ impl RowWidgets {
                     None
                 }
             })
+            .build();
+
+        self.calendar
+            .bind_property("day", condition, "after-day")
+            .flags(flags_ro)
+            .build();
+        self.calendar
+            .bind_property("month", condition, "after-month")
+            .flags(flags_ro)
+            .build();
+        self.calendar
+            .bind_property("year", condition, "after-year")
+            .flags(flags_ro)
+            .build();
+
+        let fmtdate = |binding: &Binding, _: &glib::Value| -> Option<glib::Value> {
+            let year: u32 = binding.source().unwrap().property("after-year");
+            let month: u32 = binding.source().unwrap().property("after-month");
+            let day: u32 = binding.source().unwrap().property("after-day");
+            Some(format!("{}/{}/{}", year, month + 1, day).to_value())
+        };
+
+        condition
+            .bind_property("after-day", &self.calendar_lbl, "label")
+            .flags(flags_ro)
+            .transform_to(fmtdate.clone())
+            .build();
+        condition
+            .bind_property("after-month", &self.calendar_lbl, "label")
+            .flags(flags_ro)
+            .transform_to(fmtdate.clone())
+            .build();
+        condition
+            .bind_property("after-year", &self.calendar_lbl, "label")
+            .flags(flags_ro)
+            .transform_to(fmtdate)
             .build();
     }
 }
