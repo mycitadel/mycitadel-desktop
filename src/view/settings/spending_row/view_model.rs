@@ -29,6 +29,11 @@ pub struct ConditionInner {
     lock_none: RefCell<bool>,
     lock_older: RefCell<bool>,
     lock_after: RefCell<bool>,
+    period_years: RefCell<bool>,
+    period_months: RefCell<bool>,
+    period_weeks: RefCell<bool>,
+    period_days: RefCell<bool>,
+    period_span: RefCell<u32>,
 }
 
 impl Default for ConditionInner {
@@ -41,6 +46,11 @@ impl Default for ConditionInner {
             lock_none: RefCell::new(true),
             lock_older: RefCell::new(false),
             lock_after: RefCell::new(false),
+            period_years: RefCell::new(true),
+            period_months: RefCell::new(false),
+            period_weeks: RefCell::new(false),
+            period_days: RefCell::new(false),
+            period_span: RefCell::new(1),
         }
     }
 }
@@ -78,6 +88,37 @@ impl ObjectImpl for ConditionInner {
                 glib::ParamSpecBoolean::new("lock-none", "LockNone", "LockNone", true, flag),
                 glib::ParamSpecBoolean::new("lock-after", "LockAfter", "LockAfter", false, flag),
                 glib::ParamSpecBoolean::new("lock-older", "LockOlder", "LockOlder", false, flag),
+                glib::ParamSpecBoolean::new(
+                    "period-years",
+                    "PeriodYears",
+                    "PeriodYears",
+                    true,
+                    flag,
+                ),
+                glib::ParamSpecBoolean::new(
+                    "period-months",
+                    "PeriodMonths",
+                    "PeriodMonths",
+                    false,
+                    flag,
+                ),
+                glib::ParamSpecBoolean::new(
+                    "period-weeks",
+                    "PeriodWeeks",
+                    "PeriodWeeks",
+                    false,
+                    flag,
+                ),
+                glib::ParamSpecBoolean::new("period-days", "PeriodDays", "PeriodDays", false, flag),
+                glib::ParamSpecUInt::new(
+                    "period-span",
+                    "PeriodSpan",
+                    "PeriodSpan",
+                    1,
+                    100,
+                    1,
+                    flag,
+                ),
             ]
         });
 
@@ -134,6 +175,36 @@ impl ObjectImpl for ConditionInner {
                     .expect("type conformity checked by `Object::set_property`");
                 self.lock_older.replace(value);
             }
+            "period-years" => {
+                let value = value
+                    .get()
+                    .expect("type conformity checked by `Object::set_property`");
+                self.period_years.replace(value);
+            }
+            "period-months" => {
+                let value = value
+                    .get()
+                    .expect("type conformity checked by `Object::set_property`");
+                self.period_months.replace(value);
+            }
+            "period-weeks" => {
+                let value = value
+                    .get()
+                    .expect("type conformity checked by `Object::set_property`");
+                self.period_weeks.replace(value);
+            }
+            "period-days" => {
+                let value = value
+                    .get()
+                    .expect("type conformity checked by `Object::set_property`");
+                self.period_days.replace(value);
+            }
+            "period-span" => {
+                let value = value
+                    .get()
+                    .expect("type conformity checked by `Object::set_property`");
+                self.period_span.replace(value);
+            }
             _ => unimplemented!(),
         }
     }
@@ -147,6 +218,11 @@ impl ObjectImpl for ConditionInner {
             "lock-none" => self.lock_none.borrow().to_value(),
             "lock-after" => self.lock_after.borrow().to_value(),
             "lock-older" => self.lock_older.borrow().to_value(),
+            "period-years" => self.period_years.borrow().to_value(),
+            "period-months" => self.period_months.borrow().to_value(),
+            "period-weeks" => self.period_weeks.borrow().to_value(),
+            "period-days" => self.period_days.borrow().to_value(),
+            "period-span" => self.period_span.borrow().to_value(),
             _ => unimplemented!(),
         }
     }

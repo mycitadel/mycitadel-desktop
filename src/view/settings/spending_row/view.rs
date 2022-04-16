@@ -79,9 +79,23 @@ impl RowWidgets {
             .lock_anytime_item
             .connect_toggled(toggle.clone());
         row_widgets.lock_after_item.connect_toggled(toggle.clone());
-        row_widgets.lock_older_item.connect_toggled(toggle);
+        row_widgets.lock_older_item.connect_toggled(toggle.clone());
         row_widgets
             .lock_anytime_item
+            .set_property("can-default", true);
+
+        row_widgets
+            .period_years_item
+            .connect_toggled(toggle.clone());
+        row_widgets
+            .period_months_item
+            .connect_toggled(toggle.clone());
+        row_widgets
+            .period_weeks_item
+            .connect_toggled(toggle.clone());
+        row_widgets.period_days_item.connect_toggled(toggle);
+        row_widgets
+            .period_years_item
             .set_property("can-default", true);
 
         row_widgets.spending_row.upcast::<gtk::Widget>()
@@ -202,6 +216,71 @@ impl RowWidgets {
             .transform_to(|_, val| {
                 if val.get().unwrap() {
                     Some("starting from".to_value())
+                } else {
+                    None
+                }
+            })
+            .build();
+
+        self.period_years_item
+            .bind_property("can-default", condition, "period-years")
+            .flags(flags_ro)
+            .build();
+        self.period_months_item
+            .bind_property("can-default", condition, "period-months")
+            .flags(flags_ro)
+            .build();
+        self.period_weeks_item
+            .bind_property("can-default", condition, "period-weeks")
+            .flags(flags_ro)
+            .build();
+        self.period_days_item
+            .bind_property("can-default", condition, "period-days")
+            .flags(flags_ro)
+            .build();
+        condition
+            .bind_property("period-span", &self.date_adj, "value")
+            .flags(flags_ro)
+            .build();
+        condition
+            .bind_property("period-years", &self.period_lbl, "label")
+            .flags(flags_ro)
+            .transform_to(|_, val| {
+                if val.get().unwrap() {
+                    Some("year(s)".to_value())
+                } else {
+                    None
+                }
+            })
+            .build();
+        condition
+            .bind_property("period-weeks", &self.period_lbl, "label")
+            .flags(flags_ro)
+            .transform_to(|_, val| {
+                if val.get().unwrap() {
+                    Some("week(s)".to_value())
+                } else {
+                    None
+                }
+            })
+            .build();
+        condition
+            .bind_property("period-months", &self.period_lbl, "label")
+            .flags(flags_ro)
+            .transform_to(|_, val| {
+                if val.get().unwrap() {
+                    Some("month(s)".to_value())
+                } else {
+                    None
+                }
+            })
+            .build();
+        condition
+            .bind_property("period-days", &self.period_lbl, "label")
+            .flags(flags_ro)
+            .transform_to(|_, val| {
+                if val.get().unwrap() {
+                    Some("day(s)".to_value())
                 } else {
                     None
                 }
