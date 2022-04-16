@@ -11,6 +11,7 @@ mod device_row;
 mod devices;
 mod settings;
 mod spending_row;
+mod types;
 mod wallet;
 
 fn main() {

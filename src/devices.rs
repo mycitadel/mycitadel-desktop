@@ -10,7 +10,8 @@ use relm::{Channel, Relm, Sender, Update, Widget};
 use wallet::hd::{DerivationScheme, HardenedIndex, SegmentIndexes};
 
 use crate::device_row::{DeviceModel, RowWidgets};
-use crate::settings::{self, Error, HardwareList, PublicNetwork};
+use crate::settings;
+use crate::types::{Error, HardwareList, PublicNetwork};
 
 #[derive(Clone)]
 pub struct Model {
@@ -195,6 +196,7 @@ impl Widget for Win {
             // TODO: This fixes the schema used in the wallet once and forever
             let scheme = scheme.clone();
             let sender = sender2.clone();
+            // TODO: move enumeration into Refresh event processing
             std::thread::spawn(move || {
                 let result = HardwareList::enumerate(&scheme, model.network, HardenedIndex::zero());
                 sender

@@ -708,6 +708,7 @@ version = "0.1.0"
 dependencies = [
  "amplify",
  "bitcoin 0.28.0-rc.2",
+ "chrono",
  "descriptor-wallet",
  "gladis",
  "gtk",

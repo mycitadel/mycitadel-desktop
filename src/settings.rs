@@ -1,212 +1,37 @@
-use bitcoin::hashes::{sha256, Hash};
-use bitcoin::secp256k1::{PublicKey, SECP256K1};
-use bitcoin::util::bip32::{ChainCode, ChildNumber, ExtendedPubKey, Fingerprint};
-use bitcoin::{secp256k1, Network};
-use gtk::prelude::*;
-use gtk::{
-    glib, Adjustment, Button, Dialog, Entry, Image, Label, ListStore, TextBuffer, ToggleButton,
-    ToolButton, TreeView,
-};
-use relm::{init, Channel, Component, Relm, Update, Widget};
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
 use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 use std::sync::{Arc, Mutex};
 
-use crate::devices;
 use gladis::Gladis;
-use hwi::error::Error as HwiError;
-use hwi::HWIDevice;
+use gtk::prelude::*;
+use gtk::{
+    glib, Adjustment, Button, Dialog, Entry, Image, Label, ListBox, ListStore, TextBuffer,
+    ToggleButton, ToolButton, TreeView,
+};
+use relm::{init, Channel, Component, Relm, Update, Widget};
+
+use bitcoin::hashes::{sha256, Hash};
+use bitcoin::secp256k1::{self, SECP256K1};
+use bitcoin::util::bip32::{ChildNumber, ExtendedPubKey, Fingerprint};
 use miniscript::descriptor::{Sh, TapTree, Tr, Wsh};
 use miniscript::policy::concrete::Policy;
 use miniscript::{Descriptor, Legacy, Miniscript, Segwitv0, Tap};
-use wallet::hd::schemata::DerivationBlockchain;
 use wallet::hd::{AccountStep, DerivationScheme, HardenedIndex, SegmentIndexes, TrackingAccount};
 use wallet::hd::{TerminalStep, XpubRef};
 
-// TODO: Move to descriptor wallet or BPro
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Display)]
-pub enum PublicNetwork {
-    #[display("mainnet")]
-    Mainnet,
-    #[display("testnet")]
-    Testnet,
-    #[display("signet")]
-    Signet,
-}
-
-impl From<PublicNetwork> for Network {
-    fn from(network: PublicNetwork) -> Self {
-        match network {
-            PublicNetwork::Mainnet => Network::Bitcoin,
-            PublicNetwork::Testnet => Network::Testnet,
-            PublicNetwork::Signet => Network::Signet,
-        }
-    }
-}
-
-impl From<PublicNetwork> for DerivationBlockchain {
-    fn from(network: PublicNetwork) -> Self {
-        match network {
-            PublicNetwork::Mainnet => DerivationBlockchain::Bitcoin,
-            PublicNetwork::Testnet => DerivationBlockchain::Testnet,
-            PublicNetwork::Signet => DerivationBlockchain::Testnet,
-        }
-    }
-}
-
-impl PublicNetwork {
-    pub fn is_testnet(self) -> bool {
-        matches!(self, PublicNetwork::Testnet | PublicNetwork::Signet)
-    }
-}
-
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
-pub enum Ownership {
-    Mine,
-    External,
-}
-
-#[derive(Clone)]
-pub struct HardwareDevice {
-    pub device: HWIDevice,
-    pub device_type: String,
-    pub model: String,
-    pub default_account: HardenedIndex,
-    pub default_xpub: ExtendedPubKey,
-}
-
-#[derive(Wrapper, Clone, Default, From)]
-pub struct HardwareList(BTreeMap<Fingerprint, HardwareDevice>);
-
-impl<'a> IntoIterator for &'a HardwareList {
-    type Item = (&'a Fingerprint, &'a HardwareDevice);
-    type IntoIter = std::collections::btree_map::Iter<'a, Fingerprint, HardwareDevice>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.0.iter()
-    }
-}
-
-#[derive(Debug, Display, Error)]
-#[display(doc_comments)]
-pub enum Error {
-    /// No devices detected or some of devices are locked
-    NoDevices(HwiError),
-
-    /// Device {1} ({2}, master fingerprint {0}) does not support used derivation schema {3} on {4}.
-    DerivationNotSupported(
-        Fingerprint,
-        String,
-        String,
-        DerivationScheme,
-        PublicNetwork,
-        HwiError,
-    ),
-}
-
-impl Error {
-    pub fn into_hwi_error(self) -> HwiError {
-        match self {
-            Error::NoDevices(err) => err,
-            Error::DerivationNotSupported(_, _, _, _, _, err) => err,
-        }
-    }
-}
-
-impl HardwareList {
-    pub fn enumerate(
-        scheme: &DerivationScheme,
-        network: PublicNetwork,
-        default_account: HardenedIndex,
-    ) -> Result<(HardwareList, Vec<Error>), Error> {
-        let mut devices = bmap![];
-        let mut log = vec![];
-
-        for device in HWIDevice::enumerate().map_err(Error::NoDevices)? {
-            let fingerprint = Fingerprint::from(&device.fingerprint[..]);
-
-            let derivation = scheme.to_account_derivation(default_account.into(), network.into());
-            let derivation_string = derivation.to_string();
-            match device.get_xpub(
-                &derivation_string.parse().expect(
-                    "ancient bitcoin version with different derivation path implementation",
-                ),
-                network.is_testnet(),
-            ) {
-                Ok(hwikey) => {
-                    let xpub = ExtendedPubKey {
-                        network: network.into(),
-                        depth: hwikey.xpub.depth,
-                        parent_fingerprint: Fingerprint::from(&hwikey.xpub.parent_fingerprint[..]),
-                        child_number: u32::from(hwikey.xpub.child_number).into(),
-                        public_key: PublicKey::from_slice(&hwikey.xpub.public_key.key.serialize())
-                            .expect("secp lib used by hwi is broken"),
-                        chain_code: ChainCode::from(&hwikey.xpub.chain_code[..]),
-                    };
-                    devices.insert(
-                        fingerprint,
-                        HardwareDevice {
-                            device_type: device.device_type.clone(),
-                            model: device.model.clone(),
-                            device,
-                            default_account,
-                            default_xpub: xpub,
-                        },
-                    );
-                }
-                Err(err) => {
-                    log.push(Error::DerivationNotSupported(
-                        fingerprint,
-                        device.device_type,
-                        device.model,
-                        scheme.clone(),
-                        network,
-                        err,
-                    ));
-                }
-            };
-        }
-        Ok((devices.into(), log))
-    }
-}
-
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
-pub struct Signer {
-    pub fingerprint: Fingerprint,
-    pub device: Option<String>,
-    pub name: String,
-    pub xpub: ExtendedPubKey,
-    pub account: HardenedIndex,
-    pub ownership: Ownership,
-}
-
-impl Signer {
-    pub fn with(fingerprint: Fingerprint, device: HardwareDevice) -> Signer {
-        Signer {
-            fingerprint,
-            device: Some(device.device_type),
-            name: device.model.clone(),
-            xpub: device.default_xpub,
-            account: device.default_account,
-            ownership: Ownership::Mine,
-        }
-    }
-}
-
-#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
-pub enum DescriptorClass {
-    PreSegwit,
-    SegwitV0,
-    NestedV0,
-    TaprootC0,
-}
+use crate::{devices, spending_row};
+use crate::spending_row::SpendingModel;
+use crate::types::{
+    DescriptorClass, HardwareDevice, HardwareList, PublicNetwork, Signer,
+};
 
 #[derive(Clone)]
 pub struct Model {
     pub scheme: DerivationScheme,
     pub devices: HardwareList,
     pub signers: BTreeSet<Signer>,
+    pub spendings: SpendingModel,
     pub network: PublicNetwork,
     pub descriptor: Option<Descriptor<TrackingAccount>>,
     pub class: DescriptorClass,
@@ -222,6 +47,7 @@ impl Default for Model {
             },
             devices: none!(),
             signers: none!(),
+            spendings: SpendingModel::new(),
             network: PublicNetwork::Mainnet,
             descriptor: None,
             class: DescriptorClass::SegwitV0,
@@ -455,6 +281,8 @@ pub struct Widgets {
     removesign_btn: ToolButton,
     signers_tree: TreeView,
     signers_store: ListStore,
+
+    spending_list: ListBox,
 
     name_fld: Entry,
     fingerprint_fld: Entry,
@@ -709,6 +537,13 @@ impl Widget for Win {
             connect_clicked(_),
             Msg::ToggleDescr(DescriptorClass::TaprootC0)
         );
+
+        let stream = relm.stream().clone();
+        widgets
+            .spending_list
+            .bind_model(Some(&model.spendings), move |item| {
+                spending_row::RowWidgets::init(stream.clone(), item)
+            });
 
         Win {
             model,

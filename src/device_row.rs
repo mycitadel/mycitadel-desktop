@@ -14,7 +14,7 @@ use gtk::{gio, glib, Adjustment, Button, Label, ListBox, ListBoxRow, SpinButton,
 use relm::StreamHandle;
 use wallet::hd::SegmentIndexes;
 
-use crate::settings::HardwareList;
+use crate::types::HardwareList;
 
 // The actual data structure that stores our values. This is not accessible
 // directly from the outside.
