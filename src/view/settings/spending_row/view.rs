@@ -67,10 +67,22 @@ impl RowWidgets {
             mi.set_property("can-default", mi.is_active());
             stream.emit(settings::Msg::SpendingConditionChange);
         };
+
         row_widgets.sigs_all_item.connect_toggled(toggle.clone());
         row_widgets.sigs_any_item.connect_toggled(toggle.clone());
-        row_widgets.sigs_atleast_item.connect_toggled(toggle);
+        row_widgets
+            .sigs_atleast_item
+            .connect_toggled(toggle.clone());
         row_widgets.sigs_all_item.set_property("can-default", true);
+
+        row_widgets
+            .lock_anytime_item
+            .connect_toggled(toggle.clone());
+        row_widgets.lock_after_item.connect_toggled(toggle.clone());
+        row_widgets.lock_older_item.connect_toggled(toggle);
+        row_widgets
+            .lock_anytime_item
+            .set_property("can-default", true);
 
         row_widgets.spending_row.upcast::<gtk::Widget>()
     }
@@ -132,6 +144,64 @@ impl RowWidgets {
             .transform_to(|_, val| {
                 if val.get().unwrap() {
                     Some("At least".to_value())
+                } else {
+                    None
+                }
+            })
+            .build();
+
+        self.lock_anytime_item
+            .bind_property("can-default", condition, "lock-none")
+            .flags(flags_ro)
+            .build();
+        self.lock_after_item
+            .bind_property("can-default", condition, "lock-after")
+            .flags(flags_ro)
+            .build();
+        self.lock_older_item
+            .bind_property("can-default", condition, "lock-older")
+            .flags(flags_ro)
+            .build();
+        condition
+            .bind_property("lock-older", &self.calendar_mbt, "visible")
+            .flags(flags_ro)
+            .build();
+        condition
+            .bind_property("lock-after", &self.date_spin, "visible")
+            .flags(flags_ro)
+            .build();
+        condition
+            .bind_property("lock-after", &self.period_mbt, "visible")
+            .flags(flags_ro)
+            .build();
+        condition
+            .bind_property("lock-none", &self.lock_lbl, "label")
+            .flags(flags_ro)
+            .transform_to(|_, val| {
+                if val.get().unwrap() {
+                    Some("at any time".to_value())
+                } else {
+                    None
+                }
+            })
+            .build();
+        condition
+            .bind_property("lock-after", &self.lock_lbl, "label")
+            .flags(flags_ro)
+            .transform_to(|_, val| {
+                if val.get().unwrap() {
+                    Some("after".to_value())
+                } else {
+                    None
+                }
+            })
+            .build();
+        condition
+            .bind_property("lock-older", &self.lock_lbl, "label")
+            .flags(flags_ro)
+            .transform_to(|_, val| {
+                if val.get().unwrap() {
+                    Some("starting from".to_value())
                 } else {
                     None
                 }

@@ -26,6 +26,9 @@ pub struct ConditionInner {
     sigs_at_least: RefCell<bool>,
     sigs_any: RefCell<bool>,
     sigs_no: RefCell<u32>,
+    lock_none: RefCell<bool>,
+    lock_older: RefCell<bool>,
+    lock_after: RefCell<bool>,
 }
 
 impl Default for ConditionInner {
@@ -35,6 +38,9 @@ impl Default for ConditionInner {
             sigs_at_least: RefCell::new(false),
             sigs_any: RefCell::new(false),
             sigs_no: RefCell::new(2),
+            lock_none: RefCell::new(true),
+            lock_older: RefCell::new(false),
+            lock_after: RefCell::new(false),
         }
     }
 }
@@ -57,37 +63,21 @@ impl ObjectImpl for ConditionInner {
     fn properties() -> &'static [glib::ParamSpec] {
         use once_cell::sync::Lazy;
         static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
+            let flag = glib::ParamFlags::READWRITE;
             vec![
-                glib::ParamSpecBoolean::new(
-                    "sigs-all",
-                    "SigsAll",
-                    "SigsAll",
-                    true, // Default value
-                    glib::ParamFlags::READWRITE,
-                ),
+                glib::ParamSpecBoolean::new("sigs-all", "SigsAll", "SigsAll", true, flag),
                 glib::ParamSpecBoolean::new(
                     "sigs-at-least",
                     "SigsAtLeast",
                     "SigsAtLeast",
-                    true, // Default value
-                    glib::ParamFlags::READWRITE,
+                    false,
+                    flag,
                 ),
-                glib::ParamSpecBoolean::new(
-                    "sigs-any",
-                    "SigsAny",
-                    "SigsAny",
-                    true, // Default value
-                    glib::ParamFlags::READWRITE,
-                ),
-                glib::ParamSpecUInt::new(
-                    "sigs-no",
-                    "SigsNo",
-                    "SigsNo",
-                    2,
-                    100,
-                    2, // Allowed range and default value
-                    glib::ParamFlags::READWRITE,
-                ),
+                glib::ParamSpecBoolean::new("sigs-any", "SigsAny", "SigsAny", false, flag),
+                glib::ParamSpecUInt::new("sigs-no", "SigsNo", "SigsNo", 2, 100, 2, flag),
+                glib::ParamSpecBoolean::new("lock-none", "LockNone", "LockNone", true, flag),
+                glib::ParamSpecBoolean::new("lock-after", "LockAfter", "LockAfter", false, flag),
+                glib::ParamSpecBoolean::new("lock-older", "LockOlder", "LockOlder", false, flag),
             ]
         });
 
@@ -126,6 +116,24 @@ impl ObjectImpl for ConditionInner {
                     .expect("type conformity checked by `Object::set_property`");
                 self.sigs_no.replace(value);
             }
+            "lock-none" => {
+                let value = value
+                    .get()
+                    .expect("type conformity checked by `Object::set_property`");
+                self.lock_none.replace(value);
+            }
+            "lock-after" => {
+                let value = value
+                    .get()
+                    .expect("type conformity checked by `Object::set_property`");
+                self.lock_after.replace(value);
+            }
+            "lock-older" => {
+                let value = value
+                    .get()
+                    .expect("type conformity checked by `Object::set_property`");
+                self.lock_older.replace(value);
+            }
             _ => unimplemented!(),
         }
     }
@@ -136,6 +144,9 @@ impl ObjectImpl for ConditionInner {
             "sigs-at-least" => self.sigs_at_least.borrow().to_value(),
             "sigs-any" => self.sigs_any.borrow().to_value(),
             "sigs-no" => self.sigs_no.borrow().to_value(),
+            "lock-none" => self.lock_none.borrow().to_value(),
+            "lock-after" => self.lock_after.borrow().to_value(),
+            "lock-older" => self.lock_older.borrow().to_value(),
             _ => unimplemented!(),
         }
     }
