@@ -9,11 +9,12 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
+use bitcoin::util::bip32::Fingerprint;
 use std::collections::BTreeSet;
 use wallet::descriptors::DescrVariants;
 use wallet::psbt::Psbt;
 
-use crate::model::{PublicNetwork, Signer, SpendingCondition};
+use super::{PublicNetwork, Signer, SigsReq, SpendingCondition};
 
 // TODO: Move to citadel-runtime
 #[derive(Getters, Clone, Eq, PartialEq, Debug, Default)]
@@ -49,12 +50,61 @@ impl Wallet {
     }
 }
 
+#[derive(
+    Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display, Error
+)]
+#[display(doc_comments)]
+pub enum DescriptorError {
+    /// spending condition {0} references unknown signer {1}.
+    UnknownSigner(SpendingCondition, Fingerprint),
+    /// unable to add spending condition when no signers are present.
+    NoSigners,
+    /// duplicated spending condition {0}.
+    DuplicateCondition(SpendingCondition),
+    /// insufficient number of signers {0} to support spending condition {1} requirements.
+    InsufficientSignerCount(u16, SpendingCondition),
+}
+
 #[derive(Getters, Clone, Eq, PartialEq, Hash, Debug, Default)]
 pub struct WalletDescriptor {
     format: WalletFormat,
     signers: BTreeSet<Signer>,
     conditions: Vec<SpendingCondition>,
     network: PublicNetwork,
+}
+
+impl WalletDescriptor {
+    fn push_condition(&mut self, condition: SpendingCondition) -> Result<(), DescriptorError> {
+        if self.signers.is_empty() {
+            return Err(DescriptorError::NoSigners);
+        }
+        if self.conditions.contains(&condition) {
+            return Err(DescriptorError::DuplicateCondition(condition));
+        }
+        let signer_count = self.signers.len();
+        match condition.sigs {
+            SigsReq::AtLeast(n) if (n as usize) < signer_count => {
+                Err(DescriptorError::InsufficientSignerCount(n, condition))
+            }
+            SigsReq::Specific(signer)
+                if self
+                    .signers
+                    .iter()
+                    .find(|s| s.fingerprint == signer)
+                    .is_none() =>
+            {
+                Err(DescriptorError::UnknownSigner(condition, signer))
+            }
+            _ => {
+                self.conditions.push(condition);
+                Ok(())
+            }
+        }
+    }
+
+    fn add_signer(&mut self, signer: Signer) -> bool {
+        self.signers.insert(signer)
+    }
 }
 
 // TODO: Move to descriptor wallet library

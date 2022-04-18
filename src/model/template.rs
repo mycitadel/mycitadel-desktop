@@ -9,10 +9,12 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
+use std::collections::BTreeSet;
+
+use chrono::prelude::*;
+
 use super::{Bip43, PublicNetwork, Signer, SpendingCondition, WalletFormat};
 use crate::model::{SigsReq, TimelockReq};
-use chrono::prelude::*;
-use std::collections::BTreeSet;
 
 /// Wallet template is a way to define constrained version of a wallet descriptor, but unlike
 /// [`super::WalletDescriptor`] not having restrains on the internal consistency between amount of
@@ -60,7 +62,7 @@ impl WalletTemplate {
                     timelock: TimelockReq::AfterTime(now.with_year(now.year() + 2).unwrap()),
                 },
             ],
-            Some(count) if count > 2 => vec![
+            Some(count) => vec![
                 SpendingCondition {
                     sigs: SigsReq::All,
                     timelock: TimelockReq::Anytime,

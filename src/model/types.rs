@@ -205,12 +205,16 @@ pub enum DescriptorClass {
     TaprootC0,
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Display)]
 pub enum SigsReq {
+    #[display("all signatures")]
     All,
+    #[display("at least {0} signatures")]
     AtLeast(u16),
     // TODO: Transform to vector
+    #[display("signature by {0}")]
     Specific(Fingerprint),
+    #[display("any signature")]
     Any,
 }
 
@@ -220,12 +224,17 @@ impl Default for SigsReq {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Display)]
 pub enum TimelockReq {
+    #[display("anytime")]
     Anytime,
+    #[display("after {0}")]
     OlderTime(DateTime<Utc>),
+    #[display("after {0} blocks")]
     OlderBlock(u32),
+    #[display("after date {0}")]
     AfterTime(DateTime<Utc>),
+    #[display("after block {0}")]
     AfterBlock(u32),
 }
 
@@ -235,7 +244,10 @@ impl Default for TimelockReq {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default)]
+#[derive(
+    Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default, Display
+)]
+#[display("{sigs} {timelock}")]
 pub struct SpendingCondition {
     pub sigs: SigsReq,
     pub timelock: TimelockReq,
