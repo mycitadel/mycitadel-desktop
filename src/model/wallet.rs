@@ -66,13 +66,14 @@ pub enum WalletFormat {
 
 impl Default for WalletFormat {
     fn default() -> Self {
-        WalletFormat::Bip43(Bip43Format::Bip48Native)
+        WalletFormat::Bip43(Bip43::Bip48Native)
     }
 }
 
+/// BIP43-based purpose fields and derivation paths formats defined by them.
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
 // TODO: Move to descriptor wallet library
-pub enum Bip43Format {
+pub enum Bip43 {
     /// Account-based P2PKH derivation
     ///
     /// `m / 44' / coin_type' / account'`
@@ -94,10 +95,10 @@ pub enum Bip43Format {
     /// Account-based multisig derivation with sorted keys & P2WSH native scripts
     ///
     /// `m / 48' / coin_type' / account' / script_type'`
-    #[display("bip48-naive", alt = "m/48h//2h")]
+    #[display("bip48-native", alt = "m/48h//2h")]
     Bip48Native,
 
-    /// Account-based legacy P2WPH-in-P2SH derivation
+    /// Account-based legacy P2WPKH-in-P2SH derivation
     ///
     /// `m / 49' / coin_type' / account'`
     #[display("bip49", alt = "m/49h")]
@@ -120,6 +121,33 @@ pub enum Bip43Format {
     ///
     /// `m / 87' / coin_type' / account'`
     Bip87,
+}
+
+impl Bip43 {
+    pub fn singlesig_pkh() -> Bip43 {
+        Bip43::Bip44
+    }
+    pub fn singlesig_nested0() -> Bip43 {
+        Bip43::Bip49
+    }
+    pub fn singlesig_segwit0() -> Bip43 {
+        Bip43::Bip84
+    }
+    pub fn singlelsig_taproot() -> Bip43 {
+        Bip43::Bip86
+    }
+    pub fn multisig_ordered_sh() -> Bip43 {
+        Bip43::Bip45
+    }
+    pub fn multisig_nested0() -> Bip43 {
+        Bip43::Bip48Nested
+    }
+    pub fn multisig_segwit0() -> Bip43 {
+        Bip43::Bip48Native
+    }
+    pub fn multisig_descriptor() -> Bip43 {
+        Bip43::Bip87
+    }
 }
 
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Default)]
