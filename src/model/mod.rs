@@ -9,10 +9,12 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
+mod template;
 mod types;
 mod wallet;
 
 pub use self::wallet::{Bip43, Wallet, WalletDescriptor, WalletFormat, WalletState};
+pub use template::WalletTemplate;
 pub use types::{
     DescriptorClass, Error, HardwareDevice, HardwareList, Ownership, PublicNetwork, Signer,
     SigsReq, SpendingCondition, TimelockReq,
