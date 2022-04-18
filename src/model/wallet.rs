@@ -18,7 +18,7 @@ use crate::model::{PublicNetwork, Signer, SpendingCondition};
 // TODO: Move to citadel-runtime
 #[derive(Getters, Clone, Eq, PartialEq, Debug, Default)]
 pub struct Wallet {
-    #[getter(as_clone)]
+    #[getter(skip)]
     descriptor: WalletDescriptor,
     state: WalletState,
     history: Vec<Psbt>,
@@ -31,6 +31,14 @@ impl Wallet {
             descriptor,
             ..default!()
         }
+    }
+
+    pub fn as_descriptor(&self) -> &WalletDescriptor {
+        &self.descriptor
+    }
+
+    pub fn to_descriptor(&self) -> WalletDescriptor {
+        self.descriptor.clone()
     }
 
     pub fn set_descriptor(&mut self, descr: WalletDescriptor) {
