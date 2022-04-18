@@ -209,6 +209,7 @@ pub enum DescriptorClass {
 pub enum SigsReq {
     All,
     AtLeast(u16),
+    // TODO: Transform to vector
     Specific(Fingerprint),
     Any,
 }

@@ -12,7 +12,7 @@
 mod types;
 mod wallet;
 
-pub use self::wallet::{Wallet, WalletDescriptor, WalletFormat, WalletState};
+pub use self::wallet::{Bip43, Wallet, WalletDescriptor, WalletFormat, WalletState};
 pub use types::{
     DescriptorClass, Error, HardwareDevice, HardwareList, Ownership, PublicNetwork, Signer,
     SigsReq, SpendingCondition, TimelockReq,

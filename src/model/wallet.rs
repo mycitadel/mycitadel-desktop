@@ -49,7 +49,7 @@ impl Wallet {
     }
 }
 
-#[derive(Clone, Eq, PartialEq, Hash, Debug, Default)]
+#[derive(Getters, Clone, Eq, PartialEq, Hash, Debug, Default)]
 pub struct WalletDescriptor {
     format: WalletFormat,
     signers: BTreeSet<Signer>,
@@ -58,10 +58,12 @@ pub struct WalletDescriptor {
 }
 
 // TODO: Move to descriptor wallet library
-#[derive(Clone, Eq, PartialEq, Hash, Debug)]
+#[derive(Clone, Eq, PartialEq, Hash, Debug, From)]
 pub enum WalletFormat {
+    #[from]
     LnpBp(DescrVariants),
-    Bip43(Bip43Format),
+    #[from]
+    Bip43(Bip43),
 }
 
 impl Default for WalletFormat {
