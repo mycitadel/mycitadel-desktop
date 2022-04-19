@@ -78,10 +78,9 @@ impl Widget for Component {
         let glade_src = include_str!("wallet.glade");
         let widgets = Widgets::from_string(glade_src).expect("glade file broken");
 
-        let settings =
-            init::<settings::Component>(settings::ModelParam::Descriptor(model.to_descriptor()))
-                .expect("error in settings component");
-        settings.emit(settings::Msg::SetParent(relm.stream().clone()));
+        let settings = init::<settings::Component>(()).expect("error in settings component");
+        settings.emit(settings::Msg::View(model.to_descriptor()));
+        settings.emit(settings::Msg::SetWallet(relm.stream().clone()));
 
         connect!(relm, widgets.settings_btn, connect_clicked(_), Msg::Create);
         connect!(

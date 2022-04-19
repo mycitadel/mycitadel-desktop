@@ -14,15 +14,16 @@ use gtk::prelude::*;
 use gtk::Dialog;
 use relm::{init, Channel, Relm, StreamHandle, Update, Widget};
 
-use super::{spending_row::Condition, ModelParam, Msg, ViewModel, Widgets};
+use super::{spending_row::Condition, Msg, ViewModel, Widgets};
 use crate::model::WalletDescriptor;
-use crate::view::{devices, wallet};
+use crate::view::{devices, launch, wallet};
 
 pub struct Component {
     model: ViewModel,
     widgets: Widgets,
     devices: relm::Component<devices::Win>,
-    parent_stream: Option<StreamHandle<wallet::Msg>>,
+    launcher_stream: Option<StreamHandle<launch::Msg>>,
+    wallet_stream: Option<StreamHandle<wallet::Msg>>,
 }
 
 impl Component {
@@ -43,21 +44,29 @@ impl Update for Component {
     // Specify the model used for this widget.
     type Model = ViewModel;
     // Specify the model parameter used to init the model.
-    type ModelParam = ModelParam;
+    type ModelParam = ();
     // Specify the type of the messages sent to the update function.
     type Msg = Msg;
 
-    fn model(relm: &Relm<Self>, model: Self::ModelParam) -> Self::Model {
-        relm.stream().emit(Msg::New);
-        ViewModel::from(model)
+    fn model(_relm: &Relm<Self>, _model: Self::ModelParam) -> Self::Model {
+        ViewModel::default()
     }
 
     fn update(&mut self, event: Msg) {
         match event {
-            Msg::New => self.widgets.reinit_ui(true, &self.model.template),
+            Msg::New(template) => {
+                self.model = match template {
+                    Some(template) => template.into(),
+                    None => ViewModel::default(),
+                };
+                self.model.new_wallet = true;
+                self.widgets
+                    .reinit_ui(self.model.new_wallet, &self.model.template)
+            }
             Msg::View(descriptor) => {
                 self.model = ViewModel::from(descriptor);
-                self.widgets.reinit_ui(false, &None)
+                self.model.new_wallet = false;
+                self.widgets.reinit_ui(self.model.new_wallet, &None)
             }
             Msg::DevicesList => {
                 self.devices.emit(devices::Msg::Show);
@@ -93,13 +102,18 @@ impl Update for Component {
             }
             Msg::Update => {
                 let descr = WalletDescriptor::from(&self.model);
-                self.parent_stream.as_ref().map(|stream| {
+                self.wallet_stream.as_ref().map(|stream| {
                     stream.emit(wallet::Msg::Update(descr));
                 });
                 self.widgets.hide();
             }
-            Msg::Hide => {
+            Msg::Close => {
                 self.widgets.hide();
+                if self.model.new_wallet {
+                    self.launcher_stream
+                        .as_ref()
+                        .map(|stream| stream.emit(launch::Msg::Show));
+                }
             }
             Msg::ConditionAdd => {
                 self.model.spendings.append(&Condition::default());
@@ -121,8 +135,11 @@ impl Update for Component {
             Msg::ConditionChange => {
                 self.update_descriptor();
             }
-            Msg::SetParent(stream) => {
-                self.parent_stream = Some(stream);
+            Msg::SetWallet(stream) => {
+                self.wallet_stream = Some(stream);
+            }
+            Msg::SetLauncher(stream) => {
+                self.launcher_stream = Some(stream);
             }
         }
     }
@@ -156,7 +173,8 @@ impl Widget for Component {
             model,
             widgets,
             devices,
-            parent_stream: None,
+            launcher_stream: None,
+            wallet_stream: None,
         }
     }
 }

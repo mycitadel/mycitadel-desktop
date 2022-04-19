@@ -28,11 +28,6 @@ use crate::model::{
     DescriptorClass, HardwareList, PublicNetwork, Signer, WalletDescriptor, WalletTemplate,
 };
 
-pub enum ModelParam {
-    Template(Option<WalletTemplate>),
-    Descriptor(WalletDescriptor),
-}
-
 pub struct ViewModel {
     pub scheme: DerivationScheme,
     pub devices: HardwareList,
@@ -40,6 +35,7 @@ pub struct ViewModel {
     pub spendings: SpendingModel,
     pub network: PublicNetwork,
     pub descriptor: Option<Descriptor<TrackingAccount>>,
+    pub new_wallet: bool,
     pub template: Option<WalletTemplate>,
     pub class: DescriptorClass,
     pub format_lnpbp: bool,
@@ -57,19 +53,10 @@ impl Default for ViewModel {
             spendings: SpendingModel::new(),
             network: PublicNetwork::Mainnet,
             descriptor: None,
+            new_wallet: true,
             template: None,
             class: DescriptorClass::SegwitV0,
             format_lnpbp: false,
-        }
-    }
-}
-
-impl From<ModelParam> for ViewModel {
-    fn from(param: ModelParam) -> Self {
-        match param {
-            ModelParam::Template(Some(template)) => template.into(),
-            ModelParam::Template(None) => ViewModel::default(),
-            ModelParam::Descriptor(descriptor) => descriptor.into(),
         }
     }
 }
@@ -78,6 +65,7 @@ impl From<WalletTemplate> for ViewModel {
     fn from(template: WalletTemplate) -> Self {
         ViewModel {
             template: Some(template),
+            new_wallet: true,
             ..default!()
         }
     }
@@ -85,8 +73,11 @@ impl From<WalletTemplate> for ViewModel {
 
 impl From<WalletDescriptor> for ViewModel {
     fn from(_descr: WalletDescriptor) -> Self {
-        // TODO Fix it
-        ViewModel::default()
+        ViewModel {
+            new_wallet: false,
+            // TODO Fix it
+            ..default!()
+        }
     }
 }
 

@@ -85,13 +85,17 @@ impl Widgets {
         self.dialog.hide()
     }
 
+    pub fn close(&self) {
+        self.dialog.close()
+    }
+
     pub(super) fn root(&self) -> Dialog {
         self.dialog.clone()
     }
 
     pub(super) fn connect(&self, relm: &Relm<super::Component>) {
         connect!(relm, self.save_btn, connect_clicked(_), Msg::Update);
-        connect!(relm, self.cancel_btn, connect_clicked(_), Msg::Hide);
+        connect!(relm, self.cancel_btn, connect_clicked(_), Msg::Close);
         connect!(relm, self.devices_btn, connect_clicked(_), Msg::DevicesList);
 
         connect!(

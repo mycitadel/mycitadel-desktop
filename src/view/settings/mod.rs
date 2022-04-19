@@ -15,19 +15,18 @@ mod view_model;
 mod widget;
 
 pub use component::Component;
-pub use view_model::ModelParam;
 pub(self) use view_model::ViewModel;
 pub(self) use widget::Widgets;
 
 use bitcoin::util::bip32::Fingerprint;
 use relm::StreamHandle;
 
-use crate::model::{DescriptorClass, HardwareDevice, WalletDescriptor};
-use crate::view::wallet;
+use crate::model::{DescriptorClass, HardwareDevice, WalletDescriptor, WalletTemplate};
+use crate::view::{launch, wallet};
 
 #[derive(Msg)]
 pub enum Msg {
-    New,
+    New(Option<WalletTemplate>),
     View(WalletDescriptor),
     DevicesList,
     SignerAddDevice(Fingerprint, HardwareDevice),
@@ -39,6 +38,7 @@ pub enum Msg {
     ToggleClass(DescriptorClass),
     ExportFormat(bool),
     Update,
-    Hide,
-    SetParent(StreamHandle<wallet::Msg>),
+    Close,
+    SetWallet(StreamHandle<wallet::Msg>),
+    SetLauncher(StreamHandle<launch::Msg>),
 }

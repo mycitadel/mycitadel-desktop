@@ -12,7 +12,7 @@
 use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{Adjustment, ApplicationWindow, Button, ListBox, RecentChooserWidget, Switch};
-use relm::{Relm, Update, Widget};
+use relm::{init, Relm, Update, Widget};
 
 use crate::model::{PublicNetwork, Requirement, WalletTemplate};
 use crate::view::settings;
@@ -21,6 +21,7 @@ pub struct ViewModel {}
 
 #[derive(Msg)]
 pub enum Msg {
+    Show,
     Quit,
     TemplateSelected,
     ImportSelected,
@@ -45,6 +46,7 @@ struct Widgets {
 pub struct Component {
     model: ViewModel,
     widgets: Widgets,
+    new_wallet: relm::Component<settings::Component>,
 }
 
 impl Component {
@@ -61,6 +63,10 @@ impl Component {
 
     fn hide(&self) {
         self.widgets.window.hide()
+    }
+
+    fn show(&self) {
+        self.widgets.window.show()
     }
 
     fn open_template(&self) {
@@ -107,8 +113,7 @@ impl Component {
 
         self.hide();
 
-        settings::Component::run(settings::ModelParam::Template(template))
-            .expect("unable to instantiate wallet settings");
+        self.new_wallet.emit(settings::Msg::New(template))
     }
 
     fn import_wallet(&self) {}
@@ -132,6 +137,7 @@ impl Update for Component {
 
     fn update(&mut self, event: Msg) {
         match event {
+            Msg::Show => self.show(),
             Msg::Quit => gtk::main_quit(),
             Msg::TemplateSelected => self.open_template(),
             Msg::ImportSelected => self.import_wallet(),
@@ -181,8 +187,16 @@ impl Widget for Component {
             Msg::RecentSelected
         );
 
+        let new_wallet =
+            init::<settings::Component>(()).expect("unable to instantiate wallet settings");
+        new_wallet.emit(settings::Msg::SetLauncher(relm.stream().clone()));
+
         widgets.window.show();
 
-        Component { widgets, model }
+        Component {
+            widgets,
+            model,
+            new_wallet,
+        }
     }
 }
