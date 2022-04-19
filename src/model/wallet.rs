@@ -9,10 +9,13 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
+use crate::model::DescriptorClass;
 use bitcoin::util::bip32::Fingerprint;
 use std::collections::BTreeSet;
 use wallet::descriptors::DescrVariants;
+use wallet::hd::{DerivationScheme, SegmentIndexes};
 use wallet::psbt::Psbt;
+use wallet::slip132;
 
 use super::{PublicNetwork, Signer, SigsReq, SpendingCondition};
 
@@ -175,6 +178,34 @@ pub enum Bip43 {
     Bip87,
 }
 
+#[derive(
+    Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display, Error
+)]
+#[display("unsupported derivation scheme")]
+pub struct UnsupportedDerivation;
+
+impl TryFrom<&DerivationScheme> for Bip43 {
+    type Error = UnsupportedDerivation;
+
+    fn try_from(scheme: &DerivationScheme) -> Result<Self, UnsupportedDerivation> {
+        Ok(match scheme {
+            DerivationScheme::Bip44 => Bip43::Bip44,
+            DerivationScheme::Bip84 => Bip43::Bip84,
+            DerivationScheme::Bip49 => Bip43::Bip49,
+            DerivationScheme::Bip86 => Bip43::Bip86,
+            DerivationScheme::Bip45 => Bip43::Bip45,
+            DerivationScheme::Bip48 { script_type } if script_type.first_index() == 2 => {
+                Bip43::Bip48Native
+            }
+            DerivationScheme::Bip48 { script_type } if script_type.first_index() == 1 => {
+                Bip43::Bip48Nested
+            }
+            DerivationScheme::Bip87 => Bip43::Bip87,
+            _ => return Err(UnsupportedDerivation),
+        })
+    }
+}
+
 impl Bip43 {
     pub fn singlesig_pkh() -> Bip43 {
         Bip43::Bip44
@@ -199,6 +230,32 @@ impl Bip43 {
     }
     pub fn multisig_descriptor() -> Bip43 {
         Bip43::Bip87
+    }
+
+    pub fn descriptor_class(self) -> Option<DescriptorClass> {
+        Some(match self {
+            Bip43::Bip44 => DescriptorClass::PreSegwit,
+            Bip43::Bip45 => DescriptorClass::PreSegwit,
+            Bip43::Bip48Nested => DescriptorClass::NestedV0,
+            Bip43::Bip48Native => DescriptorClass::SegwitV0,
+            Bip43::Bip49 => DescriptorClass::NestedV0,
+            Bip43::Bip84 => DescriptorClass::SegwitV0,
+            Bip43::Bip86 => DescriptorClass::TaprootC0,
+            Bip43::Bip87 => return None,
+        })
+    }
+
+    pub fn slip_application(self) -> Option<slip132::KeyApplication> {
+        Some(match self {
+            Bip43::Bip44 => slip132::KeyApplication::Hashed,
+            Bip43::Bip45 => return None,
+            Bip43::Bip48Nested => slip132::KeyApplication::NestedMultisig,
+            Bip43::Bip48Native => slip132::KeyApplication::SegWitMiltisig,
+            Bip43::Bip49 => slip132::KeyApplication::Nested,
+            Bip43::Bip84 => slip132::KeyApplication::SegWit,
+            Bip43::Bip86 => return None,
+            Bip43::Bip87 => return None,
+        })
     }
 }
 
