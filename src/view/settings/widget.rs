@@ -67,13 +67,8 @@ pub struct Widgets {
 }
 
 impl Widgets {
-    pub fn show_new(&self) {
-        // TODO: Update widgets to match new wallet UI
-        self.dialog.show();
-    }
-
-    pub fn show_view(&self) {
-        // TODO: Update widgets to match show wallet settings UI
+    pub fn reinit_ui(&self) {
+        // TODO: Update widgets to match new descriptor or descriptor template
         self.dialog.show();
     }
 

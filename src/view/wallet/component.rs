@@ -40,26 +40,21 @@ impl Update for Component {
     // Specify the type of the messages sent to the update function.
     type Msg = Msg;
 
-    fn model(relm: &Relm<Self>, param: Self::ModelParam) -> Self::Model {
+    fn model(_relm: &Relm<Self>, param: Self::ModelParam) -> Self::Model {
         match param {
             ModelParam::Open(_) => {
-                // TODO: Implement
+                // TODO: Implement wallet opening
                 Wallet::default()
             }
-            ModelParam::New(descr) => {
-                relm.stream().emit(Msg::Create);
-                Wallet::with(descr)
-            }
+            ModelParam::New(descr) => Wallet::with(descr),
         }
     }
 
     fn update(&mut self, event: Msg) {
         match event {
-            Msg::Create => {
-                self.widgets.window.hide();
-                self.settings.emit(settings::Msg::New)
-            }
-            Msg::Settings => self.settings.emit(settings::Msg::View),
+            Msg::Settings => self
+                .settings
+                .emit(settings::Msg::View(self.model.to_descriptor())),
             Msg::Update(descr) => {
                 self.model.set_descriptor(descr);
                 self.widgets.window.show();
@@ -83,8 +78,9 @@ impl Widget for Component {
         let glade_src = include_str!("wallet.glade");
         let widgets = Widgets::from_string(glade_src).expect("glade file broken");
 
-        let settings = init::<settings::Component>(model.to_descriptor())
-            .expect("error in settings component");
+        let settings =
+            init::<settings::Component>(settings::ModelParam::Descriptor(model.to_descriptor()))
+                .expect("error in settings component");
         settings.emit(settings::Msg::SetParent(relm.stream().clone()));
 
         connect!(relm, widgets.settings_btn, connect_clicked(_), Msg::Create);

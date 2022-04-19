@@ -14,7 +14,7 @@ use gtk::prelude::*;
 use gtk::Dialog;
 use relm::{init, Channel, Relm, StreamHandle, Update, Widget};
 
-use super::{spending_row::Condition, Msg, ViewModel, Widgets};
+use super::{spending_row::Condition, ModelParam, Msg, ViewModel, Widgets};
 use crate::model::WalletDescriptor;
 use crate::view::{devices, wallet};
 
@@ -43,18 +43,22 @@ impl Update for Component {
     // Specify the model used for this widget.
     type Model = ViewModel;
     // Specify the model parameter used to init the model.
-    type ModelParam = WalletDescriptor;
+    type ModelParam = ModelParam;
     // Specify the type of the messages sent to the update function.
     type Msg = Msg;
 
-    fn model(_relm: &Relm<Self>, model: Self::ModelParam) -> Self::Model {
-        ViewModel::from(&model)
+    fn model(relm: &Relm<Self>, model: Self::ModelParam) -> Self::Model {
+        relm.stream().emit(Msg::New);
+        ViewModel::from(model)
     }
 
     fn update(&mut self, event: Msg) {
         match event {
-            Msg::New => self.widgets.show_new(),
-            Msg::View => self.widgets.show_view(),
+            Msg::New => self.widgets.reinit_ui(),
+            Msg::View(descriptor) => {
+                self.model = ViewModel::from(descriptor);
+                self.widgets.reinit_ui()
+            }
             Msg::DevicesList => {
                 self.devices.emit(devices::Msg::Show);
             }

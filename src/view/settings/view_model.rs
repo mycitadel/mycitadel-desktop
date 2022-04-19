@@ -24,7 +24,14 @@ use wallet::hd::{
 };
 
 use super::spending_row::SpendingModel;
-use crate::model::{DescriptorClass, HardwareList, PublicNetwork, Signer, WalletDescriptor};
+use crate::model::{
+    DescriptorClass, HardwareList, PublicNetwork, Signer, WalletDescriptor, WalletTemplate,
+};
+
+pub enum ModelParam {
+    Template(WalletTemplate),
+    Descriptor(WalletDescriptor),
+}
 
 pub struct ViewModel {
     pub scheme: DerivationScheme,
@@ -33,6 +40,7 @@ pub struct ViewModel {
     pub spendings: SpendingModel,
     pub network: PublicNetwork,
     pub descriptor: Option<Descriptor<TrackingAccount>>,
+    pub template: Option<WalletTemplate>,
     pub class: DescriptorClass,
     pub format_lnpbp: bool,
 }
@@ -49,14 +57,33 @@ impl Default for ViewModel {
             spendings: SpendingModel::new(),
             network: PublicNetwork::Mainnet,
             descriptor: None,
+            template: None,
             class: DescriptorClass::SegwitV0,
             format_lnpbp: false,
         }
     }
 }
 
-impl From<&WalletDescriptor> for ViewModel {
-    fn from(_descr: &WalletDescriptor) -> Self {
+impl From<ModelParam> for ViewModel {
+    fn from(param: ModelParam) -> Self {
+        match param {
+            ModelParam::Template(template) => template.into(),
+            ModelParam::Descriptor(descriptor) => descriptor.into(),
+        }
+    }
+}
+
+impl From<WalletTemplate> for ViewModel {
+    fn from(template: WalletTemplate) -> Self {
+        ViewModel {
+            template: Some(template),
+            ..default!()
+        }
+    }
+}
+
+impl From<WalletDescriptor> for ViewModel {
+    fn from(_descr: WalletDescriptor) -> Self {
         // TODO Fix it
         ViewModel::default()
     }
