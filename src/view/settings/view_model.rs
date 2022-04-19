@@ -29,7 +29,7 @@ use crate::model::{
 };
 
 pub enum ModelParam {
-    Template(WalletTemplate),
+    Template(Option<WalletTemplate>),
     Descriptor(WalletDescriptor),
 }
 
@@ -67,7 +67,8 @@ impl Default for ViewModel {
 impl From<ModelParam> for ViewModel {
     fn from(param: ModelParam) -> Self {
         match param {
-            ModelParam::Template(template) => template.into(),
+            ModelParam::Template(Some(template)) => template.into(),
+            ModelParam::Template(None) => ViewModel::default(),
             ModelParam::Descriptor(descriptor) => descriptor.into(),
         }
     }

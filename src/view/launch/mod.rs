@@ -9,11 +9,13 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
-use crate::model::{PublicNetwork, Requirement, WalletTemplate};
 use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{Adjustment, ApplicationWindow, Button, ListBox, RecentChooserWidget, Switch};
 use relm::{Relm, Update, Widget};
+
+use crate::model::{PublicNetwork, Requirement, WalletTemplate};
+use crate::view::settings;
 
 pub struct ViewModel {}
 
@@ -40,12 +42,12 @@ pub struct Widgets {
     recent: RecentChooserWidget,
 }
 
-pub struct Win {
+pub struct Component {
     model: ViewModel,
     widgets: Widgets,
 }
 
-impl Win {
+impl Component {
     fn is_taproot(&self) -> bool {
         self.widgets.taproot_swch.is_active()
     }
@@ -103,7 +105,10 @@ impl Win {
             _ => unreachable!("unknown template"),
         };
 
-        // self.hide();
+        self.hide();
+
+        settings::Component::run(settings::ModelParam::Template(template))
+            .expect("unable to instantiate wallet settings");
     }
 
     fn import_wallet(&self) {}
@@ -113,7 +118,7 @@ impl Win {
     fn open_recent(&self) {}
 }
 
-impl Update for Win {
+impl Update for Component {
     // Specify the model used for this widget.
     type Model = ViewModel;
     // Specify the model parameter used to init the model.
@@ -136,7 +141,7 @@ impl Update for Win {
     }
 }
 
-impl Widget for Win {
+impl Widget for Component {
     // Specify the type of the root widget.
     type Root = ApplicationWindow;
 
@@ -178,6 +183,6 @@ impl Widget for Win {
 
         widgets.window.show();
 
-        Win { widgets, model }
+        Component { widgets, model }
     }
 }
