@@ -29,7 +29,7 @@ pub enum Msg {
 }
 
 #[derive(Clone, Gladis)]
-pub struct Widgets {
+struct Widgets {
     window: ApplicationWindow,
     action_btn: Button,
     hwcount_adj: Adjustment,

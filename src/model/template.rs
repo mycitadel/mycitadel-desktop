@@ -57,8 +57,8 @@ impl WalletTemplate {
             false => Requirement::Deny,
         };
         let watch_only_req = match require_hardware {
-            true => Requirement::Require,
-            false => Requirement::Deny,
+            true => Requirement::Deny,
+            false => Requirement::Require,
         };
         WalletTemplate {
             format: format.into(),

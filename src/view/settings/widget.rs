@@ -17,14 +17,14 @@ use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{
     glib, Adjustment, Button, Dialog, Entry, Image, Label, ListBox, ListBoxRow, ListStore,
-    TextBuffer, ToggleButton, ToolButton, TreeView,
+    Notebook, TextBuffer, ToggleButton, ToolButton, TreeView,
 };
 use miniscript::Descriptor;
 use relm::Relm;
 use wallet::hd::{SegmentIndexes, TrackingAccount};
 
 use super::Msg;
-use crate::model::{DescriptorClass, Signer};
+use crate::model::{DescriptorClass, Requirement, Signer, WalletTemplate};
 use crate::view::settings::spending_row;
 use crate::view::settings::spending_row::SpendingModel;
 
@@ -34,6 +34,7 @@ pub struct Widgets {
     dialog: Dialog,
     save_btn: Button,
     cancel_btn: Button,
+    pages: Notebook,
 
     devices_btn: ToolButton,
     addsign_btn: ToolButton,
@@ -42,6 +43,7 @@ pub struct Widgets {
     signers_store: ListStore,
 
     spending_list: ListBox,
+    spending_buf: TextBuffer,
     addcond_btn: ToolButton,
     removecond_btn: ToolButton,
 
@@ -67,8 +69,15 @@ pub struct Widgets {
 }
 
 impl Widgets {
-    pub fn reinit_ui(&self) {
-        // TODO: Update widgets to match new descriptor or descriptor template
+    pub fn reinit_ui(&self, new_wallet: bool, template: &Option<WalletTemplate>) {
+        self.set_new_wallet_mode(new_wallet);
+        if new_wallet {
+            if let Some(template) = template {
+                self.update_template(template);
+            }
+        } else {
+            // TODO: Disable UI
+        }
         self.dialog.show();
     }
 
@@ -148,6 +157,29 @@ impl Widgets {
             connect_selected_rows_changed(_),
             Msg::ConditionSelect
         );
+    }
+
+    fn update_template(&self, template: &WalletTemplate) {
+        // TODO: Update widgets to match new descriptor or descriptor template
+        self.devices_btn
+            .set_visible(template.hardware_req != Requirement::Deny);
+        self.addsign_btn
+            .set_visible(template.watch_only_req != Requirement::Deny);
+        self.spending_list
+            .set_sensitive(template.max_signer_count > Some(1));
+        self.addcond_btn
+            .set_visible(template.max_signer_count > Some(1));
+        self.removecond_btn
+            .set_visible(template.max_signer_count > Some(1));
+        if template.max_signer_count == Some(1) {
+            self.spending_buf
+                .set_text("Single-sig wallets always can be spent with a single signature and does not allow to customize spending conditions.");
+        }
+    }
+
+    fn set_new_wallet_mode(&self, new_wallet: bool) {
+        self.save_btn
+            .set_label(if new_wallet { "Create" } else { "Save" });
     }
 
     pub(super) fn bind_model(&self, relm: &Relm<super::Component>, model: &SpendingModel) {

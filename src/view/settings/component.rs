@@ -54,10 +54,10 @@ impl Update for Component {
 
     fn update(&mut self, event: Msg) {
         match event {
-            Msg::New => self.widgets.reinit_ui(),
+            Msg::New => self.widgets.reinit_ui(true, &self.model.template),
             Msg::View(descriptor) => {
                 self.model = ViewModel::from(descriptor);
-                self.widgets.reinit_ui()
+                self.widgets.reinit_ui(false, &None)
             }
             Msg::DevicesList => {
                 self.devices.emit(devices::Msg::Show);
