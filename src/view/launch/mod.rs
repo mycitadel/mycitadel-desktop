@@ -9,15 +9,17 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
+use crate::model::{PublicNetwork, Requirement, WalletTemplate};
 use gladis::Gladis;
 use gtk::prelude::*;
-use gtk::{ApplicationWindow, Button, ListBox, Notebook, RecentChooserWidget};
+use gtk::{Adjustment, ApplicationWindow, Button, ListBox, RecentChooserWidget, Switch};
 use relm::{Relm, Update, Widget};
+
+pub struct ViewModel {}
 
 #[derive(Msg)]
 pub enum Msg {
-    Action,
-    PageChange(u32),
+    Quit,
     TemplateSelected,
     ImportSelected,
     OpenSelected,
@@ -28,57 +30,126 @@ pub enum Msg {
 pub struct Widgets {
     window: ApplicationWindow,
     action_btn: Button,
-    pages: Notebook,
+    hwcount_adj: Adjustment,
+    taproot_swch: Switch,
+    testnet_swch: Switch,
+    rgb_swch: Switch,
     create_box: ListBox,
     import_box: ListBox,
     open_box: ListBox,
     recent: RecentChooserWidget,
 }
 
-impl Update for Widgets {
+pub struct Win {
+    model: ViewModel,
+    widgets: Widgets,
+}
+
+impl Win {
+    fn is_taproot(&self) -> bool {
+        self.widgets.taproot_swch.is_active()
+    }
+
+    fn network(&self) -> PublicNetwork {
+        match self.widgets.testnet_swch.is_active() {
+            true => PublicNetwork::Mainnet,
+            false => PublicNetwork::Testnet,
+        }
+    }
+
+    fn hide(&self) {
+        self.widgets.window.hide()
+    }
+
+    fn open_template(&self) {
+        let index = if let Some(row) = self.widgets.create_box.selected_row() {
+            row.index()
+        } else {
+            return;
+        };
+        let taproot = self.is_taproot();
+        let network = self.network();
+        let template = match index {
+            0 => Some(WalletTemplate::singlesig(taproot, network, false)),
+            1 => Some(WalletTemplate::singlesig(taproot, network, true)),
+            2 => Some(WalletTemplate::hodling(
+                network,
+                4,
+                Requirement::Allow,
+                Requirement::Allow,
+            )),
+            3 => {
+                let count = self.widgets.hwcount_adj.value() as u16;
+                Some(WalletTemplate::multisig(
+                    network,
+                    Some(count),
+                    Requirement::Require,
+                    Requirement::Deny,
+                ))
+            }
+            4 => Some(WalletTemplate::multisig(
+                network,
+                None,
+                Requirement::Allow,
+                Requirement::Require,
+            )),
+            5 => Some(WalletTemplate::multisig(
+                network,
+                None,
+                Requirement::Allow,
+                Requirement::Allow,
+            )),
+            6 => None,
+            _ => unreachable!("unknown template"),
+        };
+
+        // self.hide();
+    }
+
+    fn import_wallet(&self) {}
+
+    fn open_file(&self) {}
+
+    fn open_recent(&self) {}
+}
+
+impl Update for Win {
     // Specify the model used for this widget.
-    type Model = ();
+    type Model = ViewModel;
     // Specify the model parameter used to init the model.
     type ModelParam = ();
     // Specify the type of the messages sent to the update function.
     type Msg = Msg;
 
     fn model(_relm: &Relm<Self>, _model: Self::ModelParam) -> Self::Model {
-        ()
+        ViewModel {}
     }
 
     fn update(&mut self, event: Msg) {
         match event {
-            Msg::Action => {}
-            Msg::PageChange(page) => {}
-            Msg::TemplateSelected => {}
-            Msg::ImportSelected => {}
-            Msg::OpenSelected => {}
-            Msg::RecentSelected => {}
+            Msg::Quit => gtk::main_quit(),
+            Msg::TemplateSelected => self.open_template(),
+            Msg::ImportSelected => self.import_wallet(),
+            Msg::OpenSelected => self.open_file(),
+            Msg::RecentSelected => self.open_recent(),
         }
     }
 }
 
-impl Widget for Widgets {
+impl Widget for Win {
     // Specify the type of the root widget.
     type Root = ApplicationWindow;
 
     // Return the root widget.
     fn root(&self) -> Self::Root {
-        self.window.clone()
+        self.widgets.window.clone()
     }
 
-    fn view(relm: &Relm<Self>, _model: Self::Model) -> Self {
+    fn view(relm: &Relm<Self>, model: Self::Model) -> Self {
         let glade_src = include_str!("launch.glade");
         let widgets = Widgets::from_string(glade_src).expect("glade file broken");
 
-        connect!(relm, widgets.action_btn, connect_clicked(_), Msg::Action);
-        connect!(
-            relm,
-            widgets.pages,
-            connect_switch_page(_, _, page),
-            Msg::PageChange(page)
-        );
+        connect!(relm, widgets.action_btn, connect_clicked(_), Msg::Quit);
 
         connect!(
             relm,
@@ -107,6 +178,6 @@ impl Widget for Widgets {
 
         widgets.window.show();
 
-        widgets
+        Win { widgets, model }
     }
 }
