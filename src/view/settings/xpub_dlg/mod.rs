@@ -19,10 +19,13 @@ pub(self) use widget::Widgets;
 
 use wallet::slip132::KeyApplication;
 
-#[derive(Copy, Clone, Msg)]
+#[derive(Clone, Msg)]
 pub enum Msg {
     Open(bool, Option<KeyApplication>),
     Edit,
+    Error(String),
+    Warning(String),
+    Info(String),
     Close,
     Ok,
 }

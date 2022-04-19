@@ -9,9 +9,13 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
+use std::str::FromStr;
+
+use bitcoin::util::bip32::ExtendedPubKey;
 use gladis::Gladis;
 use gtk::MessageDialog;
 use relm::{Relm, Update, Widget};
+use wallet::slip132::FromSlip132;
 
 use super::{Msg, ViewModel, Widgets};
 
@@ -40,8 +44,21 @@ impl Update for Component {
                 self.widgets.open();
             }
             Msg::Edit => {
-                // TODO: parse xpub
+                let xpub = self.widgets.xpub();
+                // TODO: Recognize Slip132 type and match with the wallet type
+                match ExtendedPubKey::from_str(&xpub)
+                    .or_else(|_| ExtendedPubKey::from_slip132_str(&xpub))
+                {
+                    Ok(_) => {
+                        self.widgets.hide_message();
+                        self.model.xpub = xpub
+                    }
+                    Err(err) => self.widgets.show_error(&err.to_string()),
+                }
             }
+            Msg::Error(msg) => self.widgets.show_error(&msg),
+            Msg::Warning(msg) => self.widgets.show_warning(&msg),
+            Msg::Info(msg) => self.widgets.show_info(&msg),
             Msg::Close => {}
             Msg::Ok => {}
         }

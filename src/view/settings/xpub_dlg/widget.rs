@@ -59,6 +59,10 @@ impl Widgets {
         self.msg_box.hide()
     }
 
+    pub fn xpub(&self) -> String {
+        self.xpub_entry.text().to_string()
+    }
+
     pub(super) fn connect(&self, relm: &Relm<super::Component>) {
         connect!(relm, self.xpub_entry, connect_changed(_), Msg::Edit);
     }
