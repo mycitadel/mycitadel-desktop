@@ -75,6 +75,7 @@ impl Widgets {
             if let Some(template) = template {
                 self.update_template(template);
             }
+            self.pages.set_page(0);
         } else {
             // TODO: Disable UI
         }
@@ -170,15 +171,17 @@ impl Widgets {
         self.addsign_btn
             .set_visible(template.watch_only_req != Requirement::Deny);
         self.spending_list
-            .set_sensitive(template.max_signer_count > Some(1));
+            .set_sensitive(template.max_signer_count != Some(1));
         self.addcond_btn
-            .set_visible(template.max_signer_count > Some(1));
+            .set_visible(template.max_signer_count != Some(1));
         self.removecond_btn
-            .set_visible(template.max_signer_count > Some(1));
-        if template.max_signer_count == Some(1) {
-            self.spending_buf
-                .set_text("Single-sig wallets always can be spent with a single signature and does not allow to customize spending conditions.");
-        }
+            .set_visible(template.max_signer_count != Some(1));
+        self.spending_buf
+            .set_text(if template.max_signer_count == Some(1) {
+            "Single-sig wallets always can be spent with a single signature and does not allow to customize spending conditions."
+        } else {
+            "Each row means alternative spending condition.\nIf all of the requirements at least in a single row are satisfied, than the funds from this wallet may be spent."
+        });
     }
 
     fn set_new_wallet_mode(&self, new_wallet: bool) {
