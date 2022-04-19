@@ -10,11 +10,10 @@
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
 use gladis::Gladis;
-use gtk::prelude::*;
 use gtk::MessageDialog;
 use relm::{Relm, Update, Widget};
 
-use super::{ModelParam, Msg, ViewModel, Widgets, XpubModel};
+use super::{Msg, ViewModel, Widgets};
 
 pub struct Component {
     model: ViewModel,
@@ -25,20 +24,21 @@ impl Update for Component {
     // Specify the model used for this widget.
     type Model = ViewModel;
     // Specify the model parameter used to init the model.
-    type ModelParam = ModelParam;
+    type ModelParam = ();
     // Specify the type of the messages sent to the update function.
     type Msg = Msg;
 
-    fn model(_relm: &Relm<Self>, config: Self::ModelParam) -> Self::Model {
-        ViewModel {
-            config,
-            xpub_model: XpubModel::default(),
-        }
+    fn model(_relm: &Relm<Self>, _model: Self::ModelParam) -> Self::Model {
+        ViewModel::default()
     }
 
     fn update(&mut self, event: Msg) {
         match event {
-            Msg::Open => {}
+            Msg::Open(testnet, format) => {
+                self.model.testnet = testnet;
+                self.model.slip_format = format;
+                self.widgets.open();
+            }
             Msg::Edit => {
                 // TODO: parse xpub
             }
@@ -61,14 +61,7 @@ impl Widget for Component {
         let glade_src = include_str!("xpub_dlg.glade");
         let widgets = Widgets::from_string(glade_src).expect("glade file broken");
 
-        // connect!(relm, model.xpub_model, connect_notify("xpub"), Msg::Edit);
-
-        let stream = relm.stream().clone();
-        model
-            .xpub_model
-            .connect_notify(Some("xpub"), move |_, _| stream.emit(Msg::Edit));
-
-        widgets.bind_model(&model.xpub_model);
+        widgets.connect(relm);
 
         Component { model, widgets }
     }

@@ -14,14 +14,15 @@ use gtk::prelude::*;
 use gtk::Dialog;
 use relm::{init, Channel, Relm, StreamHandle, Update, Widget};
 
-use super::{spending_row::Condition, Msg, ViewModel, Widgets};
-use crate::model::WalletDescriptor;
+use super::{spending_row::Condition, xpub_dlg, Msg, ViewModel, Widgets};
+use crate::model::{Bip43, WalletDescriptor};
 use crate::view::{devices, launch, wallet};
 
 pub struct Component {
     model: ViewModel,
     widgets: Widgets,
     devices: relm::Component<devices::Component>,
+    xpub_dlg: relm::Component<xpub_dlg::Component>,
     launcher_stream: Option<StreamHandle<launch::Msg>>,
     wallet_stream: Option<StreamHandle<wallet::Msg>>,
 }
@@ -68,8 +69,15 @@ impl Update for Component {
                 self.model.new_wallet = false;
                 self.widgets.reinit_ui(self.model.new_wallet, &None)
             }
-            Msg::DevicesList => {
+            Msg::AddDevices => {
                 self.devices.emit(devices::Msg::Show);
+            }
+            Msg::AddXpub => {
+                let testnet = self.model.network.is_testnet();
+                let format = Bip43::try_from(&self.model.scheme)
+                    .ok()
+                    .and_then(Bip43::slip_application);
+                self.xpub_dlg.emit(xpub_dlg::Msg::Open(testnet, format));
             }
             Msg::SignerAddDevice(fingerprint, device) => {
                 self.model.devices.insert(fingerprint, device);
@@ -165,6 +173,7 @@ impl Widget for Component {
 
         let devices = init::<devices::Component>((model.scheme.clone(), model.network, sender))
             .expect("error in devices component");
+        let xpub_dlg = init::<xpub_dlg::Component>(()).expect("error in xpub dialog component");
 
         widgets.connect(relm);
         widgets.bind_model(relm, &model.spendings);
@@ -173,6 +182,7 @@ impl Widget for Component {
             model,
             widgets,
             devices,
+            xpub_dlg,
             launcher_stream: None,
             wallet_stream: None,
         }

@@ -29,7 +29,8 @@ use crate::view::{launch, wallet};
 pub enum Msg {
     New(Option<WalletTemplate>),
     View(WalletDescriptor),
-    DevicesList,
+    AddDevices,
+    AddXpub,
     SignerAddDevice(Fingerprint, HardwareDevice),
     SignerSelect,
     ConditionAdd,

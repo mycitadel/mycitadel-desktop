@@ -14,12 +14,14 @@ mod view_model;
 mod widget;
 
 pub use component::Component;
-pub(self) use view_model::{ModelParam, ViewModel, XpubModel};
+pub(self) use view_model::ViewModel;
 pub(self) use widget::Widgets;
+
+use wallet::slip132::KeyApplication;
 
 #[derive(Copy, Clone, Msg)]
 pub enum Msg {
-    Open,
+    Open(bool, Option<KeyApplication>),
     Edit,
     Close,
     Ok,
