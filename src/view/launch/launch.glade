@@ -219,7 +219,7 @@
                             <property name="margin-right">13</property>
                             <property name="margin-start">6</property>
                             <property name="margin-end">13</property>
-                            <property name="icon-name">dialog-password</property>
+                            <property name="icon-name">dialog-password-symbolic</property>
                           </object>
                           <packing>
                             <property name="left-attach">0</property>
@@ -1015,6 +1015,19 @@
             <property name="tab-fill">False</property>
           </packing>
         </child>
+        <child type="action-end">
+          <object class="GtkButton" id="action_btn">
+            <property name="label" translatable="yes">Next</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <property name="halign">end</property>
+            <property name="valign">center</property>
+            <property name="margin-end">6</property>
+          </object>
+          <packing>
+            <property name="tab-fill">False</property>
+          </packing>
+        </child>
       </object>
     </child>
     <child type="titlebar">
@@ -1031,7 +1044,7 @@
           </object>
         </child>
         <child>
-          <object class="GtkButton" id="action_btn">
+          <object class="GtkButton" id="exit_btn">
             <property name="label" translatable="yes">Exit</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>

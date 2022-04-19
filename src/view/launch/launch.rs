@@ -32,7 +32,7 @@ pub enum Msg {
 #[derive(Clone, Gladis)]
 struct Widgets {
     window: ApplicationWindow,
-    action_btn: Button,
+    exit_btn: Button,
     hwcount_adj: Adjustment,
     taproot_swch: Switch,
     testnet_swch: Switch,
@@ -160,7 +160,7 @@ impl Widget for Component {
         let glade_src = include_str!("launch.glade");
         let widgets = Widgets::from_string(glade_src).expect("glade file broken");
 
-        connect!(relm, widgets.action_btn, connect_clicked(_), Msg::Quit);
+        connect!(relm, widgets.exit_btn, connect_clicked(_), Msg::Quit);
 
         connect!(
             relm,
