@@ -79,6 +79,7 @@ impl Widgets {
         } else {
             // TODO: Disable UI
         }
+        self.update_signer_details(None);
         self.dialog.show();
     }
 
@@ -223,6 +224,7 @@ impl Widgets {
     }
 
     pub fn update_signer_details(&self, details: Option<(&Signer, TrackingAccount)>) {
+        self.removesign_btn.set_sensitive(details.is_some());
         if let Some((signer, ref derivation)) = details {
             self.name_fld.set_text(&signer.name);
             self.fingerprint_fld
