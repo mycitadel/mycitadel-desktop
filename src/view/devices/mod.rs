@@ -12,4 +12,4 @@
 pub mod device_row;
 mod devices;
 
-pub use devices::{Msg, ViewModel, Win};
+pub use devices::{Component, Msg, ViewModel};

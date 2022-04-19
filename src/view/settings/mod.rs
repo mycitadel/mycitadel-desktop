@@ -10,9 +10,10 @@
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
 mod component;
-pub mod spending_row;
+pub(self) mod spending_row;
 mod view_model;
 mod widget;
+pub(self) mod xpub_dlg;
 
 pub use component::Component;
 pub(self) use view_model::ViewModel;

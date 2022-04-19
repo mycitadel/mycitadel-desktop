@@ -43,13 +43,13 @@ pub struct Widgets {
     error_dlg: MessageDialog,
 }
 
-pub struct Win {
+pub struct Component {
     model: ViewModel,
     sender: Sender<Msg>,
     widgets: Widgets,
 }
 
-impl Update for Win {
+impl Update for Component {
     // Specify the model used for this widget.
     type Model = ViewModel;
     // Specify the model parameter used to init the model.
@@ -167,7 +167,7 @@ impl Update for Win {
     }
 }
 
-impl Widget for Win {
+impl Widget for Component {
     // Specify the type of the root widget.
     type Root = Dialog;
 
@@ -214,7 +214,7 @@ impl Widget for Win {
                 RowWidgets::init(stream.clone(), item)
             });
 
-        Win {
+        Component {
             model,
             widgets,
             sender,

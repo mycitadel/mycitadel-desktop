@@ -21,7 +21,7 @@ use crate::view::{devices, launch, wallet};
 pub struct Component {
     model: ViewModel,
     widgets: Widgets,
-    devices: relm::Component<devices::Win>,
+    devices: relm::Component<devices::Component>,
     launcher_stream: Option<StreamHandle<launch::Msg>>,
     wallet_stream: Option<StreamHandle<wallet::Msg>>,
 }
@@ -163,7 +163,7 @@ impl Widget for Component {
             stream.emit(msg);
         });
 
-        let devices = init::<devices::Win>((model.scheme.clone(), model.network, sender))
+        let devices = init::<devices::Component>((model.scheme.clone(), model.network, sender))
             .expect("error in devices component");
 
         widgets.connect(relm);
