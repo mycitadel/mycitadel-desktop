@@ -2,88 +2,198 @@
 <!-- Generated with glade 3.38.2 -->
 <interface>
   <requires lib="gtk+" version="3.24"/>
+  <object class="GtkAdjustment" id="hwcount_adj">
+    <property name="lower">2</property>
+    <property name="upper">5</property>
+    <property name="value">2</property>
+    <property name="step-increment">1</property>
+    <property name="page-increment">10</property>
+  </object>
+  <object class="GtkRecentFilter" id="recentfilter">
+    <patterns>
+      <pattern>*.mcw</pattern>
+      <pattern>*.psbt</pattern>
+      <pattern>*.tx</pattern>
+    </patterns>
+  </object>
   <object class="GtkApplicationWindow" id="window">
+    <property name="height-request">250</property>
     <property name="can-focus">False</property>
     <property name="window-position">center</property>
-    <property name="gravity">center</property>
+    <property name="default-height">250</property>
     <child>
       <object class="GtkNotebook" id="pages">
+        <property name="height-request">250</property>
         <property name="visible">True</property>
         <property name="can-focus">True</property>
-        <property name="tab-pos">left</property>
         <property name="show-border">False</property>
         <child>
-          <object class="GtkListBox" id="create_box">
+          <object class="GtkBox">
+            <property name="height-request">250</property>
             <property name="visible">True</property>
             <property name="can-focus">False</property>
+            <property name="orientation">vertical</property>
             <child>
-              <object class="GtkListBoxRow">
+              <object class="GtkBox">
                 <property name="visible">True</property>
-                <property name="can-focus">True</property>
+                <property name="can-focus">False</property>
+                <property name="halign">center</property>
+                <property name="margin-top">13</property>
+                <property name="margin-bottom">13</property>
+                <property name="spacing">6</property>
                 <child>
-                  <!-- n-columns=2 n-rows=2 -->
-                  <object class="GtkGrid">
+                  <object class="GtkSwitch" id="taproot_swch">
+                    <property name="visible">True</property>
+                    <property name="can-focus">True</property>
+                    <property name="active">True</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
+                    <property name="label" translatable="yes">Use taproot</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkSwitch" id="testnet_swch">
+                    <property name="visible">True</property>
+                    <property name="can-focus">True</property>
                     <property name="margin-start">13</property>
-                    <property name="margin-end">13</property>
-                    <property name="margin-top">6</property>
-                    <property name="margin-bottom">6</property>
-                    <property name="row-spacing">6</property>
-                    <property name="column-spacing">6</property>
+                    <property name="active">True</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">2</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="label" translatable="yes">Use testnet</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">3</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkSwitch" id="rgb_swch">
+                    <property name="visible">True</property>
+                    <property name="sensitive">False</property>
+                    <property name="can-focus">True</property>
+                    <property name="tooltip-text" translatable="yes">RGB support will be shipped soon</property>
+                    <property name="margin-start">13</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">4</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="visible">True</property>
+                    <property name="sensitive">False</property>
+                    <property name="can-focus">False</property>
+                    <property name="tooltip-text" translatable="yes">RGB support will be shipped soon</property>
+                    <property name="label" translatable="yes">Use RGB</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">5</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkListBox" id="create_box">
+                <property name="height-request">250</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <child>
+                  <object class="GtkListBoxRow">
+                    <property name="visible">True</property>
+                    <property name="can-focus">True</property>
                     <child>
-                      <object class="GtkImage">
+                      <!-- n-columns=2 n-rows=2 -->
+                      <object class="GtkGrid">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
-                        <property name="margin-start">6</property>
+                        <property name="margin-start">13</property>
                         <property name="margin-end">13</property>
-                        <property name="icon-name">view-reveal-symbolic</property>
+                        <property name="margin-top">6</property>
+                        <property name="margin-bottom">6</property>
+                        <property name="row-spacing">6</property>
+                        <property name="column-spacing">6</property>
+                        <child>
+                          <object class="GtkImage">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="margin-start">6</property>
+                            <property name="margin-end">13</property>
+                            <property name="icon-name">view-reveal-symbolic</property>
+                          </object>
+                          <packing>
+                            <property name="left-attach">0</property>
+                            <property name="top-attach">0</property>
+                            <property name="height">2</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="halign">start</property>
+                            <property name="hexpand">True</property>
+                            <property name="label" translatable="yes">Single-sig watch-only</property>
+                            <property name="wrap">True</property>
+                            <attributes>
+                              <attribute name="weight" value="bold"/>
+                              <attribute name="scale" value="1.3300000000000001"/>
+                            </attributes>
+                          </object>
+                          <packing>
+                            <property name="left-attach">1</property>
+                            <property name="top-attach">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="halign">start</property>
+                            <property name="label" translatable="yes">A watch-only wallet controlled by a single signature</property>
+                            <property name="wrap">True</property>
+                          </object>
+                          <packing>
+                            <property name="left-attach">1</property>
+                            <property name="top-attach">1</property>
+                          </packing>
+                        </child>
                       </object>
-                      <packing>
-                        <property name="left-attach">0</property>
-                        <property name="top-attach">0</property>
-                        <property name="height">2</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="halign">start</property>
-                        <property name="hexpand">True</property>
-                        <property name="label" translatable="yes">Single-sig watch-only</property>
-                        <property name="wrap">True</property>
-                        <attributes>
-                          <attribute name="weight" value="bold"/>
-                          <attribute name="scale" value="1.3300000000000001"/>
-                        </attributes>
-                      </object>
-                      <packing>
-                        <property name="left-attach">1</property>
-                        <property name="top-attach">0</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="halign">start</property>
-                        <property name="label" translatable="yes">A watch-only wallet controlled by a single signature</property>
-                        <property name="wrap">True</property>
-                      </object>
-                      <packing>
-                        <property name="left-attach">1</property>
-                        <property name="top-attach">1</property>
-                      </packing>
                     </child>
                   </object>
                 </child>
-              </object>
-            </child>
-            <child>
-              <object class="GtkListBoxRow">
-                <property name="visible">True</property>
-                <property name="can-focus">True</property>
                 <child>
                   <object class="GtkListBoxRow">
                     <property name="visible">True</property>
@@ -109,7 +219,7 @@
                             <property name="margin-right">13</property>
                             <property name="margin-start">6</property>
                             <property name="margin-end">13</property>
-                            <property name="icon-name">application-certificate-symbolic</property>
+                            <property name="icon-name">dialog-password</property>
                           </object>
                           <packing>
                             <property name="left-attach">0</property>
@@ -152,148 +262,178 @@
                     </child>
                   </object>
                 </child>
-              </object>
-            </child>
-            <child>
-              <object class="GtkListBoxRow">
-                <property name="visible">True</property>
-                <property name="can-focus">True</property>
                 <child>
-                  <!-- n-columns=2 n-rows=2 -->
-                  <object class="GtkGrid">
+                  <object class="GtkListBoxRow">
                     <property name="visible">True</property>
-                    <property name="can-focus">False</property>
-                    <property name="margin-left">13</property>
-                    <property name="margin-right">13</property>
-                    <property name="margin-start">13</property>
-                    <property name="margin-end">13</property>
-                    <property name="margin-top">6</property>
-                    <property name="margin-bottom">6</property>
-                    <property name="row-spacing">6</property>
-                    <property name="column-spacing">6</property>
+                    <property name="can-focus">True</property>
                     <child>
-                      <object class="GtkImage">
+                      <!-- n-columns=2 n-rows=2 -->
+                      <object class="GtkGrid">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
-                        <property name="margin-left">6</property>
+                        <property name="margin-left">13</property>
                         <property name="margin-right">13</property>
-                        <property name="margin-start">6</property>
+                        <property name="margin-start">13</property>
                         <property name="margin-end">13</property>
-                        <property name="icon-name">channel-secure-symbolic</property>
+                        <property name="margin-top">6</property>
+                        <property name="margin-bottom">6</property>
+                        <property name="row-spacing">6</property>
+                        <property name="column-spacing">6</property>
+                        <child>
+                          <object class="GtkImage">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="margin-left">6</property>
+                            <property name="margin-right">13</property>
+                            <property name="margin-start">6</property>
+                            <property name="margin-end">13</property>
+                            <property name="icon-name">system-lock-screen-symbolic</property>
+                          </object>
+                          <packing>
+                            <property name="left-attach">0</property>
+                            <property name="top-attach">0</property>
+                            <property name="height">2</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="halign">start</property>
+                            <property name="hexpand">True</property>
+                            <property name="label" translatable="yes">Hodling wallet</property>
+                            <property name="wrap">True</property>
+                            <attributes>
+                              <attribute name="weight" value="bold"/>
+                              <attribute name="scale" value="1.3300000000000001"/>
+                            </attributes>
+                          </object>
+                          <packing>
+                            <property name="left-attach">1</property>
+                            <property name="top-attach">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="halign">start</property>
+                            <property name="label" translatable="yes">Wallet controlled by a set of your devices with expiration periods</property>
+                            <property name="wrap">True</property>
+                          </object>
+                          <packing>
+                            <property name="left-attach">1</property>
+                            <property name="top-attach">1</property>
+                          </packing>
+                        </child>
                       </object>
-                      <packing>
-                        <property name="left-attach">0</property>
-                        <property name="top-attach">0</property>
-                        <property name="height">2</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="halign">start</property>
-                        <property name="hexpand">True</property>
-                        <property name="label" translatable="yes">Hodling wallet</property>
-                        <property name="wrap">True</property>
-                        <attributes>
-                          <attribute name="weight" value="bold"/>
-                          <attribute name="scale" value="1.3300000000000001"/>
-                        </attributes>
-                      </object>
-                      <packing>
-                        <property name="left-attach">1</property>
-                        <property name="top-attach">0</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="halign">start</property>
-                        <property name="label" translatable="yes">Wallet controlled by a set of your devices with expiration periods</property>
-                        <property name="wrap">True</property>
-                      </object>
-                      <packing>
-                        <property name="left-attach">1</property>
-                        <property name="top-attach">1</property>
-                      </packing>
                     </child>
                   </object>
                 </child>
-              </object>
-            </child>
-            <child>
-              <object class="GtkListBoxRow">
-                <property name="visible">True</property>
-                <property name="can-focus">True</property>
                 <child>
-                  <!-- n-columns=2 n-rows=2 -->
-                  <object class="GtkGrid">
+                  <object class="GtkListBoxRow">
                     <property name="visible">True</property>
-                    <property name="can-focus">False</property>
-                    <property name="margin-left">13</property>
-                    <property name="margin-right">13</property>
-                    <property name="margin-start">13</property>
-                    <property name="margin-end">13</property>
-                    <property name="margin-top">6</property>
-                    <property name="margin-bottom">6</property>
-                    <property name="row-spacing">6</property>
-                    <property name="column-spacing">6</property>
+                    <property name="can-focus">True</property>
                     <child>
-                      <object class="GtkImage">
+                      <!-- n-columns=2 n-rows=2 -->
+                      <object class="GtkGrid">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
-                        <property name="margin-left">6</property>
+                        <property name="margin-left">13</property>
                         <property name="margin-right">13</property>
-                        <property name="margin-start">6</property>
+                        <property name="margin-start">13</property>
                         <property name="margin-end">13</property>
-                        <property name="icon-name">drive-harddisk-usb-symbolic</property>
+                        <property name="margin-top">6</property>
+                        <property name="margin-bottom">6</property>
+                        <property name="row-spacing">6</property>
+                        <property name="column-spacing">6</property>
+                        <child>
+                          <object class="GtkImage">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="margin-left">6</property>
+                            <property name="margin-right">13</property>
+                            <property name="margin-start">6</property>
+                            <property name="margin-end">13</property>
+                            <property name="icon-name">drive-harddisk-usb-symbolic</property>
+                          </object>
+                          <packing>
+                            <property name="left-attach">0</property>
+                            <property name="top-attach">0</property>
+                            <property name="height">2</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="halign">start</property>
+                            <property name="hexpand">True</property>
+                            <property name="label" translatable="yes">Multi-sig using your devices</property>
+                            <property name="wrap">True</property>
+                            <attributes>
+                              <attribute name="weight" value="bold"/>
+                              <attribute name="scale" value="1.3300000000000001"/>
+                            </attributes>
+                          </object>
+                          <packing>
+                            <property name="left-attach">1</property>
+                            <property name="top-attach">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkBox">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="spacing">6</property>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="label" translatable="yes">Wallet controlled by</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkSpinButton">
+                                <property name="visible">True</property>
+                                <property name="can-focus">True</property>
+                                <property name="adjustment">hwcount_adj</property>
+                                <property name="value">2</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="halign">start</property>
+                                <property name="label" translatable="yes">devices</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">2</property>
+                              </packing>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="left-attach">1</property>
+                            <property name="top-attach">1</property>
+                          </packing>
+                        </child>
                       </object>
-                      <packing>
-                        <property name="left-attach">0</property>
-                        <property name="top-attach">0</property>
-                        <property name="height">2</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="halign">start</property>
-                        <property name="hexpand">True</property>
-                        <property name="label" translatable="yes">Multi-sig using your devices</property>
-                        <property name="wrap">True</property>
-                        <attributes>
-                          <attribute name="weight" value="bold"/>
-                          <attribute name="scale" value="1.3300000000000001"/>
-                        </attributes>
-                      </object>
-                      <packing>
-                        <property name="left-attach">1</property>
-                        <property name="top-attach">0</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="halign">start</property>
-                        <property name="label" translatable="yes">Wallet controlled by a set of your devices</property>
-                        <property name="wrap">True</property>
-                      </object>
-                      <packing>
-                        <property name="left-attach">1</property>
-                        <property name="top-attach">1</property>
-                      </packing>
                     </child>
                   </object>
                 </child>
-              </object>
-            </child>
-            <child>
-              <object class="GtkListBoxRow">
-                <property name="visible">True</property>
-                <property name="can-focus">True</property>
                 <child>
                   <object class="GtkListBoxRow">
                     <property name="visible">True</property>
@@ -362,84 +502,80 @@
                     </child>
                   </object>
                 </child>
-              </object>
-            </child>
-            <child>
-              <object class="GtkListBoxRow">
-                <property name="visible">True</property>
-                <property name="can-focus">True</property>
-                <child>
-                  <!-- n-columns=2 n-rows=2 -->
-                  <object class="GtkGrid">
-                    <property name="visible">True</property>
-                    <property name="can-focus">False</property>
-                    <property name="margin-left">13</property>
-                    <property name="margin-right">13</property>
-                    <property name="margin-start">13</property>
-                    <property name="margin-end">13</property>
-                    <property name="margin-top">6</property>
-                    <property name="margin-bottom">6</property>
-                    <property name="row-spacing">6</property>
-                    <property name="column-spacing">6</property>
-                    <child>
-                      <object class="GtkImage">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="margin-left">6</property>
-                        <property name="margin-right">13</property>
-                        <property name="margin-start">6</property>
-                        <property name="margin-end">13</property>
-                        <property name="icon-name">document-edit-symbolic</property>
-                      </object>
-                      <packing>
-                        <property name="left-attach">0</property>
-                        <property name="top-attach">0</property>
-                        <property name="height">2</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="halign">start</property>
-                        <property name="hexpand">True</property>
-                        <property name="label" translatable="yes">Custom wallet</property>
-                        <property name="wrap">True</property>
-                        <attributes>
-                          <attribute name="weight" value="bold"/>
-                          <attribute name="scale" value="1.3300000000000001"/>
-                        </attributes>
-                      </object>
-                      <packing>
-                        <property name="left-attach">1</property>
-                        <property name="top-attach">0</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="halign">start</property>
-                        <property name="label" translatable="yes">Fully-customizable wallet</property>
-                        <property name="wrap">True</property>
-                      </object>
-                      <packing>
-                        <property name="left-attach">1</property>
-                        <property name="top-attach">1</property>
-                      </packing>
-                    </child>
-                  </object>
-                </child>
-              </object>
-            </child>
-            <child>
-              <object class="GtkListBoxRow">
-                <property name="visible">True</property>
-                <property name="can-focus">True</property>
                 <child>
                   <object class="GtkListBoxRow">
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
+                    <child>
+                      <!-- n-columns=2 n-rows=2 -->
+                      <object class="GtkGrid">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="margin-left">13</property>
+                        <property name="margin-right">13</property>
+                        <property name="margin-start">13</property>
+                        <property name="margin-end">13</property>
+                        <property name="margin-top">6</property>
+                        <property name="margin-bottom">6</property>
+                        <property name="row-spacing">6</property>
+                        <property name="column-spacing">6</property>
+                        <child>
+                          <object class="GtkImage">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="margin-left">6</property>
+                            <property name="margin-right">13</property>
+                            <property name="margin-start">6</property>
+                            <property name="margin-end">13</property>
+                            <property name="icon-name">document-edit-symbolic</property>
+                          </object>
+                          <packing>
+                            <property name="left-attach">0</property>
+                            <property name="top-attach">0</property>
+                            <property name="height">2</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="halign">start</property>
+                            <property name="hexpand">True</property>
+                            <property name="label" translatable="yes">Custom wallet</property>
+                            <property name="wrap">True</property>
+                            <attributes>
+                              <attribute name="weight" value="bold"/>
+                              <attribute name="scale" value="1.3300000000000001"/>
+                            </attributes>
+                          </object>
+                          <packing>
+                            <property name="left-attach">1</property>
+                            <property name="top-attach">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="halign">start</property>
+                            <property name="label" translatable="yes">Fully-customizable wallet</property>
+                            <property name="wrap">True</property>
+                          </object>
+                          <packing>
+                            <property name="left-attach">1</property>
+                            <property name="top-attach">1</property>
+                          </packing>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkListBoxRow">
+                    <property name="visible">True</property>
+                    <property name="sensitive">False</property>
+                    <property name="can-focus">False</property>
+                    <property name="tooltip-text" translatable="yes">Lightning support will be shipped soon</property>
                     <property name="activatable">False</property>
                     <property name="selectable">False</property>
                     <child>
@@ -477,7 +613,7 @@
                             <property name="can-focus">False</property>
                             <property name="halign">start</property>
                             <property name="hexpand">True</property>
-                            <property name="label" translatable="yes">Lightning channel</property>
+                            <property name="label" translatable="yes">Instant payments with Lightning</property>
                             <property name="wrap">True</property>
                             <attributes>
                               <attribute name="weight" value="bold"/>
@@ -507,6 +643,11 @@
                   </object>
                 </child>
               </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
             </child>
           </object>
         </child>
@@ -526,6 +667,7 @@
         </child>
         <child>
           <object class="GtkListBox" id="import_box">
+            <property name="height-request">250</property>
             <property name="visible">True</property>
             <property name="can-focus">False</property>
             <child>
@@ -567,7 +709,7 @@
                         <property name="can-focus">False</property>
                         <property name="halign">start</property>
                         <property name="hexpand">True</property>
-                        <property name="label" translatable="yes">Bitcoin core descriptor</property>
+                        <property name="label" translatable="yes">Bitcoin core</property>
                         <property name="wrap">True</property>
                         <attributes>
                           <attribute name="weight" value="bold"/>
@@ -585,6 +727,74 @@
                         <property name="can-focus">False</property>
                         <property name="halign">start</property>
                         <property name="label" translatable="yes">Wallet exported from Bitcoin Core as descriptor</property>
+                        <property name="wrap">True</property>
+                      </object>
+                      <packing>
+                        <property name="left-attach">1</property>
+                        <property name="top-attach">1</property>
+                      </packing>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkListBoxRow">
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <child>
+                  <!-- n-columns=2 n-rows=2 -->
+                  <object class="GtkGrid">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="margin-left">13</property>
+                    <property name="margin-right">13</property>
+                    <property name="margin-start">13</property>
+                    <property name="margin-end">13</property>
+                    <property name="margin-top">6</property>
+                    <property name="margin-bottom">6</property>
+                    <property name="row-spacing">6</property>
+                    <property name="column-spacing">6</property>
+                    <child>
+                      <object class="GtkImage">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="margin-left">6</property>
+                        <property name="margin-right">13</property>
+                        <property name="margin-start">6</property>
+                        <property name="margin-end">13</property>
+                        <property name="icon-name">application-certificate-symbolic</property>
+                      </object>
+                      <packing>
+                        <property name="left-attach">0</property>
+                        <property name="top-attach">0</property>
+                        <property name="height">2</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="halign">start</property>
+                        <property name="hexpand">True</property>
+                        <property name="label" translatable="yes">Sparrow</property>
+                        <property name="wrap">True</property>
+                        <attributes>
+                          <attribute name="weight" value="bold"/>
+                          <attribute name="scale" value="1.3300000000000001"/>
+                        </attributes>
+                      </object>
+                      <packing>
+                        <property name="left-attach">1</property>
+                        <property name="top-attach">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="halign">start</property>
+                        <property name="label" translatable="yes">Wallet exported from Sparrow as descriptor</property>
                         <property name="wrap">True</property>
                       </object>
                       <packing>
@@ -618,6 +828,7 @@
         </child>
         <child>
           <object class="GtkBox">
+            <property name="height-request">250</property>
             <property name="visible">True</property>
             <property name="can-focus">False</property>
             <property name="orientation">vertical</property>
@@ -650,7 +861,7 @@
                             <property name="margin-right">13</property>
                             <property name="margin-start">6</property>
                             <property name="margin-end">13</property>
-                            <property name="icon-name">application-certificate-symbolic</property>
+                            <property name="icon-name">document-open-symbolic</property>
                           </object>
                           <packing>
                             <property name="left-attach">0</property>
@@ -721,7 +932,7 @@
                     <property name="margin-right">13</property>
                     <property name="margin-start">6</property>
                     <property name="margin-end">13</property>
-                    <property name="icon-name">application-certificate-symbolic</property>
+                    <property name="icon-name">document-open-recent-symbolic</property>
                   </object>
                   <packing>
                     <property name="left-attach">0</property>
@@ -752,7 +963,7 @@
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <property name="halign">start</property>
-                    <property name="label" translatable="yes">select one of wallets or transactions you used recently:</property>
+                    <property name="label" translatable="yes">select one of wallets or transactions you used before:</property>
                     <property name="wrap">True</property>
                   </object>
                   <packing>
@@ -769,14 +980,17 @@
             </child>
             <child>
               <object class="GtkRecentChooserWidget" id="recent">
+                <property name="height-request">200</property>
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
-                <property name="vexpand">True</property>
-                <property name="limit">20</property>
+                <property name="margin-start">52</property>
+                <property name="border-width">0</property>
+                <property name="filter">recentfilter</property>
+                <property name="limit">10</property>
                 <property name="sort-type">mru</property>
               </object>
               <packing>
-                <property name="expand">False</property>
+                <property name="expand">True</property>
                 <property name="fill">True</property>
                 <property name="position">2</property>
               </packing>
