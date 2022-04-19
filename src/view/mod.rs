@@ -11,6 +11,7 @@
 
 pub mod devices;
 pub mod invoice;
+pub mod launch;
 pub mod psbt;
 pub mod settings;
 pub mod tx;

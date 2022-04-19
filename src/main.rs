@@ -27,6 +27,10 @@ mod model;
 mod view;
 
 fn main() {
+    view::launch::Widgets::run(()).expect("application failed")
+
+    /*
     view::wallet::Component::run(ModelParam::New(WalletDescriptor::default()))
         .expect("wallet::Win::run failed");
+     */
 }
