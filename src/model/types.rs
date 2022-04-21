@@ -9,7 +9,9 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
+use std::cmp::Ordering;
 use std::collections::BTreeMap;
+use std::hash::{Hash, Hasher};
 
 use bitcoin::secp256k1::PublicKey;
 use bitcoin::util::bip32::{ChainCode, ExtendedPubKey, Fingerprint};
@@ -174,7 +176,7 @@ impl HardwareList {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+#[derive(Clone, Debug)]
 pub struct Signer {
     pub fingerprint: Fingerprint,
     pub device: Option<String>,
@@ -182,6 +184,33 @@ pub struct Signer {
     pub xpub: ExtendedPubKey,
     pub account: HardenedIndex,
     pub ownership: Ownership,
+}
+
+impl PartialEq for Signer {
+    // Two signers considered equal when their xpubs are equal
+    fn eq(&self, other: &Self) -> bool {
+        self.xpub == other.xpub
+    }
+}
+
+impl Eq for Signer {}
+
+impl Hash for Signer {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.xpub.hash(state)
+    }
+}
+
+impl PartialOrd for Signer {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Signer {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.xpub.cmp(&other.xpub)
+    }
 }
 
 impl Signer {

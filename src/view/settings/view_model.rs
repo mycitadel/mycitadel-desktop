@@ -32,6 +32,7 @@ pub struct ViewModel {
     pub scheme: DerivationScheme,
     pub devices: HardwareList,
     pub signers: BTreeSet<Signer>,
+    pub active_signer: Option<Signer>,
     pub spendings: SpendingModel,
     pub network: PublicNetwork,
     pub descriptor: Option<Descriptor<TrackingAccount>>,
@@ -50,6 +51,7 @@ impl Default for ViewModel {
             },
             devices: none!(),
             signers: none!(),
+            active_signer: None,
             spendings: SpendingModel::new(),
             network: PublicNetwork::Mainnet,
             descriptor: None,
@@ -110,6 +112,10 @@ impl ViewModel {
             revocation_seal: None,
             terminal_path: vec![TerminalStep::Wildcard, TerminalStep::Wildcard],
         }
+    }
+
+    pub fn replace_signer(&mut self, signer: Signer) -> bool {
+        self.signers.replace(signer).is_some()
     }
 
     pub fn update_signers(&mut self) {

@@ -16,8 +16,8 @@ use std::str::FromStr;
 use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{
-    gdk, glib, Adjustment, Button, Dialog, Entry, Image, Label, ListBox, ListBoxRow, ListStore,
-    Notebook, TextBuffer, ToggleButton, ToolButton, TreeView,
+    gdk, glib, Adjustment, Box, Button, Dialog, Entry, Image, Label, ListBox, ListBoxRow,
+    ListStore, Notebook, ResponseType, TextBuffer, ToggleButton, ToolButton, TreeView,
 };
 use miniscript::Descriptor;
 use relm::Relm;
@@ -35,6 +35,10 @@ pub struct Widgets {
     save_btn: Button,
     cancel_btn: Button,
     pages: Notebook,
+
+    msg_box: Box,
+    msg_lbl: Label,
+    msg_img: Image,
 
     devices_btn: ToolButton,
     addsign_btn: ToolButton,
@@ -95,12 +99,68 @@ impl Widgets {
         self.dialog.clone()
     }
 
+    pub fn show_notification(&self) {
+        self.msg_box.show_all();
+    }
+
+    pub fn show_error(&self, msg: &str) {
+        self.dialog.set_response_sensitive(ResponseType::Ok, false);
+        self.msg_img.set_icon_name(Some("dialog-error-symbolic"));
+        self.msg_lbl.set_label(msg);
+        self.msg_box.show_all();
+    }
+
+    pub fn show_info(&self, msg: &str) {
+        self.dialog.set_response_sensitive(ResponseType::Ok, true);
+        self.msg_img
+            .set_icon_name(Some("dialog-information-symbolic"));
+        self.msg_lbl.set_label(msg);
+        self.msg_box.show_all();
+    }
+
+    pub fn show_warning(&self, msg: &str) {
+        self.dialog.set_response_sensitive(ResponseType::Ok, true);
+        self.msg_img.set_icon_name(Some("dialog-warning-symbolic"));
+        self.msg_lbl.set_label(msg);
+        self.msg_box.show_all();
+    }
+
+    pub fn hide_message(&self) {
+        self.dialog.set_response_sensitive(ResponseType::Ok, true);
+        self.msg_box.hide()
+    }
+
     pub(super) fn connect(&self, relm: &Relm<super::Component>) {
         connect!(relm, self.save_btn, connect_clicked(_), Msg::Update);
         connect!(relm, self.cancel_btn, connect_clicked(_), Msg::Close);
 
         connect!(relm, self.devices_btn, connect_clicked(_), Msg::AddDevices);
         connect!(relm, self.addsign_btn, connect_clicked(_), Msg::AddReadOnly);
+
+        connect!(
+            relm,
+            self.fingerprint_fld,
+            connect_changed(_),
+            Msg::SignerFingerprintChange
+        );
+        connect!(
+            relm,
+            self.name_fld,
+            connect_changed(_),
+            Msg::SignerNameChange
+        );
+        connect!(
+            relm,
+            self.seed_mine_tgl,
+            connect_toggled(_),
+            Msg::ExportFormat(false)
+        );
+        connect!(
+            relm,
+            self.seed_extern_tgl,
+            connect_toggled(_),
+            Msg::SignerOwnershipChange
+        );
 
         connect!(
             relm,
@@ -181,6 +241,22 @@ impl Widgets {
 
         self.dialog
             .connect_delete_event(|_, _| glib::signal::Inhibit(true));
+    }
+
+    pub fn signer_fingerprint(&self) -> String {
+        self.fingerprint_fld.text().to_string()
+    }
+
+    pub fn signer_name(&self) -> String {
+        self.name_fld.text().to_string()
+    }
+
+    pub fn signer_ownership(&self) -> Ownership {
+        if self.seed_mine_tgl.is_active() {
+            Ownership::Mine
+        } else {
+            Ownership::External
+        }
     }
 
     fn update_template(&self, template: &WalletTemplate) {
@@ -293,6 +369,24 @@ impl Widgets {
                     (4, &signer.device.clone().unwrap_or_default()),
                 ],
             );
+        }
+    }
+
+    pub fn replace_signer(&mut self, signer: &Signer) -> bool {
+        if let Some((_, item)) = self.signers_tree.selection().selected() {
+            self.signers_store.set(
+                &item,
+                &[
+                    (0, &signer.name),
+                    (1, &signer.fingerprint.to_string()),
+                    (2, &signer.account.to_string()),
+                    (3, &signer.xpub.to_string()),
+                    (4, &signer.device.clone().unwrap_or_default()),
+                ],
+            );
+            true
+        } else {
+            false
         }
     }
 

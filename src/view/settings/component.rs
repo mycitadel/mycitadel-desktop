@@ -9,6 +9,9 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
+use std::str::FromStr;
+
+use bitcoin::util::bip32::Fingerprint;
 use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::Dialog;
@@ -28,6 +31,14 @@ pub struct Component {
 }
 
 impl Component {
+    fn replace_signer(&mut self) {
+        if let Some(signer) = self.model.active_signer.clone() {
+            self.widgets.replace_signer(&signer);
+            debug_assert!(self.model.replace_signer(signer));
+            self.update_descriptor();
+        }
+    }
+
     fn update_descriptor(&mut self) {
         self.model.update_descriptor();
         self.widgets
@@ -83,8 +94,7 @@ impl Update for Component {
                 self.model.devices.insert(fingerprint, device);
                 self.model.update_signers();
                 self.widgets.update_signers(&self.model.signers);
-                self.widgets
-                    .update_descriptor(self.model.descriptor.as_ref(), self.model.format_lnpbp);
+                self.update_descriptor();
             }
             Msg::SignerSelect => {
                 let signer = self
@@ -93,26 +103,63 @@ impl Update for Component {
                     .and_then(|xpub| self.model.signer_by(xpub));
                 self.widgets
                     .update_signer_details(signer.map(|s| (s, self.model.derivation_for(s))));
+                self.model.active_signer = signer.cloned();
             }
             Msg::AddXpub(xpub) => {
                 self.model.signers.insert(xpub.into());
                 self.widgets.update_signers(&self.model.signers);
-                self.widgets
-                    .update_descriptor(self.model.descriptor.as_ref(), self.model.format_lnpbp);
+                self.update_descriptor();
+            }
+            Msg::SignerFingerprintChange => {
+                let fingerprint = match Fingerprint::from_str(&self.widgets.signer_fingerprint()) {
+                    Err(_) => {
+                        self.widgets.show_error("incorrect fingerprint value");
+                        return;
+                    }
+                    Ok(fingerprint) => {
+                        self.widgets.hide_message();
+                        fingerprint
+                    }
+                };
+                if let Some(ref mut signer) = self.model.active_signer {
+                    if signer.fingerprint == fingerprint {
+                        return;
+                    }
+                    signer.fingerprint = fingerprint;
+                    self.replace_signer();
+                }
+            }
+            Msg::SignerNameChange => {
+                if let Some(ref mut signer) = self.model.active_signer {
+                    let name = self.widgets.signer_name();
+                    if signer.name == name {
+                        return;
+                    }
+                    signer.name = name;
+                    self.replace_signer();
+                }
+            }
+            Msg::SignerOwnershipChange => {
+                if let Some(ref mut signer) = self.model.active_signer {
+                    let ownership = self.widgets.signer_ownership();
+                    if signer.ownership == ownership {
+                        return;
+                    }
+                    signer.ownership = ownership;
+                    self.replace_signer();
+                }
             }
             Msg::ToggleClass(class) => {
                 if self.widgets.should_update_descr_class(class)
                     && self.model.toggle_descr_class(class)
                 {
                     self.widgets.update_descr_class(self.model.class);
-                    self.widgets
-                        .update_descriptor(self.model.descriptor.as_ref(), self.model.format_lnpbp);
+                    self.update_descriptor();
                 }
             }
             Msg::ExportFormat(lnpbp) => {
                 self.model.format_lnpbp = lnpbp;
-                self.widgets
-                    .update_descriptor(self.model.descriptor.as_ref(), self.model.format_lnpbp);
+                self.update_descriptor();
             }
             Msg::Update => {
                 let descr = WalletDescriptor::from(&self.model);
