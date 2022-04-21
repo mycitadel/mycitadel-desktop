@@ -18,7 +18,7 @@ use chrono::{DateTime, Utc};
 use hwi::error::Error as HwiError;
 use hwi::HWIDevice;
 use wallet::hd::schemata::DerivationBlockchain;
-use wallet::hd::{DerivationScheme, HardenedIndex};
+use wallet::hd::{DerivationScheme, HardenedIndex, SegmentIndexes};
 
 // TODO: Move to descriptor wallet or BPro
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Display)]
@@ -193,6 +193,22 @@ impl Signer {
             xpub: device.default_xpub,
             account: device.default_account,
             ownership: Ownership::Mine,
+        }
+    }
+}
+
+impl From<ExtendedPubKey> for Signer {
+    fn from(xpub: ExtendedPubKey) -> Self {
+        Signer {
+            fingerprint: xpub.parent_fingerprint,
+            device: None,
+            name: "".to_string(),
+            xpub,
+            account: HardenedIndex::from_derivation_value(
+                xpub.child_number.first_derivation_value(),
+            )
+            .unwrap_or_default(),
+            ownership: Ownership::External,
         }
     }
 }

@@ -11,7 +11,7 @@
 
 use gladis::Gladis;
 use gtk::prelude::*;
-use gtk::{Box, Entry, Image, Label, MessageDialog};
+use gtk::{Box, Entry, Image, Label, MessageDialog, ResponseType};
 use relm::Relm;
 
 use super::Msg;
@@ -34,15 +34,29 @@ impl Widgets {
         self.xpub_entry.set_text("");
         self.hide_message();
         self.dialog.show();
+        self.dialog.set_response_sensitive(ResponseType::Ok, false);
+    }
+
+    pub fn close(&self) {
+        self.dialog.hide();
+        self.dialog.set_response_sensitive(ResponseType::Ok, false);
+        self.xpub_entry.set_text("");
+        self.hide_message();
+    }
+
+    pub fn show_notification(&self) {
+        self.msg_box.show_all();
     }
 
     pub fn show_error(&self, msg: &str) {
+        self.dialog.set_response_sensitive(ResponseType::Ok, false);
         self.msg_img.set_icon_name(Some("dialog-error-symbolic"));
         self.msg_lbl.set_label(msg);
         self.msg_box.show_all();
     }
 
     pub fn show_info(&self, msg: &str) {
+        self.dialog.set_response_sensitive(ResponseType::Ok, true);
         self.msg_img
             .set_icon_name(Some("dialog-information-symbolic"));
         self.msg_lbl.set_label(msg);
@@ -50,12 +64,14 @@ impl Widgets {
     }
 
     pub fn show_warning(&self, msg: &str) {
+        self.dialog.set_response_sensitive(ResponseType::Ok, true);
         self.msg_img.set_icon_name(Some("dialog-warning-symbolic"));
         self.msg_lbl.set_label(msg);
         self.msg_box.show_all();
     }
 
     pub fn hide_message(&self) {
+        self.dialog.set_response_sensitive(ResponseType::Ok, true);
         self.msg_box.hide()
     }
 
@@ -65,5 +81,12 @@ impl Widgets {
 
     pub(super) fn connect(&self, relm: &Relm<super::Component>) {
         connect!(relm, self.xpub_entry, connect_changed(_), Msg::Edit);
+
+        connect!(
+            relm,
+            self.dialog,
+            connect_response(_, resp),
+            Msg::Response(resp)
+        );
     }
 }

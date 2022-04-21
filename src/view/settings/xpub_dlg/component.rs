@@ -13,11 +13,12 @@ use std::str::FromStr;
 
 use bitcoin::util::bip32::ExtendedPubKey;
 use gladis::Gladis;
-use gtk::MessageDialog;
-use relm::{Relm, Update, Widget};
+use gtk::{MessageDialog, ResponseType};
+use relm::{Relm, Sender, Update, Widget};
 use wallet::slip132::FromSlip132;
 
 use super::{Msg, ViewModel, Widgets};
+use crate::view::settings;
 
 pub struct Component {
     model: ViewModel,
@@ -28,12 +29,12 @@ impl Update for Component {
     // Specify the model used for this widget.
     type Model = ViewModel;
     // Specify the model parameter used to init the model.
-    type ModelParam = ();
+    type ModelParam = (Sender<settings::Msg>,);
     // Specify the type of the messages sent to the update function.
     type Msg = Msg;
 
-    fn model(_relm: &Relm<Self>, _model: Self::ModelParam) -> Self::Model {
-        ViewModel::default()
+    fn model(_relm: &Relm<Self>, model: Self::ModelParam) -> Self::Model {
+        ViewModel::with(model.0)
     }
 
     fn update(&mut self, event: Msg) {
@@ -49,18 +50,34 @@ impl Update for Component {
                 match ExtendedPubKey::from_str(&xpub)
                     .or_else(|_| ExtendedPubKey::from_slip132_str(&xpub))
                 {
-                    Ok(_) => {
+                    Ok(xpub) => {
                         self.widgets.hide_message();
-                        self.model.xpub = xpub
+                        self.model.xpub = Some(xpub)
                     }
-                    Err(err) => self.widgets.show_error(&err.to_string()),
+                    Err(err) => {
+                        self.model.xpub = None;
+                        self.widgets.show_error(&err.to_string())
+                    }
                 }
             }
             Msg::Error(msg) => self.widgets.show_error(&msg),
             Msg::Warning(msg) => self.widgets.show_warning(&msg),
             Msg::Info(msg) => self.widgets.show_info(&msg),
-            Msg::Close => {}
-            Msg::Ok => {}
+            Msg::Response(ResponseType::Cancel) | Msg::Response(ResponseType::DeleteEvent) => {
+                self.widgets.close();
+            }
+            Msg::Response(ResponseType::Ok) => {
+                if let Some(xpub) = self.model.xpub {
+                    self.model
+                        .sender
+                        .send(settings::Msg::AddXpub(xpub))
+                        .expect("communication of xpub dialog with settings window");
+                    self.widgets.close();
+                } else {
+                    self.widgets.show_notification();
+                }
+            }
+            Msg::Response(resp) => unreachable!("{}", resp),
         }
     }
 }

@@ -100,7 +100,7 @@ impl Widgets {
         connect!(relm, self.cancel_btn, connect_clicked(_), Msg::Close);
 
         connect!(relm, self.devices_btn, connect_clicked(_), Msg::AddDevices);
-        connect!(relm, self.addsign_btn, connect_clicked(_), Msg::AddXpub);
+        connect!(relm, self.addsign_btn, connect_clicked(_), Msg::AddReadOnly);
 
         connect!(
             relm,

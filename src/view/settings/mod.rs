@@ -19,7 +19,7 @@ pub use component::Component;
 pub(self) use view_model::ViewModel;
 pub(self) use widget::Widgets;
 
-use bitcoin::util::bip32::Fingerprint;
+use bitcoin::util::bip32::{ExtendedPubKey, Fingerprint};
 use relm::StreamHandle;
 
 use crate::model::{DescriptorClass, HardwareDevice, WalletDescriptor, WalletTemplate};
@@ -30,7 +30,8 @@ pub enum Msg {
     New(Option<WalletTemplate>),
     View(WalletDescriptor),
     AddDevices,
-    AddXpub,
+    AddReadOnly,
+    AddXpub(ExtendedPubKey),
     SignerAddDevice(Fingerprint, HardwareDevice),
     SignerSelect,
     ConditionAdd,

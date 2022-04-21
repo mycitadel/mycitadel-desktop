@@ -14,11 +14,11 @@ use crate::view::settings;
 
 #[derive(Clone)]
 pub struct ViewModel {
-    pub scheme: DerivationScheme,
-    pub network: PublicNetwork,
-    pub devices: DeviceModel,
-    pub hwi: HardwareList,
-    pub sender: Sender<settings::Msg>,
+    pub(self) scheme: DerivationScheme,
+    pub(self) network: PublicNetwork,
+    pub(self) devices: DeviceModel,
+    pub(self) hwi: HardwareList,
+    pub(self) sender: Sender<settings::Msg>,
 }
 
 #[derive(Msg)]
@@ -158,7 +158,7 @@ impl Update for Component {
                 self.model
                     .sender
                     .send(settings::Msg::SignerAddDevice(fingerprint, device))
-                    .expect("communication with parent window");
+                    .expect("communication of devices dialog with settings window");
             }
             Msg::Close => {
                 self.widgets.dialog.hide();

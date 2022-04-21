@@ -72,7 +72,7 @@ impl Update for Component {
             Msg::AddDevices => {
                 self.devices.emit(devices::Msg::Show);
             }
-            Msg::AddXpub => {
+            Msg::AddReadOnly => {
                 let testnet = self.model.network.is_testnet();
                 let format = Bip43::try_from(&self.model.scheme)
                     .ok()
@@ -93,6 +93,12 @@ impl Update for Component {
                     .and_then(|xpub| self.model.signer_by(xpub));
                 self.widgets
                     .update_signer_details(signer.map(|s| (s, self.model.derivation_for(s))));
+            }
+            Msg::AddXpub(xpub) => {
+                self.model.signers.insert(xpub.into());
+                self.widgets.update_signers(&self.model.signers);
+                self.widgets
+                    .update_descriptor(self.model.descriptor.as_ref(), self.model.format_lnpbp);
             }
             Msg::ToggleClass(class) => {
                 if self.widgets.should_update_descr_class(class)
@@ -171,9 +177,11 @@ impl Widget for Component {
             stream.emit(msg);
         });
 
-        let devices = init::<devices::Component>((model.scheme.clone(), model.network, sender))
-            .expect("error in devices component");
-        let xpub_dlg = init::<xpub_dlg::Component>(()).expect("error in xpub dialog component");
+        let devices =
+            init::<devices::Component>((model.scheme.clone(), model.network, sender.clone()))
+                .expect("error in devices component");
+        let xpub_dlg =
+            init::<xpub_dlg::Component>((sender,)).expect("error in xpub dialog component");
 
         widgets.connect(relm);
         widgets.bind_model(relm, &model.spendings);

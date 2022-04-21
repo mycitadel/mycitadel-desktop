@@ -17,6 +17,7 @@ pub use component::Component;
 pub(self) use view_model::ViewModel;
 pub(self) use widget::Widgets;
 
+use gtk::ResponseType;
 use wallet::slip132::KeyApplication;
 
 #[derive(Clone, Msg)]
@@ -26,6 +27,5 @@ pub enum Msg {
     Error(String),
     Warning(String),
     Info(String),
-    Close,
-    Ok,
+    Response(ResponseType),
 }

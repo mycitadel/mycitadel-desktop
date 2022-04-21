@@ -9,14 +9,29 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
+use bitcoin::util::bip32::ExtendedPubKey;
+use relm::Sender;
 use wallet::slip132::KeyApplication;
 
 use crate::model::Notification;
+use crate::view::settings;
 
-#[derive(Default)]
 pub struct ViewModel {
-    pub testnet: bool,
-    pub slip_format: Option<KeyApplication>,
-    pub xpub: String,
-    pub notification: Option<Notification>,
+    pub(super) testnet: bool,
+    pub(super) slip_format: Option<KeyApplication>,
+    pub(super) xpub: Option<ExtendedPubKey>,
+    pub(super) notification: Option<Notification>,
+    pub(super) sender: Sender<settings::Msg>,
+}
+
+impl ViewModel {
+    pub fn with(sender: Sender<settings::Msg>) -> ViewModel {
+        ViewModel {
+            testnet: false,
+            slip_format: None,
+            xpub: None,
+            notification: None,
+            sender,
+        }
+    }
 }
