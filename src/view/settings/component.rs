@@ -18,7 +18,7 @@ use gtk::Dialog;
 use relm::{init, Channel, Relm, StreamHandle, Update, Widget};
 
 use super::{spending_row::Condition, xpub_dlg, Msg, ViewModel, Widgets};
-use crate::model::{Bip43, WalletDescriptor};
+use crate::model::{Bip43, Signer, WalletDescriptor};
 use crate::view::{devices, launch, wallet};
 
 pub struct Component {
@@ -106,7 +106,11 @@ impl Update for Component {
                 self.model.active_signer = signer.cloned();
             }
             Msg::AddXpub(xpub) => {
-                self.model.signers.insert(xpub.into());
+                self.model.signers.insert(Signer::with_xpub(
+                    xpub,
+                    &self.model.scheme,
+                    self.model.network,
+                ));
                 self.widgets.update_signers(&self.model.signers);
                 self.update_descriptor();
             }
@@ -149,6 +153,7 @@ impl Update for Component {
                     self.replace_signer();
                 }
             }
+            Msg::SignerOriginUpdate => {}
             Msg::ToggleClass(class) => {
                 if self.widgets.should_update_descr_class(class)
                     && self.model.toggle_descr_class(class)

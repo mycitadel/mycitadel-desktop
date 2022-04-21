@@ -14,7 +14,7 @@ use std::collections::BTreeMap;
 use std::hash::{Hash, Hasher};
 
 use bitcoin::secp256k1::PublicKey;
-use bitcoin::util::bip32::{ChainCode, ExtendedPubKey, Fingerprint};
+use bitcoin::util::bip32::{ChainCode, DerivationPath, ExtendedPubKey, Fingerprint};
 use bitcoin::Network;
 use chrono::{DateTime, Utc};
 use hwi::error::Error as HwiError;
@@ -181,8 +181,9 @@ pub struct Signer {
     pub fingerprint: Fingerprint,
     pub device: Option<String>,
     pub name: String,
+    pub origin: DerivationPath,
     pub xpub: ExtendedPubKey,
-    pub account: HardenedIndex,
+    pub account: Option<HardenedIndex>,
     pub ownership: Ownership,
 }
 
@@ -214,33 +215,54 @@ impl Ord for Signer {
 }
 
 impl Signer {
-    pub fn with(fingerprint: Fingerprint, device: HardwareDevice) -> Signer {
+    pub fn with_device(
+        fingerprint: Fingerprint,
+        device: HardwareDevice,
+        schema: &DerivationScheme,
+        network: PublicNetwork,
+    ) -> Signer {
         Signer {
             fingerprint,
             device: Some(device.device_type),
             name: device.model.clone(),
+            origin: schema.to_account_derivation(device.default_account.into(), network.into()),
             xpub: device.default_xpub,
-            account: device.default_account,
+            account: Some(device.default_account),
             ownership: Ownership::Mine,
         }
     }
-}
 
-impl From<ExtendedPubKey> for Signer {
-    fn from(xpub: ExtendedPubKey) -> Self {
-        let fingerprint = match xpub.depth {
-            0 => xpub.fingerprint(),
-            1 => xpub.parent_fingerprint,
-            _ => Fingerprint::default(),
+    pub fn with_xpub(
+        xpub: ExtendedPubKey,
+        schema: &DerivationScheme,
+        network: PublicNetwork,
+    ) -> Self {
+        let (fingerprint, origin) = match xpub.depth {
+            0 => (xpub.fingerprint(), DerivationPath::default()),
+            1 => (xpub.parent_fingerprint, vec![xpub.child_number].into()),
+            _ => (
+                Fingerprint::default(),
+                schema
+                    .to_account_derivation(xpub.child_number, network.into())
+                    .into(),
+            ),
         };
         Signer {
             fingerprint,
             device: None,
             name: "".to_string(),
+            origin,
             xpub,
-            account: HardenedIndex::try_from(xpub.child_number).unwrap_or_default(),
+            account: xpub.child_number.try_into().ok(),
             ownership: Ownership::External,
         }
+    }
+
+    pub fn account_string(&self) -> String {
+        self.account
+            .as_ref()
+            .map(HardenedIndex::to_string)
+            .unwrap_or_else(|| s!("n/a"))
     }
 }
 

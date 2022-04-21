@@ -16,8 +16,9 @@ use std::str::FromStr;
 use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{
-    gdk, glib, Adjustment, Box, Button, Dialog, Entry, Image, Label, ListBox, ListBoxRow,
-    ListStore, Notebook, ResponseType, TextBuffer, ToggleButton, ToolButton, TreeView,
+    gdk, glib, Adjustment, Box, Button, ComboBoxText, Dialog, Entry, Image, Label, ListBox,
+    ListBoxRow, ListStore, Notebook, ResponseType, SpinButton, TextBuffer, ToggleButton,
+    ToolButton, TreeView,
 };
 use miniscript::Descriptor;
 use relm::Relm;
@@ -53,7 +54,9 @@ pub struct Widgets {
 
     name_fld: Entry,
     fingerprint_fld: Entry,
+    path_cmb: ComboBoxText,
     xpub_fld: Entry,
+    account_stp: SpinButton,
     account_adj: Adjustment,
     accfp_fld: Entry,
     derivation_fld: Entry,
@@ -137,6 +140,12 @@ impl Widgets {
         connect!(relm, self.devices_btn, connect_clicked(_), Msg::AddDevices);
         connect!(relm, self.addsign_btn, connect_clicked(_), Msg::AddReadOnly);
 
+        connect!(
+            relm,
+            self.path_cmb,
+            connect_active_id_notify(_),
+            Msg::SignerOriginUpdate
+        );
         connect!(
             relm,
             self.fingerprint_fld,
@@ -324,8 +333,15 @@ impl Widgets {
             self.fingerprint_fld
                 .set_text(&signer.fingerprint.to_string());
             self.xpub_fld.set_text(&signer.xpub.to_string());
-            self.account_adj
-                .set_value(signer.account.first_index() as f64);
+
+            if let Some(account) = signer.account {
+                self.account_stp.set_sensitive(true);
+                self.account_adj.set_value(account.first_index() as f64);
+            } else {
+                self.account_stp.set_sensitive(false);
+                self.account_adj.set_value(-1.0);
+            }
+
             self.accfp_fld
                 .set_text(&signer.xpub.fingerprint().to_string());
             self.derivation_fld.set_text(&derivation.to_string());
@@ -364,7 +380,7 @@ impl Widgets {
                 &[
                     (0, &signer.name),
                     (1, &signer.fingerprint.to_string()),
-                    (2, &signer.account.to_string()),
+                    (2, &signer.account_string()),
                     (3, &signer.xpub.to_string()),
                     (4, &signer.device.clone().unwrap_or_default()),
                 ],
@@ -379,7 +395,7 @@ impl Widgets {
                 &[
                     (0, &signer.name),
                     (1, &signer.fingerprint.to_string()),
-                    (2, &signer.account.to_string()),
+                    (2, &signer.account_string()),
                     (3, &signer.xpub.to_string()),
                     (4, &signer.device.clone().unwrap_or_default()),
                 ],

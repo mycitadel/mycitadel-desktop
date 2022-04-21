@@ -98,7 +98,10 @@ impl ViewModel {
     pub fn derivation_for(&self, signer: &Signer) -> TrackingAccount {
         let path: Vec<ChildNumber> = self
             .scheme
-            .to_account_derivation(signer.account.into(), self.network.into())
+            .to_account_derivation(
+                signer.account.unwrap_or_default().into(),
+                self.network.into(),
+            )
             .into();
         TrackingAccount {
             seed_based: true,
@@ -129,8 +132,12 @@ impl ViewModel {
             .iter()
             .filter(|(_, device)| !known_xpubs.contains(&device.default_xpub))
             .for_each(|(fingerprint, device)| {
-                self.signers
-                    .insert(Signer::with(*fingerprint, device.clone()));
+                self.signers.insert(Signer::with_device(
+                    *fingerprint,
+                    device.clone(),
+                    &self.scheme,
+                    self.network,
+                ));
             });
 
         self.update_descriptor();

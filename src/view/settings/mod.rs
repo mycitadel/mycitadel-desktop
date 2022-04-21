@@ -34,6 +34,7 @@ pub enum Msg {
     AddXpub(ExtendedPubKey),
     SignerAddDevice(Fingerprint, HardwareDevice),
     SignerSelect,
+    SignerOriginUpdate,
     SignerFingerprintChange,
     SignerNameChange,
     SignerOwnershipChange,

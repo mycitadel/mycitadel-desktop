@@ -185,6 +185,7 @@ If all of the requirements at least in a single row are satisfied, than the fund
                     <property name="can-focus">True</property>
                     <property name="vexpand">True</property>
                     <property name="model">signers_store</property>
+                    <property name="search-column">0</property>
                     <property name="fixed-height-mode">True</property>
                     <child internal-child="selection">
                       <object class="GtkTreeSelection"/>
@@ -208,7 +209,7 @@ If all of the requirements at least in a single row are satisfied, than the fund
                       <object class="GtkTreeViewColumn">
                         <property name="resizable">True</property>
                         <property name="sizing">fixed</property>
-                        <property name="title" translatable="yes">Seed fingerprint</property>
+                        <property name="title" translatable="yes">Source</property>
                         <property name="clickable">True</property>
                         <property name="sort-column-id">1</property>
                         <child>
@@ -285,7 +286,7 @@ If all of the requirements at least in a single row are satisfied, than the fund
                   </packing>
                 </child>
                 <child>
-                  <!-- n-columns=5 n-rows=5 -->
+                  <!-- n-columns=4 n-rows=5 -->
                   <object class="GtkGrid">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
@@ -323,7 +324,6 @@ If all of the requirements at least in a single row are satisfied, than the fund
                       <packing>
                         <property name="left-attach">1</property>
                         <property name="top-attach">2</property>
-                        <property name="width">2</property>
                       </packing>
                     </child>
                     <child>
@@ -340,33 +340,6 @@ If all of the requirements at least in a single row are satisfied, than the fund
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="halign">end</property>
-                        <property name="label" translatable="yes">Seed:</property>
-                        <property name="justify">right</property>
-                      </object>
-                      <packing>
-                        <property name="left-attach">0</property>
-                        <property name="top-attach">1</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkEntry" id="fingerprint_fld">
-                        <property name="visible">True</property>
-                        <property name="can-focus">True</property>
-                        <property name="editable">False</property>
-                        <property name="secondary-icon-name">edit-copy</property>
-                        <property name="secondary-icon-tooltip-text" translatable="yes">Copy to clipboard</property>
-                        <property name="secondary-icon-tooltip-markup" translatable="yes">Copy to clipboard</property>
-                      </object>
-                      <packing>
-                        <property name="left-attach">1</property>
-                        <property name="top-attach">1</property>
-                      </packing>
-                    </child>
-                    <child>
                       <object class="GtkEntry" id="name_fld">
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
@@ -379,48 +352,6 @@ If all of the requirements at least in a single row are satisfied, than the fund
                       <packing>
                         <property name="left-attach">1</property>
                         <property name="top-attach">0</property>
-                        <property name="width">2</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="halign">end</property>
-                        <property name="label" translatable="yes">Account:</property>
-                        <property name="justify">right</property>
-                      </object>
-                      <packing>
-                        <property name="left-attach">3</property>
-                        <property name="top-attach">1</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="halign">start</property>
-                        <property name="label" translatable="yes">fingerprint</property>
-                      </object>
-                      <packing>
-                        <property name="left-attach">2</property>
-                        <property name="top-attach">1</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkSpinButton" id="account_stp">
-                        <property name="visible">True</property>
-                        <property name="sensitive">False</property>
-                        <property name="can-focus">True</property>
-                        <property name="width-chars">3</property>
-                        <property name="max-width-chars">3</property>
-                        <property name="input-purpose">digits</property>
-                        <property name="adjustment">account_adj</property>
-                        <property name="numeric">True</property>
-                      </object>
-                      <packing>
-                        <property name="left-attach">4</property>
-                        <property name="top-attach">1</property>
                       </packing>
                     </child>
                     <child>
@@ -432,7 +363,7 @@ If all of the requirements at least in a single row are satisfied, than the fund
                         <property name="justify">right</property>
                       </object>
                       <packing>
-                        <property name="left-attach">3</property>
+                        <property name="left-attach">2</property>
                         <property name="top-attach">2</property>
                       </packing>
                     </child>
@@ -448,7 +379,7 @@ If all of the requirements at least in a single row are satisfied, than the fund
                         <property name="secondary-icon-tooltip-markup" translatable="yes">Copy to clipboard</property>
                       </object>
                       <packing>
-                        <property name="left-attach">4</property>
+                        <property name="left-attach">3</property>
                         <property name="top-attach">2</property>
                       </packing>
                     </child>
@@ -457,8 +388,7 @@ If all of the requirements at least in a single row are satisfied, than the fund
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                         <property name="halign">end</property>
-                        <property name="label" translatable="yes">Final
-derivation:</property>
+                        <property name="label" translatable="yes">Descriptor:</property>
                         <property name="justify">right</property>
                       </object>
                       <packing>
@@ -468,7 +398,6 @@ derivation:</property>
                     </child>
                     <child>
                       <object class="GtkEntry" id="derivation_fld">
-                        <property name="height-request">60</property>
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="hexpand">True</property>
@@ -480,7 +409,7 @@ derivation:</property>
                       <packing>
                         <property name="left-attach">1</property>
                         <property name="top-attach">3</property>
-                        <property name="width">4</property>
+                        <property name="width">3</property>
                       </packing>
                     </child>
                     <child>
@@ -541,7 +470,7 @@ derivation:</property>
                       <packing>
                         <property name="left-attach">1</property>
                         <property name="top-attach">4</property>
-                        <property name="width">4</property>
+                        <property name="width">3</property>
                       </packing>
                     </child>
                     <child>
@@ -583,9 +512,117 @@ derivation:</property>
                         </child>
                       </object>
                       <packing>
-                        <property name="left-attach">3</property>
+                        <property name="left-attach">2</property>
                         <property name="top-attach">0</property>
                         <property name="width">2</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkBox">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="hexpand">True</property>
+                        <property name="spacing">6</property>
+                        <child>
+                          <object class="GtkEntry" id="fingerprint_fld">
+                            <property name="visible">True</property>
+                            <property name="can-focus">True</property>
+                            <property name="editable">False</property>
+                            <property name="width-chars">10</property>
+                            <property name="max-width-chars">10</property>
+                            <property name="secondary-icon-name">edit-copy</property>
+                            <property name="secondary-icon-tooltip-text" translatable="yes">Copy to clipboard</property>
+                            <property name="secondary-icon-tooltip-markup" translatable="yes">Copy to clipboard</property>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="halign">end</property>
+                            <property name="margin-start">6</property>
+                            <property name="label" translatable="yes">Origin:</property>
+                            <property name="justify">right</property>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkComboBoxText" id="path_cmb">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="active">0</property>
+                            <property name="has-entry">True</property>
+                            <property name="active-id">master</property>
+                            <items>
+                              <item id="master" translatable="yes">m/</item>
+                              <item id="account" translatable="yes">m/0h</item>
+                              <item id="purpose" translatable="yes">m/84h/0h/0h</item>
+                            </items>
+                            <child internal-child="entry">
+                              <object class="GtkEntry">
+                                <property name="can-focus">False</property>
+                                <property name="max-width-chars">6</property>
+                              </object>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">2</property>
+                          </packing>
+                        </child>
+                      </object>
+                      <packing>
+                        <property name="left-attach">1</property>
+                        <property name="top-attach">1</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="halign">end</property>
+                        <property name="label" translatable="yes">Master fp:</property>
+                        <property name="justify">right</property>
+                      </object>
+                      <packing>
+                        <property name="left-attach">0</property>
+                        <property name="top-attach">1</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="halign">end</property>
+                        <property name="label" translatable="yes">Account:</property>
+                        <property name="justify">right</property>
+                      </object>
+                      <packing>
+                        <property name="left-attach">2</property>
+                        <property name="top-attach">1</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkSpinButton" id="account_stp">
+                        <property name="visible">True</property>
+                        <property name="can-focus">True</property>
+                        <property name="width-chars">3</property>
+                        <property name="max-width-chars">3</property>
+                        <property name="adjustment">account_adj</property>
+                      </object>
+                      <packing>
+                        <property name="left-attach">3</property>
+                        <property name="top-attach">1</property>
                       </packing>
                     </child>
                   </object>
