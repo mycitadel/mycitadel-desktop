@@ -11,16 +11,17 @@
 
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
+use std::fmt::{self, Display, Formatter};
 use std::hash::{Hash, Hasher};
 
 use bitcoin::secp256k1::PublicKey;
-use bitcoin::util::bip32::{ChainCode, DerivationPath, ExtendedPubKey, Fingerprint};
+use bitcoin::util::bip32::{ChainCode, ChildNumber, DerivationPath, ExtendedPubKey, Fingerprint};
 use bitcoin::Network;
 use chrono::{DateTime, Utc};
 use hwi::error::Error as HwiError;
 use hwi::HWIDevice;
 use wallet::hd::schemata::DerivationBlockchain;
-use wallet::hd::{DerivationScheme, HardenedIndex};
+use wallet::hd::{DerivationScheme, HardenedIndex, SegmentIndexes};
 
 // TODO: Move to descriptor wallet or BPro
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Display)]
@@ -176,14 +177,66 @@ impl HardwareList {
     }
 }
 
+#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
+pub enum OriginFormat {
+    Master,
+    SubMaster(ChildNumber),
+    Standard(DerivationScheme, HardenedIndex, PublicNetwork),
+    Custom(DerivationPath),
+}
+
+impl Display for OriginFormat {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            OriginFormat::Master => f.write_str("m/"),
+            OriginFormat::SubMaster(account) => Display::fmt(account, f),
+            OriginFormat::Standard(scheme, account, network) => Display::fmt(
+                &scheme.to_account_derivation((*account).into(), (*network).into()),
+                f,
+            ),
+            OriginFormat::Custom(path) => Display::fmt(path, f),
+        }
+    }
+}
+
+impl OriginFormat {
+    pub fn with(path: &DerivationPath) -> OriginFormat {
+        match DerivationScheme::from_derivation(&path) {
+            scheme @ DerivationScheme::Bip44
+            | scheme @ DerivationScheme::Bip84
+            | scheme @ DerivationScheme::Bip49
+            | scheme @ DerivationScheme::Bip86
+            | scheme @ DerivationScheme::Bip45
+            | scheme @ DerivationScheme::Bip87
+            | scheme @ DerivationScheme::Bip48 { .. } => {
+                let account = path[2].try_into().expect("DerivationScheme parser broken");
+                let testnet = path[1].first_index() != 0;
+                let network = if testnet {
+                    PublicNetwork::Testnet
+                } else {
+                    PublicNetwork::Mainnet
+                };
+                OriginFormat::Standard(scheme, account, network)
+            }
+            DerivationScheme::Custom { .. } if path.is_empty() => OriginFormat::Master,
+            DerivationScheme::Custom { .. } if path.len() == 1 => OriginFormat::SubMaster(path[0]),
+            DerivationScheme::LnpBp43 { .. }
+            | DerivationScheme::Bip43 { .. }
+            | DerivationScheme::Custom { .. } => OriginFormat::Custom(path.clone()),
+            _ => OriginFormat::Custom(path.clone()),
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct Signer {
+    // TODO: Transform first 4 fields into a descriptor wallet AccountXpub type
     pub fingerprint: Fingerprint,
+    pub origin: DerivationPath,
+    pub account: Option<HardenedIndex>,
+    pub xpub: ExtendedPubKey,
     pub device: Option<String>,
     pub name: String,
-    pub origin: DerivationPath,
-    pub xpub: ExtendedPubKey,
-    pub account: Option<HardenedIndex>,
     pub ownership: Ownership,
 }
 
@@ -263,6 +316,10 @@ impl Signer {
             .as_ref()
             .map(HardenedIndex::to_string)
             .unwrap_or_else(|| s!("n/a"))
+    }
+
+    pub fn origin_format(&self) -> OriginFormat {
+        OriginFormat::with(&self.origin)
     }
 }
 

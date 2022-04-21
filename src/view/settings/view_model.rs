@@ -29,17 +29,21 @@ use crate::model::{
 };
 
 pub struct ViewModel {
-    pub scheme: DerivationScheme,
-    pub devices: HardwareList,
-    pub signers: BTreeSet<Signer>,
-    pub active_signer: Option<Signer>,
-    pub spendings: SpendingModel,
-    pub network: PublicNetwork,
-    pub descriptor: Option<Descriptor<TrackingAccount>>,
-    pub new_wallet: bool,
-    pub template: Option<WalletTemplate>,
     pub class: DescriptorClass,
+    pub scheme: DerivationScheme,
+    pub network: PublicNetwork,
+    pub signers: BTreeSet<Signer>,
+    pub spendings: SpendingModel,
+
+    // Data provided by the parent window
+    pub template: Option<WalletTemplate>,
+    pub new_wallet: bool,
     pub format_lnpbp: bool,
+
+    // Non-persisting / dynamic data for this window
+    pub active_signer: Option<Signer>,
+    pub devices: HardwareList,
+    pub descriptor: Option<Descriptor<TrackingAccount>>,
 }
 
 impl Default for ViewModel {
