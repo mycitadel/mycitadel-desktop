@@ -232,7 +232,7 @@ impl Bip43 {
         Bip43::Bip87
     }
 
-    pub fn descriptor_class(self) -> Option<DescriptorClass> {
+    pub fn descriptor_class(&self) -> Option<DescriptorClass> {
         Some(match self {
             Bip43::Bip44 => DescriptorClass::PreSegwit,
             Bip43::Bip45 => DescriptorClass::PreSegwit,

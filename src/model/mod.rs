@@ -17,7 +17,7 @@ mod wallet;
 pub use self::wallet::{Bip43, Wallet, WalletDescriptor, WalletFormat, WalletState};
 pub use template::{Requirement, WalletTemplate};
 pub use types::{
-    DescriptorClass, Error, HardwareDevice, HardwareList, Ownership, PublicNetwork, Signer,
-    SigsReq, SpendingCondition, TimelockReq,
+    DescriptorClass, Error, HardwareDevice, HardwareList, OriginFormat, Ownership, PublicNetwork,
+    Signer, SigsReq, SpendingCondition, TimelockReq,
 };
 pub use ui::Notification;

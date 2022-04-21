@@ -73,12 +73,12 @@ impl Update for Component {
                 };
                 self.model.new_wallet = true;
                 self.widgets
-                    .reinit_ui(self.model.new_wallet, &self.model.template)
+                    .reinit_ui(self.model.new_wallet, &self.model.template);
             }
             Msg::View(descriptor) => {
                 self.model = ViewModel::from(descriptor);
                 self.model.new_wallet = false;
-                self.widgets.reinit_ui(self.model.new_wallet, &None)
+                self.widgets.reinit_ui(self.model.new_wallet, &None);
             }
             Msg::AddDevices => {
                 self.devices.emit(devices::Msg::Show);
@@ -236,7 +236,7 @@ impl Widget for Component {
             init::<xpub_dlg::Component>((sender,)).expect("error in xpub dialog component");
 
         widgets.connect(relm);
-        widgets.bind_model(relm, &model.spendings);
+        widgets.bind_spending_model(relm, &model.spendings);
 
         Component {
             model,

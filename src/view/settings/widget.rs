@@ -25,7 +25,10 @@ use relm::Relm;
 use wallet::hd::{SegmentIndexes, TrackingAccount};
 
 use super::Msg;
-use crate::model::{DescriptorClass, Ownership, Requirement, Signer, WalletTemplate};
+use crate::model::{
+    DescriptorClass, OriginFormat, Ownership, PublicNetwork, Requirement, Signer, WalletFormat,
+    WalletTemplate,
+};
 use crate::view::settings::spending_row;
 use crate::view::settings::spending_row::SpendingModel;
 
@@ -55,6 +58,7 @@ pub struct Widgets {
     name_fld: Entry,
     fingerprint_fld: Entry,
     path_cmb: ComboBoxText,
+    path_fld: Entry,
     xpub_fld: Entry,
     account_stp: SpinButton,
     account_adj: Adjustment,
@@ -71,6 +75,9 @@ pub struct Widgets {
     descr_segwit_tgl: ToggleButton,
     descr_nested_tgl: ToggleButton,
     descr_taproot_tgl: ToggleButton,
+    mainnet_tgl: ToggleButton,
+    testnet_tgl: ToggleButton,
+    signet_tgl: ToggleButton,
     export_core_tgl: ToggleButton,
     export_lnpbp_tgl: ToggleButton,
 }
@@ -81,6 +88,7 @@ impl Widgets {
         if new_wallet {
             if let Some(template) = template {
                 self.update_template(template);
+                self.update_derivation(&template.format, template.network);
             }
             self.pages.set_page(0);
         } else {
@@ -252,6 +260,13 @@ impl Widgets {
             .connect_delete_event(|_, _| glib::signal::Inhibit(true));
     }
 
+    pub(super) fn bind_spending_model(&self, relm: &Relm<super::Component>, model: &SpendingModel) {
+        let stream = relm.stream().clone();
+        self.spending_list.bind_model(Some(model), move |item| {
+            spending_row::RowWidgets::init(stream.clone(), item)
+        });
+    }
+
     pub fn signer_fingerprint(&self) -> String {
         self.fingerprint_fld.text().to_string()
     }
@@ -266,6 +281,36 @@ impl Widgets {
         } else {
             Ownership::External
         }
+    }
+
+    fn update_derivation(&self, format: &WalletFormat, network: PublicNetwork) {
+        match format {
+            WalletFormat::LnpBp(_) => {
+                self.descr_legacy_tgl.set_active(true);
+                self.descr_segwit_tgl.set_active(true);
+                self.descr_nested_tgl.set_active(true);
+                self.descr_taproot_tgl.set_active(true);
+            }
+            WalletFormat::Bip43(ref bip43) => {
+                let class = bip43
+                    .descriptor_class()
+                    .unwrap_or(DescriptorClass::SegwitV0);
+                self.descr_legacy_tgl
+                    .set_active(class == DescriptorClass::PreSegwit);
+                self.descr_segwit_tgl
+                    .set_active(class == DescriptorClass::SegwitV0);
+                self.descr_nested_tgl
+                    .set_active(class == DescriptorClass::NestedV0);
+                self.descr_taproot_tgl
+                    .set_active(class == DescriptorClass::TaprootC0);
+            }
+        }
+
+        self.mainnet_tgl
+            .set_active(network == PublicNetwork::Mainnet);
+        self.testnet_tgl
+            .set_active(network == PublicNetwork::Testnet);
+        self.signet_tgl.set_active(network == PublicNetwork::Signet);
     }
 
     fn update_template(&self, template: &WalletTemplate) {
@@ -291,13 +336,6 @@ impl Widgets {
     fn set_new_wallet_mode(&self, new_wallet: bool) {
         self.save_btn
             .set_label(if new_wallet { "Create" } else { "Save" });
-    }
-
-    pub(super) fn bind_model(&self, relm: &Relm<super::Component>, model: &SpendingModel) {
-        let stream = relm.stream().clone();
-        self.spending_list.bind_model(Some(model), move |item| {
-            spending_row::RowWidgets::init(stream.clone(), item)
-        });
     }
 
     pub fn set_remove_condition(&self, allow: bool) {
@@ -334,13 +372,34 @@ impl Widgets {
                 .set_text(&signer.fingerprint.to_string());
             self.xpub_fld.set_text(&signer.xpub.to_string());
 
+            let origin_format = signer.origin_format();
+            gtk::prelude::ComboBoxTextExt::remove(&self.path_cmb, 2);
+            let active_id = match origin_format {
+                OriginFormat::Master => Some("master"),
+                OriginFormat::SubMaster(_) => Some("account"),
+                OriginFormat::Standard(ref schema, account, network) => {
+                    self.path_cmb.append(
+                        Some("purpose"),
+                        &schema
+                            .to_account_derivation(account.into(), network.into())
+                            .to_string(),
+                    );
+                    Some("purpose")
+                }
+                OriginFormat::Custom(ref path) => {
+                    self.path_fld.set_text(&path.to_string());
+                    None
+                }
+            };
+            self.path_cmb.set_active_id(active_id);
             if let Some(account) = signer.account {
-                self.account_stp.set_sensitive(true);
                 self.account_adj.set_value(account.first_index() as f64);
             } else {
-                self.account_stp.set_sensitive(false);
-                self.account_adj.set_value(-1.0);
+                self.account_adj.set_value(0.0);
             }
+            let custom_derivation = matches!(origin_format, OriginFormat::Custom(_));
+            self.path_fld.set_sensitive(custom_derivation);
+            self.account_stp.set_sensitive(custom_derivation);
 
             self.accfp_fld
                 .set_text(&signer.xpub.fingerprint().to_string());

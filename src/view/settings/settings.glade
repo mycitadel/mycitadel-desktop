@@ -568,8 +568,8 @@ If all of the requirements at least in a single row are satisfied, than the fund
                               <item id="purpose" translatable="yes">m/84h/0h/0h</item>
                             </items>
                             <child internal-child="entry">
-                              <object class="GtkEntry">
-                                <property name="can-focus">False</property>
+                              <object class="GtkEntry" id="path_fld">
+                                <property name="can-focus">True</property>
                                 <property name="max-width-chars">6</property>
                               </object>
                             </child>

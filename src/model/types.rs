@@ -226,6 +226,15 @@ impl OriginFormat {
             _ => OriginFormat::Custom(path.clone()),
         }
     }
+
+    pub fn account(&self) -> Option<HardenedIndex> {
+        match self {
+            OriginFormat::Master => None,
+            OriginFormat::SubMaster(index) => (*index).try_into().ok(),
+            OriginFormat::Standard(_, index, _) => Some(*index),
+            OriginFormat::Custom(_) => None,
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -300,13 +309,14 @@ impl Signer {
                     .into(),
             ),
         };
+        let format = OriginFormat::with(&origin);
         Signer {
             fingerprint,
             device: None,
             name: "".to_string(),
             origin,
             xpub,
-            account: xpub.child_number.try_into().ok(),
+            account: format.account(),
             ownership: Ownership::External,
         }
     }
