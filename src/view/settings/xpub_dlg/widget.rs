@@ -11,7 +11,7 @@
 
 use gladis::Gladis;
 use gtk::prelude::*;
-use gtk::{Box, Entry, Image, Label, MessageDialog, ResponseType};
+use gtk::{glib, Box, Entry, Image, Label, MessageDialog, ResponseType};
 use relm::Relm;
 
 use super::Msg;
@@ -88,5 +88,7 @@ impl Widgets {
             connect_response(_, resp),
             Msg::Response(resp)
         );
+        self.dialog
+            .connect_delete_event(|_, _| glib::signal::Inhibit(true));
     }
 }
