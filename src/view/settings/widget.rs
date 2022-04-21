@@ -24,7 +24,7 @@ use relm::Relm;
 use wallet::hd::{SegmentIndexes, TrackingAccount};
 
 use super::Msg;
-use crate::model::{DescriptorClass, Requirement, Signer, WalletTemplate};
+use crate::model::{DescriptorClass, Ownership, Requirement, Signer, WalletTemplate};
 use crate::view::settings::spending_row;
 use crate::view::settings::spending_row::SpendingModel;
 
@@ -91,7 +91,7 @@ impl Widgets {
         self.dialog.close()
     }
 
-    pub(super) fn root(&self) -> Dialog {
+    pub(super) fn to_root(&self) -> Dialog {
         self.dialog.clone()
     }
 
@@ -165,6 +165,9 @@ impl Widgets {
             connect_selected_rows_changed(_),
             Msg::ConditionSelect
         );
+
+        self.dialog
+            .connect_delete_event(|_, _| glib::signal::Inhibit(true));
     }
 
     fn update_template(&self, template: &WalletTemplate) {
@@ -237,17 +240,29 @@ impl Widgets {
             self.accfp_fld
                 .set_text(&signer.xpub.fingerprint().to_string());
             self.derivation_fld.set_text(&derivation.to_string());
-        }
-        if let Some((device, model)) =
-            details.and_then(|(s, _)| s.device.as_ref().map(|d| (d, &s.name)))
-        {
-            self.device_img.set_visible(true);
-            self.device_status_img.set_visible(true);
-            self.device_lbl.set_text(&format!("{} ({})", device, model));
-        } else {
-            self.device_img.set_visible(false);
-            self.device_status_img.set_visible(false);
-            self.device_lbl.set_text("Unknown");
+            self.seed_mine_tgl
+                .set_active(signer.ownership == Ownership::Mine);
+            self.seed_extern_tgl
+                .set_active(signer.ownership == Ownership::External);
+
+            if let Some(ref device) = signer.device {
+                self.seed_mine_tgl.set_sensitive(false);
+                self.seed_extern_tgl.set_sensitive(false);
+                self.name_fld.set_editable(false);
+                self.fingerprint_fld.set_editable(false);
+                self.device_img.set_visible(true);
+                self.device_status_img.set_visible(true);
+                self.device_lbl
+                    .set_text(&format!("{} ({})", device, signer.name));
+            } else {
+                self.seed_mine_tgl.set_sensitive(true);
+                self.seed_extern_tgl.set_sensitive(true);
+                self.name_fld.set_editable(true);
+                self.fingerprint_fld.set_editable(true);
+                self.device_img.set_visible(false);
+                self.device_status_img.set_visible(false);
+                self.device_lbl.set_text("none / unknown");
+            }
         }
     }
 

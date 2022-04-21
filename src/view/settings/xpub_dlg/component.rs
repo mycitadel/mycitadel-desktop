@@ -47,6 +47,8 @@ impl Update for Component {
             Msg::Edit => {
                 let xpub = self.widgets.xpub();
                 // TODO: Recognize Slip132 type and match with the wallet type
+                // TODO: Check that the key depth corresponds to the used derivation path
+                // TODO: Check that the parent fingerprint and child number matches derivation path
                 match ExtendedPubKey::from_str(&xpub)
                     .or_else(|_| ExtendedPubKey::from_slip132_str(&xpub))
                 {

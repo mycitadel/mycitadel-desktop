@@ -165,7 +165,7 @@ impl Widget for Component {
 
     // Return the root widget.
     fn root(&self) -> Self::Root {
-        self.widgets.root()
+        self.widgets.to_root()
     }
 
     fn view(relm: &Relm<Self>, model: Self::Model) -> Self {

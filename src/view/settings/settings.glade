@@ -313,7 +313,7 @@ If all of the requirements at least in a single row are satisfied, than the fund
                     <child>
                       <object class="GtkEntry" id="xpub_fld">
                         <property name="visible">True</property>
-                        <property name="sensitive">False</property>
+                        <property name="editable">False</property>
                         <property name="can-focus">True</property>
                         <property name="hexpand">True</property>
                         <property name="secondary-icon-name">edit-copy</property>
@@ -355,7 +355,7 @@ If all of the requirements at least in a single row are satisfied, than the fund
                     <child>
                       <object class="GtkEntry" id="fingerprint_fld">
                         <property name="visible">True</property>
-                        <property name="sensitive">False</property>
+                        <property name="editable">False</property>
                         <property name="can-focus">True</property>
                         <property name="secondary-icon-name">edit-copy</property>
                         <property name="secondary-icon-tooltip-text" translatable="yes">Copy to clipboard</property>
@@ -369,7 +369,7 @@ If all of the requirements at least in a single row are satisfied, than the fund
                     <child>
                       <object class="GtkEntry" id="name_fld">
                         <property name="visible">True</property>
-                        <property name="sensitive">False</property>
+                        <property name="editable">False</property>
                         <property name="can-focus">True</property>
                         <property name="hexpand">True</property>
                         <property name="secondary-icon-name">edit-copy</property>
@@ -438,7 +438,7 @@ If all of the requirements at least in a single row are satisfied, than the fund
                     <child>
                       <object class="GtkEntry" id="accfp_fld">
                         <property name="visible">True</property>
-                        <property name="sensitive">False</property>
+                        <property name="editable">False</property>
                         <property name="can-focus">True</property>
                         <property name="editable">False</property>
                         <property name="secondary-icon-name">edit-copy</property>
@@ -468,7 +468,7 @@ derivation:</property>
                       <object class="GtkEntry" id="derivation_fld">
                         <property name="height-request">60</property>
                         <property name="visible">True</property>
-                        <property name="sensitive">False</property>
+                        <property name="editable">False</property>
                         <property name="can-focus">True</property>
                         <property name="hexpand">True</property>
                         <property name="secondary-icon-name">edit-copy</property>
