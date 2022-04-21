@@ -16,7 +16,7 @@ use std::str::FromStr;
 use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{
-    glib, Adjustment, Button, Dialog, Entry, Image, Label, ListBox, ListBoxRow, ListStore,
+    gdk, glib, Adjustment, Button, Dialog, Entry, Image, Label, ListBox, ListBoxRow, ListStore,
     Notebook, TextBuffer, ToggleButton, ToolButton, TreeView,
 };
 use miniscript::Descriptor;
@@ -165,6 +165,19 @@ impl Widgets {
             connect_selected_rows_changed(_),
             Msg::ConditionSelect
         );
+
+        for entry in [
+            &self.fingerprint_fld,
+            &self.name_fld,
+            &self.derivation_fld,
+            &self.xpub_fld,
+            &self.accfp_fld,
+        ] {
+            entry.connect_icon_press(|entry, _, _| {
+                let val = entry.text();
+                gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).set_text(&val);
+            });
+        }
 
         self.dialog
             .connect_delete_event(|_, _| glib::signal::Inhibit(true));
