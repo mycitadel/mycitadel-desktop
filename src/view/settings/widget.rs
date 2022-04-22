@@ -422,7 +422,8 @@ impl Widgets {
                 self.seed_mine_tgl.set_sensitive(true);
                 self.seed_extern_tgl.set_sensitive(true);
                 self.name_fld.set_editable(true);
-                self.fingerprint_fld.set_editable(true);
+                self.fingerprint_fld
+                    .set_editable(origin_format.master_fingerprint_editable());
                 self.device_img.set_visible(false);
                 self.device_status_img.set_visible(false);
                 self.device_lbl.set_text("none / unknown");

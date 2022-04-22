@@ -46,6 +46,12 @@ impl From<PublicNetwork> for Network {
 
 impl From<PublicNetwork> for DerivationBlockchain {
     fn from(network: PublicNetwork) -> Self {
+        DerivationBlockchain::from(&network)
+    }
+}
+
+impl From<&PublicNetwork> for DerivationBlockchain {
+    fn from(network: &PublicNetwork) -> Self {
         match network {
             PublicNetwork::Mainnet => DerivationBlockchain::Bitcoin,
             PublicNetwork::Testnet => DerivationBlockchain::Testnet,
@@ -215,6 +221,17 @@ impl OriginFormat {
             OriginFormat::SubMaster(index) => (*index).try_into().ok(),
             OriginFormat::Standard(_, index, _) => *index,
             OriginFormat::Custom(_) => None,
+        }
+    }
+
+    pub fn master_fingerprint_editable(&self) -> bool {
+        match self {
+            OriginFormat::Master => false,
+            OriginFormat::SubMaster(_) => false,
+            OriginFormat::Standard(s, _, network) => {
+                s.to_origin_derivation((*network).into()).len() > 2
+            }
+            OriginFormat::Custom(derivation) => derivation.len() > 2,
         }
     }
 }
