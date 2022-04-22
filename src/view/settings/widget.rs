@@ -376,6 +376,10 @@ impl Widgets {
 
             let origin_format = signer.origin_format(network);
             gtk::prelude::ComboBoxTextExt::remove(&self.path_cmb, 2);
+            self.account_stp.set_visible(true);
+            self.account_stp.set_sensitive(false);
+            self.path_fld.set_sensitive(false);
+            self.path_cmb.set_sensitive(false);
             let active_id = match origin_format {
                 OriginFormat::Master => Some("master"),
                 OriginFormat::SubMaster(_) => Some("account"),
@@ -387,8 +391,21 @@ impl Widgets {
                     Some("purpose")
                 }
                 OriginFormat::Custom(ref path) => {
-                    self.path_fld.set_text(&path.to_string());
-                    None
+                    self.account_stp.set_visible(false);
+                    self.path_fld.set_sensitive(true);
+                    self.path_cmb.set_sensitive(true);
+                    self.path_cmb.append(
+                        Some("custom"),
+                        format!("{:#}", path).trim_start_matches("m/"),
+                    );
+                    Some("custom")
+                }
+                OriginFormat::CustomAccount(ref path) => {
+                    self.account_stp.set_sensitive(true);
+                    self.path_fld.set_sensitive(true);
+                    self.path_cmb.set_sensitive(true);
+                    self.path_cmb.append(Some("custom"), &format!("{:#}", path));
+                    Some("custom")
                 }
             };
             self.path_cmb.set_active_id(active_id);
@@ -397,9 +414,6 @@ impl Widgets {
             } else {
                 self.account_adj.set_value(0.0);
             }
-            let custom_derivation = matches!(origin_format, OriginFormat::Custom(_));
-            self.path_fld.set_sensitive(custom_derivation);
-            self.account_stp.set_sensitive(custom_derivation);
 
             self.accfp_fld
                 .set_text(&signer.xpub.fingerprint().to_string());

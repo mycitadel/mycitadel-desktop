@@ -181,6 +181,7 @@ pub enum OriginFormat {
     Master,
     SubMaster(ChildNumber),
     Standard(Bip43, Option<HardenedIndex>, PublicNetwork),
+    CustomAccount(DerivationPath),
     Custom(DerivationPath),
 }
 
@@ -192,13 +193,14 @@ impl Display for OriginFormat {
             OriginFormat::Standard(scheme, _, network) => {
                 Display::fmt(&scheme.to_origin_derivation((*network).into()), f)
             }
+            OriginFormat::CustomAccount(path) => Display::fmt(path, f),
             OriginFormat::Custom(path) => Display::fmt(path, f),
         }
     }
 }
 
 impl OriginFormat {
-    pub fn with(path: &DerivationPath, network: PublicNetwork) -> OriginFormat {
+    pub fn with_account(path: &DerivationPath, network: PublicNetwork) -> OriginFormat {
         let bip43 = Bip43::deduce(&path);
         if let Some(bip43) = bip43 {
             let account = bip43
@@ -211,7 +213,13 @@ impl OriginFormat {
         } else if path.len() == 1 {
             OriginFormat::SubMaster(path[0])
         } else {
-            OriginFormat::Custom(path.clone())
+            let path = path.as_ref().to_vec();
+            let account = path.last().unwrap();
+            if account.is_hardened() {
+                OriginFormat::CustomAccount(path.into())
+            } else {
+                OriginFormat::Custom(path.into())
+            }
         }
     }
 
@@ -221,6 +229,7 @@ impl OriginFormat {
             OriginFormat::SubMaster(index) => (*index).try_into().ok(),
             OriginFormat::Standard(_, index, _) => *index,
             OriginFormat::Custom(_) => None,
+            OriginFormat::CustomAccount(_) => None,
         }
     }
 
@@ -231,7 +240,9 @@ impl OriginFormat {
             OriginFormat::Standard(s, _, network) => {
                 s.to_origin_derivation((*network).into()).len() > 2
             }
-            OriginFormat::Custom(derivation) => derivation.len() > 2,
+            OriginFormat::Custom(derivation) | OriginFormat::CustomAccount(derivation) => {
+                derivation.len() > 2
+            }
         }
     }
 }
@@ -294,24 +305,27 @@ impl Signer {
     }
 
     pub fn with_xpub(xpub: ExtendedPubKey, schema: &Bip43, network: PublicNetwork) -> Self {
-        let (fingerprint, origin) = match xpub.depth {
-            0 => (xpub.fingerprint(), DerivationPath::default()),
-            1 => (xpub.parent_fingerprint, vec![xpub.child_number].into()),
-            _ => (
-                Fingerprint::default(),
-                schema
-                    .to_account_derivation(xpub.child_number, network.into())
-                    .into(),
+        let (fingerprint, origin, account) = match xpub.depth {
+            0 => (xpub.fingerprint(), empty!(), None),
+            1 => (
+                xpub.parent_fingerprint,
+                vec![xpub.child_number].into(),
+                HardenedIndex::try_from(xpub.child_number).ok(),
             ),
+            _ if xpub.child_number.is_hardened() => (
+                Fingerprint::default(),
+                schema.to_account_derivation(xpub.child_number, network.into()),
+                HardenedIndex::try_from(xpub.child_number).ok(),
+            ),
+            _ => (Fingerprint::default(), vec![xpub.child_number].into(), None),
         };
-        let format = OriginFormat::with(&origin, network);
         Signer {
             fingerprint,
             device: None,
             name: "".to_string(),
             origin,
             xpub,
-            account: format.account(),
+            account,
             ownership: Ownership::External,
         }
     }
@@ -324,7 +338,7 @@ impl Signer {
     }
 
     pub fn origin_format(&self, network: PublicNetwork) -> OriginFormat {
-        OriginFormat::with(&self.origin, network)
+        OriginFormat::with_account(&self.origin, network)
     }
 }
 
