@@ -9,10 +9,12 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
-use bitcoin::secp256k1;
+use bitcoin::hashes::Hash;
 use bitcoin::util::bip32;
 use bitcoin::util::bip32::{ChainCode, ChildNumber, DerivationPath, ExtendedPubKey, Fingerprint};
+use bitcoin::{secp256k1, XpubIdentifier};
 use std::fmt::Display;
+use std::io::Write;
 use std::str::FromStr;
 use wallet::hd::{DerivationStandard, HardenedIndex, UnhardenedIndex};
 use wallet::slip132;
@@ -213,23 +215,28 @@ where
 }
 
 #[derive(Getters, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
-#[getter(as_copy)]
 pub struct XpubDescriptor<Standard>
 where
     Standard: DerivationStandard,
 {
+    #[getter(as_copy)]
     testnet: bool,
+    #[getter(as_copy)]
     depth: u8,
+    #[getter(as_copy)]
     parent_fingerprint: Fingerprint,
+    #[getter(as_copy)]
     child_number: ChildNumber,
+    #[getter(as_copy)]
     public_key: secp256k1::PublicKey,
+    #[getter(as_copy)]
     chain_code: ChainCode,
 
-    #[getter(as_mut)]
+    #[getter(as_copy, as_mut)]
     master_fingerprint: Option<Fingerprint>,
     #[getter(as_ref)]
     standard: Option<Standard>,
-    #[getter(as_mut)]
+    #[getter(as_copy, as_mut)]
     account: Option<HardenedIndex>,
 }
 
@@ -423,6 +430,23 @@ where
         xd.master_fingerprint = master_fingerprint;
         xd.account = origin.account;
         Ok(Ok(xd))
+    }
+}
+
+impl<Standard> XpubDescriptor<Standard>
+where
+    Standard: DerivationStandard,
+{
+    pub fn identifier(&self) -> XpubIdentifier {
+        let mut engine = XpubIdentifier::engine();
+        engine
+            .write_all(&self.public_key.serialize())
+            .expect("engines don't error");
+        XpubIdentifier::from_engine(engine)
+    }
+
+    pub fn fingerprint(&self) -> Fingerprint {
+        Fingerprint::from(&self.identifier()[0..4])
     }
 
     pub fn to_origin(&self) -> XpubOrigin<Standard> {

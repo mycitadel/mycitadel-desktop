@@ -115,7 +115,8 @@ impl WalletDescriptor {
     }
 }
 
-#[derive(Clone, Eq, PartialEq, Hash, Debug, From)]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Display, From)]
+#[display(inner)]
 pub enum WalletStandard {
     #[from]
     LnpBp(DescrVariants),

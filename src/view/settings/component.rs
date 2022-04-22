@@ -19,7 +19,7 @@ use gtk::Dialog;
 use relm::{init, Channel, Relm, StreamHandle, Update, Widget};
 
 use super::{spending_row::Condition, xpub_dlg, Msg, ViewModel, Widgets};
-use crate::model::{Signer, WalletDescriptor};
+use crate::model::{Signer, WalletDescriptor, WalletStandard};
 use crate::view::{devices, launch, wallet};
 
 pub struct Component {
@@ -232,7 +232,8 @@ impl Widget for Component {
             init::<devices::Component>((model.scheme.clone(), model.network, sender.clone()))
                 .expect("error in devices component");
         let xpub_dlg =
-            init::<xpub_dlg::Component>((sender,)).expect("error in xpub dialog component");
+            init::<xpub_dlg::Component>((WalletStandard::Bip43(model.scheme.clone()), sender))
+                .expect("error in xpub dialog component");
 
         widgets.connect(relm);
         widgets.bind_spending_model(relm, &model.spendings);

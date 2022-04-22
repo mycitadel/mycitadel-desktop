@@ -9,15 +9,12 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
-use std::str::FromStr;
-
-use bitcoin::util::bip32::ExtendedPubKey;
 use gladis::Gladis;
 use gtk::{MessageDialog, ResponseType};
 use relm::{Relm, Sender, Update, Widget};
-use wallet::slip132::FromSlip132;
 
 use super::{Msg, ViewModel, Widgets};
+use crate::model::{WalletStandard, XpubDescriptor};
 use crate::view::settings;
 
 pub struct Component {
@@ -28,12 +25,7 @@ pub struct Component {
 impl Component {
     fn process_xpub(&mut self) {
         let xpub = self.widgets.xpub();
-        // TODO: Recognize Slip132 type and match with the wallet type
-        // TODO: Check that the key depth corresponds to the used derivation path
-        // TODO: Check that the parent fingerprint and child number matches derivation path
-        // TODO: Check network correspondence
-        // TODO: Move main check logic for different correspondences into descriptor-library
-        match ExtendedPubKey::from_str(&xpub).or_else(|_| ExtendedPubKey::from_slip132_str(&xpub)) {
+        match XpubDescriptor::from_str_checked(&xpub, Some(self.model.standard.clone())) {
             Ok(xpub) => {
                 self.widgets.hide_message();
                 self.model.xpub = Some(xpub)
@@ -50,12 +42,12 @@ impl Update for Component {
     // Specify the model used for this widget.
     type Model = ViewModel;
     // Specify the model parameter used to init the model.
-    type ModelParam = (Sender<settings::Msg>,);
+    type ModelParam = (WalletStandard, Sender<settings::Msg>);
     // Specify the type of the messages sent to the update function.
     type Msg = Msg;
 
     fn model(_relm: &Relm<Self>, model: Self::ModelParam) -> Self::Model {
-        ViewModel::with(model.0)
+        ViewModel::with(model.0, model.1)
     }
 
     fn update(&mut self, event: Msg) {
@@ -75,10 +67,10 @@ impl Update for Component {
                 self.widgets.close();
             }
             Msg::Response(ResponseType::Ok) => {
-                if let Some(xpub) = self.model.xpub {
+                if let Some(ref xpub) = self.model.xpub {
                     self.model
                         .sender
-                        .send(settings::Msg::AddXpub(xpub))
+                        .send(settings::Msg::AddXpub(xpub.into()))
                         .expect("communication of xpub dialog with settings window");
                     self.widgets.close();
                 } else {
