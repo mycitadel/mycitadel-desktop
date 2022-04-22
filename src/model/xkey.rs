@@ -233,6 +233,42 @@ where
     account: Option<HardenedIndex>,
 }
 
+#[derive(
+    Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display, Error, From
+)]
+#[display(inner)]
+pub enum XpubParseError {
+    #[from]
+    Bip32(bip32::Error),
+
+    #[from]
+    Slip132(slip132::Error),
+
+    #[from]
+    Inconsistency(XpubRequirementError),
+}
+
+impl<Standard> FromStr for XpubDescriptor<Standard>
+where
+    Standard: DerivationStandard + Display,
+{
+    type Err = XpubParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        // The string here could be just a xpub, slip132 xpub or xpub prefixed
+        // with origin information in a different formats.
+
+        // TODO: Implement `[fp/derivation/path]xpub` processing
+        // TODO: Implement `m=[fp]/derivation/path/account=[xpub]` processing
+
+        let xpub = ExtendedPubKey::from_str(s).or_else(|_| ExtendedPubKey::from_slip132_str(s))?;
+
+        let slip = KeyVersion::from_xkey_str(s).ok();
+
+        XpubDescriptor::with(None, xpub, None, slip).map_err(XpubParseError::from)
+    }
+}
+
 impl<Standard> From<ExtendedPubKey> for XpubDescriptor<Standard>
 where
     Standard: DerivationStandard,
@@ -285,6 +321,42 @@ impl<Standard> XpubDescriptor<Standard>
 where
     Standard: DerivationStandard + ToString,
 {
+    /// Constructs origin information for _an account_-level xpub or deeper key,
+    /// parsing it from a given xpub descriptor string.
+    /// Ensures consistency of this information and returns error indicating
+    /// discovered inconsistency.
+    ///
+    /// Compares the following correspondences between xpub and SLIP132-encoded
+    /// key version:
+    /// - network (testnet/mainnet only, since SLIP132 does not cover more
+    ///   networks for bitcoin);
+    /// - specific BIP43-based derivation standard matching the possible use
+    ///   of the extended public key as an account-level key or deeper;
+    ///   basing on its depth and child number;
+    /// - if the xpub depth matches account key depth defined by the provided
+    ///   derivation standard information, the child number of the xpub must be
+    ///   a hardened number.
+    ///
+    /// Also checks that if there is a provided SLIP132 key version and
+    /// derivation standard, they do match.
+    pub fn from_str_checked(
+        s: &str,
+        standard: Option<Standard>,
+    ) -> Result<XpubDescriptor<Standard>, XpubParseError>
+    where
+        Standard: Display,
+    {
+        let mut xd = XpubDescriptor::from_str(s)?;
+
+        match (&standard, &xd.standard) {
+            (Some(required), Some(actual)) if required != actual => {}
+            _ => {}
+        }
+        xd.standard = standard.or(xd.standard);
+
+        Ok(xd)
+    }
+
     /// Constructs origin information for _an account_-level xpub or deeper key,
     /// extracting it from both `xpub` and SLIP132 key version (prefix) data.
     /// Ensures consistency of this information and returns error indicating
@@ -369,41 +441,5 @@ where
             standard: self.standard,
             account: self.account,
         }
-    }
-}
-
-#[derive(
-    Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display, Error, From
-)]
-#[display(inner)]
-pub enum XpubParseError {
-    #[from]
-    Bip32(bip32::Error),
-
-    #[from]
-    Slip132(slip132::Error),
-
-    #[from]
-    Inconsistency(XpubRequirementError),
-}
-
-impl<Standard> FromStr for XpubDescriptor<Standard>
-where
-    Standard: DerivationStandard + Display,
-{
-    type Err = XpubParseError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        // The string here could be just a xpub, slip132 xpub or xpub prefixed
-        // with origin information in a different formats.
-
-        // TODO: Implement `[fp/derivation/path]xpub` processing
-        // TODO: Implement `m=[fp]/derivation/path/account=[xpub]` processing
-
-        let xpub = ExtendedPubKey::from_str(s).or_else(|_| ExtendedPubKey::from_slip132_str(s))?;
-
-        let slip = KeyVersion::from_xkey_str(s).ok();
-
-        XpubDescriptor::with(None, xpub, None, slip).map_err(XpubParseError::from)
     }
 }
