@@ -22,4 +22,6 @@ pub use types::{
     Signer, SigsReq, SpendingCondition, TimelockReq,
 };
 pub use ui::Notification;
-pub use xkey::{NonStandardDerivation, XPubkeyDescriptor, XpubOrigin, XpubRequirementError};
+pub use xkey::{
+    NonStandardDerivation, XpubDescriptor, XpubOrigin, XpubParseError, XpubRequirementError,
+};

@@ -10,9 +10,13 @@
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
 use bitcoin::secp256k1;
+use bitcoin::util::bip32;
 use bitcoin::util::bip32::{ChainCode, ChildNumber, DerivationPath, ExtendedPubKey, Fingerprint};
+use std::fmt::Display;
+use std::str::FromStr;
 use wallet::hd::{DerivationStandard, HardenedIndex, UnhardenedIndex};
-use wallet::slip132::{DefaultResolver, KeyVersion};
+use wallet::slip132;
+use wallet::slip132::{DefaultResolver, FromSlip132, KeyVersion};
 
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display, Error)]
 #[display(doc_comments)]
@@ -210,7 +214,7 @@ where
 
 #[derive(Getters, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 #[getter(as_copy)]
-pub struct XPubkeyDescriptor<Standard>
+pub struct XpubDescriptor<Standard>
 where
     Standard: DerivationStandard,
 {
@@ -229,12 +233,12 @@ where
     account: Option<HardenedIndex>,
 }
 
-impl<Standard> From<ExtendedPubKey> for XPubkeyDescriptor<Standard>
+impl<Standard> From<ExtendedPubKey> for XpubDescriptor<Standard>
 where
     Standard: DerivationStandard,
 {
     fn from(xpub: ExtendedPubKey) -> Self {
-        XPubkeyDescriptor {
+        XpubDescriptor {
             testnet: xpub.network != bitcoin::Network::Bitcoin,
             depth: xpub.depth,
             parent_fingerprint: xpub.parent_fingerprint,
@@ -248,11 +252,11 @@ where
     }
 }
 
-impl<Standard> From<&XPubkeyDescriptor<Standard>> for ExtendedPubKey
+impl<Standard> From<&XpubDescriptor<Standard>> for ExtendedPubKey
 where
     Standard: DerivationStandard,
 {
-    fn from(xpub: &XPubkeyDescriptor<Standard>) -> Self {
+    fn from(xpub: &XpubDescriptor<Standard>) -> Self {
         ExtendedPubKey {
             network: if xpub.testnet {
                 bitcoin::Network::Testnet
@@ -268,16 +272,16 @@ where
     }
 }
 
-impl<Standard> From<XPubkeyDescriptor<Standard>> for ExtendedPubKey
+impl<Standard> From<XpubDescriptor<Standard>> for ExtendedPubKey
 where
     Standard: DerivationStandard,
 {
-    fn from(xpub: XPubkeyDescriptor<Standard>) -> Self {
+    fn from(xpub: XpubDescriptor<Standard>) -> Self {
         ExtendedPubKey::from(&xpub)
     }
 }
 
-impl<Standard> XPubkeyDescriptor<Standard>
+impl<Standard> XpubDescriptor<Standard>
 where
     Standard: DerivationStandard + ToString,
 {
@@ -304,8 +308,8 @@ where
         xpub: ExtendedPubKey,
         standard: Option<Standard>,
         slip: Option<KeyVersion>,
-    ) -> Result<XPubkeyDescriptor<Standard>, XpubRequirementError> {
-        let mut xd = XPubkeyDescriptor::from(xpub);
+    ) -> Result<XpubDescriptor<Standard>, XpubRequirementError> {
+        let mut xd = XpubDescriptor::from(xpub);
         let origin = XpubOrigin::with(master_fingerprint, xpub, standard, slip)?;
         xd.standard = origin.standard;
         xd.master_fingerprint = master_fingerprint;
@@ -336,9 +340,8 @@ where
         source: &DerivationPath,
         xpub: ExtendedPubKey,
         slip: Option<KeyVersion>,
-    ) -> Result<Result<XPubkeyDescriptor<Standard>, XpubRequirementError>, NonStandardDerivation>
-    {
-        let mut xd = XPubkeyDescriptor::from(xpub);
+    ) -> Result<Result<XpubDescriptor<Standard>, XpubRequirementError>, NonStandardDerivation> {
+        let mut xd = XpubDescriptor::from(xpub);
         let origin = match XpubOrigin::deduce(master_fingerprint, source, xpub, slip) {
             Err(err) => return Err(err),
             Ok(Err(err)) => return Ok(Err(err)),
@@ -366,5 +369,41 @@ where
             standard: self.standard,
             account: self.account,
         }
+    }
+}
+
+#[derive(
+    Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display, Error, From
+)]
+#[display(inner)]
+pub enum XpubParseError {
+    #[from]
+    Bip32(bip32::Error),
+
+    #[from]
+    Slip132(slip132::Error),
+
+    #[from]
+    Inconsistency(XpubRequirementError),
+}
+
+impl<Standard> FromStr for XpubDescriptor<Standard>
+where
+    Standard: DerivationStandard + Display,
+{
+    type Err = XpubParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        // The string here could be just a xpub, slip132 xpub or xpub prefixed
+        // with origin information in a different formats.
+
+        // TODO: Implement `[fp/derivation/path]xpub` processing
+        // TODO: Implement `m=[fp]/derivation/path/account=[xpub]` processing
+
+        let xpub = ExtendedPubKey::from_str(s).or_else(|_| ExtendedPubKey::from_slip132_str(s))?;
+
+        let slip = KeyVersion::from_xkey_str(s).ok();
+
+        XpubDescriptor::with(None, xpub, None, slip).map_err(XpubParseError::from)
     }
 }
