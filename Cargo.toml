@@ -22,6 +22,7 @@ bitcoin = "0.28.0-rc.2"
 miniscript = "7.0.0-rc.2"
 hwi = "0.1.3"
 descriptor-wallet = { version = "0.7.0-beta.2", features = ["miniscript", "keygen"] }
+strict_encoding = "1.8.0-rc.9"
 
 [patch.crates-io]
 bitcoin = { git = "https://github.com/rust-bitcoin/rust-bitcoin" }

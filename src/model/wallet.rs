@@ -24,8 +24,9 @@ use wallet::slip132::KeyApplication;
 
 use super::{PublicNetwork, Signer, SigsReq, SpendingCondition};
 
-// TODO: Move to citadel-runtime
-#[derive(Getters, Clone, Eq, PartialEq, Debug, Default)]
+// TODO: Move to bpro library
+#[derive(Getters, Clone, Debug, Default)]
+#[derive(StrictEncode, StrictDecode)]
 pub struct Wallet {
     #[getter(skip)]
     descriptor: WalletDescriptor,
@@ -73,7 +74,8 @@ pub enum DescriptorError {
     InsufficientSignerCount(u16, SpendingCondition),
 }
 
-#[derive(Getters, Clone, Eq, PartialEq, Hash, Debug, Default)]
+#[derive(Getters, Clone, Debug, Default)]
+#[derive(StrictEncode, StrictDecode)]
 pub struct WalletDescriptor {
     format: WalletStandard,
     signers: BTreeSet<Signer>,
@@ -116,6 +118,7 @@ impl WalletDescriptor {
 }
 
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Display, From)]
+#[derive(StrictEncode, StrictDecode)]
 #[display(inner)]
 pub enum WalletStandard {
     #[from]
@@ -269,9 +272,11 @@ impl DerivationStandardExt for Bip43 {
 }
 
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Default)]
+#[derive(StrictEncode, StrictDecode)]
 pub struct WalletState {
     balance: Sats,
 }
 
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
+#[derive(StrictEncode, StrictDecode)]
 pub struct Sats(u64);

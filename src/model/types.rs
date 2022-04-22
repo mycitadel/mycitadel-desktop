@@ -25,6 +25,7 @@ use wallet::hd::{Bip43, DerivationStandard, HardenedIndex};
 
 // TODO: Move to descriptor wallet or BPro
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Display)]
+#[derive(StrictEncode, StrictDecode)]
 pub enum PublicNetwork {
     #[display("mainnet")]
     Mainnet,
@@ -73,6 +74,7 @@ impl PublicNetwork {
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+#[derive(StrictEncode, StrictDecode)]
 pub enum Ownership {
     Mine,
     External,
@@ -248,6 +250,7 @@ impl OriginFormat {
 }
 
 #[derive(Clone, Debug)]
+#[derive(StrictEncode, StrictDecode)]
 pub struct Signer {
     // TODO: Transform first 4 fields into a descriptor wallet AccountXpub type
     pub fingerprint: Fingerprint,
@@ -351,6 +354,7 @@ pub enum DescriptorClass {
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Display)]
+#[derive(StrictEncode, StrictDecode)]
 pub enum SigsReq {
     #[display("all signatures")]
     All,
@@ -370,6 +374,7 @@ impl Default for SigsReq {
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Display)]
+#[derive(StrictEncode, StrictDecode)]
 pub enum TimelockReq {
     #[display("anytime")]
     Anytime,
@@ -392,6 +397,7 @@ impl Default for TimelockReq {
 #[derive(
     Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default, Display
 )]
+#[derive(StrictEncode, StrictDecode)]
 #[display("{sigs} {timelock}")]
 pub struct SpendingCondition {
     pub sigs: SigsReq,
