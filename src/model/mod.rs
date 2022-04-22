@@ -13,6 +13,7 @@ mod template;
 mod types;
 mod ui;
 mod wallet;
+mod xkey;
 
 pub use self::wallet::{Wallet, WalletDescriptor, WalletFormat, WalletFormatExt, WalletState};
 pub use template::{Requirement, WalletTemplate};
@@ -21,3 +22,4 @@ pub use types::{
     Signer, SigsReq, SpendingCondition, TimelockReq,
 };
 pub use ui::Notification;
+pub use xkey::{NonStandardDerivation, XPubkeyDescriptor, XpubOrigin, XpubRequirementError};
