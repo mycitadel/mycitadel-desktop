@@ -25,6 +25,27 @@ pub struct Component {
     widgets: Widgets,
 }
 
+impl Component {
+    fn process_xpub(&mut self) {
+        let xpub = self.widgets.xpub();
+        // TODO: Recognize Slip132 type and match with the wallet type
+        // TODO: Check that the key depth corresponds to the used derivation path
+        // TODO: Check that the parent fingerprint and child number matches derivation path
+        // TODO: Check network correspondence
+        // TODO: Move main check logic for different correspondences into descriptor-library
+        match ExtendedPubKey::from_str(&xpub).or_else(|_| ExtendedPubKey::from_slip132_str(&xpub)) {
+            Ok(xpub) => {
+                self.widgets.hide_message();
+                self.model.xpub = Some(xpub)
+            }
+            Err(err) => {
+                self.model.xpub = None;
+                self.widgets.show_error(&err.to_string())
+            }
+        }
+    }
+}
+
 impl Update for Component {
     // Specify the model used for this widget.
     type Model = ViewModel;
@@ -45,22 +66,7 @@ impl Update for Component {
                 self.widgets.open();
             }
             Msg::Edit => {
-                let xpub = self.widgets.xpub();
-                // TODO: Recognize Slip132 type and match with the wallet type
-                // TODO: Check that the key depth corresponds to the used derivation path
-                // TODO: Check that the parent fingerprint and child number matches derivation path
-                match ExtendedPubKey::from_str(&xpub)
-                    .or_else(|_| ExtendedPubKey::from_slip132_str(&xpub))
-                {
-                    Ok(xpub) => {
-                        self.widgets.hide_message();
-                        self.model.xpub = Some(xpub)
-                    }
-                    Err(err) => {
-                        self.model.xpub = None;
-                        self.widgets.show_error(&err.to_string())
-                    }
-                }
+                self.process_xpub();
             }
             Msg::Error(msg) => self.widgets.show_error(&msg),
             Msg::Warning(msg) => self.widgets.show_warning(&msg),
