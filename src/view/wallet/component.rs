@@ -12,16 +12,18 @@
 use gladis::Gladis;
 use gtk::prelude::{WidgetExt, *};
 use gtk::{ApplicationWindow, Button, Inhibit};
-use relm::{init, Relm, Update, Widget};
+use relm::{init, Relm, StreamHandle, Update, Widget};
 
-use super::{ModelParam, Msg, ViewModel};
-use crate::model::Wallet;
-use crate::view::settings;
+use super::{Msg, ViewModel};
+use crate::model::{Wallet, WalletDescriptor};
+use crate::view::{launch, settings};
 
 // Create the structure that holds the widgets used in the view.
 #[derive(Clone, Gladis)]
 pub struct Widgets {
     window: ApplicationWindow,
+    new_btn: Button,
+    open_btn: Button,
     settings_btn: Button,
 }
 
@@ -30,28 +32,28 @@ pub struct Component {
     model: Wallet,
     widgets: Widgets,
     settings: relm::Component<settings::Component>,
+    launcher_stream: Option<StreamHandle<launch::Msg>>,
 }
 
 impl Update for Component {
     // Specify the model used for this widget.
     type Model = Wallet;
     // Specify the model parameter used to init the model.
-    type ModelParam = ModelParam;
+    type ModelParam = WalletDescriptor;
     // Specify the type of the messages sent to the update function.
     type Msg = Msg;
 
-    fn model(_relm: &Relm<Self>, param: Self::ModelParam) -> Self::Model {
-        match param {
-            ModelParam::Open(_) => {
-                // TODO: Implement wallet opening
-                Wallet::default()
-            }
-            ModelParam::New(descr) => Wallet::with(descr),
-        }
+    fn model(_relm: &Relm<Self>, descriptor: Self::ModelParam) -> Self::Model {
+        Wallet::with(descriptor)
     }
 
     fn update(&mut self, event: Msg) {
         match event {
+            Msg::New => {
+                self.launcher_stream
+                    .as_ref()
+                    .map(|stream| stream.emit(launch::Msg::Show));
+            }
             Msg::Settings => self
                 .settings
                 .emit(settings::Msg::View(self.model.to_descriptor())),
@@ -59,7 +61,9 @@ impl Update for Component {
                 self.model.set_descriptor(descr);
                 self.widgets.window.show();
             }
-            Msg::Quit => gtk::main_quit(),
+            Msg::RegisterLauncher(stream) => {
+                self.launcher_stream = Some(stream);
+            }
             _ => { /* TODO: Implement main window event handling */ }
         }
     }
@@ -79,15 +83,20 @@ impl Widget for Component {
         let widgets = Widgets::from_string(glade_src).expect("glade file broken");
 
         let settings = init::<settings::Component>(()).expect("error in settings component");
-        settings.emit(settings::Msg::View(model.to_descriptor()));
         settings.emit(settings::Msg::SetWallet(relm.stream().clone()));
 
-        connect!(relm, widgets.settings_btn, connect_clicked(_), Msg::Create);
+        connect!(relm, widgets.new_btn, connect_clicked(_), Msg::New);
+        connect!(
+            relm,
+            widgets.settings_btn,
+            connect_clicked(_),
+            Msg::Settings
+        );
         connect!(
             relm,
             widgets.window,
             connect_delete_event(_, _),
-            return (Some(Msg::Quit), Inhibit(false))
+            return (Some(Msg::Close), Inhibit(false))
         );
 
         widgets.window.show();
@@ -97,6 +106,7 @@ impl Widget for Component {
             model,
             widgets,
             settings,
+            launcher_stream: None,
         }
     }
 }

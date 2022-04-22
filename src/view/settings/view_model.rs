@@ -85,6 +85,10 @@ impl From<&ViewModel> for WalletDescriptor {
 }
 
 impl ViewModel {
+    pub fn is_new_wallet(&self) -> bool {
+        self.template.is_some()
+    }
+
     pub fn signer_by(&self, xpub: ExtendedPubKey) -> Option<&Signer> {
         self.signers.iter().find(|signer| signer.xpub == xpub)
     }

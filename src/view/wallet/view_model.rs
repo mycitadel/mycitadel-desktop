@@ -9,14 +9,7 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
-use std::path::PathBuf;
-
-use crate::model::{Wallet, WalletDescriptor};
-
-pub enum ModelParam {
-    Open(PathBuf),
-    New(WalletDescriptor),
-}
+use crate::model::Wallet;
 
 pub struct ViewModel {}
 

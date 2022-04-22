@@ -140,7 +140,7 @@ impl Widgets {
     }
 
     pub(super) fn connect(&self, relm: &Relm<super::Component>) {
-        connect!(relm, self.save_btn, connect_clicked(_), Msg::Update);
+        connect!(relm, self.save_btn, connect_clicked(_), Msg::Apply);
         connect!(relm, self.cancel_btn, connect_clicked(_), Msg::Close);
 
         connect!(relm, self.devices_btn, connect_clicked(_), Msg::AddDevices);

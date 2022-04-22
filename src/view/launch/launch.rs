@@ -12,10 +12,10 @@
 use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{Adjustment, ApplicationWindow, Button, ListBox, RecentChooserWidget, Switch};
-use relm::{init, Relm, Update, Widget};
+use relm::{init, Relm, StreamHandle, Update, Widget};
 
-use crate::model::{PublicNetwork, Requirement, WalletTemplate};
-use crate::view::settings;
+use crate::model::{PublicNetwork, Requirement, WalletDescriptor, WalletTemplate};
+use crate::view::{settings, wallet};
 
 pub struct ViewModel {}
 
@@ -27,6 +27,7 @@ pub enum Msg {
     ImportSelected,
     OpenSelected,
     RecentSelected,
+    CreateWallet(WalletDescriptor),
 }
 
 #[derive(Clone, Gladis)]
@@ -46,7 +47,9 @@ struct Widgets {
 pub struct Component {
     model: ViewModel,
     widgets: Widgets,
+    stream: StreamHandle<Msg>,
     new_wallet: relm::Component<settings::Component>,
+    wallets: Vec<relm::Component<wallet::Component>>,
 }
 
 impl Component {
@@ -121,6 +124,13 @@ impl Component {
     fn open_file(&self) {}
 
     fn open_recent(&self) {}
+
+    fn create_wallet(&mut self, descriptor: WalletDescriptor) {
+        let new_wallet =
+            init::<wallet::Component>(descriptor).expect("unable to instantiate wallet settings");
+        new_wallet.emit(wallet::Msg::RegisterLauncher(self.stream.clone()));
+        self.wallets.push(new_wallet);
+    }
 }
 
 impl Update for Component {
@@ -143,6 +153,7 @@ impl Update for Component {
             Msg::ImportSelected => self.import_wallet(),
             Msg::OpenSelected => self.open_file(),
             Msg::RecentSelected => self.open_recent(),
+            Msg::CreateWallet(descriptor) => self.create_wallet(descriptor),
         }
     }
 }
@@ -197,6 +208,8 @@ impl Widget for Component {
             widgets,
             model,
             new_wallet,
+            wallets: empty!(),
+            stream: relm.stream().clone(),
         }
     }
 }

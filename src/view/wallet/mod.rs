@@ -13,9 +13,12 @@ mod component;
 mod view_model;
 
 pub use self::component::Component;
-use crate::model::WalletDescriptor;
-pub use view_model::ModelParam;
 pub(self) use view_model::ViewModel;
+
+use relm::StreamHandle;
+
+use crate::model::WalletDescriptor;
+use crate::view::launch;
 
 #[derive(Msg)]
 pub enum Msg {
@@ -28,5 +31,6 @@ pub enum Msg {
     Refresh,
     Select(usize),
     Create,
-    Quit,
+    Close,
+    RegisterLauncher(StreamHandle<launch::Msg>),
 }

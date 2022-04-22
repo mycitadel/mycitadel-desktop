@@ -44,7 +44,7 @@ pub enum Msg {
     ConditionChange,
     ToggleClass(DescriptorClass),
     ExportFormat(bool),
-    Update,
+    Apply,
     Close,
     SetWallet(StreamHandle<wallet::Msg>),
     SetLauncher(StreamHandle<launch::Msg>),

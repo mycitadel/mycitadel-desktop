@@ -165,11 +165,17 @@ impl Update for Component {
                 self.model.format_lnpbp = lnpbp;
                 self.update_descriptor();
             }
-            Msg::Update => {
+            Msg::Apply => {
                 let descr = WalletDescriptor::from(&self.model);
-                self.wallet_stream.as_ref().map(|stream| {
-                    stream.emit(wallet::Msg::Update(descr));
-                });
+                if self.model.is_new_wallet() {
+                    self.launcher_stream.as_ref().map(|stream| {
+                        stream.emit(launch::Msg::CreateWallet(descr));
+                    });
+                } else {
+                    self.wallet_stream.as_ref().map(|stream| {
+                        stream.emit(wallet::Msg::Update(descr));
+                    });
+                }
                 self.widgets.hide();
             }
             Msg::Close => {
