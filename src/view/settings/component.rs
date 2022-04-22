@@ -9,6 +9,7 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
+use std::path::PathBuf;
 use std::str::FromStr;
 
 use ::wallet::hd::DerivationStandard;
@@ -19,11 +20,12 @@ use gtk::Dialog;
 use relm::{init, Channel, Relm, StreamHandle, Update, Widget};
 
 use super::{spending_row::Condition, xpub_dlg, Msg, ViewModel, Widgets};
-use crate::model::{Signer, WalletDescriptor, WalletStandard};
+use crate::model::{FileDocument, Signer, Wallet, WalletDescriptor, WalletStandard};
 use crate::view::{devices, launch, wallet};
 
 pub struct Component {
     model: ViewModel,
+    path: Option<PathBuf>,
     widgets: Widgets,
     devices: relm::Component<devices::Component>,
     xpub_dlg: relm::Component<xpub_dlg::Component>,
@@ -32,6 +34,20 @@ pub struct Component {
 }
 
 impl Component {
+    fn save(&self) {
+        if let Some(ref path) = self.path {
+            let wallet = Wallet::with(WalletDescriptor::from(&self.model));
+            wallet.write_file(path); // TODO: Handle errors displaying a message
+        }
+    }
+
+    fn new_wallet_path(&self) -> Option<&PathBuf> {
+        if self.model.is_new_wallet() {
+            return self.path.as_ref();
+        }
+        None
+    }
+
     fn replace_signer(&mut self) {
         if let Some(signer) = self.model.active_signer.clone() {
             self.widgets.replace_signer(&signer);
@@ -67,11 +83,13 @@ impl Update for Component {
 
     fn update(&mut self, event: Msg) {
         match event {
-            Msg::New(template) => {
+            Msg::New(template, path) => {
                 self.model = match template {
                     Some(template) => template.into(),
                     None => ViewModel::default(),
                 };
+                self.save();
+                self.path = Some(path);
                 self.widgets.reinit_ui(&self.model.template);
             }
             Msg::View(descriptor) => {
@@ -167,9 +185,9 @@ impl Update for Component {
             }
             Msg::Apply => {
                 let descr = WalletDescriptor::from(&self.model);
-                if self.model.is_new_wallet() {
+                if let Some(path) = self.new_wallet_path() {
                     self.launcher_stream.as_ref().map(|stream| {
-                        stream.emit(launch::Msg::CreateWallet(descr));
+                        stream.emit(launch::Msg::WalletCreated(path.clone()));
                     });
                 } else {
                     self.wallet_stream.as_ref().map(|stream| {
@@ -246,6 +264,7 @@ impl Widget for Component {
 
         Component {
             model,
+            path: None,
             widgets,
             devices,
             xpub_dlg,

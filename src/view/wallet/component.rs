@@ -9,23 +9,15 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
+use std::path::PathBuf;
+
 use gladis::Gladis;
-use gtk::prelude::{WidgetExt, *};
-use gtk::{ApplicationWindow, Button, Inhibit};
+use gtk::ApplicationWindow;
 use relm::{init, Relm, StreamHandle, Update, Widget};
 
-use super::{Msg, ViewModel};
-use crate::model::{Wallet, WalletDescriptor};
+use super::{Msg, ViewModel, Widgets};
+use crate::model::{FileDocument, Wallet};
 use crate::view::{launch, settings};
-
-// Create the structure that holds the widgets used in the view.
-#[derive(Clone, Gladis)]
-pub struct Widgets {
-    window: ApplicationWindow,
-    new_btn: Button,
-    open_btn: Button,
-    settings_btn: Button,
-}
 
 pub struct Component {
     model: ViewModel,
@@ -34,16 +26,26 @@ pub struct Component {
     launcher_stream: Option<StreamHandle<launch::Msg>>,
 }
 
+impl Component {
+    fn close(&self) {
+        // TODO: Signal to launcher
+        self.widgets.close();
+    }
+}
+
 impl Update for Component {
     // Specify the model used for this widget.
     type Model = ViewModel;
     // Specify the model parameter used to init the model.
-    type ModelParam = WalletDescriptor;
+    type ModelParam = PathBuf;
     // Specify the type of the messages sent to the update function.
     type Msg = Msg;
 
-    fn model(_relm: &Relm<Self>, descriptor: Self::ModelParam) -> Self::Model {
-        ViewModel::from(Wallet::with(descriptor))
+    fn model(relm: &Relm<Self>, path: Self::ModelParam) -> Self::Model {
+        let wallet = Wallet::read_file(&path)
+            .map_err(|err| relm.stream().emit(Msg::FileError(path, err)))
+            .unwrap_or_default();
+        ViewModel::from(wallet)
     }
 
     fn update(&mut self, event: Msg) {
@@ -53,15 +55,27 @@ impl Update for Component {
                     .as_ref()
                     .map(|stream| stream.emit(launch::Msg::Show));
             }
-            Msg::Save => {
-                // TODO: Implement
+            Msg::Open => {
+                self.widgets.show_open_dlg();
+            }
+            Msg::OpenWallet => {
+                self.widgets.hide_open_dlg();
+                if let Some(path) = self.widgets.selected_file() {
+                    self.launcher_stream
+                        .as_ref()
+                        .map(|stream| stream.emit(launch::Msg::OpenWallet(path)));
+                }
+            }
+            Msg::FileError(path, err) => {
+                self.widgets.file_open_err(path, err);
+                self.close();
             }
             Msg::Settings => self
                 .settings
                 .emit(settings::Msg::View(self.model.to_descriptor())),
             Msg::Update(descr) => {
                 self.model.set_descriptor(descr);
-                self.widgets.window.show();
+                self.widgets.show();
             }
             Msg::RegisterLauncher(stream) => {
                 self.launcher_stream = Some(stream);
@@ -77,7 +91,7 @@ impl Widget for Component {
 
     // Return the root widget.
     fn root(&self) -> Self::Root {
-        self.widgets.window.clone()
+        self.widgets.to_root()
     }
 
     fn view(relm: &Relm<Self>, model: Self::Model) -> Self {
@@ -87,21 +101,8 @@ impl Widget for Component {
         let settings = init::<settings::Component>(()).expect("error in settings component");
         settings.emit(settings::Msg::SetWallet(relm.stream().clone()));
 
-        connect!(relm, widgets.new_btn, connect_clicked(_), Msg::New);
-        connect!(
-            relm,
-            widgets.settings_btn,
-            connect_clicked(_),
-            Msg::Settings
-        );
-        connect!(
-            relm,
-            widgets.window,
-            connect_delete_event(_, _),
-            return (Some(Msg::Close), Inhibit(false))
-        );
-
-        widgets.window.show();
+        widgets.connect(relm);
+        widgets.show();
 
         Component {
             model,

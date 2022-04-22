@@ -19,6 +19,8 @@ pub use component::Component;
 pub(self) use view_model::ViewModel;
 pub(self) use widget::Widgets;
 
+use std::path::PathBuf;
+
 use bitcoin::util::bip32::{ExtendedPubKey, Fingerprint};
 use relm::StreamHandle;
 
@@ -27,7 +29,7 @@ use crate::view::{launch, wallet};
 
 #[derive(Msg)]
 pub enum Msg {
-    New(Option<WalletTemplate>),
+    New(Option<WalletTemplate>, PathBuf),
     View(WalletDescriptor),
     AddDevices,
     AddReadOnly,

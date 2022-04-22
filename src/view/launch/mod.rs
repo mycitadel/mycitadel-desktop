@@ -9,6 +9,25 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
-mod launch;
+mod component;
+mod widget;
 
-pub use self::launch::{Component, Msg};
+pub use component::Component;
+pub(self) use widget::Widgets;
+
+use std::path::PathBuf;
+
+pub struct ViewModel {}
+
+#[derive(Msg)]
+pub enum Msg {
+    Show,
+    Quit,
+    TemplateSelected,
+    ImportSelected,
+    OpenSelected,
+    RecentSelected,
+    NewFileSelected,
+    WalletCreated(PathBuf),
+    OpenWallet(PathBuf),
+}

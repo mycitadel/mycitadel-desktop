@@ -11,9 +11,13 @@
 
 mod component;
 mod view_model;
+mod widget;
 
 pub use self::component::Component;
 pub(self) use view_model::ViewModel;
+pub(self) use widget::Widgets;
+
+use std::path::PathBuf;
 
 use relm::StreamHandle;
 
@@ -24,6 +28,8 @@ use crate::view::launch;
 pub enum Msg {
     New,
     Open,
+    OpenWallet,
+    FileError(PathBuf, strict_encoding::Error),
     Save,
     Settings,
     Update(WalletDescriptor),
