@@ -72,14 +72,12 @@ impl Update for Component {
                     Some(template) => template.into(),
                     None => ViewModel::default(),
                 };
-                self.model.new_wallet = true;
-                self.widgets
-                    .reinit_ui(self.model.new_wallet, &self.model.template);
+                self.widgets.reinit_ui(&self.model.template);
             }
             Msg::View(descriptor) => {
                 self.model = ViewModel::from(descriptor);
-                self.model.new_wallet = false;
-                self.widgets.reinit_ui(self.model.new_wallet, &None);
+                self.model.template = None;
+                self.widgets.reinit_ui(&self.model.template);
             }
             Msg::AddDevices => {
                 self.devices.emit(devices::Msg::Show);
@@ -100,8 +98,10 @@ impl Update for Component {
                     .widgets
                     .selected_signer_xpub()
                     .and_then(|xpub| self.model.signer_by(xpub));
-                self.widgets
-                    .update_signer_details(signer.map(|s| (s, self.model.derivation_for(s))));
+                self.widgets.update_signer_details(
+                    signer.map(|s| (s, self.model.derivation_for(s))),
+                    self.model.network,
+                );
                 self.model.active_signer = signer.cloned();
             }
             Msg::AddXpub(xpub) => {
@@ -174,7 +174,7 @@ impl Update for Component {
             }
             Msg::Close => {
                 self.widgets.hide();
-                if self.model.new_wallet {
+                if self.model.template.is_some() {
                     self.launcher_stream
                         .as_ref()
                         .map(|stream| stream.emit(launch::Msg::Show));

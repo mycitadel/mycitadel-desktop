@@ -31,9 +31,9 @@ pub enum XpubRequirementError {
         required_standard: String,
     },
 
-    /// the provided extended public key has a derivation depth {actual_depth}
-    /// less than the depth of account-level key {required_depth} according to
-    /// {standard}. The standard conformance is required by the key metadata.
+    /// the provided extended public key has a derivation depth {actual_depth},
+    /// whis is less than the depth of account-level key {required_depth}
+    /// according to {standard}.
     ShallowKey {
         required_depth: u8,
         actual_depth: u8,

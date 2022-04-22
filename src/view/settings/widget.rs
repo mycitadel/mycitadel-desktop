@@ -83,18 +83,15 @@ pub struct Widgets {
 }
 
 impl Widgets {
-    pub fn reinit_ui(&self, new_wallet: bool, template: &Option<WalletTemplate>) {
-        self.set_new_wallet_mode(new_wallet);
-        if new_wallet {
-            if let Some(template) = template {
-                self.update_template(template);
-                self.update_derivation(&template.format, template.network);
-            }
+    pub fn reinit_ui(&self, template: &Option<WalletTemplate>) {
+        self.set_new_wallet_mode(template.is_some());
+        // New wallet
+        if let Some(template) = template {
+            self.update_template(template);
+            self.update_derivation(&template.format, template.network);
+            self.update_signer_details(None, template.network);
             self.pages.set_page(0);
-        } else {
-            // TODO: Disable UI
         }
-        self.update_signer_details(None);
         self.dialog.show();
     }
 
@@ -336,6 +333,7 @@ impl Widgets {
     fn set_new_wallet_mode(&self, new_wallet: bool) {
         self.save_btn
             .set_label(if new_wallet { "Create" } else { "Save" });
+        // TODO: Disable UI for non-new model
     }
 
     pub fn set_remove_condition(&self, allow: bool) {
@@ -364,7 +362,11 @@ impl Widgets {
             .expect("invalid signer xpub")
     }
 
-    pub fn update_signer_details(&self, details: Option<(&Signer, TrackingAccount)>) {
+    pub fn update_signer_details(
+        &self,
+        details: Option<(&Signer, TrackingAccount)>,
+        network: PublicNetwork,
+    ) {
         self.removesign_btn.set_sensitive(details.is_some());
         if let Some((signer, ref derivation)) = details {
             self.name_fld.set_text(&signer.name);
@@ -372,17 +374,15 @@ impl Widgets {
                 .set_text(&signer.fingerprint.to_string());
             self.xpub_fld.set_text(&signer.xpub.to_string());
 
-            let origin_format = signer.origin_format();
+            let origin_format = signer.origin_format(network);
             gtk::prelude::ComboBoxTextExt::remove(&self.path_cmb, 2);
             let active_id = match origin_format {
                 OriginFormat::Master => Some("master"),
                 OriginFormat::SubMaster(_) => Some("account"),
-                OriginFormat::Standard(ref schema, account, network) => {
+                OriginFormat::Standard(ref schema, _, network) => {
                     self.path_cmb.append(
                         Some("purpose"),
-                        &schema
-                            .to_account_derivation(account.into(), network.into())
-                            .to_string(),
+                        &schema.account_template_string(network.into()),
                     );
                     Some("purpose")
                 }

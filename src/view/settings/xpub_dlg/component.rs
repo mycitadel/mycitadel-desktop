@@ -12,9 +12,10 @@
 use gladis::Gladis;
 use gtk::{MessageDialog, ResponseType};
 use relm::{Relm, Sender, Update, Widget};
+use std::str::FromStr;
 
 use super::{Msg, ViewModel, Widgets};
-use crate::model::{WalletStandard, XpubDescriptor};
+use crate::model::{WalletStandard, XpubDescriptor, XpubParseError};
 use crate::view::settings;
 
 pub struct Component {
@@ -29,6 +30,10 @@ impl Component {
             Ok(xpub) => {
                 self.widgets.hide_message();
                 self.model.xpub = Some(xpub)
+            }
+            Err(XpubParseError::Inconsistency(err)) => {
+                self.model.xpub = XpubDescriptor::from_str(&xpub).ok();
+                self.widgets.show_warning(&err.to_string())
             }
             Err(err) => {
                 self.model.xpub = None;

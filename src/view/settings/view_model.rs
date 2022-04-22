@@ -34,7 +34,6 @@ pub struct ViewModel {
 
     // Data provided by the parent window
     pub template: Option<WalletTemplate>,
-    pub new_wallet: bool,
     pub format_lnpbp: bool,
 
     // Non-persisting / dynamic data for this window
@@ -53,7 +52,6 @@ impl Default for ViewModel {
             spendings: SpendingModel::new(),
             network: PublicNetwork::Mainnet,
             descriptor: None,
-            new_wallet: true,
             template: None,
             class: DescriptorClass::SegwitV0,
             format_lnpbp: false,
@@ -65,7 +63,6 @@ impl From<WalletTemplate> for ViewModel {
     fn from(template: WalletTemplate) -> Self {
         ViewModel {
             template: Some(template),
-            new_wallet: true,
             ..default!()
         }
     }
@@ -74,7 +71,6 @@ impl From<WalletTemplate> for ViewModel {
 impl From<WalletDescriptor> for ViewModel {
     fn from(_descr: WalletDescriptor) -> Self {
         ViewModel {
-            new_wallet: false,
             // TODO Fix it
             ..default!()
         }

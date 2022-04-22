@@ -21,7 +21,7 @@ use chrono::{DateTime, Utc};
 use hwi::error::Error as HwiError;
 use hwi::HWIDevice;
 use wallet::hd::standards::DerivationBlockchain;
-use wallet::hd::{Bip43, DerivationStandard, HardenedIndex, SegmentIndexes};
+use wallet::hd::{Bip43, DerivationStandard, HardenedIndex};
 
 // TODO: Move to descriptor wallet or BPro
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Display)]
@@ -174,7 +174,7 @@ impl HardwareList {
 pub enum OriginFormat {
     Master,
     SubMaster(ChildNumber),
-    Standard(Bip43, HardenedIndex, PublicNetwork),
+    Standard(Bip43, Option<HardenedIndex>, PublicNetwork),
     Custom(DerivationPath),
 }
 
@@ -183,26 +183,22 @@ impl Display for OriginFormat {
         match self {
             OriginFormat::Master => f.write_str("m/"),
             OriginFormat::SubMaster(account) => Display::fmt(account, f),
-            OriginFormat::Standard(scheme, account, network) => Display::fmt(
-                &scheme.to_account_derivation((*account).into(), (*network).into()),
-                f,
-            ),
+            OriginFormat::Standard(scheme, _, network) => {
+                Display::fmt(&scheme.to_origin_derivation((*network).into()), f)
+            }
             OriginFormat::Custom(path) => Display::fmt(path, f),
         }
     }
 }
 
 impl OriginFormat {
-    pub fn with(path: &DerivationPath) -> OriginFormat {
+    pub fn with(path: &DerivationPath, network: PublicNetwork) -> OriginFormat {
         let bip43 = Bip43::deduce(&path);
         if let Some(bip43) = bip43 {
-            let account = path[2].try_into().expect("Bip43 parser broken");
-            let testnet = path[1].first_index() != 0;
-            let network = if testnet {
-                PublicNetwork::Testnet
-            } else {
-                PublicNetwork::Mainnet
-            };
+            let account = bip43
+                .extract_account_index(path)
+                .transpose()
+                .expect("BIP43 parser is broken");
             OriginFormat::Standard(bip43, account, network)
         } else if path.is_empty() {
             OriginFormat::Master
@@ -217,7 +213,7 @@ impl OriginFormat {
         match self {
             OriginFormat::Master => None,
             OriginFormat::SubMaster(index) => (*index).try_into().ok(),
-            OriginFormat::Standard(_, index, _) => Some(*index),
+            OriginFormat::Standard(_, index, _) => *index,
             OriginFormat::Custom(_) => None,
         }
     }
@@ -291,7 +287,7 @@ impl Signer {
                     .into(),
             ),
         };
-        let format = OriginFormat::with(&origin);
+        let format = OriginFormat::with(&origin, network);
         Signer {
             fingerprint,
             device: None,
@@ -310,8 +306,8 @@ impl Signer {
             .unwrap_or_else(|| s!("n/a"))
     }
 
-    pub fn origin_format(&self) -> OriginFormat {
-        OriginFormat::with(&self.origin)
+    pub fn origin_format(&self, network: PublicNetwork) -> OriginFormat {
+        OriginFormat::with(&self.origin, network)
     }
 }
 

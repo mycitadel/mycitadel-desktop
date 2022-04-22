@@ -186,6 +186,14 @@ impl DerivationStandard for WalletStandard {
         }
     }
 
+    fn account_template_string(&self, blockchain: DerivationBlockchain) -> String {
+        match self {
+            // TODO: Support LNPBP standard derivation
+            WalletStandard::LnpBp(_) => s!("m/"),
+            WalletStandard::Bip43(bip43) => bip43.account_template_string(blockchain),
+        }
+    }
+
     fn to_origin_derivation(&self, blockchain: DerivationBlockchain) -> DerivationPath {
         match self {
             // TODO: Support LNPBP standard derivation
