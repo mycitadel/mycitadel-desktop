@@ -6,7 +6,7 @@ use glib::subclass::prelude::*;
 use gtk::prelude::*;
 use gtk::{glib, Button, Dialog, ListBox, MessageDialog};
 use relm::{Channel, Relm, Sender, Update, Widget};
-use wallet::hd::{DerivationScheme, HardenedIndex, SegmentIndexes};
+use wallet::hd::{Bip43, DerivationStandard, HardenedIndex, SegmentIndexes};
 
 use super::device_row::{DeviceModel, RowWidgets};
 use crate::model::{Error, HardwareList, PublicNetwork};
@@ -14,7 +14,7 @@ use crate::view::settings;
 
 #[derive(Clone)]
 pub struct ViewModel {
-    pub(self) scheme: DerivationScheme,
+    pub(self) scheme: Bip43,
     pub(self) network: PublicNetwork,
     pub(self) devices: DeviceModel,
     pub(self) hwi: HardwareList,
@@ -53,7 +53,7 @@ impl Update for Component {
     // Specify the model used for this widget.
     type Model = ViewModel;
     // Specify the model parameter used to init the model.
-    type ModelParam = (DerivationScheme, PublicNetwork, Sender<settings::Msg>);
+    type ModelParam = (Bip43, PublicNetwork, Sender<settings::Msg>);
     // Specify the type of the messages sent to the update function.
     type Msg = Msg;
 

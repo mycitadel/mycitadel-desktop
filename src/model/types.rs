@@ -21,7 +21,7 @@ use chrono::{DateTime, Utc};
 use hwi::error::Error as HwiError;
 use hwi::HWIDevice;
 use wallet::hd::schemata::DerivationBlockchain;
-use wallet::hd::{DerivationScheme, HardenedIndex, SegmentIndexes};
+use wallet::hd::{Bip43, DerivationStandard, HardenedIndex, SegmentIndexes};
 
 // TODO: Move to descriptor wallet or BPro
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Display)]
@@ -89,14 +89,7 @@ pub enum Error {
 
     /// Device {1} ({2}, master fingerprint {0}) does not support used derivation schema {3} on
     /// {4}.
-    DerivationNotSupported(
-        Fingerprint,
-        String,
-        String,
-        DerivationScheme,
-        PublicNetwork,
-        HwiError,
-    ),
+    DerivationNotSupported(Fingerprint, String, String, Bip43, PublicNetwork, HwiError),
 }
 
 impl Error {
@@ -122,7 +115,7 @@ impl<'a> IntoIterator for &'a HardwareList {
 
 impl HardwareList {
     pub fn enumerate(
-        scheme: &DerivationScheme,
+        scheme: &Bip43,
         network: PublicNetwork,
         default_account: HardenedIndex,
     ) -> Result<(HardwareList, Vec<Error>), Error> {
@@ -181,7 +174,7 @@ impl HardwareList {
 pub enum OriginFormat {
     Master,
     SubMaster(ChildNumber),
-    Standard(DerivationScheme, HardenedIndex, PublicNetwork),
+    Standard(Bip43, HardenedIndex, PublicNetwork),
     Custom(DerivationPath),
 }
 
@@ -201,29 +194,22 @@ impl Display for OriginFormat {
 
 impl OriginFormat {
     pub fn with(path: &DerivationPath) -> OriginFormat {
-        match DerivationScheme::from_derivation(&path) {
-            scheme @ DerivationScheme::Bip44
-            | scheme @ DerivationScheme::Bip84
-            | scheme @ DerivationScheme::Bip49
-            | scheme @ DerivationScheme::Bip86
-            | scheme @ DerivationScheme::Bip45
-            | scheme @ DerivationScheme::Bip87
-            | scheme @ DerivationScheme::Bip48 { .. } => {
-                let account = path[2].try_into().expect("DerivationScheme parser broken");
-                let testnet = path[1].first_index() != 0;
-                let network = if testnet {
-                    PublicNetwork::Testnet
-                } else {
-                    PublicNetwork::Mainnet
-                };
-                OriginFormat::Standard(scheme, account, network)
-            }
-            DerivationScheme::Custom { .. } if path.is_empty() => OriginFormat::Master,
-            DerivationScheme::Custom { .. } if path.len() == 1 => OriginFormat::SubMaster(path[0]),
-            DerivationScheme::LnpBp43 { .. }
-            | DerivationScheme::Bip43 { .. }
-            | DerivationScheme::Custom { .. } => OriginFormat::Custom(path.clone()),
-            _ => OriginFormat::Custom(path.clone()),
+        let bip43 = Bip43::with(&path);
+        if let Some(bip43) = bip43 {
+            let account = path[2].try_into().expect("Bip43 parser broken");
+            let testnet = path[1].first_index() != 0;
+            let network = if testnet {
+                PublicNetwork::Testnet
+            } else {
+                PublicNetwork::Mainnet
+            };
+            OriginFormat::Standard(bip43, account, network)
+        } else if path.is_empty() {
+            OriginFormat::Master
+        } else if path.len() == 1 {
+            OriginFormat::SubMaster(path[0])
+        } else {
+            OriginFormat::Custom(path.clone())
         }
     }
 
@@ -280,7 +266,7 @@ impl Signer {
     pub fn with_device(
         fingerprint: Fingerprint,
         device: HardwareDevice,
-        schema: &DerivationScheme,
+        schema: &Bip43,
         network: PublicNetwork,
     ) -> Signer {
         Signer {
@@ -294,11 +280,7 @@ impl Signer {
         }
     }
 
-    pub fn with_xpub(
-        xpub: ExtendedPubKey,
-        schema: &DerivationScheme,
-        network: PublicNetwork,
-    ) -> Self {
+    pub fn with_xpub(xpub: ExtendedPubKey, schema: &Bip43, network: PublicNetwork) -> Self {
         let (fingerprint, origin) = match xpub.depth {
             0 => (xpub.fingerprint(), DerivationPath::default()),
             1 => (xpub.parent_fingerprint, vec![xpub.child_number].into()),

@@ -11,6 +11,7 @@
 
 use std::str::FromStr;
 
+use ::wallet::hd::DerivationStandard;
 use bitcoin::util::bip32::Fingerprint;
 use gladis::Gladis;
 use gtk::prelude::*;
@@ -18,7 +19,7 @@ use gtk::Dialog;
 use relm::{init, Channel, Relm, StreamHandle, Update, Widget};
 
 use super::{spending_row::Condition, xpub_dlg, Msg, ViewModel, Widgets};
-use crate::model::{Bip43, Signer, WalletDescriptor};
+use crate::model::{Signer, WalletDescriptor};
 use crate::view::{devices, launch, wallet};
 
 pub struct Component {
@@ -85,9 +86,7 @@ impl Update for Component {
             }
             Msg::AddReadOnly => {
                 let testnet = self.model.network.is_testnet();
-                let format = Bip43::try_from(&self.model.scheme)
-                    .ok()
-                    .and_then(Bip43::slip_application);
+                let format = self.model.scheme.slip_application();
                 self.xpub_dlg.emit(xpub_dlg::Msg::Open(testnet, format));
             }
             Msg::SignerAddDevice(fingerprint, device) => {

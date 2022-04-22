@@ -10,8 +10,9 @@
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
 use chrono::prelude::*;
+use wallet::hd::Bip43;
 
-use super::{Bip43, PublicNetwork, SpendingCondition, WalletFormat};
+use super::{PublicNetwork, SpendingCondition, WalletFormat};
 use crate::model::{SigsReq, TimelockReq};
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]

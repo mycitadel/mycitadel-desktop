@@ -22,12 +22,12 @@ use gtk::{
 };
 use miniscript::Descriptor;
 use relm::Relm;
-use wallet::hd::{SegmentIndexes, TrackingAccount};
+use wallet::hd::{DerivationStandard, SegmentIndexes, TrackingAccount};
 
 use super::Msg;
 use crate::model::{
     DescriptorClass, OriginFormat, Ownership, PublicNetwork, Requirement, Signer, WalletFormat,
-    WalletTemplate,
+    WalletFormatExt, WalletTemplate,
 };
 use crate::view::settings::spending_row;
 use crate::view::settings::spending_row::SpendingModel;

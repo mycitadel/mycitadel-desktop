@@ -14,7 +14,7 @@ mod types;
 mod ui;
 mod wallet;
 
-pub use self::wallet::{Bip43, Wallet, WalletDescriptor, WalletFormat, WalletState};
+pub use self::wallet::{Wallet, WalletDescriptor, WalletFormat, WalletFormatExt, WalletState};
 pub use template::{Requirement, WalletTemplate};
 pub use types::{
     DescriptorClass, Error, HardwareDevice, HardwareList, OriginFormat, Ownership, PublicNetwork,

@@ -18,10 +18,7 @@ use bitcoin::util::bip32::{ChildNumber, ExtendedPubKey};
 use miniscript::descriptor::{Sh, TapTree, Tr, Wsh};
 use miniscript::policy::concrete::Policy;
 use miniscript::{Descriptor, Legacy, Miniscript, Segwitv0, Tap};
-use wallet::hd::{
-    AccountStep, DerivationScheme, HardenedIndex, SegmentIndexes, TerminalStep, TrackingAccount,
-    XpubRef,
-};
+use wallet::hd::{AccountStep, Bip43, DerivationStandard, TerminalStep, TrackingAccount, XpubRef};
 
 use super::spending_row::SpendingModel;
 use crate::model::{
@@ -30,7 +27,7 @@ use crate::model::{
 
 pub struct ViewModel {
     pub class: DescriptorClass,
-    pub scheme: DerivationScheme,
+    pub scheme: Bip43,
     pub network: PublicNetwork,
     pub signers: BTreeSet<Signer>,
     pub spendings: SpendingModel,
@@ -49,10 +46,7 @@ pub struct ViewModel {
 impl Default for ViewModel {
     fn default() -> Self {
         ViewModel {
-            // TODO: Add `ScriptType` to descriptor-wallet and simplify constructor
-            scheme: DerivationScheme::Bip48 {
-                script_type: HardenedIndex::from_index(2u32).unwrap(),
-            },
+            scheme: Bip43::Bip48Native,
             devices: none!(),
             signers: none!(),
             active_signer: None,
