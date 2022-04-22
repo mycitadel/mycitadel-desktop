@@ -287,7 +287,7 @@ If all of the requirements at least in a single row are satisfied, than the fund
                 </child>
                 <child>
                   <!-- n-columns=4 n-rows=5 -->
-                  <object class="GtkGrid">
+                  <object class="GtkGrid" id="signer_grid">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <property name="margin-left">13</property>

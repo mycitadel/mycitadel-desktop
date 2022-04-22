@@ -16,7 +16,7 @@ use std::str::FromStr;
 use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{
-    gdk, glib, Adjustment, Box, Button, ComboBoxText, Dialog, Entry, Image, Label, ListBox,
+    gdk, glib, Adjustment, Box, Button, ComboBoxText, Dialog, Entry, Grid, Image, Label, ListBox,
     ListBoxRow, ListStore, Notebook, ResponseType, SpinButton, TextBuffer, ToggleButton,
     ToolButton, TreeView,
 };
@@ -55,6 +55,7 @@ pub struct Widgets {
     addcond_btn: ToolButton,
     removecond_btn: ToolButton,
 
+    signer_grid: Grid,
     name_fld: Entry,
     fingerprint_fld: Entry,
     path_cmb: ComboBoxText,
@@ -368,6 +369,7 @@ impl Widgets {
         network: PublicNetwork,
     ) {
         self.removesign_btn.set_sensitive(details.is_some());
+        self.signer_grid.set_sensitive(details.is_some());
         if let Some((signer, ref derivation)) = details {
             self.name_fld.set_text(&signer.name);
             self.fingerprint_fld
