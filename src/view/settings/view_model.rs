@@ -18,7 +18,7 @@ use bitcoin::util::bip32::{ChildNumber, ExtendedPubKey};
 use miniscript::descriptor::{Sh, TapTree, Tr, Wsh};
 use miniscript::policy::concrete::Policy;
 use miniscript::{Descriptor, Legacy, Miniscript, Segwitv0, Tap};
-use wallet::hd::{AccountStep, Bip43, DerivationStandard, TerminalStep, TrackingAccount, XpubRef};
+use wallet::hd::{AccountStep, Bip43, TerminalStep, TrackingAccount, XpubRef};
 
 use super::spending_row::SpendingModel;
 use crate::model::{
@@ -90,16 +90,14 @@ impl ViewModel {
     }
 
     pub fn derivation_for(&self, signer: &Signer) -> TrackingAccount {
-        let path: Vec<ChildNumber> = self
-            .scheme
-            .to_account_derivation(
-                signer.account.unwrap_or_default().into(),
-                self.network.into(),
-            )
-            .into();
+        let path: Vec<ChildNumber> = signer.origin.clone().into();
+        let seed_based = signer.fingerprint != zero!();
         TrackingAccount {
-            seed_based: true,
-            master: XpubRef::Fingerprint(signer.fingerprint),
+            master: if seed_based {
+                XpubRef::Fingerprint(signer.fingerprint)
+            } else {
+                XpubRef::Unknown
+            },
             account_path: path
                 .into_iter()
                 .map(AccountStep::try_from)
@@ -229,7 +227,6 @@ impl ViewModel {
                 let unspendable_xkey =
                     ExtendedPubKey::decode(&buf).expect("broken unspendable key construction");
                 let unspendable = TrackingAccount {
-                    seed_based: true,
                     master: XpubRef::Unknown,
                     account_path: vec![],
                     account_xpub: unspendable_xkey,
