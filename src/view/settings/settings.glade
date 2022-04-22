@@ -372,8 +372,8 @@ If all of the requirements at least in a single row are satisfied, than the fund
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="editable">False</property>
-                        <property name="width-chars">10</property>
-                        <property name="max-width-chars">10</property>
+                        <property name="width-chars">12</property>
+                        <property name="max-width-chars">12</property>
                         <property name="secondary-icon-name">edit-copy</property>
                         <property name="secondary-icon-tooltip-text" translatable="yes">Copy to clipboard</property>
                         <property name="secondary-icon-tooltip-markup" translatable="yes">Copy to clipboard</property>
@@ -528,8 +528,8 @@ If all of the requirements at least in a single row are satisfied, than the fund
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
                             <property name="editable">False</property>
-                            <property name="width-chars">10</property>
-                            <property name="max-width-chars">10</property>
+                            <property name="width-chars">12</property>
+                            <property name="max-width-chars">12</property>
                             <property name="secondary-icon-name">edit-copy</property>
                             <property name="secondary-icon-tooltip-text" translatable="yes">Copy to clipboard</property>
                             <property name="secondary-icon-tooltip-markup" translatable="yes">Copy to clipboard</property>
@@ -562,10 +562,11 @@ If all of the requirements at least in a single row are satisfied, than the fund
                             <property name="active">0</property>
                             <property name="has-entry">True</property>
                             <property name="active-id">master</property>
+                            <property name="hexpand">True</property>
                             <items>
                               <item id="master" translatable="yes">m/</item>
-                              <item id="account" translatable="yes">m/0h</item>
-                              <item id="purpose" translatable="yes">m/84h/0h/0h</item>
+                              <item id="account" translatable="yes">m/*h/</item>
+                              <item id="purpose" translatable="yes">m/48h/0h/*h/2h/</item>
                             </items>
                             <child internal-child="entry">
                               <object class="GtkEntry" id="path_fld">
