@@ -20,12 +20,17 @@
     <property name="can-focus">False</property>
     <property name="icon-name">document-save-symbolic</property>
   </object>
+  <object class="GtkImage" id="sign_img">
+    <property name="visible">True</property>
+    <property name="can-focus">False</property>
+    <property name="icon-name">text-editor-symbolic</property>
+  </object>
   <object class="GtkApplicationWindow" id="window">
     <property name="can-focus">False</property>
     <property name="window-position">center</property>
     <property name="default-width">800</property>
     <property name="default-height">480</property>
-    <property name="icon">../../../res/applogo-big.png</property>
+    <property name="icon">res/applogo-big.png</property>
     <property name="show-menubar">False</property>
     <child>
       <object class="GtkBox">
@@ -266,6 +271,9 @@
                         <property name="can-focus">True</property>
                         <property name="model">address_store</property>
                         <property name="search-column">0</property>
+                        <child internal-child="selection">
+                          <object class="GtkTreeSelection"/>
+                        </child>
                         <child>
                           <object class="GtkTreeViewColumn">
                             <property name="resizable">True</property>
@@ -773,10 +781,5 @@
         </child>
       </object>
     </child>
-  </object>
-  <object class="GtkImage" id="sign_img">
-    <property name="visible">True</property>
-    <property name="can-focus">False</property>
-    <property name="icon-name">text-editor-symbolic</property>
   </object>
 </interface>

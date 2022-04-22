@@ -15,8 +15,7 @@ use crate::model::{PublicNetwork, Requirement, WalletTemplate};
 use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{
-    Adjustment, ApplicationWindow, Button, Entry, FileChooserDialog, ListBox, RecentChooserWidget,
-    Switch,
+    Adjustment, ApplicationWindow, Button, FileChooserDialog, ListBox, RecentChooserWidget, Switch,
 };
 use relm::Relm;
 
@@ -28,8 +27,6 @@ pub struct Widgets {
     exit_btn: Button,
 
     create_dlg: FileChooserDialog,
-    filename_fld: Entry,
-    create_btn: Button,
 
     hwcount_adj: Adjustment,
     taproot_swch: Switch,
