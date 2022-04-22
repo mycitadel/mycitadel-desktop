@@ -20,7 +20,7 @@ use bitcoin::Network;
 use chrono::{DateTime, Utc};
 use hwi::error::Error as HwiError;
 use hwi::HWIDevice;
-use wallet::hd::schemata::DerivationBlockchain;
+use wallet::hd::standards::DerivationBlockchain;
 use wallet::hd::{Bip43, DerivationStandard, HardenedIndex, SegmentIndexes};
 
 // TODO: Move to descriptor wallet or BPro
@@ -194,7 +194,7 @@ impl Display for OriginFormat {
 
 impl OriginFormat {
     pub fn with(path: &DerivationPath) -> OriginFormat {
-        let bip43 = Bip43::with(&path);
+        let bip43 = Bip43::deduce(&path);
         if let Some(bip43) = bip43 {
             let account = path[2].try_into().expect("Bip43 parser broken");
             let testnet = path[1].first_index() != 0;

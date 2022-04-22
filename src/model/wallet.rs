@@ -109,7 +109,6 @@ impl WalletDescriptor {
     }
 }
 
-// TODO: Move to descriptor wallet library
 #[derive(Clone, Eq, PartialEq, Hash, Debug, From)]
 pub enum WalletFormat {
     #[from]
