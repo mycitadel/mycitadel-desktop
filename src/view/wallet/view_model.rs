@@ -9,12 +9,40 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
-use crate::model::Wallet;
+use std::path::{Path, PathBuf};
 
-pub struct ViewModel {}
+use crate::model::{FileDocument, Wallet, WalletDescriptor};
+
+pub struct ViewModel {
+    wallet: Wallet,
+    path: PathBuf,
+}
 
 impl From<Wallet> for ViewModel {
-    fn from(_wallet: Wallet) -> Self {
-        ViewModel {}
+    fn from(wallet: Wallet) -> Self {
+        ViewModel {
+            wallet,
+            // TODO: Add suffix with wallet id
+            path: Wallet::file_name("citadel-01"),
+        }
+    }
+}
+
+impl ViewModel {
+    pub fn save(&mut self, path: impl AsRef<Path>) -> Result<usize, strict_encoding::Error> {
+        self.path = path.as_ref().to_owned();
+        self.wallet.write_file(path)
+    }
+
+    pub fn as_descriptor(&self) -> &WalletDescriptor {
+        self.wallet.as_descriptor()
+    }
+
+    pub fn to_descriptor(&self) -> WalletDescriptor {
+        self.wallet.to_descriptor()
+    }
+
+    pub fn set_descriptor(&mut self, descr: WalletDescriptor) {
+        self.wallet.set_descriptor(descr)
     }
 }

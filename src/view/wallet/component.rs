@@ -28,8 +28,7 @@ pub struct Widgets {
 }
 
 pub struct Component {
-    view_model: ViewModel,
-    model: Wallet,
+    model: ViewModel,
     widgets: Widgets,
     settings: relm::Component<settings::Component>,
     launcher_stream: Option<StreamHandle<launch::Msg>>,
@@ -37,14 +36,14 @@ pub struct Component {
 
 impl Update for Component {
     // Specify the model used for this widget.
-    type Model = Wallet;
+    type Model = ViewModel;
     // Specify the model parameter used to init the model.
     type ModelParam = WalletDescriptor;
     // Specify the type of the messages sent to the update function.
     type Msg = Msg;
 
     fn model(_relm: &Relm<Self>, descriptor: Self::ModelParam) -> Self::Model {
-        Wallet::with(descriptor)
+        ViewModel::from(Wallet::with(descriptor))
     }
 
     fn update(&mut self, event: Msg) {
@@ -53,6 +52,9 @@ impl Update for Component {
                 self.launcher_stream
                     .as_ref()
                     .map(|stream| stream.emit(launch::Msg::Show));
+            }
+            Msg::Save => {
+                // TODO: Implement
             }
             Msg::Settings => self
                 .settings
@@ -102,7 +104,6 @@ impl Widget for Component {
         widgets.window.show();
 
         Component {
-            view_model: model.clone().into(),
             model,
             widgets,
             settings,

@@ -19,6 +19,7 @@ mod xkey;
 pub use self::wallet::{
     DerivationStandardExt, Wallet, WalletDescriptor, WalletStandard, WalletState,
 };
+pub use file::FileDocument;
 pub use template::{Requirement, WalletTemplate};
 pub use types::{
     DescriptorClass, Error, HardwareDevice, HardwareList, OriginFormat, Ownership, PublicNetwork,

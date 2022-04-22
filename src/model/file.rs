@@ -11,7 +11,7 @@
 
 use std::fs;
 use std::io::{Seek, Write};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use strict_encoding::{Error, StrictDecode, StrictEncode};
 
 use crate::model::Wallet;
@@ -77,8 +77,16 @@ where
 pub trait FileDocument {
     const DOC_MAGIC: [u8; 4];
 
+    const FILE_EXT: &'static str;
+
     fn magic_u32() -> u32 {
         u32::from_be_bytes(Self::DOC_MAGIC)
+    }
+
+    fn file_name(base: &str) -> PathBuf {
+        let mut path = PathBuf::from(base);
+        path.set_extension(Self::FILE_EXT);
+        path
     }
 
     fn read_file(path: impl AsRef<Path>) -> Result<Self, strict_encoding::Error>
@@ -119,4 +127,5 @@ pub trait FileDocument {
 
 impl FileDocument for Wallet {
     const DOC_MAGIC: [u8; 4] = WALLET_DOC_MAGIC;
+    const FILE_EXT: &'static str = "mcw";
 }

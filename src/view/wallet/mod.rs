@@ -24,6 +24,7 @@ use crate::view::launch;
 pub enum Msg {
     New,
     Open,
+    Save,
     Settings,
     Update(WalletDescriptor),
     Send,
