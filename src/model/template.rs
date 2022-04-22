@@ -12,7 +12,7 @@
 use chrono::prelude::*;
 use wallet::hd::Bip43;
 
-use super::{PublicNetwork, SpendingCondition, WalletFormat};
+use super::{PublicNetwork, SpendingCondition, WalletStandard};
 use crate::model::{SigsReq, TimelockReq};
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
@@ -33,7 +33,7 @@ impl Default for Requirement {
 /// signatures already present and condition parameters.
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Default)]
 pub struct WalletTemplate {
-    pub format: WalletFormat,
+    pub format: WalletStandard,
     pub min_signer_count: Option<u16>,
     pub max_signer_count: Option<u16>,
     pub hardware_req: Requirement,

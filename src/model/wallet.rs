@@ -10,11 +10,17 @@
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
 use crate::model::DescriptorClass;
-use bitcoin::util::bip32::Fingerprint;
+use bitcoin::util::bip32::{ChildNumber, DerivationPath, Fingerprint};
+use bitcoin::Network;
+use miniscript::descriptor::DescriptorType;
 use std::collections::BTreeSet;
 use wallet::descriptors::DescrVariants;
-use wallet::hd::Bip43;
+use wallet::hd::standards::DerivationBlockchain;
+use wallet::hd::{
+    Bip43, DerivationStandard, HardenedIndex, HardenedIndexExpected, UnhardenedIndex,
+};
 use wallet::psbt::Psbt;
+use wallet::slip132::KeyApplication;
 
 use super::{PublicNetwork, Signer, SigsReq, SpendingCondition};
 
@@ -69,7 +75,7 @@ pub enum DescriptorError {
 
 #[derive(Getters, Clone, Eq, PartialEq, Hash, Debug, Default)]
 pub struct WalletDescriptor {
-    format: WalletFormat,
+    format: WalletStandard,
     signers: BTreeSet<Signer>,
     conditions: Vec<SpendingCondition>,
     network: PublicNetwork,
@@ -110,24 +116,133 @@ impl WalletDescriptor {
 }
 
 #[derive(Clone, Eq, PartialEq, Hash, Debug, From)]
-pub enum WalletFormat {
+pub enum WalletStandard {
     #[from]
     LnpBp(DescrVariants),
     #[from]
     Bip43(Bip43),
 }
 
-impl Default for WalletFormat {
+impl Default for WalletStandard {
     fn default() -> Self {
-        WalletFormat::Bip43(Bip43::Bip48Native)
+        WalletStandard::Bip43(Bip43::Bip48Native)
     }
 }
 
-pub trait WalletFormatExt {
+impl DerivationStandard for WalletStandard {
+    fn deduce(derivation: &DerivationPath) -> Option<Self>
+    where
+        Self: Sized,
+    {
+        // TODO: Support LNPBP standard derivation
+        Bip43::deduce(derivation).map(WalletStandard::Bip43)
+    }
+
+    fn matching(slip: KeyApplication) -> Option<Self>
+    where
+        Self: Sized,
+    {
+        Bip43::matching(slip).map(WalletStandard::Bip43)
+    }
+
+    fn purpose(&self) -> Option<HardenedIndex> {
+        match self {
+            // TODO: Support LNPBP standard derivation
+            WalletStandard::LnpBp(_) => None,
+            WalletStandard::Bip43(bip43) => bip43.purpose(),
+        }
+    }
+
+    fn account_depth(&self) -> Option<u8> {
+        match self {
+            // TODO: Support LNPBP standard derivation
+            WalletStandard::LnpBp(_) => None,
+            WalletStandard::Bip43(bip43) => bip43.account_depth(),
+        }
+    }
+
+    fn coin_type_depth(&self) -> Option<u8> {
+        match self {
+            // TODO: Support LNPBP standard derivation
+            WalletStandard::LnpBp(_) => None,
+            WalletStandard::Bip43(bip43) => bip43.coin_type_depth(),
+        }
+    }
+
+    fn is_account_last_hardened(&self) -> Option<bool> {
+        match self {
+            // TODO: Support LNPBP standard derivation
+            WalletStandard::LnpBp(_) => None,
+            WalletStandard::Bip43(bip43) => bip43.is_account_last_hardened(),
+        }
+    }
+
+    fn network(&self, path: &DerivationPath) -> Option<Result<Network, HardenedIndexExpected>> {
+        match self {
+            // TODO: Support LNPBP standard derivation
+            WalletStandard::LnpBp(_) => None,
+            WalletStandard::Bip43(bip43) => bip43.network(path),
+        }
+    }
+
+    fn to_origin_derivation(&self, blockchain: DerivationBlockchain) -> DerivationPath {
+        match self {
+            // TODO: Support LNPBP standard derivation
+            WalletStandard::LnpBp(_) => empty!(),
+            WalletStandard::Bip43(bip43) => bip43.to_origin_derivation(blockchain),
+        }
+    }
+
+    fn to_account_derivation(
+        &self,
+        account_index: ChildNumber,
+        blockchain: DerivationBlockchain,
+    ) -> DerivationPath {
+        match self {
+            // TODO: Support LNPBP standard derivation
+            WalletStandard::LnpBp(_) => empty!(),
+            WalletStandard::Bip43(bip43) => bip43.to_account_derivation(account_index, blockchain),
+        }
+    }
+
+    fn to_key_derivation(
+        &self,
+        account_index: ChildNumber,
+        blockchain: DerivationBlockchain,
+        index: UnhardenedIndex,
+        case: Option<UnhardenedIndex>,
+    ) -> DerivationPath {
+        match self {
+            // TODO: Support LNPBP standard derivation
+            WalletStandard::LnpBp(_) => empty!(),
+            WalletStandard::Bip43(bip43) => {
+                bip43.to_key_derivation(account_index, blockchain, index, case)
+            }
+        }
+    }
+
+    fn descriptor_types(&self) -> &'static [DescriptorType] {
+        match self {
+            // TODO: Support LNPBP standard derivation
+            WalletStandard::LnpBp(_) => &[],
+            WalletStandard::Bip43(bip43) => bip43.descriptor_types(),
+        }
+    }
+
+    fn slip_application(&self) -> Option<KeyApplication> {
+        match self {
+            // TODO: Support LNPBP standard derivation
+            WalletStandard::LnpBp(_) => None,
+            WalletStandard::Bip43(bip43) => bip43.slip_application(),
+        }
+    }
+}
+
+pub trait DerivationStandardExt: DerivationStandard {
     fn descriptor_class(&self) -> Option<DescriptorClass>;
 }
 
-impl WalletFormatExt for Bip43 {
+impl DerivationStandardExt for Bip43 {
     fn descriptor_class(&self) -> Option<DescriptorClass> {
         Some(match self {
             Bip43::Bip44 => DescriptorClass::PreSegwit,

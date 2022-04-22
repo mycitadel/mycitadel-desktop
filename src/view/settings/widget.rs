@@ -26,8 +26,8 @@ use wallet::hd::{DerivationStandard, SegmentIndexes, TrackingAccount};
 
 use super::Msg;
 use crate::model::{
-    DescriptorClass, OriginFormat, Ownership, PublicNetwork, Requirement, Signer, WalletFormat,
-    WalletFormatExt, WalletTemplate,
+    DerivationStandardExt, DescriptorClass, OriginFormat, Ownership, PublicNetwork, Requirement,
+    Signer, WalletStandard, WalletTemplate,
 };
 use crate::view::settings::spending_row;
 use crate::view::settings::spending_row::SpendingModel;
@@ -283,15 +283,15 @@ impl Widgets {
         }
     }
 
-    fn update_derivation(&self, format: &WalletFormat, network: PublicNetwork) {
+    fn update_derivation(&self, format: &WalletStandard, network: PublicNetwork) {
         match format {
-            WalletFormat::LnpBp(_) => {
+            WalletStandard::LnpBp(_) => {
                 self.descr_legacy_tgl.set_active(true);
                 self.descr_segwit_tgl.set_active(true);
                 self.descr_nested_tgl.set_active(true);
                 self.descr_taproot_tgl.set_active(true);
             }
-            WalletFormat::Bip43(ref bip43) => {
+            WalletStandard::Bip43(ref bip43) => {
                 let class = bip43
                     .descriptor_class()
                     .unwrap_or(DescriptorClass::SegwitV0);
