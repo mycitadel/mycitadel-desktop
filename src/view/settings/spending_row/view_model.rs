@@ -9,6 +9,8 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
+use chrono::{DateTime, Datelike, NaiveDate, Utc};
+use std::borrow::Borrow;
 use std::cell::RefCell;
 use std::collections::BTreeSet;
 
@@ -17,7 +19,7 @@ use gtk::prelude::*;
 use gtk::subclass::prelude::ListModelImpl;
 use gtk::{gio, glib};
 
-use crate::model::{Signer, SigsReq};
+use crate::model::{Signer, SigsReq, SpendingCondition, TimelockReq, TimelockedSigs};
 
 // The actual data structure that stores our values. This is not accessible
 // directly from the outside.
@@ -57,6 +59,61 @@ impl Default for ConditionInner {
             after_day: RefCell::new(1),
             after_month: RefCell::new(1),
             after_year: RefCell::new(2025),
+        }
+    }
+}
+
+impl From<&ConditionInner> for SigsReq {
+    fn from(inner: &ConditionInner) -> Self {
+        match (
+            *inner.sigs_all.borrow(),
+            *inner.sigs_at_least.borrow(),
+            *inner.sigs_any.borrow(),
+        ) {
+            (true, false, false) => SigsReq::All,
+            (_, true, false) => SigsReq::AtLeast(*inner.sigs_no.borrow() as u16),
+            (_, _, true) => SigsReq::Any,
+            _ => unreachable!("ConditionInner internal inconsistency in sig requirements"),
+        }
+    }
+}
+
+impl From<&ConditionInner> for TimelockReq {
+    fn from(inner: &ConditionInner) -> Self {
+        match (
+            *inner.lock_none.borrow(),
+            *inner.lock_after.borrow(),
+            *inner.lock_older.borrow(),
+        ) {
+            (true, false, false) => TimelockReq::Anytime,
+            (_, true, false) => {
+                let date = NaiveDate::from_ymd(
+                    *inner.after_year.borrow() as i32,
+                    *inner.after_month.borrow(),
+                    *inner.after_day.borrow(),
+                );
+                TimelockReq::AfterTime(DateTime::from_utc(date.and_hms(0, 0, 0), Utc))
+            }
+            (_, _, true) => {
+                let now = Utc::now();
+                let offset = *inner.period_span.borrow();
+                let datetime = match (
+                    *inner.period_years.borrow(),
+                    *inner.period_months.borrow(),
+                    *inner.period_weeks.borrow(),
+                    *inner.period_days.borrow(),
+                ) {
+                    (true, false, false, false) => now.with_year(now.year() + offset as i32),
+                    (_, true, false, false) => now.with_month(now.month() + offset),
+                    (_, _, true, false) => now.with_day(now.day() + offset * 7),
+                    (_, _, _, true) => now.with_day(now.day() + offset),
+                    _ => unreachable!(
+                        "ConditionInner internal inconsistency in relative timelock requirements"
+                    ),
+                };
+                TimelockReq::OlderTime(datetime.expect("datetime exceeds bounds"))
+            }
+            _ => unreachable!("ConditionInner internal inconsistency in timelock requirements"),
         }
     }
 }
@@ -288,6 +345,16 @@ impl Default for Condition {
     }
 }
 
+impl From<&Condition> for SpendingCondition {
+    fn from(condition: &Condition) -> Self {
+        let condition = condition.imp().borrow();
+        SpendingCondition::Sigs(TimelockedSigs {
+            sigs: SigsReq::from(condition),
+            timelock: TimelockReq::from(condition),
+        })
+    }
+}
+
 impl Condition {
     pub fn sigs_req(&self) -> SigsReq {
         if self.property("sigs-all") {
@@ -337,6 +404,112 @@ glib::wrapper! {
     pub struct SpendingModel(ObjectSubclass<SpendingModelInner>) @implements gio::ListModel;
 }
 
+impl From<&BTreeSet<(u8, SpendingCondition)>> for SpendingModel {
+    fn from(conditions: &BTreeSet<(u8, SpendingCondition)>) -> Self {
+        let model = SpendingModel::new();
+        let mut conditions = conditions.iter().collect::<Vec<_>>();
+        conditions.sort_by_key(|(depth, _)| *depth);
+        for (_, sc) in conditions {
+            let cond = Condition::default();
+
+            cond.set_property(
+                "sigs-all",
+                matches!(
+                    sc,
+                    SpendingCondition::Sigs(TimelockedSigs {
+                        sigs: SigsReq::All,
+                        ..
+                    })
+                ),
+            );
+            cond.set_property(
+                "sigs-at-least",
+                matches!(
+                    sc,
+                    SpendingCondition::Sigs(TimelockedSigs {
+                        sigs: SigsReq::AtLeast(_),
+                        ..
+                    })
+                ),
+            );
+            cond.set_property(
+                "sigs-any",
+                matches!(
+                    sc,
+                    SpendingCondition::Sigs(TimelockedSigs {
+                        sigs: SigsReq::Any,
+                        ..
+                    })
+                ),
+            );
+            match sc {
+                SpendingCondition::Sigs(TimelockedSigs {
+                    sigs: SigsReq::AtLeast(no),
+                    ..
+                }) => Some(no),
+                _ => None,
+            }
+            .map(|no| cond.set_property("sigs-no", *no as u32));
+
+            cond.set_property(
+                "lock-none",
+                matches!(
+                    sc,
+                    SpendingCondition::Sigs(TimelockedSigs {
+                        timelock: TimelockReq::Anytime,
+                        ..
+                    })
+                ),
+            );
+            cond.set_property(
+                "lock-older",
+                matches!(
+                    sc,
+                    SpendingCondition::Sigs(TimelockedSigs {
+                        timelock: TimelockReq::OlderTime(_),
+                        ..
+                    })
+                ),
+            );
+            cond.set_property(
+                "lock-after",
+                matches!(
+                    sc,
+                    SpendingCondition::Sigs(TimelockedSigs {
+                        timelock: TimelockReq::AfterTime(_),
+                        ..
+                    })
+                ),
+            );
+            match sc {
+                SpendingCondition::Sigs(TimelockedSigs {
+                    timelock: TimelockReq::OlderTime(datetime),
+                    ..
+                }) => Some(datetime),
+                _ => None,
+            }
+            .map(|datetime| {
+                // TODO: Process periods
+            });
+            match sc {
+                SpendingCondition::Sigs(TimelockedSigs {
+                    timelock: TimelockReq::AfterTime(datetime),
+                    ..
+                }) => Some(datetime),
+                _ => None,
+            }
+            .map(|datetime| {
+                cond.set_property("after-day", datetime.day());
+                cond.set_property("after-month", datetime.month());
+                cond.set_property("after-year", datetime.year() as u32);
+            });
+
+            model.append(&cond);
+        }
+        model
+    }
+}
+
 impl SpendingModel {
     #[allow(clippy::new_without_default)]
     pub fn new() -> SpendingModel {
@@ -380,5 +553,16 @@ impl SpendingModel {
         imp.conditions.borrow_mut().remove(index as usize);
         // Emits a signal that 1 item was removed, 0 added at the position index
         self.items_changed(index, 1, 0);
+    }
+
+    pub fn spending_conditions(&self) -> Vec<(u8, SpendingCondition)> {
+        self.imp()
+            .conditions
+            .borrow()
+            .iter()
+            .map(SpendingCondition::from)
+            .enumerate()
+            .map(|(d, c)| (d as u8 + 1, c))
+            .collect()
     }
 }

@@ -14,6 +14,7 @@ use std::collections::BTreeMap;
 use std::fmt::{self, Display, Formatter};
 use std::hash::{Hash, Hasher};
 
+use crate::model::XpubkeyCore;
 use bitcoin::secp256k1::PublicKey;
 use bitcoin::util::bip32::{ChainCode, ChildNumber, DerivationPath, ExtendedPubKey, Fingerprint};
 use bitcoin::Network;
@@ -264,7 +265,7 @@ pub struct Signer {
 impl PartialEq for Signer {
     // Two signers considered equal when their xpubs are equal
     fn eq(&self, other: &Self) -> bool {
-        self.xpub == other.xpub
+        self.xpub_core() == other.xpub_core()
     }
 }
 
@@ -272,7 +273,7 @@ impl Eq for Signer {}
 
 impl Hash for Signer {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.xpub.hash(state)
+        self.xpub.identifier().hash(state)
     }
 }
 
@@ -284,7 +285,7 @@ impl PartialOrd for Signer {
 
 impl Ord for Signer {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.xpub.cmp(&other.xpub)
+        self.xpub_core().cmp(&other.xpub_core())
     }
 }
 
@@ -342,14 +343,38 @@ impl Signer {
     pub fn origin_format(&self, network: PublicNetwork) -> OriginFormat {
         OriginFormat::with_account(&self.origin, network)
     }
+
+    pub fn xpub_core(&self) -> XpubkeyCore {
+        XpubkeyCore::from(self.xpub)
+    }
+
+    pub fn fingerprint(&self) -> Fingerprint {
+        self.xpub.fingerprint()
+    }
 }
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
+#[derive(StrictEncode, StrictDecode)]
 pub enum DescriptorClass {
     PreSegwit,
     SegwitV0,
     NestedV0,
     TaprootC0,
+}
+
+impl DescriptorClass {
+    pub fn bip43(self, sigs_no: usize) -> Bip43 {
+        match (self, sigs_no > 1) {
+            (DescriptorClass::PreSegwit, false) => Bip43::singlesig_pkh(),
+            (DescriptorClass::SegwitV0, false) => Bip43::singlesig_segwit0(),
+            (DescriptorClass::NestedV0, false) => Bip43::singlesig_nested0(),
+            (DescriptorClass::TaprootC0, false) => Bip43::singlelsig_taproot(),
+            (DescriptorClass::PreSegwit, true) => Bip43::multisig_ordered_sh(),
+            (DescriptorClass::SegwitV0, true) => Bip43::multisig_segwit0(),
+            (DescriptorClass::NestedV0, true) => Bip43::multisig_nested0(),
+            (DescriptorClass::TaprootC0, true) => Bip43::multisig_descriptor(),
+        }
+    }
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Display)]

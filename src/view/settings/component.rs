@@ -20,7 +20,7 @@ use gtk::Dialog;
 use relm::{init, Channel, Relm, StreamHandle, Update, Widget};
 
 use super::{spending_row::Condition, xpub_dlg, Msg, ViewModel, Widgets};
-use crate::model::{Signer, WalletDescriptor, WalletStandard};
+use crate::model::{Signer, WalletDescriptor};
 use crate::view::{devices, error_dlg, launch, wallet};
 
 pub struct Component {
@@ -127,7 +127,7 @@ impl Update for Component {
             }
             Msg::AddReadOnly => {
                 let testnet = self.model.network.is_testnet();
-                let format = self.model.scheme.slip_application();
+                let format = self.model.bip43().slip_application();
                 self.xpub_dlg.emit(xpub_dlg::Msg::Open(testnet, format));
                 return;
             }
@@ -149,14 +149,28 @@ impl Update for Component {
                 return;
             }
             Msg::Apply => {
-                let descr = WalletDescriptor::from(&self.model);
+                let descr = match WalletDescriptor::try_from(&self.model) {
+                    Err(err) => {
+                        error_dlg(
+                            self.widgets.as_root(),
+                            "Error in wallet settings",
+                            &err.to_string(),
+                            None,
+                        );
+                        return;
+                    }
+                    Ok(descr) => descr,
+                };
                 if let Some(path) = self.new_wallet_path() {
                     self.launcher_stream.as_ref().map(|stream| {
                         stream.emit(launch::Msg::WalletCreated(path.to_owned()));
                     });
                 } else {
                     self.wallet_stream.as_ref().map(|stream| {
-                        stream.emit(wallet::Msg::Update(descr));
+                        stream.emit(wallet::Msg::Update(
+                            descr.signers().clone(),
+                            descr.descriptor_classes().clone(),
+                        ));
                     });
                 }
                 self.widgets.hide();
@@ -191,7 +205,7 @@ impl Update for Component {
             Msg::SignerAddXpub(xpub) => {
                 self.model.signers.insert(Signer::with_xpub(
                     xpub,
-                    &self.model.scheme,
+                    &self.model.bip43(),
                     self.model.network,
                 ));
                 self.widgets.update_signers(&self.model.signers);
@@ -253,7 +267,8 @@ impl Update for Component {
                 if self.widgets.should_update_descr_class(class)
                     && self.model.toggle_descr_class(class)
                 {
-                    self.widgets.update_descr_class(self.model.class);
+                    self.widgets
+                        .update_descr_classes(&self.model.descriptor_classes);
                 }
             }
             _ => {}
@@ -281,12 +296,10 @@ impl Widget for Component {
             stream.emit(msg);
         });
 
-        let devices =
-            init::<devices::Component>((model.scheme.clone(), model.network, sender.clone()))
-                .expect("error in devices component");
-        let xpub_dlg =
-            init::<xpub_dlg::Component>((WalletStandard::Bip43(model.scheme.clone()), sender))
-                .expect("error in xpub dialog component");
+        let devices = init::<devices::Component>((model.bip43(), model.network, sender.clone()))
+            .expect("error in devices component");
+        let xpub_dlg = init::<xpub_dlg::Component>((model.bip43().into(), sender))
+            .expect("error in xpub dialog component");
 
         widgets.connect(relm);
         widgets.bind_spending_model(relm, &model.spendings);

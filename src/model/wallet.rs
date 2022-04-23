@@ -9,13 +9,14 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
+use std::collections::BTreeSet;
+use std::ops::Deref;
+
 use bitcoin::util::bip32::{ChildNumber, DerivationPath, Fingerprint};
 use bitcoin::Network;
 use chrono::{DateTime, Utc};
 use miniscript::descriptor::DescriptorType;
-use std::collections::BTreeSet;
-use std::ops::{Deref, DerefMut};
-use wallet::descriptors::{CompositeDescrType, DescrVariants};
+use wallet::descriptors::DescrVariants;
 use wallet::hd::standards::DerivationBlockchain;
 use wallet::hd::{
     Bip43, DerivationStandard, HardenedIndex, HardenedIndexExpected, TerminalStep, UnhardenedIndex,
@@ -23,7 +24,9 @@ use wallet::hd::{
 use wallet::psbt::Psbt;
 use wallet::slip132::KeyApplication;
 
-use super::{DescriptorClass, Signer, SigsReq, TimelockReq, TimelockedSigs, XpubkeyCore};
+use super::{
+    DescriptorClass, PublicNetwork, Signer, SigsReq, TimelockReq, TimelockedSigs, XpubkeyCore,
+};
 
 // TODO: Move to bpro library
 #[derive(Getters, Clone, Debug, Default)]
@@ -52,25 +55,35 @@ impl Wallet {
         self.descriptor.clone()
     }
 
-    pub fn set_descriptor(&mut self, descr: WalletDescriptor) {
-        self.state = WalletState::default();
-        self.history.clear();
-        self.wip.clear();
-        self.descriptor = descr;
+    pub fn update_signers(
+        &mut self,
+        signers: impl IntoIterator<Item = Signer>,
+    ) -> Result<u16, DescriptorError> {
+        self.descriptor.update_signers(signers)
+    }
+
+    pub fn add_descriptor_class(&mut self, descriptor_class: DescriptorClass) -> bool {
+        self.descriptor.add_descriptor_class(descriptor_class)
     }
 }
 
-#[derive(
-    Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display, Error
-)]
+#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display, Error)]
 #[display(doc_comments)]
 pub enum DescriptorError {
-    /// spending condition {0} references unknown signer {1}.
-    UnknownSigner(SpendingCondition, Fingerprint),
-    /// unable to add spending condition when no signers are present.
+    /// signer with fingerprint {0} is not part of the wallet descriptor.
+    UnknownSigner(Fingerprint),
+    /// spending condition {0} references unknown signer with fingerprint {1}.
+    UnknownConditionSigner(SpendingCondition, Fingerprint),
+    /// no signers present.
     NoSigners,
+    /// no spending conditions present.
+    NoConditions,
+    /// no information about scriptPubkey construction present.
+    NoDescriptorClasses,
     /// duplicated spending condition {1} at depth {0}.
     DuplicateCondition(u8, SpendingCondition),
+    /// signer {0} key with fingerprint {1} is already present among signers.
+    DuplicateSigner(String, Fingerprint),
     /// insufficient number of signers {0} to support spending condition {1} requirements.
     InsufficientSignerCount(u16, SpendingCondition),
 }
@@ -78,6 +91,7 @@ pub enum DescriptorError {
 #[derive(Getters, Clone, PartialEq, Eq, Hash, Debug, Default)]
 #[derive(StrictEncode, StrictDecode)]
 pub struct WalletDescriptor {
+    network: PublicNetwork,
     signers: BTreeSet<Signer>,
     core: WalletCore,
 }
@@ -87,12 +101,6 @@ impl Deref for WalletDescriptor {
 
     fn deref(&self) -> &Self::Target {
         &self.core
-    }
-}
-
-impl DerefMut for WalletDescriptor {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.core
     }
 }
 
@@ -114,7 +122,7 @@ pub struct WalletCore {
     /// spending conditions into a scriptPubkey. In case of taproot, this means that the descriptor
     /// type must also define how the key path spending condition is constructed (aggregated key or
     /// a unsatisfiable condition).
-    pub(self) descriptor_types: BTreeSet<CompositeDescrType>,
+    pub(self) descriptor_classes: BTreeSet<DescriptorClass>,
     /// Terminal defines a way how a public keys are derived from signing extended keys. Terminals
     /// always consists of unhardened indexes or unhardened index wildcards - and always contain
     /// at least one wildcard marking index position.
@@ -127,6 +135,56 @@ pub struct WalletCore {
 }
 
 impl WalletDescriptor {
+    pub fn with(
+        signers: impl IntoIterator<Item = Signer>,
+        spending_conditions: impl IntoIterator<Item = (u8, SpendingCondition)>,
+        descriptor_classes: impl IntoIterator<Item = DescriptorClass>,
+        terminal: Vec<TerminalStep>,
+        network: PublicNetwork,
+    ) -> Result<WalletDescriptor, DescriptorError> {
+        let mut descriptor = WalletDescriptor {
+            signers: empty!(),
+            network,
+            core: WalletCore {
+                testnet: network.is_testnet(),
+                descriptor_classes: empty!(),
+                terminal,
+                signing_keys: empty!(),
+                spending_conditions: empty!(),
+            },
+        };
+
+        for signer in signers {
+            descriptor.add_signer(signer)?;
+        }
+
+        for (depth, condition) in spending_conditions {
+            descriptor.add_condition(depth, condition)?;
+        }
+
+        for class in descriptor_classes {
+            descriptor.add_descriptor_class(class);
+        }
+
+        if descriptor.signers.is_empty() {
+            return Err(DescriptorError::NoSigners);
+        }
+
+        if descriptor.core.spending_conditions.is_empty() {
+            return Err(DescriptorError::NoConditions);
+        }
+
+        if descriptor.core.descriptor_classes.is_empty() {
+            return Err(DescriptorError::NoDescriptorClasses);
+        }
+
+        Ok(descriptor)
+    }
+
+    fn add_descriptor_class(&mut self, class: DescriptorClass) -> bool {
+        self.core.descriptor_classes.insert(class)
+    }
+
     fn add_condition(
         &mut self,
         depth: u8,
@@ -137,7 +195,7 @@ impl WalletDescriptor {
         if self.signers.is_empty() {
             return Err(DescriptorError::NoSigners);
         }
-        if self.spending_conditions.contains(&(depth, condition)) {
+        if self.core.spending_conditions.contains(&(depth, condition)) {
             return Err(DescriptorError::DuplicateCondition(depth, condition));
         }
         let signer_count = self.signers.len();
@@ -146,27 +204,56 @@ impl WalletDescriptor {
                 SigsReq::AtLeast(n) if (n as usize) < signer_count => {
                     Err(DescriptorError::InsufficientSignerCount(n, condition))
                 }
-                SigsReq::Specific(signer)
-                // TODO: Use XPubkeyCore
+                SigsReq::Specific(signer_fp)
                     if self
                         .signers
                         .iter()
-                        .find(|s| s.master_fp == signer)
+                        .find(|s| s.fingerprint() == signer_fp)
                         .is_none() =>
                 {
-                    Err(DescriptorError::UnknownSigner(condition, signer))
+                    Err(DescriptorError::UnknownConditionSigner(
+                        condition, signer_fp,
+                    ))
                 }
                 _ => {
-                    self.spending_conditions.insert((depth, condition));
+                    self.core.spending_conditions.insert((depth, condition));
                     Ok(())
                 }
             },
         }
     }
 
-    fn add_signer(&mut self, signer: Signer) -> bool {
-        // TODO: Insert into self.core.signing_keys
-        self.signers.insert(signer)
+    fn add_signer(&mut self, signer: Signer) -> Result<(), DescriptorError> {
+        if !self.core.signing_keys.insert(signer.xpub.into()) {
+            return Err(DescriptorError::DuplicateSigner(
+                signer.name.clone(),
+                signer.fingerprint(),
+            ));
+        }
+        self.signers.insert(signer);
+        Ok(())
+    }
+
+    fn update_signers(
+        &mut self,
+        signers: impl IntoIterator<Item = Signer>,
+    ) -> Result<u16, DescriptorError> {
+        let mut count = 0u16;
+        for signer in signers {
+            let fingerprint = signer.fingerprint();
+            if !self.update_signer(signer) {
+                return Err(DescriptorError::UnknownSigner(fingerprint));
+            }
+            count += 1;
+        }
+        Ok(count)
+    }
+
+    fn update_signer(&mut self, signer: Signer) -> bool {
+        if !self.signers.contains(&signer) {
+            return false;
+        }
+        !self.signers.insert(signer)
     }
 }
 

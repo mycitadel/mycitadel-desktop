@@ -77,9 +77,18 @@ impl Update for Component {
                 self.model.to_descriptor(),
                 self.model.path().clone(),
             )),
-            Msg::Update(descr) => {
-                self.model.set_descriptor(descr);
-                self.widgets.show();
+            Msg::Update(signers, descriptor_classes) => {
+                if let Err(err) = self.model.update_descriptor(signers, descriptor_classes) {
+                    error_dlg(
+                        self.widgets.as_root(),
+                        "Internal error",
+                        "Please report the following information to the developer",
+                        Some(&err.to_string()),
+                    );
+                } else {
+                    self.widgets.show();
+                    self.settings.emit(settings::Msg::Close);
+                }
             }
             Msg::RegisterLauncher(stream) => {
                 self.launcher_stream = Some(stream);

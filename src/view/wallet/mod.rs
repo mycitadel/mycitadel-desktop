@@ -17,11 +17,12 @@ pub use self::component::Component;
 pub(self) use view_model::ViewModel;
 pub(self) use widget::Widgets;
 
+use std::collections::BTreeSet;
 use std::path::PathBuf;
 
 use relm::StreamHandle;
 
-use crate::model::WalletDescriptor;
+use crate::model::{DescriptorClass, Signer};
 use crate::view::launch;
 
 #[derive(Msg)]
@@ -31,7 +32,7 @@ pub enum Msg {
     FileError(PathBuf, String),
     Save,
     Settings,
-    Update(WalletDescriptor),
+    Update(BTreeSet<Signer>, BTreeSet<DescriptorClass>),
     Send,
     Receive,
     Refresh,

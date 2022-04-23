@@ -513,14 +513,14 @@ impl Widgets {
         self.descr_class_toggle(class).is_active()
     }
 
-    pub fn update_descr_class(&mut self, class: DescriptorClass) {
+    pub fn update_descr_classes(&mut self, classes: &BTreeSet<DescriptorClass>) {
         self.descr_legacy_tgl
-            .set_active(class == DescriptorClass::PreSegwit);
+            .set_active(classes.contains(&DescriptorClass::PreSegwit));
         self.descr_segwit_tgl
-            .set_active(class == DescriptorClass::SegwitV0);
+            .set_active(classes.contains(&DescriptorClass::SegwitV0));
         self.descr_nested_tgl
-            .set_active(class == DescriptorClass::NestedV0);
+            .set_active(classes.contains(&DescriptorClass::NestedV0));
         self.descr_taproot_tgl
-            .set_active(class == DescriptorClass::TaprootC0);
+            .set_active(classes.contains(&DescriptorClass::TaprootC0));
     }
 }

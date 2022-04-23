@@ -73,6 +73,25 @@ pub struct XpubkeyCore {
     pub chain_code: ChainCode,
 }
 
+impl From<ExtendedPubKey> for XpubkeyCore {
+    fn from(xpub: ExtendedPubKey) -> Self {
+        XpubkeyCore {
+            public_key: xpub.public_key,
+            chain_code: xpub.chain_code,
+        }
+    }
+}
+
+impl XpubkeyCore {
+    pub fn identifier(&self) -> XpubIdentifier {
+        XpubIdentifier::hash(&self.public_key.serialize())
+    }
+
+    pub fn fingerprint(&self) -> Fingerprint {
+        Fingerprint::from(&self.identifier()[0..4])
+    }
+}
+
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 pub struct XpubOrigin<Standard>
 where

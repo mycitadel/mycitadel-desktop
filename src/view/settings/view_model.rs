@@ -23,15 +23,15 @@ use wallet::hd::{AccountStep, Bip43, TerminalStep, TrackingAccount, XpubRef};
 
 use super::spending_row::SpendingModel;
 use crate::model::{
-    file, DescriptorClass, FileDocument, HardwareList, PublicNetwork, Signer, Wallet,
-    WalletDescriptor, WalletStandard, WalletTemplate,
+    file, DescriptorClass, DescriptorError, FileDocument, HardwareList, PublicNetwork, Signer,
+    Wallet, WalletDescriptor, WalletTemplate,
 };
 
 pub struct ViewModel {
     path: PathBuf,
 
-    pub class: DescriptorClass,
-    pub scheme: WalletStandard,
+    pub descriptor_classes: BTreeSet<DescriptorClass>,
+    pub support_multiclass: bool,
     pub network: PublicNetwork,
     pub signers: BTreeSet<Signer>,
     pub spendings: SpendingModel,
@@ -50,7 +50,6 @@ impl Default for ViewModel {
     fn default() -> Self {
         ViewModel {
             path: PathBuf::default(),
-            scheme: WalletStandard::Bip43(Bip43::multisig_segwit0()),
             devices: none!(),
             signers: none!(),
             active_signer: None,
@@ -58,16 +57,24 @@ impl Default for ViewModel {
             network: PublicNetwork::Mainnet,
             descriptor: None,
             template: None,
-            class: DescriptorClass::SegwitV0,
+            descriptor_classes: bset![DescriptorClass::SegwitV0],
+            support_multiclass: false,
             export_lnpbp: true,
         }
     }
 }
 
-impl From<&ViewModel> for WalletDescriptor {
-    fn from(_model: &ViewModel) -> Self {
-        // TODO Fix it
-        WalletDescriptor::default()
+impl TryFrom<&ViewModel> for WalletDescriptor {
+    type Error = DescriptorError;
+
+    fn try_from(model: &ViewModel) -> Result<Self, Self::Error> {
+        WalletDescriptor::with(
+            model.signers.clone(),
+            model.spendings.spending_conditions(),
+            model.descriptor_classes.clone(),
+            model.terminal_derivation(),
+            model.network,
+        )
     }
 }
 
@@ -83,11 +90,12 @@ impl ViewModel {
     }
 
     pub fn with(descr: WalletDescriptor, path: PathBuf) -> ViewModel {
+        let descriptor_classes = descr.descriptor_classes().clone();
         ViewModel {
             path,
-            class,
-            scheme: descr.format(),
-            network: descr.network(),
+            support_multiclass: descriptor_classes.len() > 1,
+            descriptor_classes,
+            network: *descr.network(),
             signers: descr.signers().clone(),
             spendings: SpendingModel::from(descr.spending_conditions()),
 
@@ -100,8 +108,12 @@ impl ViewModel {
     }
 
     pub fn save(&self) -> Result<usize, file::Error> {
-        if self.is_new_wallet() {
-            let wallet = Wallet::with(WalletDescriptor::from(self));
+        let wallet = if self.is_new_wallet() {
+            WalletDescriptor::try_from(self).ok().map(Wallet::with)
+        } else {
+            None
+        };
+        if let Some(wallet) = wallet {
             wallet.write_file(&self.path)
         } else {
             Ok(0)
@@ -117,6 +129,27 @@ impl ViewModel {
 
     pub fn is_new_wallet(&self) -> bool {
         self.template.is_some()
+    }
+
+    pub fn bip43(&self) -> Bip43 {
+        let class = self
+            .descriptor_classes
+            .iter()
+            .next()
+            .expect("dscriptor must always have at least a single class");
+        class.bip43(self.signers.len())
+    }
+
+    pub fn terminal_derivation(&self) -> Vec<TerminalStep> {
+        match self.support_multiclass {
+            true => vec![TerminalStep::range(0u8, 1u8), TerminalStep::Wildcard],
+            false => vec![
+                TerminalStep::Wildcard,
+                TerminalStep::Wildcard,
+                TerminalStep::Wildcard,
+                TerminalStep::Wildcard,
+            ],
+        }
     }
 
     pub fn signer_by(&self, xpub: ExtendedPubKey) -> Option<&Signer> {
@@ -154,28 +187,37 @@ impl ViewModel {
             .map(|signer| signer.xpub)
             .collect::<BTreeSet<_>>();
 
-        self.devices
+        for (fingerprint, device) in self
+            .devices
             .iter()
             .filter(|(_, device)| !known_xpubs.contains(&device.default_xpub))
-            .for_each(|(fingerprint, device)| {
-                self.signers.insert(Signer::with_device(
-                    *fingerprint,
-                    device.clone(),
-                    &self.scheme,
-                    self.network,
-                ));
-            });
+        {
+            self.signers.insert(Signer::with_device(
+                *fingerprint,
+                device.clone(),
+                &self.bip43(),
+                self.network,
+            ));
+        }
 
         self.update_descriptor();
     }
 
     pub fn toggle_descr_class(&mut self, class: DescriptorClass) -> bool {
-        if self.class == class {
-            false
+        if self.support_multiclass {
+            if self.descriptor_classes.contains(&class) {
+                self.descriptor_classes.remove(&class)
+            } else {
+                self.descriptor_classes.insert(class)
+            }
         } else {
-            self.class = class;
-            self.update_descriptor();
-            true
+            if self.descriptor_classes == bset![class] {
+                false
+            } else {
+                self.descriptor_classes = bset![class];
+                self.update_descriptor();
+                true
+            }
         }
     }
 
@@ -240,88 +282,97 @@ impl ViewModel {
 
         let wsh = Wsh::new(ms_witscript).expect("miniscript composition is broken");
 
-        self.descriptor = Some(match self.class {
-            DescriptorClass::PreSegwit => {
-                let ms = policy
-                    .compile::<Legacy>()
-                    .expect("policy composition  is broken");
-                Descriptor::Sh(Sh::new(ms).expect("miniscript composition is broken"))
-            }
-            DescriptorClass::SegwitV0 => Descriptor::Wsh(wsh),
-            DescriptorClass::NestedV0 => Descriptor::Sh(Sh::new_with_wsh(wsh)),
-            DescriptorClass::TaprootC0 => {
-                let mut unspendable_key =
-                    secp256k1::PublicKey::from_secret_key(&SECP256K1, &secp256k1::ONE_KEY);
-                unspendable_key
-                    .add_exp_assign(
-                        &SECP256K1,
-                        &sha256::Hash::hash(&unspendable_key.serialize()),
-                    )
-                    .unwrap();
-                let mut buf = Vec::with_capacity(78);
-                buf.extend(if self.network.is_testnet() {
-                    [0x04u8, 0x35, 0x87, 0xCF]
-                } else {
-                    [0x04u8, 0x88, 0xB2, 0x1E]
-                });
-                buf.extend([0u8; 5]); // depth + fingerprint
-                buf.extend([0u8; 4]); // child no
-                buf.extend(&unspendable_key.serialize()[1..]);
-                buf.extend(&unspendable_key.serialize());
-                let unspendable_xkey =
-                    ExtendedPubKey::decode(&buf).expect("broken unspendable key construction");
-                let unspendable = TrackingAccount {
-                    master: XpubRef::Unknown,
-                    account_path: vec![],
-                    account_xpub: unspendable_xkey,
-                    revocation_seal: None,
-                    terminal_path: vec![TerminalStep::Wildcard, TerminalStep::Wildcard],
-                };
-
-                let (tap_tree, remnant) = sig_conditions
-                    .into_iter()
-                    .map(|(depth, pol)| {
-                        (
-                            depth,
-                            pol.compile::<Tap>()
-                                .expect("tapscript construction is broken"),
+        // TODO: Support multiple descriptors
+        self.descriptor = Some(
+            match self
+                .descriptor_classes
+                .iter()
+                .next()
+                .expect("at least single descriptor class must be present")
+            {
+                DescriptorClass::PreSegwit => {
+                    let ms = policy
+                        .compile::<Legacy>()
+                        .expect("policy composition  is broken");
+                    Descriptor::Sh(Sh::new(ms).expect("miniscript composition is broken"))
+                }
+                DescriptorClass::SegwitV0 => Descriptor::Wsh(wsh),
+                DescriptorClass::NestedV0 => Descriptor::Sh(Sh::new_with_wsh(wsh)),
+                DescriptorClass::TaprootC0 => {
+                    let mut unspendable_key =
+                        secp256k1::PublicKey::from_secret_key(&SECP256K1, &secp256k1::ONE_KEY);
+                    unspendable_key
+                        .add_exp_assign(
+                            &SECP256K1,
+                            &sha256::Hash::hash(&unspendable_key.serialize()),
                         )
-                    })
-                    .rfold(
-                        (None, None)
-                            as (
-                                Option<TapTree<TrackingAccount>>,
-                                Option<Miniscript<TrackingAccount, Tap>>,
-                            ),
-                        |(tree, prev), (depth, ms)| match (tree, prev) {
-                            (None, None) if depth % 2 == 1 => (None, Some(ms)),
-                            (None, None) if depth % 2 == 1 => {
-                                (Some(TapTree::Leaf(Arc::new(ms))), None)
-                            }
-                            (None, Some(ms2)) => (
-                                Some(TapTree::Tree(
-                                    Arc::new(TapTree::Leaf(Arc::new(ms))),
-                                    Arc::new(TapTree::Leaf(Arc::new(ms2))),
-                                )),
-                                None,
-                            ),
-                            (Some(tree), None) => (
-                                Some(TapTree::Tree(
-                                    Arc::new(TapTree::Leaf(Arc::new(ms))),
-                                    Arc::new(tree),
-                                )),
-                                None,
-                            ),
-                            _ => unreachable!(),
-                        },
-                    );
+                        .unwrap();
+                    let mut buf = Vec::with_capacity(78);
+                    buf.extend(if self.network.is_testnet() {
+                        [0x04u8, 0x35, 0x87, 0xCF]
+                    } else {
+                        [0x04u8, 0x88, 0xB2, 0x1E]
+                    });
+                    buf.extend([0u8; 5]); // depth + fingerprint
+                    buf.extend([0u8; 4]); // child no
+                    buf.extend(&unspendable_key.serialize()[1..]);
+                    buf.extend(&unspendable_key.serialize());
+                    let unspendable_xkey =
+                        ExtendedPubKey::decode(&buf).expect("broken unspendable key construction");
+                    let unspendable = TrackingAccount {
+                        master: XpubRef::Unknown,
+                        account_path: vec![],
+                        account_xpub: unspendable_xkey,
+                        revocation_seal: None,
+                        terminal_path: vec![TerminalStep::Wildcard, TerminalStep::Wildcard],
+                    };
 
-                let tap_tree = tap_tree.or_else(|| remnant.map(|ms| TapTree::Leaf(Arc::new(ms))));
+                    let (tap_tree, remnant) = sig_conditions
+                        .into_iter()
+                        .map(|(depth, pol)| {
+                            (
+                                depth,
+                                pol.compile::<Tap>()
+                                    .expect("tapscript construction is broken"),
+                            )
+                        })
+                        .rfold(
+                            (None, None)
+                                as (
+                                    Option<TapTree<TrackingAccount>>,
+                                    Option<Miniscript<TrackingAccount, Tap>>,
+                                ),
+                            |(tree, prev), (depth, ms)| match (tree, prev) {
+                                (None, None) if depth % 2 == 1 => (None, Some(ms)),
+                                (None, None) if depth % 2 == 1 => {
+                                    (Some(TapTree::Leaf(Arc::new(ms))), None)
+                                }
+                                (None, Some(ms2)) => (
+                                    Some(TapTree::Tree(
+                                        Arc::new(TapTree::Leaf(Arc::new(ms))),
+                                        Arc::new(TapTree::Leaf(Arc::new(ms2))),
+                                    )),
+                                    None,
+                                ),
+                                (Some(tree), None) => (
+                                    Some(TapTree::Tree(
+                                        Arc::new(TapTree::Leaf(Arc::new(ms))),
+                                        Arc::new(tree),
+                                    )),
+                                    None,
+                                ),
+                                _ => unreachable!(),
+                            },
+                        );
 
-                Descriptor::Tr(
-                    Tr::new(unspendable, tap_tree).expect("taproot construction is broken"),
-                )
-            }
-        });
+                    let tap_tree =
+                        tap_tree.or_else(|| remnant.map(|ms| TapTree::Leaf(Arc::new(ms))));
+
+                    Descriptor::Tr(
+                        Tr::new(unspendable, tap_tree).expect("taproot construction is broken"),
+                    )
+                }
+            },
+        );
     }
 }

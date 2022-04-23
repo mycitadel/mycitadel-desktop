@@ -9,9 +9,12 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
-use crate::model::{file, FileDocument, Wallet, WalletDescriptor};
+use crate::model::{
+    file, DescriptorClass, DescriptorError, FileDocument, Signer, Wallet, WalletDescriptor,
+};
 
 #[derive(Getters)]
 pub struct ViewModel {
@@ -41,7 +44,15 @@ impl ViewModel {
         self.wallet.to_descriptor()
     }
 
-    pub fn set_descriptor(&mut self, descr: WalletDescriptor) {
-        self.wallet.set_descriptor(descr)
+    pub fn update_descriptor(
+        &mut self,
+        signers: BTreeSet<Signer>,
+        descriptor_classes: BTreeSet<DescriptorClass>,
+    ) -> Result<(), DescriptorError> {
+        self.wallet.update_signers(signers)?;
+        for class in descriptor_classes {
+            self.wallet.add_descriptor_class(class);
+        }
+        Ok(())
     }
 }
