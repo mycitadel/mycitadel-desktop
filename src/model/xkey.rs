@@ -402,9 +402,13 @@ where
         Standard: Display,
     {
         let mut xd = XpubDescriptor::from_str(s)?;
+        let slip = KeyVersion::from_xkey_str(s).ok();
+        xd.checked(slip)?;
 
         match (&standard, &xd.standard) {
-            (Some(required), Some(actual)) if required != actual => {}
+            (Some(required), Some(actual)) if required != actual => {
+                // TODO: Report error
+            }
             _ => {}
         }
         xd.standard = standard.or(xd.standard);
@@ -437,10 +441,9 @@ where
         slip: Option<KeyVersion>,
     ) -> Result<XpubDescriptor<Standard>, XpubRequirementError> {
         let mut xd = XpubDescriptor::from(xpub);
-        let origin = XpubOrigin::with(master_fingerprint, xpub, standard, slip)?;
-        xd.standard = origin.standard;
+        xd.standard = standard;
         xd.master_fingerprint = master_fingerprint;
-        xd.account = origin.account;
+        xd.checked(slip)?;
         Ok(xd)
     }
 
@@ -451,11 +454,39 @@ where
         slip: Option<KeyVersion>,
     ) -> XpubDescriptor<Standard> {
         let mut xd = XpubDescriptor::from(xpub);
-        let origin = XpubOrigin::with_unchecked(master_fingerprint, xpub, standard.clone(), slip);
-        xd.standard = standard;
+        xd.standard = standard.clone();
         xd.master_fingerprint = master_fingerprint;
+        let origin = XpubOrigin::with_unchecked(master_fingerprint, xpub, standard, slip);
         xd.account = origin.account;
         xd
+    }
+
+    /// Checks the correctness of the key against standards and updates unknown
+    /// information from the one which can be guessed from the standard.
+    ///
+    /// Compares the following correspondences between the self and SLIP132-encoded
+    /// key version.
+    /// - network (testnet/mainnet only, since SLIP132 does not cover more
+    ///   networks for bitcoin);
+    /// - specific BIP43-based derivation standard matching the possible use
+    ///   of the extended public key as an account-level key or deeper;
+    ///   basing on its depth and child number;
+    /// - if the xpub depth matches account key depth defined by the provided
+    ///   derivation standard information, the child number of the xpub must be
+    ///   a hardened number.
+    ///
+    /// Also checks that if there is a provided SLIP132 key version and
+    /// derivation standard, they do match.
+    pub fn checked(&mut self, slip: Option<KeyVersion>) -> Result<(), XpubRequirementError> {
+        let origin = XpubOrigin::with(
+            self.master_fingerprint,
+            self.clone().into(),
+            self.standard.clone(),
+            slip,
+        )?;
+        self.standard = origin.standard;
+        self.account = origin.account;
+        Ok(())
     }
 
     /// Deduces key origin information, using derivation path, internal key
