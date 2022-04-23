@@ -11,11 +11,8 @@
 
 use gladis::Gladis;
 use gtk::prelude::*;
-use gtk::{
-    ApplicationWindow, Button, Entry, FileChooserDialog, HeaderBar, Inhibit, Popover, Statusbar,
-};
+use gtk::{ApplicationWindow, Button, Entry, HeaderBar, Popover, Statusbar};
 use relm::Relm;
-use std::path::PathBuf;
 
 use super::Msg;
 
@@ -31,8 +28,6 @@ pub struct Widgets {
 
     status_bar: Statusbar,
 
-    open_dlg: FileChooserDialog,
-
     invoice_popover: Popover,
     address_fld: Entry,
 }
@@ -41,7 +36,9 @@ impl Widgets {
     pub fn show(&self) {
         self.window.show()
     }
-
+    pub fn hide(&self) {
+        self.window.hide()
+    }
     pub fn close(&self) {
         self.window.close()
     }
@@ -53,35 +50,9 @@ impl Widgets {
         &self.window
     }
 
-    pub fn show_open_dlg(&self) {
-        self.open_dlg.show();
-    }
-
-    pub fn hide_open_dlg(&self) {
-        self.open_dlg.hide();
-    }
-
-    pub fn selected_file(&self) -> Option<PathBuf> {
-        self.open_dlg.filename()
-    }
-
     pub(super) fn connect(&self, relm: &Relm<super::Component>) {
         connect!(relm, self.new_btn, connect_clicked(_), Msg::New);
         connect!(relm, self.open_btn, connect_clicked(_), Msg::Open);
         connect!(relm, self.settings_btn, connect_clicked(_), Msg::Settings);
-
-        connect!(
-            relm,
-            self.open_dlg,
-            connect_action_notify(_),
-            Msg::OpenWallet
-        );
-
-        connect!(
-            relm,
-            self.window,
-            connect_delete_event(_, _),
-            return (None, Inhibit(false))
-        );
     }
 }

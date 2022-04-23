@@ -9,16 +9,12 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
-use std::path::{Path, PathBuf};
-
 use crate::model::{PublicNetwork, Requirement, WalletTemplate};
 use gladis::Gladis;
 use gtk::prelude::*;
-use gtk::{
-    Adjustment, ApplicationWindow, Button, FileChooserDialog, ListBox, RecentChooserWidget,
-    ResponseType, Switch,
-};
+use gtk::{Adjustment, ApplicationWindow, Button, ListBox, RecentChooserWidget, Switch};
 use relm::Relm;
+use std::path::PathBuf;
 
 use super::Msg;
 
@@ -26,8 +22,6 @@ use super::Msg;
 pub struct Widgets {
     window: ApplicationWindow,
     exit_btn: Button,
-
-    create_dlg: FileChooserDialog,
 
     hwcount_adj: Adjustment,
     taproot_swch: Switch,
@@ -51,15 +45,8 @@ impl Widgets {
     pub fn to_root(&self) -> ApplicationWindow {
         self.window.clone()
     }
-
-    pub fn create_dlg(&self, filename: &Path) -> Option<PathBuf> {
-        self.create_dlg.set_current_name(filename.to_str().unwrap());
-        let resp = self.create_dlg.run();
-        self.create_dlg.hide();
-        if resp != ResponseType::Ok {
-            return None;
-        }
-        self.create_dlg.filename()
+    pub fn as_root(&self) -> &ApplicationWindow {
+        &self.window
     }
 
     fn is_taproot(&self) -> bool {
@@ -116,6 +103,14 @@ impl Widgets {
         }
     }
 
+    pub fn selected_recent(&self) -> Option<PathBuf> {
+        self.recent
+            .current_uri()
+            .map(String::from)
+            .map(|s| s.trim_start_matches("file://").to_owned())
+            .map(PathBuf::from)
+    }
+
     pub(super) fn connect(&self, relm: &Relm<super::Component>) {
         connect!(relm, self.exit_btn, connect_clicked(_), Msg::Quit);
 
@@ -140,17 +135,8 @@ impl Widgets {
         connect!(
             relm,
             self.recent,
-            connect_selection_changed(_),
+            connect_item_activated(_),
             Msg::RecentSelected
-        );
-
-        self.create_dlg.add_button("Save", ResponseType::Ok);
-        self.create_dlg.set_default_response(ResponseType::Ok);
-        connect!(
-            relm,
-            self.create_dlg,
-            connect_delete_event(_, _),
-            return (None, Inhibit(true))
         );
     }
 }

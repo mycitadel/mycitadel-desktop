@@ -28,7 +28,6 @@ use crate::view::launch;
 pub enum Msg {
     New,
     Open,
-    OpenWallet,
     FileError(PathBuf, String),
     Save,
     Settings,

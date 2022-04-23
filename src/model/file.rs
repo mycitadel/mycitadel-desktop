@@ -129,10 +129,7 @@ pub trait FileDocument {
         Self: Sized + StrictEncode,
     {
         let doc = DocWriter::with(Self::DOC_MAGIC, self);
-        let file = fs::OpenOptions::new()
-            .create(true)
-            .truncate(true)
-            .open(path)?;
+        let file = fs::File::create(path)?;
         doc.strict_encode(file).map_err(Error::Encoding)
     }
 }

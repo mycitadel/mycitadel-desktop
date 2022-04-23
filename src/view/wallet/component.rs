@@ -59,17 +59,12 @@ impl Update for Component {
                     .map(|stream| stream.emit(launch::Msg::Show));
             }
             Msg::Open => {
-                self.widgets.show_open_dlg();
-            }
-            Msg::OpenWallet => {
-                self.widgets.hide_open_dlg();
-                if let Some(path) = self.widgets.selected_file() {
-                    self.launcher_stream
-                        .as_ref()
-                        .map(|stream| stream.emit(launch::Msg::OpenWallet(path)));
-                }
+                self.launcher_stream
+                    .as_ref()
+                    .map(|stream| stream.emit(launch::Msg::OpenSelected));
             }
             Msg::FileError(path, err) => {
+                self.widgets.hide();
                 error_dlg(
                     self.widgets.as_root(),
                     "Error opening wallet",

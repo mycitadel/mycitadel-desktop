@@ -16,8 +16,7 @@ use gtk::ApplicationWindow;
 use relm::{init, Relm, StreamHandle, Update, Widget};
 
 use super::{Msg, ViewModel, Widgets};
-use crate::model::{FileDocument, Wallet};
-use crate::view::{settings, wallet};
+use crate::view::{file_create_dlg, file_open_dlg, settings, wallet};
 
 pub struct Component {
     model: ViewModel,
@@ -29,19 +28,6 @@ pub struct Component {
 }
 
 impl Component {
-    fn import_wallet(&self) {}
-
-    fn open_file(&self) {}
-
-    fn open_recent(&self) {}
-
-    fn create_wallet(&mut self, path: PathBuf) {
-        let new_wallet =
-            init::<wallet::Component>(path).expect("unable to instantiate wallet settings");
-        new_wallet.emit(wallet::Msg::RegisterLauncher(self.stream.clone()));
-        self.wallets.push(new_wallet);
-    }
-
     fn open_wallet(&mut self, path: PathBuf) {
         let wallet =
             init::<wallet::Component>(path).expect("unable to instantiate wallet settings");
@@ -67,16 +53,37 @@ impl Update for Component {
             Msg::Show => self.widgets.show(),
             Msg::Quit => gtk::main_quit(),
             Msg::TemplateSelected => {
-                if let Some(path) = self.widgets.create_dlg(&Wallet::file_name("citadel-01")) {
+                if let Some(path) = file_create_dlg(
+                    self.widgets.as_root(),
+                    "Create wallet",
+                    "MyCitadel wallet",
+                    "*.mcw",
+                    "citadel-01",
+                ) {
                     self.widgets.hide();
                     self.wallet_settings
                         .emit(settings::Msg::New(self.widgets.selected_template(), path));
                 }
             }
-            Msg::ImportSelected => self.import_wallet(),
-            Msg::OpenSelected => self.open_file(),
-            Msg::RecentSelected => self.open_recent(),
-            Msg::WalletCreated(path) => self.create_wallet(path),
+            Msg::ImportSelected => {}
+            Msg::OpenSelected => {
+                if let Some(path) = file_open_dlg(
+                    self.widgets.as_root(),
+                    "Open wallet",
+                    "MyCitadel wallet",
+                    "*.mcw",
+                ) {
+                    self.widgets.hide();
+                    self.open_wallet(path)
+                }
+            }
+            Msg::RecentSelected => {
+                if let Some(path) = self.widgets.selected_recent() {
+                    self.widgets.hide();
+                    self.open_wallet(path)
+                }
+            }
+            Msg::WalletCreated(path) => self.open_wallet(path),
             Msg::OpenWallet(path) => self.open_wallet(path),
         }
     }
