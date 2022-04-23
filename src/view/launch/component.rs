@@ -11,12 +11,12 @@
 
 use std::path::PathBuf;
 
-use crate::model::{FileDocument, Wallet};
 use gladis::Gladis;
-use gtk::{ApplicationWindow, ResponseType};
+use gtk::ApplicationWindow;
 use relm::{init, Relm, StreamHandle, Update, Widget};
 
 use super::{Msg, ViewModel, Widgets};
+use crate::model::{FileDocument, Wallet};
 use crate::view::{settings, wallet};
 
 pub struct Component {
@@ -67,19 +67,11 @@ impl Update for Component {
             Msg::Show => self.widgets.show(),
             Msg::Quit => gtk::main_quit(),
             Msg::TemplateSelected => {
-                self.widgets
-                    .show_create_dlg(&Wallet::file_name("citadel-01"));
-            }
-            Msg::CreateDlgResponse(response) if response == ResponseType::Ok => {
-                if let Some(path) = self.widgets.create_dlg_filename() {
-                    self.widgets.hide_create_dlg();
+                if let Some(path) = self.widgets.create_dlg(&Wallet::file_name("citadel-01")) {
                     self.widgets.hide();
                     self.wallet_settings
                         .emit(settings::Msg::New(self.widgets.selected_template(), path));
                 }
-            }
-            Msg::CreateDlgResponse(_) => {
-                self.widgets.hide_create_dlg();
             }
             Msg::ImportSelected => self.import_wallet(),
             Msg::OpenSelected => self.open_file(),

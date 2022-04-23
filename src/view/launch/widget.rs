@@ -52,16 +52,13 @@ impl Widgets {
         self.window.clone()
     }
 
-    pub fn show_create_dlg(&self, filename: &Path) {
-        self.create_dlg.show();
+    pub fn create_dlg(&self, filename: &Path) -> Option<PathBuf> {
         self.create_dlg.set_current_name(filename.to_str().unwrap());
-    }
-
-    pub fn hide_create_dlg(&self) {
+        let resp = self.create_dlg.run();
         self.create_dlg.hide();
-    }
-
-    pub fn create_dlg_filename(&self) -> Option<PathBuf> {
+        if resp != ResponseType::Ok {
+            return None;
+        }
         self.create_dlg.filename()
     }
 
@@ -149,12 +146,6 @@ impl Widgets {
 
         self.create_dlg.add_button("Save", ResponseType::Ok);
         self.create_dlg.set_default_response(ResponseType::Ok);
-        connect!(
-            relm,
-            self.create_dlg,
-            connect_response(_, resp),
-            Msg::CreateDlgResponse(resp)
-        );
         connect!(
             relm,
             self.create_dlg,

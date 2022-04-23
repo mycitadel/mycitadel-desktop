@@ -15,7 +15,6 @@ mod widget;
 pub use component::Component;
 pub(self) use widget::Widgets;
 
-use gtk::ResponseType;
 use std::path::PathBuf;
 
 pub struct ViewModel {}
@@ -28,7 +27,6 @@ pub enum Msg {
     ImportSelected,
     OpenSelected,
     RecentSelected,
-    CreateDlgResponse(ResponseType),
     WalletCreated(PathBuf),
     OpenWallet(PathBuf),
 }
