@@ -22,6 +22,7 @@ pub(self) use widget::Widgets;
 use std::path::PathBuf;
 
 use bitcoin::util::bip32::{ExtendedPubKey, Fingerprint};
+use gtk::ResponseType;
 use relm::StreamHandle;
 
 use crate::model::{DescriptorClass, HardwareDevice, WalletDescriptor, WalletTemplate};
@@ -46,8 +47,7 @@ pub enum Msg {
     ConditionChange,
     ToggleClass(DescriptorClass),
     ExportFormat(bool),
-    Apply,
-    Close,
+    Response(ResponseType),
     SetWallet(StreamHandle<wallet::Msg>),
     SetLauncher(StreamHandle<launch::Msg>),
 }

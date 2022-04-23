@@ -12,7 +12,7 @@
 use std::path::PathBuf;
 
 use gladis::Gladis;
-use gtk::ApplicationWindow;
+use gtk::{ApplicationWindow, ResponseType};
 use relm::{init, Relm, StreamHandle, Update, Widget};
 
 use super::{Msg, ViewModel, Widgets};
@@ -87,7 +87,8 @@ impl Update for Component {
                     );
                 } else {
                     self.widgets.show();
-                    self.settings.emit(settings::Msg::Close);
+                    self.settings
+                        .emit(settings::Msg::Response(ResponseType::Cancel));
                 }
             }
             Msg::RegisterLauncher(stream) => {

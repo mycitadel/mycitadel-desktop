@@ -31,6 +31,10 @@ If all of the requirements at least in a single row are satisfied, than the fund
     <property name="modal">True</property>
     <property name="window-position">center</property>
     <property name="type-hint">dialog</property>
+    <action-widgets>
+      <action-widget response="cancel">cancel_btn</action-widget>
+      <action-widget response="ok" default="true">save_btn</action-widget>
+    </action-widgets>
     <child internal-child="vbox">
       <object class="GtkBox">
         <property name="can-focus">False</property>
@@ -559,10 +563,10 @@ If all of the requirements at least in a single row are satisfied, than the fund
                           <object class="GtkComboBoxText" id="path_cmb">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
+                            <property name="hexpand">True</property>
                             <property name="active">0</property>
                             <property name="has-entry">True</property>
                             <property name="active-id">master</property>
-                            <property name="hexpand">True</property>
                             <items>
                               <item id="master" translatable="yes">m/</item>
                               <item id="account" translatable="yes">m/*h/</item>
@@ -1451,6 +1455,9 @@ However, they are not supported by other wallets. Wallets of this type can be us
             <property name="visible">True</property>
             <property name="can-focus">True</property>
             <property name="receives-default">True</property>
+            <style>
+              <class name="suggested-action"/>
+            </style>
           </object>
           <packing>
             <property name="pack-type">end</property>

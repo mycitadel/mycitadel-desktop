@@ -119,12 +119,14 @@ impl Widgets {
     }
     pub fn show_error(&self, msg: &str) {
         self.dialog.set_response_sensitive(ResponseType::Ok, false);
+        self.save_btn.set_sensitive(false);
         self.msg_img.set_icon_name(Some("dialog-error-symbolic"));
         self.msg_lbl.set_label(msg);
         self.msg_box.show_all();
     }
     pub fn show_info(&self, msg: &str) {
         self.dialog.set_response_sensitive(ResponseType::Ok, true);
+        self.save_btn.set_sensitive(true);
         self.msg_img
             .set_icon_name(Some("dialog-information-symbolic"));
         self.msg_lbl.set_label(msg);
@@ -132,19 +134,18 @@ impl Widgets {
     }
     pub fn show_warning(&self, msg: &str) {
         self.dialog.set_response_sensitive(ResponseType::Ok, true);
+        self.save_btn.set_sensitive(true);
         self.msg_img.set_icon_name(Some("dialog-warning-symbolic"));
         self.msg_lbl.set_label(msg);
         self.msg_box.show_all();
     }
     pub fn hide_message(&self) {
         self.dialog.set_response_sensitive(ResponseType::Ok, true);
+        self.save_btn.set_sensitive(true);
         self.msg_box.hide()
     }
 
     pub(super) fn connect(&self, relm: &Relm<super::Component>) {
-        connect!(relm, self.save_btn, connect_clicked(_), Msg::Apply);
-        connect!(relm, self.cancel_btn, connect_clicked(_), Msg::Close);
-
         connect!(relm, self.devices_btn, connect_clicked(_), Msg::AddDevices);
         connect!(relm, self.addsign_btn, connect_clicked(_), Msg::AddReadOnly);
 
@@ -255,6 +256,15 @@ impl Widgets {
                 gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).set_text(&val);
             });
         }
+
+        connect!(
+            relm,
+            self.dialog,
+            connect_response(_, resp),
+            Msg::Response(resp)
+        );
+        self.save_btn.set_sensitive(false);
+        self.dialog.set_response_sensitive(ResponseType::Ok, false);
 
         connect!(
             relm,

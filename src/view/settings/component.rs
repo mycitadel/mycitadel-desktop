@@ -16,7 +16,7 @@ use ::wallet::hd::DerivationStandard;
 use bitcoin::util::bip32::Fingerprint;
 use gladis::Gladis;
 use gtk::prelude::*;
-use gtk::Dialog;
+use gtk::{Dialog, ResponseType};
 use relm::{init, Channel, Relm, StreamHandle, Update, Widget};
 
 use super::{spending_row::Condition, xpub_dlg, Msg, ViewModel, Widgets};
@@ -152,7 +152,19 @@ impl Update for Component {
                 self.sync();
                 return;
             }
-            Msg::Apply => {
+            Msg::ConditionSelect => {
+                self.condition_selection_change();
+                return;
+            }
+            Msg::SetWallet(stream) => {
+                self.wallet_stream = Some(stream);
+                return;
+            }
+            Msg::SetLauncher(stream) => {
+                self.launcher_stream = Some(stream);
+                return;
+            }
+            Msg::Response(ResponseType::Ok) => {
                 let descr = match WalletDescriptor::try_from(&self.model) {
                     Err(err) => {
                         error_dlg(
@@ -180,19 +192,7 @@ impl Update for Component {
                 self.widgets.hide();
                 return;
             }
-            Msg::ConditionSelect => {
-                self.condition_selection_change();
-                return;
-            }
-            Msg::SetWallet(stream) => {
-                self.wallet_stream = Some(stream);
-                return;
-            }
-            Msg::SetLauncher(stream) => {
-                self.launcher_stream = Some(stream);
-                return;
-            }
-            Msg::Close => {
+            Msg::Response(ResponseType::Cancel) => {
                 self.close();
                 return;
             }
