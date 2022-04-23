@@ -65,6 +65,13 @@ pub enum NonStandardDerivation {
     UnhardenedCoinType(UnhardenedIndex),
 }
 
+/// Deterministic part of the extended public key descriptor
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
+pub struct XpubkeyCore {
+    pub public_key: secp256k1::PublicKey,
+    pub chain_code: ChainCode,
+}
+
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 pub struct XpubOrigin<Standard>
 where

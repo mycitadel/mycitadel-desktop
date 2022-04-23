@@ -28,4 +28,5 @@ pub use types::{
 pub use ui::Notification;
 pub use xkey::{
     NonStandardDerivation, XpubDescriptor, XpubOrigin, XpubParseError, XpubRequirementError,
+    XpubkeyCore,
 };
