@@ -24,14 +24,14 @@ use wallet::hd::{AccountStep, Bip43, TerminalStep, TrackingAccount, XpubRef};
 use super::spending_row::SpendingModel;
 use crate::model::{
     file, DescriptorClass, FileDocument, HardwareList, PublicNetwork, Signer, Wallet,
-    WalletDescriptor, WalletTemplate,
+    WalletDescriptor, WalletStandard, WalletTemplate,
 };
 
 pub struct ViewModel {
     path: PathBuf,
 
     pub class: DescriptorClass,
-    pub scheme: Bip43,
+    pub scheme: WalletStandard,
     pub network: PublicNetwork,
     pub signers: BTreeSet<Signer>,
     pub spendings: SpendingModel,
@@ -50,7 +50,7 @@ impl Default for ViewModel {
     fn default() -> Self {
         ViewModel {
             path: PathBuf::default(),
-            scheme: Bip43::Bip48Native,
+            scheme: WalletStandard::Bip43(Bip43::multisig_segwit0()),
             devices: none!(),
             signers: none!(),
             active_signer: None,
@@ -82,11 +82,20 @@ impl ViewModel {
         Ok(model)
     }
 
-    pub fn with(_descr: WalletDescriptor, path: PathBuf) -> ViewModel {
+    pub fn with(descr: WalletDescriptor, path: PathBuf) -> ViewModel {
         ViewModel {
             path,
-            // TODO Fix it
-            ..default!()
+            class,
+            scheme: descr.format(),
+            network: descr.network(),
+            signers: descr.signers().clone(),
+            spendings: SpendingModel::from(descr.spending_conditions()),
+
+            export_lnpbp: true,
+            template: None,
+            active_signer: None,
+            devices: empty!(),
+            descriptor: None,
         }
     }
 
