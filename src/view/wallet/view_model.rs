@@ -11,7 +11,7 @@
 
 use std::path::{Path, PathBuf};
 
-use crate::model::{FileDocument, Wallet, WalletDescriptor};
+use crate::model::{file, FileDocument, Wallet, WalletDescriptor};
 
 #[derive(Getters)]
 pub struct ViewModel {
@@ -28,7 +28,7 @@ impl ViewModel {
         }
     }
 
-    pub fn save(&mut self, path: impl AsRef<Path>) -> Result<usize, strict_encoding::Error> {
+    pub fn save(&mut self, path: impl AsRef<Path>) -> Result<usize, file::Error> {
         self.path = path.as_ref().to_owned();
         self.wallet.write_file(path)
     }

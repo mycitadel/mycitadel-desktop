@@ -16,3 +16,26 @@ pub mod psbt;
 pub mod settings;
 pub mod tx;
 pub mod wallet;
+
+use gtk::prelude::*;
+
+pub fn error_dlg(
+    parent: &impl IsA<gtk::Window>,
+    title: &str,
+    message: &str,
+    details: Option<&str>,
+) {
+    use gtk::{ButtonsType, DialogFlags, MessageDialog, MessageType};
+
+    let err_dlg = MessageDialog::new(
+        Some(parent),
+        DialogFlags::all(),
+        MessageType::Error,
+        ButtonsType::Close,
+        message,
+    );
+    err_dlg.set_title(title);
+    err_dlg.set_secondary_text(details);
+    err_dlg.run();
+    err_dlg.close();
+}

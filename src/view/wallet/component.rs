@@ -17,7 +17,7 @@ use relm::{init, Relm, StreamHandle, Update, Widget};
 
 use super::{Msg, ViewModel, Widgets};
 use crate::model::{FileDocument, Wallet};
-use crate::view::{launch, settings};
+use crate::view::{error_dlg, launch, settings};
 
 pub struct Component {
     model: ViewModel,
@@ -43,7 +43,10 @@ impl Update for Component {
 
     fn model(relm: &Relm<Self>, path: Self::ModelParam) -> Self::Model {
         let wallet = Wallet::read_file(&path)
-            .map_err(|err| relm.stream().emit(Msg::FileError(path.clone(), err)))
+            .map_err(|err| {
+                relm.stream()
+                    .emit(Msg::FileError(path.clone(), err.to_string()))
+            })
             .unwrap_or_default();
         ViewModel::with(wallet, path)
     }
@@ -67,7 +70,12 @@ impl Update for Component {
                 }
             }
             Msg::FileError(path, err) => {
-                self.widgets.file_open_err(path, err);
+                error_dlg(
+                    self.widgets.as_root(),
+                    "Error opening wallet",
+                    &path.display().to_string(),
+                    Some(&err.to_string()),
+                );
                 self.close();
             }
             Msg::Settings => self.settings.emit(settings::Msg::View(

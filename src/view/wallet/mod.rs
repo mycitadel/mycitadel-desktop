@@ -29,7 +29,7 @@ pub enum Msg {
     New,
     Open,
     OpenWallet,
-    FileError(PathBuf, strict_encoding::Error),
+    FileError(PathBuf, String),
     Save,
     Settings,
     Update(WalletDescriptor),

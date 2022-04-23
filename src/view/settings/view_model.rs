@@ -23,8 +23,8 @@ use wallet::hd::{AccountStep, Bip43, TerminalStep, TrackingAccount, XpubRef};
 
 use super::spending_row::SpendingModel;
 use crate::model::{
-    DescriptorClass, FileDocument, HardwareList, PublicNetwork, Signer, Wallet, WalletDescriptor,
-    WalletTemplate,
+    file, DescriptorClass, FileDocument, HardwareList, PublicNetwork, Signer, Wallet,
+    WalletDescriptor, WalletTemplate,
 };
 
 pub struct ViewModel {
@@ -72,10 +72,7 @@ impl From<&ViewModel> for WalletDescriptor {
 }
 
 impl ViewModel {
-    pub fn new(
-        template: WalletTemplate,
-        path: PathBuf,
-    ) -> Result<ViewModel, strict_encoding::Error> {
+    pub fn new(template: WalletTemplate, path: PathBuf) -> Result<ViewModel, file::Error> {
         let model = ViewModel {
             path,
             template: Some(template),
@@ -93,7 +90,7 @@ impl ViewModel {
         }
     }
 
-    pub fn save(&self) -> Result<usize, strict_encoding::Error> {
+    pub fn save(&self) -> Result<usize, file::Error> {
         let wallet = Wallet::with(WalletDescriptor::from(self));
         wallet.write_file(&self.path)
     }

@@ -9,10 +9,10 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
-use std::fs;
 use std::io::{Seek, Write};
 use std::path::{Path, PathBuf};
-use strict_encoding::{Error, StrictDecode, StrictEncode};
+use std::{fs, io};
+use strict_encoding::{StrictDecode, StrictEncode};
 
 use crate::model::Wallet;
 
@@ -29,7 +29,7 @@ impl<'doc, T> StrictEncode for RefWrap<'doc, T>
 where
     T: StrictEncode,
 {
-    fn strict_encode<E: Write>(&self, e: E) -> Result<usize, Error> {
+    fn strict_encode<E: Write>(&self, e: E) -> Result<usize, strict_encoding::Error> {
         self.0.strict_encode(e)
     }
 }
@@ -74,6 +74,19 @@ where
     }
 }
 
+#[derive(Debug, Error, From, Display)]
+#[display(inner)]
+pub enum Error {
+    #[from]
+    File(io::Error),
+    #[from]
+    Encoding(strict_encoding::Error),
+    #[display("incorrect file format or future version (expected {expected:#X}, got {actual:#X})")]
+    Magic { expected: u32, actual: u32 },
+    #[display("extra data after the end of file")]
+    DataNotEntirelyConsumed,
+}
+
 pub trait FileDocument {
     const DOC_MAGIC: [u8; 4];
 
@@ -89,7 +102,7 @@ pub trait FileDocument {
         path
     }
 
-    fn read_file(path: impl AsRef<Path>) -> Result<Self, strict_encoding::Error>
+    fn read_file(path: impl AsRef<Path>) -> Result<Self, Error>
     where
         Self: StrictDecode,
     {
@@ -100,19 +113,18 @@ pub trait FileDocument {
             .open(&path)?;
         let doc = DocReader::<Self>::strict_decode(&mut file)?;
         if fs::metadata(path)?.len() != file.stream_position()? {
-            return Err(strict_encoding::Error::DataNotEntirelyConsumed);
+            return Err(Error::DataNotEntirelyConsumed);
         }
         if doc.magic != Self::DOC_MAGIC {
-            return Err(strict_encoding::Error::DataIntegrityError(format!(
-                "incorrect file magic number; expected {}, got {}",
-                Self::magic_u32(),
-                doc.magic_u32()
-            )));
+            return Err(Error::Magic {
+                expected: Self::magic_u32(),
+                actual: doc.magic_u32(),
+            });
         }
         Ok(doc.data)
     }
 
-    fn write_file(&self, path: impl AsRef<Path>) -> Result<usize, strict_encoding::Error>
+    fn write_file(&self, path: impl AsRef<Path>) -> Result<usize, Error>
     where
         Self: Sized + StrictEncode,
     {
@@ -121,7 +133,7 @@ pub trait FileDocument {
             .create(true)
             .truncate(true)
             .open(path)?;
-        doc.strict_encode(file)
+        doc.strict_encode(file).map_err(Error::Encoding)
     }
 }
 

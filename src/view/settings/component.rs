@@ -21,7 +21,7 @@ use relm::{init, Channel, Relm, StreamHandle, Update, Widget};
 
 use super::{spending_row::Condition, xpub_dlg, Msg, ViewModel, Widgets};
 use crate::model::{Signer, WalletDescriptor, WalletStandard};
-use crate::view::{devices, launch, wallet};
+use crate::view::{devices, error_dlg, launch, wallet};
 
 pub struct Component {
     model: ViewModel,
@@ -88,10 +88,11 @@ impl Update for Component {
                 let template = template.unwrap_or_default();
                 self.model = match ViewModel::new(template.clone(), path) {
                     Err(err) => {
-                        self.widgets.error_dlg(
-                            "Error saving file",
-                            &err.to_string(),
-                            Some(&self.model.path().display().to_string()),
+                        error_dlg(
+                            self.widgets.as_root(),
+                            "Error saving wallet",
+                            &self.model.path().display().to_string(),
+                            Some(&err.to_string()),
                         );
                         // We need this, otherwise self.close() would not work
                         self.model.template = Some(template);

@@ -17,9 +17,9 @@ use std::str::FromStr;
 use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{
-    gdk, glib, Adjustment, Box, Button, ButtonsType, ComboBoxText, Dialog, DialogFlags, Entry,
-    Grid, HeaderBar, Image, Label, ListBox, ListBoxRow, ListStore, MessageDialog, MessageType,
-    Notebook, ResponseType, SpinButton, TextBuffer, ToggleButton, ToolButton, TreeView,
+    gdk, glib, Adjustment, Box, Button, ComboBoxText, Dialog, Entry, Grid, HeaderBar, Image, Label,
+    ListBox, ListBoxRow, ListStore, Notebook, ResponseType, SpinButton, TextBuffer, ToggleButton,
+    ToolButton, TreeView,
 };
 use miniscript::Descriptor;
 use relm::Relm;
@@ -108,26 +108,16 @@ impl Widgets {
         self.dialog.close()
     }
 
-    pub(super) fn to_root(&self) -> Dialog {
+    pub fn to_root(&self) -> Dialog {
         self.dialog.clone()
+    }
+
+    pub fn as_root(&self) -> &Dialog {
+        &self.dialog
     }
 
     pub fn show_notification(&self) {
         self.msg_box.show_all();
-    }
-
-    pub fn error_dlg(&self, title: &str, message: &str, details: Option<&str>) {
-        let err_dlg = MessageDialog::new(
-            Some(&self.dialog),
-            DialogFlags::all(),
-            MessageType::Error,
-            ButtonsType::Close,
-            message,
-        );
-        err_dlg.set_title(title);
-        err_dlg.set_secondary_text(details);
-        err_dlg.run();
-        err_dlg.close();
     }
 
     pub fn show_error(&self, msg: &str) {

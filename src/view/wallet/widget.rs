@@ -12,8 +12,7 @@
 use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{
-    ApplicationWindow, Button, Entry, FileChooserDialog, HeaderBar, Inhibit, MessageDialog,
-    Popover, Statusbar,
+    ApplicationWindow, Button, Entry, FileChooserDialog, HeaderBar, Inhibit, Popover, Statusbar,
 };
 use relm::Relm;
 use std::path::PathBuf;
@@ -33,7 +32,6 @@ pub struct Widgets {
     status_bar: Statusbar,
 
     open_dlg: FileChooserDialog,
-    file_err_dlg: MessageDialog,
 
     invoice_popover: Popover,
     address_fld: Entry,
@@ -51,6 +49,9 @@ impl Widgets {
     pub fn to_root(&self) -> ApplicationWindow {
         self.window.clone()
     }
+    pub fn as_root(&self) -> &ApplicationWindow {
+        &self.window
+    }
 
     pub fn show_open_dlg(&self) {
         self.open_dlg.show();
@@ -62,13 +63,6 @@ impl Widgets {
 
     pub fn selected_file(&self) -> Option<PathBuf> {
         self.open_dlg.filename()
-    }
-
-    pub fn file_open_err(&self, path: PathBuf, err: strict_encoding::Error) {
-        self.file_err_dlg
-            .set_text(Some(&format!("unable to ipen wallet {}", path.display())));
-        self.file_err_dlg.set_secondary_text(Some(&err.to_string()));
-        self.file_err_dlg.show();
     }
 
     pub(super) fn connect(&self, relm: &Relm<super::Component>) {
