@@ -208,10 +208,10 @@ impl Update for Component {
                     }
                 };
                 if let Some(ref mut signer) = self.model.active_signer {
-                    if signer.fingerprint == fingerprint {
+                    if signer.master_fp == fingerprint {
                         return;
                     }
-                    signer.fingerprint = fingerprint;
+                    signer.master_fp = fingerprint;
                     self.replace_signer();
                 }
             }

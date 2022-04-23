@@ -378,8 +378,7 @@ impl Widgets {
         self.signer_grid.set_sensitive(details.is_some());
         if let Some((signer, ref derivation)) = details {
             self.name_fld.set_text(&signer.name);
-            self.fingerprint_fld
-                .set_text(&signer.fingerprint.to_string());
+            self.fingerprint_fld.set_text(&signer.master_fp.to_string());
             self.xpub_fld.set_text(&signer.xpub.to_string());
 
             let origin_format = signer.origin_format(network);
@@ -461,7 +460,7 @@ impl Widgets {
                 None,
                 &[
                     (0, &signer.name),
-                    (1, &signer.fingerprint.to_string()),
+                    (1, &signer.master_fp.to_string()),
                     (2, &signer.account_string()),
                     (3, &signer.xpub.to_string()),
                     (4, &signer.device.clone().unwrap_or_default()),
@@ -476,7 +475,7 @@ impl Widgets {
                 &item,
                 &[
                     (0, &signer.name),
-                    (1, &signer.fingerprint.to_string()),
+                    (1, &signer.master_fp.to_string()),
                     (2, &signer.account_string()),
                     (3, &signer.xpub.to_string()),
                     (4, &signer.device.clone().unwrap_or_default()),

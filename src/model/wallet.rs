@@ -100,7 +100,7 @@ impl WalletDescriptor {
                 if self
                     .signers
                     .iter()
-                    .find(|s| s.fingerprint == signer)
+                    .find(|s| s.master_fp == signer)
                     .is_none() =>
             {
                 Err(DescriptorError::UnknownSigner(condition, signer))

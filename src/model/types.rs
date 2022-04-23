@@ -252,8 +252,7 @@ impl OriginFormat {
 #[derive(Clone, Debug)]
 #[derive(StrictEncode, StrictDecode)]
 pub struct Signer {
-    // TODO: Transform first 4 fields into a descriptor wallet AccountXpub type
-    pub fingerprint: Fingerprint,
+    pub master_fp: Fingerprint,
     pub origin: DerivationPath,
     pub account: Option<HardenedIndex>,
     pub xpub: ExtendedPubKey,
@@ -297,7 +296,7 @@ impl Signer {
         network: PublicNetwork,
     ) -> Signer {
         Signer {
-            fingerprint,
+            master_fp: fingerprint,
             device: Some(device.device_type),
             name: device.model.clone(),
             origin: schema.to_account_derivation(device.default_account.into(), network.into()),
@@ -323,7 +322,7 @@ impl Signer {
             _ => (Fingerprint::default(), vec![xpub.child_number].into(), None),
         };
         Signer {
-            fingerprint,
+            master_fp: fingerprint,
             device: None,
             name: "".to_string(),
             origin,

@@ -116,10 +116,10 @@ impl ViewModel {
 
     pub fn derivation_for(&self, signer: &Signer) -> TrackingAccount {
         let path: Vec<ChildNumber> = signer.origin.clone().into();
-        let seed_based = signer.fingerprint != zero!();
+        let seed_based = signer.master_fp != zero!();
         TrackingAccount {
             master: if seed_based {
-                XpubRef::Fingerprint(signer.fingerprint)
+                XpubRef::Fingerprint(signer.master_fp)
             } else {
                 XpubRef::Unknown
             },
