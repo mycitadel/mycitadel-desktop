@@ -9,9 +9,10 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
-use crate::model::DescriptorClass;
+use crate::model::TimelockReq;
 use bitcoin::util::bip32::{ChildNumber, DerivationPath, Fingerprint};
 use bitcoin::Network;
+use chrono::{DateTime, Utc};
 use miniscript::descriptor::DescriptorType;
 use std::collections::BTreeSet;
 use wallet::descriptors::DescrVariants;
@@ -22,7 +23,7 @@ use wallet::hd::{
 use wallet::psbt::Psbt;
 use wallet::slip132::KeyApplication;
 
-use super::{PublicNetwork, Signer, SigsReq, SpendingCondition};
+use super::{DescriptorClass, PublicNetwork, Signer, SigsReq, TimelockedSigs};
 
 // TODO: Move to bpro library
 #[derive(Getters, Clone, Debug, Default)]
@@ -68,8 +69,8 @@ pub enum DescriptorError {
     UnknownSigner(SpendingCondition, Fingerprint),
     /// unable to add spending condition when no signers are present.
     NoSigners,
-    /// duplicated spending condition {0}.
-    DuplicateCondition(SpendingCondition),
+    /// duplicated spending condition {1} at depth {0}.
+    DuplicateCondition(u8, SpendingCondition),
     /// insufficient number of signers {0} to support spending condition {1} requirements.
     InsufficientSignerCount(u16, SpendingCondition),
 }
@@ -79,41 +80,96 @@ pub enum DescriptorError {
 pub struct WalletDescriptor {
     format: WalletStandard,
     signers: BTreeSet<Signer>,
-    conditions: Vec<SpendingCondition>,
+    conditions: BTreeSet<(u8, SpendingCondition)>,
     network: PublicNetwork,
 }
 
 impl WalletDescriptor {
-    fn push_condition(&mut self, condition: SpendingCondition) -> Result<(), DescriptorError> {
+    fn add_condition(
+        &mut self,
+        depth: u8,
+        condition: impl Into<SpendingCondition>,
+    ) -> Result<(), DescriptorError> {
+        let condition = condition.into();
+
         if self.signers.is_empty() {
             return Err(DescriptorError::NoSigners);
         }
-        if self.conditions.contains(&condition) {
-            return Err(DescriptorError::DuplicateCondition(condition));
+        if self.conditions.contains(&(depth, condition)) {
+            return Err(DescriptorError::DuplicateCondition(depth, condition));
         }
         let signer_count = self.signers.len();
-        match condition.sigs {
-            SigsReq::AtLeast(n) if (n as usize) < signer_count => {
-                Err(DescriptorError::InsufficientSignerCount(n, condition))
-            }
-            SigsReq::Specific(signer)
-                if self
-                    .signers
-                    .iter()
-                    .find(|s| s.master_fp == signer)
-                    .is_none() =>
-            {
-                Err(DescriptorError::UnknownSigner(condition, signer))
-            }
-            _ => {
-                self.conditions.push(condition);
-                Ok(())
-            }
+        match condition {
+            SpendingCondition::Sigs(ts) => match ts.sigs {
+                SigsReq::AtLeast(n) if (n as usize) < signer_count => {
+                    Err(DescriptorError::InsufficientSignerCount(n, condition))
+                }
+                SigsReq::Specific(signer)
+                    if self
+                        .signers
+                        .iter()
+                        .find(|s| s.master_fp == signer)
+                        .is_none() =>
+                {
+                    Err(DescriptorError::UnknownSigner(condition, signer))
+                }
+                _ => {
+                    self.conditions.insert((depth, condition));
+                    Ok(())
+                }
+            },
         }
     }
 
     fn add_signer(&mut self, signer: Signer) -> bool {
         self.signers.insert(signer)
+    }
+}
+
+#[derive(
+    Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Display, From
+)]
+#[derive(StrictEncode, StrictDecode)]
+#[display(inner)]
+pub enum SpendingCondition {
+    #[from]
+    Sigs(TimelockedSigs),
+    // In a future we may add custom script types
+}
+
+impl Default for SpendingCondition {
+    fn default() -> Self {
+        SpendingCondition::Sigs(default!())
+    }
+}
+
+impl SpendingCondition {
+    pub fn all() -> SpendingCondition {
+        SpendingCondition::Sigs(TimelockedSigs {
+            sigs: SigsReq::All,
+            timelock: TimelockReq::Anytime,
+        })
+    }
+
+    pub fn at_least(sigs: u16) -> SpendingCondition {
+        SpendingCondition::Sigs(TimelockedSigs {
+            sigs: SigsReq::AtLeast(sigs),
+            timelock: TimelockReq::Anytime,
+        })
+    }
+
+    pub fn anybody_after_date(date: DateTime<Utc>) -> SpendingCondition {
+        SpendingCondition::Sigs(TimelockedSigs {
+            sigs: SigsReq::Any,
+            timelock: TimelockReq::AfterTime(date),
+        })
+    }
+
+    pub fn after_date(sigs: SigsReq, date: DateTime<Utc>) -> SpendingCondition {
+        SpendingCondition::Sigs(TimelockedSigs {
+            sigs,
+            timelock: TimelockReq::AfterTime(date),
+        })
     }
 }
 

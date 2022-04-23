@@ -13,7 +13,7 @@ use chrono::prelude::*;
 use wallet::hd::Bip43;
 
 use super::{PublicNetwork, SpendingCondition, WalletStandard};
-use crate::model::{SigsReq, TimelockReq};
+use crate::model::SigsReq;
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 pub enum Requirement {
@@ -86,14 +86,8 @@ impl WalletTemplate {
             unreachable!("WalletTemplate::hodling must require at least 3 signers")
         }
         let conditions = vec![
-            SpendingCondition {
-                sigs: SigsReq::All,
-                timelock: TimelockReq::Anytime,
-            },
-            SpendingCondition {
-                sigs: SigsReq::Any,
-                timelock: TimelockReq::AfterTime(now.with_year(now.year() + 5).unwrap()),
-            },
+            SpendingCondition::all(),
+            SpendingCondition::anybody_after_date(now.with_year(now.year() + 5).unwrap()),
         ];
         WalletTemplate {
             format: Bip43::multisig_descriptor().into(),
@@ -120,38 +114,20 @@ impl WalletTemplate {
             None => vec![SpendingCondition::default()],
             Some(0) | Some(1) => unreachable!("WalletTemplate::multisig must expect > 1 signature"),
             Some(2) => vec![
-                SpendingCondition {
-                    sigs: SigsReq::All,
-                    timelock: TimelockReq::Anytime,
-                },
-                SpendingCondition {
-                    sigs: SigsReq::Any,
-                    timelock: TimelockReq::AfterTime(now.with_year(now.year() + 5).unwrap()),
-                },
+                SpendingCondition::all(),
+                SpendingCondition::anybody_after_date(now.with_year(now.year() + 5).unwrap()),
             ],
             Some(3) => vec![
-                SpendingCondition {
-                    sigs: SigsReq::AtLeast(2),
-                    timelock: TimelockReq::Anytime,
-                },
-                SpendingCondition {
-                    sigs: SigsReq::Any,
-                    timelock: TimelockReq::AfterTime(now.with_year(now.year() + 5).unwrap()),
-                },
+                SpendingCondition::at_least(2),
+                SpendingCondition::anybody_after_date(now.with_year(now.year() + 5).unwrap()),
             ],
             Some(count) => vec![
-                SpendingCondition {
-                    sigs: SigsReq::AtLeast(count - 1),
-                    timelock: TimelockReq::Anytime,
-                },
-                SpendingCondition {
-                    sigs: SigsReq::AtLeast(count / 2 + count % 2),
-                    timelock: TimelockReq::AfterTime(now.with_year(now.year() + 3).unwrap()),
-                },
-                SpendingCondition {
-                    sigs: SigsReq::Any,
-                    timelock: TimelockReq::AfterTime(now.with_year(now.year() + 5).unwrap()),
-                },
+                SpendingCondition::at_least(count - 1),
+                SpendingCondition::after_date(
+                    SigsReq::AtLeast(count / 2 + count % 2),
+                    now.with_year(now.year() + 3).unwrap(),
+                ),
+                SpendingCondition::anybody_after_date(now.with_year(now.year() + 5).unwrap()),
             ],
         };
         WalletTemplate {

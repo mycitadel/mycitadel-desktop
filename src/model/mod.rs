@@ -17,13 +17,13 @@ mod wallet;
 mod xkey;
 
 pub use self::wallet::{
-    DerivationStandardExt, Wallet, WalletDescriptor, WalletStandard, WalletState,
+    DerivationStandardExt, SpendingCondition, Wallet, WalletDescriptor, WalletStandard, WalletState,
 };
 pub use file::FileDocument;
 pub use template::{Requirement, WalletTemplate};
 pub use types::{
     DescriptorClass, Error, HardwareDevice, HardwareList, OriginFormat, Ownership, PublicNetwork,
-    Signer, SigsReq, SpendingCondition, TimelockReq,
+    Signer, SigsReq, TimelockReq, TimelockedSigs,
 };
 pub use ui::Notification;
 pub use xkey::{

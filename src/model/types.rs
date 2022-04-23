@@ -398,7 +398,7 @@ impl Default for TimelockReq {
 )]
 #[derive(StrictEncode, StrictDecode)]
 #[display("{sigs} {timelock}")]
-pub struct SpendingCondition {
+pub struct TimelockedSigs {
     pub sigs: SigsReq,
     pub timelock: TimelockReq,
 }
