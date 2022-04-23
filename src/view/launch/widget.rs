@@ -9,13 +9,14 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use crate::model::{PublicNetwork, Requirement, WalletTemplate};
 use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{
-    Adjustment, ApplicationWindow, Button, FileChooserDialog, ListBox, RecentChooserWidget, Switch,
+    Adjustment, ApplicationWindow, Button, FileChooserDialog, ListBox, RecentChooserWidget,
+    ResponseType, Switch,
 };
 use relm::Relm;
 
@@ -51,15 +52,16 @@ impl Widgets {
         self.window.clone()
     }
 
-    pub fn show_create_dlg(&self) {
+    pub fn show_create_dlg(&self, filename: &Path) {
         self.create_dlg.show();
+        self.create_dlg.set_current_name(filename.to_str().unwrap());
     }
 
     pub fn hide_create_dlg(&self) {
         self.create_dlg.hide();
     }
 
-    pub fn new_filename(&self) -> Option<PathBuf> {
+    pub fn create_dlg_filename(&self) -> Option<PathBuf> {
         self.create_dlg.filename()
     }
 
@@ -145,11 +147,19 @@ impl Widgets {
             Msg::RecentSelected
         );
 
+        self.create_dlg.add_button("Save", ResponseType::Ok);
+        self.create_dlg.set_default_response(ResponseType::Ok);
         connect!(
             relm,
             self.create_dlg,
-            connect_action_notify(_),
-            Msg::NewFileSelected
+            connect_response(_, resp),
+            Msg::CreateDlgResponse(resp)
+        );
+        connect!(
+            relm,
+            self.create_dlg,
+            connect_delete_event(_, _),
+            return (None, Inhibit(true))
         );
     }
 }

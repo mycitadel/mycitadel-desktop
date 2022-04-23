@@ -43,9 +43,9 @@ impl Update for Component {
 
     fn model(relm: &Relm<Self>, path: Self::ModelParam) -> Self::Model {
         let wallet = Wallet::read_file(&path)
-            .map_err(|err| relm.stream().emit(Msg::FileError(path, err)))
+            .map_err(|err| relm.stream().emit(Msg::FileError(path.clone(), err)))
             .unwrap_or_default();
-        ViewModel::from(wallet)
+        ViewModel::with(wallet, path)
     }
 
     fn update(&mut self, event: Msg) {
@@ -70,9 +70,10 @@ impl Update for Component {
                 self.widgets.file_open_err(path, err);
                 self.close();
             }
-            Msg::Settings => self
-                .settings
-                .emit(settings::Msg::View(self.model.to_descriptor())),
+            Msg::Settings => self.settings.emit(settings::Msg::View(
+                self.model.to_descriptor(),
+                self.model.path().clone(),
+            )),
             Msg::Update(descr) => {
                 self.model.set_descriptor(descr);
                 self.widgets.show();

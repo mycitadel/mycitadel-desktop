@@ -87,7 +87,7 @@ impl Widgets {
             relm,
             self.window,
             connect_delete_event(_, _),
-            return (Some(Msg::Close), Inhibit(false))
+            return (None, Inhibit(false))
         );
     }
 }

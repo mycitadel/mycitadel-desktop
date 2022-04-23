@@ -30,7 +30,7 @@ use crate::view::{launch, wallet};
 #[derive(Msg)]
 pub enum Msg {
     New(Option<WalletTemplate>, PathBuf),
-    View(WalletDescriptor),
+    View(WalletDescriptor, PathBuf),
     AddDevices,
     AddReadOnly,
     AddXpub(ExtendedPubKey),

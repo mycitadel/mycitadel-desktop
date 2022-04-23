@@ -11,14 +11,15 @@
 
 use bitcoin::util::bip32::ExtendedPubKey;
 use std::collections::BTreeSet;
+use std::path::Path;
 use std::str::FromStr;
 
 use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{
-    gdk, glib, Adjustment, Box, Button, ComboBoxText, Dialog, Entry, Grid, Image, Label, ListBox,
-    ListBoxRow, ListStore, Notebook, ResponseType, SpinButton, TextBuffer, ToggleButton,
-    ToolButton, TreeView,
+    gdk, glib, Adjustment, Box, Button, ButtonsType, ComboBoxText, Dialog, DialogFlags, Entry,
+    Grid, HeaderBar, Image, Label, ListBox, ListBoxRow, ListStore, MessageDialog, MessageType,
+    Notebook, ResponseType, SpinButton, TextBuffer, ToggleButton, ToolButton, TreeView,
 };
 use miniscript::Descriptor;
 use relm::Relm;
@@ -36,6 +37,7 @@ use crate::view::settings::spending_row::SpendingModel;
 #[derive(Clone, Gladis)]
 pub struct Widgets {
     dialog: Dialog,
+    header_bar: HeaderBar,
     save_btn: Button,
     cancel_btn: Button,
     pages: Notebook,
@@ -84,7 +86,9 @@ pub struct Widgets {
 }
 
 impl Widgets {
-    pub fn reinit_ui(&self, template: &Option<WalletTemplate>) {
+    pub fn reinit_ui(&self, template: &Option<WalletTemplate>, path: &Path) {
+        self.header_bar
+            .set_subtitle(Some(&path.display().to_string()));
         self.set_new_wallet_mode(template.is_some());
         // New wallet
         if let Some(template) = template {
@@ -110,6 +114,20 @@ impl Widgets {
 
     pub fn show_notification(&self) {
         self.msg_box.show_all();
+    }
+
+    pub fn error_dlg(&self, title: &str, message: &str, details: Option<&str>) {
+        let err_dlg = MessageDialog::new(
+            Some(&self.dialog),
+            DialogFlags::all(),
+            MessageType::Error,
+            ButtonsType::Close,
+            message,
+        );
+        err_dlg.set_title(title);
+        err_dlg.set_secondary_text(details);
+        err_dlg.run();
+        err_dlg.close();
     }
 
     pub fn show_error(&self, msg: &str) {
@@ -254,8 +272,12 @@ impl Widgets {
             });
         }
 
-        self.dialog
-            .connect_delete_event(|_, _| glib::signal::Inhibit(true));
+        connect!(
+            relm,
+            self.dialog,
+            connect_delete_event(_, _),
+            return (None, Inhibit(true))
+        );
     }
 
     pub(super) fn bind_spending_model(&self, relm: &Relm<super::Component>, model: &SpendingModel) {

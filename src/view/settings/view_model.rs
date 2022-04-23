@@ -10,6 +10,7 @@
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
 use std::collections::BTreeSet;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use bitcoin::hashes::{sha256, Hash};
@@ -22,10 +23,13 @@ use wallet::hd::{AccountStep, Bip43, TerminalStep, TrackingAccount, XpubRef};
 
 use super::spending_row::SpendingModel;
 use crate::model::{
-    DescriptorClass, HardwareList, PublicNetwork, Signer, WalletDescriptor, WalletTemplate,
+    DescriptorClass, FileDocument, HardwareList, PublicNetwork, Signer, Wallet, WalletDescriptor,
+    WalletTemplate,
 };
 
 pub struct ViewModel {
+    path: PathBuf,
+
     pub class: DescriptorClass,
     pub scheme: Bip43,
     pub network: PublicNetwork,
@@ -45,6 +49,7 @@ pub struct ViewModel {
 impl Default for ViewModel {
     fn default() -> Self {
         ViewModel {
+            path: PathBuf::default(),
             scheme: Bip43::Bip48Native,
             devices: none!(),
             signers: none!(),
@@ -59,24 +64,6 @@ impl Default for ViewModel {
     }
 }
 
-impl From<WalletTemplate> for ViewModel {
-    fn from(template: WalletTemplate) -> Self {
-        ViewModel {
-            template: Some(template),
-            ..default!()
-        }
-    }
-}
-
-impl From<WalletDescriptor> for ViewModel {
-    fn from(_descr: WalletDescriptor) -> Self {
-        ViewModel {
-            // TODO Fix it
-            ..default!()
-        }
-    }
-}
-
 impl From<&ViewModel> for WalletDescriptor {
     fn from(_model: &ViewModel) -> Self {
         // TODO Fix it
@@ -85,6 +72,36 @@ impl From<&ViewModel> for WalletDescriptor {
 }
 
 impl ViewModel {
+    pub fn new(
+        template: WalletTemplate,
+        path: PathBuf,
+    ) -> Result<ViewModel, strict_encoding::Error> {
+        let model = ViewModel {
+            path,
+            template: Some(template),
+            ..default!()
+        };
+        model.save()?;
+        Ok(model)
+    }
+
+    pub fn with(_descr: WalletDescriptor, path: PathBuf) -> ViewModel {
+        ViewModel {
+            path,
+            // TODO Fix it
+            ..default!()
+        }
+    }
+
+    pub fn save(&self) -> Result<usize, strict_encoding::Error> {
+        let wallet = Wallet::with(WalletDescriptor::from(self));
+        wallet.write_file(&self.path)
+    }
+
+    pub fn path(&self) -> &Path {
+        &self.path
+    }
+
     pub fn is_new_wallet(&self) -> bool {
         self.template.is_some()
     }

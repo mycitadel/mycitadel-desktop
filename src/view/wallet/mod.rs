@@ -38,6 +38,5 @@ pub enum Msg {
     Refresh,
     Select(usize),
     Create,
-    Close,
     RegisterLauncher(StreamHandle<launch::Msg>),
 }

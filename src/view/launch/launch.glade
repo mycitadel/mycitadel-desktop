@@ -11,6 +11,7 @@
     <property name="do-overwrite-confirmation">True</property>
     <property name="preview-widget-active">False</property>
     <property name="use-preview-label">False</property>
+    <property name="filter">wallet_filter</property>
     <child internal-child="vbox">
       <object class="GtkBox">
         <property name="can-focus">False</property>

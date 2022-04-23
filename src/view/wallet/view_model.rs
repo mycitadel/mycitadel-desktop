@@ -13,22 +13,21 @@ use std::path::{Path, PathBuf};
 
 use crate::model::{FileDocument, Wallet, WalletDescriptor};
 
+#[derive(Getters)]
 pub struct ViewModel {
     wallet: Wallet,
     path: PathBuf,
 }
 
-impl From<Wallet> for ViewModel {
-    fn from(wallet: Wallet) -> Self {
+impl ViewModel {
+    pub fn with(wallet: Wallet, path: PathBuf) -> ViewModel {
         ViewModel {
             wallet,
             // TODO: Add suffix with wallet id
-            path: Wallet::file_name("citadel-01"),
+            path,
         }
     }
-}
 
-impl ViewModel {
     pub fn save(&mut self, path: impl AsRef<Path>) -> Result<usize, strict_encoding::Error> {
         self.path = path.as_ref().to_owned();
         self.wallet.write_file(path)

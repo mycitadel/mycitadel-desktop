@@ -9,7 +9,7 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
-use std::path::PathBuf;
+use std::path::Path;
 use std::str::FromStr;
 
 use ::wallet::hd::DerivationStandard;
@@ -20,12 +20,11 @@ use gtk::Dialog;
 use relm::{init, Channel, Relm, StreamHandle, Update, Widget};
 
 use super::{spending_row::Condition, xpub_dlg, Msg, ViewModel, Widgets};
-use crate::model::{FileDocument, Signer, Wallet, WalletDescriptor, WalletStandard};
+use crate::model::{Signer, WalletDescriptor, WalletStandard};
 use crate::view::{devices, launch, wallet};
 
 pub struct Component {
     model: ViewModel,
-    path: Option<PathBuf>,
     widgets: Widgets,
     devices: relm::Component<devices::Component>,
     xpub_dlg: relm::Component<xpub_dlg::Component>,
@@ -34,16 +33,18 @@ pub struct Component {
 }
 
 impl Component {
-    fn save(&self) {
-        if let Some(ref path) = self.path {
-            let wallet = Wallet::with(WalletDescriptor::from(&self.model));
-            wallet.write_file(path); // TODO: Handle errors displaying a message
+    fn close(&self) {
+        self.widgets.hide();
+        if self.model.is_new_wallet() {
+            self.launcher_stream
+                .as_ref()
+                .map(|stream| stream.emit(launch::Msg::Show));
         }
     }
 
-    fn new_wallet_path(&self) -> Option<&PathBuf> {
+    fn new_wallet_path(&self) -> Option<&Path> {
         if self.model.is_new_wallet() {
-            return self.path.as_ref();
+            return Some(self.model.path());
         }
         None
     }
@@ -84,18 +85,28 @@ impl Update for Component {
     fn update(&mut self, event: Msg) {
         match event {
             Msg::New(template, path) => {
-                self.model = match template {
-                    Some(template) => template.into(),
-                    None => ViewModel::default(),
+                let template = template.unwrap_or_default();
+                self.model = match ViewModel::new(template.clone(), path) {
+                    Err(err) => {
+                        self.widgets.error_dlg(
+                            "Error saving file",
+                            &err.to_string(),
+                            Some(&self.model.path().display().to_string()),
+                        );
+                        // We need this, otherwise self.close() would not work
+                        self.model.template = Some(template);
+                        self.close();
+                        return;
+                    }
+                    Ok(model) => model,
                 };
-                self.save();
-                self.path = Some(path);
-                self.widgets.reinit_ui(&self.model.template);
+                self.widgets
+                    .reinit_ui(&self.model.template, self.model.path());
             }
-            Msg::View(descriptor) => {
-                self.model = ViewModel::from(descriptor);
-                self.model.template = None;
-                self.widgets.reinit_ui(&self.model.template);
+            Msg::View(descriptor, path) => {
+                self.model = ViewModel::with(descriptor, path);
+                self.widgets
+                    .reinit_ui(&self.model.template, &self.model.path());
             }
             Msg::AddDevices => {
                 self.devices.emit(devices::Msg::Show);
@@ -187,7 +198,7 @@ impl Update for Component {
                 let descr = WalletDescriptor::from(&self.model);
                 if let Some(path) = self.new_wallet_path() {
                     self.launcher_stream.as_ref().map(|stream| {
-                        stream.emit(launch::Msg::WalletCreated(path.clone()));
+                        stream.emit(launch::Msg::WalletCreated(path.to_owned()));
                     });
                 } else {
                     self.wallet_stream.as_ref().map(|stream| {
@@ -196,14 +207,7 @@ impl Update for Component {
                 }
                 self.widgets.hide();
             }
-            Msg::Close => {
-                self.widgets.hide();
-                if self.model.template.is_some() {
-                    self.launcher_stream
-                        .as_ref()
-                        .map(|stream| stream.emit(launch::Msg::Show));
-                }
-            }
+            Msg::Close => self.close(),
             Msg::ConditionAdd => {
                 self.model.spendings.append(&Condition::default());
                 self.condition_selection_change();
@@ -264,7 +268,6 @@ impl Widget for Component {
 
         Component {
             model,
-            path: None,
             widgets,
             devices,
             xpub_dlg,
