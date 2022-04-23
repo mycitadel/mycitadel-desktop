@@ -107,17 +107,15 @@ impl ViewModel {
         }
     }
 
-    pub fn save(&self) -> Result<usize, file::Error> {
-        let wallet = if self.is_new_wallet() {
-            WalletDescriptor::try_from(self).ok().map(Wallet::with)
-        } else {
-            None
-        };
-        if let Some(wallet) = wallet {
-            wallet.write_file(&self.path)
-        } else {
-            Ok(0)
-        }
+    pub fn save(&self) -> Result<Option<WalletDescriptor>, file::Error> {
+        WalletDescriptor::try_from(self)
+            .ok()
+            .map(Wallet::with)
+            .map(|wallet| {
+                wallet.write_file(&self.path)?;
+                Ok(wallet.into_descriptor())
+            })
+            .transpose()
     }
 
     pub fn path(&self) -> &Path {

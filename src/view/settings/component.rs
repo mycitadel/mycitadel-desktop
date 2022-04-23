@@ -75,7 +75,11 @@ impl Component {
         self.model.update_descriptor();
         self.widgets
             .update_descriptor(self.model.descriptor.as_ref(), self.model.export_lnpbp);
-        let _ = self.model.save();
+        if let Err(err) = self.model.save() {
+            self.widgets.show_error(&err.to_string());
+        } else {
+            self.widgets.hide_message();
+        }
     }
 }
 

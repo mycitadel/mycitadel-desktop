@@ -55,6 +55,10 @@ impl Wallet {
         self.descriptor.clone()
     }
 
+    pub fn into_descriptor(self) -> WalletDescriptor {
+        self.descriptor
+    }
+
     pub fn update_signers(
         &mut self,
         signers: impl IntoIterator<Item = Signer>,
