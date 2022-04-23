@@ -33,7 +33,7 @@ pub enum Msg {
     View(WalletDescriptor, PathBuf),
     AddDevices,
     AddReadOnly,
-    AddXpub(ExtendedPubKey),
+    SignerAddXpub(ExtendedPubKey),
     SignerAddDevice(Fingerprint, HardwareDevice),
     SignerSelect,
     SignerOriginUpdate,

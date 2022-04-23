@@ -38,7 +38,7 @@ pub struct ViewModel {
 
     // Data provided by the parent window
     pub template: Option<WalletTemplate>,
-    pub format_lnpbp: bool,
+    pub export_lnpbp: bool,
 
     // Non-persisting / dynamic data for this window
     pub active_signer: Option<Signer>,
@@ -59,7 +59,7 @@ impl Default for ViewModel {
             descriptor: None,
             template: None,
             class: DescriptorClass::SegwitV0,
-            format_lnpbp: false,
+            export_lnpbp: true,
         }
     }
 }
@@ -91,12 +91,19 @@ impl ViewModel {
     }
 
     pub fn save(&self) -> Result<usize, file::Error> {
-        let wallet = Wallet::with(WalletDescriptor::from(self));
-        wallet.write_file(&self.path)
+        if self.is_new_wallet() {
+            let wallet = Wallet::with(WalletDescriptor::from(self));
+            wallet.write_file(&self.path)
+        } else {
+            Ok(0)
+        }
     }
 
     pub fn path(&self) -> &Path {
         &self.path
+    }
+    pub fn filename(&self) -> String {
+        self.path.display().to_string()
     }
 
     pub fn is_new_wallet(&self) -> bool {
@@ -151,6 +158,16 @@ impl ViewModel {
             });
 
         self.update_descriptor();
+    }
+
+    pub fn toggle_descr_class(&mut self, class: DescriptorClass) -> bool {
+        if self.class == class {
+            false
+        } else {
+            self.class = class;
+            self.update_descriptor();
+            true
+        }
     }
 
     pub fn update_descriptor(&mut self) {
@@ -297,15 +314,5 @@ impl ViewModel {
                 )
             }
         });
-    }
-
-    pub fn toggle_descr_class(&mut self, class: DescriptorClass) -> bool {
-        if self.class == class {
-            false
-        } else {
-            self.class = class;
-            self.update_descriptor();
-            true
-        }
     }
 }

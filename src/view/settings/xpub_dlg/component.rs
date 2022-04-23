@@ -75,7 +75,7 @@ impl Update for Component {
                 if let Some(ref xpub) = self.model.xpub {
                     self.model
                         .sender
-                        .send(settings::Msg::AddXpub(xpub.into()))
+                        .send(settings::Msg::SignerAddXpub(xpub.into()))
                         .expect("communication of xpub dialog with settings window");
                     self.widgets.close();
                 } else {

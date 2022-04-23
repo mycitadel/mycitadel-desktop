@@ -103,7 +103,6 @@ impl Widgets {
     pub fn hide(&self) {
         self.dialog.hide()
     }
-
     pub fn close(&self) {
         self.dialog.close()
     }
@@ -111,7 +110,6 @@ impl Widgets {
     pub fn to_root(&self) -> Dialog {
         self.dialog.clone()
     }
-
     pub fn as_root(&self) -> &Dialog {
         &self.dialog
     }
@@ -119,14 +117,12 @@ impl Widgets {
     pub fn show_notification(&self) {
         self.msg_box.show_all();
     }
-
     pub fn show_error(&self, msg: &str) {
         self.dialog.set_response_sensitive(ResponseType::Ok, false);
         self.msg_img.set_icon_name(Some("dialog-error-symbolic"));
         self.msg_lbl.set_label(msg);
         self.msg_box.show_all();
     }
-
     pub fn show_info(&self, msg: &str) {
         self.dialog.set_response_sensitive(ResponseType::Ok, true);
         self.msg_img
@@ -134,14 +130,12 @@ impl Widgets {
         self.msg_lbl.set_label(msg);
         self.msg_box.show_all();
     }
-
     pub fn show_warning(&self, msg: &str) {
         self.dialog.set_response_sensitive(ResponseType::Ok, true);
         self.msg_img.set_icon_name(Some("dialog-warning-symbolic"));
         self.msg_lbl.set_label(msg);
         self.msg_box.show_all();
     }
-
     pub fn hide_message(&self) {
         self.dialog.set_response_sensitive(ResponseType::Ok, true);
         self.msg_box.hide()

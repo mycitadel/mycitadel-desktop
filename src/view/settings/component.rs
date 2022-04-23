@@ -34,6 +34,14 @@ pub struct Component {
 
 impl Component {
     fn close(&self) {
+        if let Err(err) = self.model.save() {
+            error_dlg(
+                self.widgets.as_root(),
+                "Error saving new wallet",
+                &self.model.filename(),
+                Some(&err.to_string()),
+            );
+        }
         self.widgets.hide();
         if self.model.is_new_wallet() {
             self.launcher_stream
@@ -53,20 +61,21 @@ impl Component {
         if let Some(signer) = self.model.active_signer.clone() {
             self.widgets.replace_signer(&signer);
             debug_assert!(self.model.replace_signer(signer));
-            self.update_descriptor();
+            self.sync();
         }
-    }
-
-    fn update_descriptor(&mut self) {
-        self.model.update_descriptor();
-        self.widgets
-            .update_descriptor(self.model.descriptor.as_ref(), self.model.format_lnpbp);
     }
 
     fn condition_selection_change(&mut self) {
         let removable =
             self.widgets.selected_condition_index().is_some() && self.model.spendings.n_items() > 1;
         self.widgets.set_remove_condition(removable);
+    }
+
+    fn sync(&mut self) {
+        self.model.update_descriptor();
+        self.widgets
+            .update_descriptor(self.model.descriptor.as_ref(), self.model.export_lnpbp);
+        let _ = self.model.save();
     }
 }
 
@@ -83,7 +92,8 @@ impl Update for Component {
     }
 
     fn update(&mut self, event: Msg) {
-        match event {
+        // First, we process events which does not update the state
+        let event = match event {
             Msg::New(template, path) => {
                 let template = template.unwrap_or_default();
                 self.model = match ViewModel::new(template.clone(), path) {
@@ -91,7 +101,7 @@ impl Update for Component {
                         error_dlg(
                             self.widgets.as_root(),
                             "Error saving wallet",
-                            &self.model.path().display().to_string(),
+                            &self.model.filename(),
                             Some(&err.to_string()),
                         );
                         // We need this, otherwise self.close() would not work
@@ -103,25 +113,23 @@ impl Update for Component {
                 };
                 self.widgets
                     .reinit_ui(&self.model.template, self.model.path());
+                return;
             }
             Msg::View(descriptor, path) => {
                 self.model = ViewModel::with(descriptor, path);
                 self.widgets
                     .reinit_ui(&self.model.template, &self.model.path());
+                return;
             }
             Msg::AddDevices => {
                 self.devices.emit(devices::Msg::Show);
+                return;
             }
             Msg::AddReadOnly => {
                 let testnet = self.model.network.is_testnet();
                 let format = self.model.scheme.slip_application();
                 self.xpub_dlg.emit(xpub_dlg::Msg::Open(testnet, format));
-            }
-            Msg::SignerAddDevice(fingerprint, device) => {
-                self.model.devices.insert(fingerprint, device);
-                self.model.update_signers();
-                self.widgets.update_signers(&self.model.signers);
-                self.update_descriptor();
+                return;
             }
             Msg::SignerSelect => {
                 let signer = self
@@ -133,15 +141,60 @@ impl Update for Component {
                     self.model.network,
                 );
                 self.model.active_signer = signer.cloned();
+                return;
             }
-            Msg::AddXpub(xpub) => {
+            Msg::ExportFormat(lnpbp) => {
+                self.model.export_lnpbp = lnpbp;
+                self.sync();
+                return;
+            }
+            Msg::Apply => {
+                let descr = WalletDescriptor::from(&self.model);
+                if let Some(path) = self.new_wallet_path() {
+                    self.launcher_stream.as_ref().map(|stream| {
+                        stream.emit(launch::Msg::WalletCreated(path.to_owned()));
+                    });
+                } else {
+                    self.wallet_stream.as_ref().map(|stream| {
+                        stream.emit(wallet::Msg::Update(descr));
+                    });
+                }
+                self.widgets.hide();
+                return;
+            }
+            Msg::ConditionSelect => {
+                self.condition_selection_change();
+                return;
+            }
+            Msg::SetWallet(stream) => {
+                self.wallet_stream = Some(stream);
+                return;
+            }
+            Msg::SetLauncher(stream) => {
+                self.launcher_stream = Some(stream);
+                return;
+            }
+            Msg::Close => {
+                self.close();
+                return;
+            }
+            _ => event,
+        };
+
+        // Than, events which update the state and require saving or descriptor change
+        match event {
+            Msg::SignerAddDevice(fingerprint, device) => {
+                self.model.devices.insert(fingerprint, device);
+                self.model.update_signers();
+                self.widgets.update_signers(&self.model.signers);
+            }
+            Msg::SignerAddXpub(xpub) => {
                 self.model.signers.insert(Signer::with_xpub(
                     xpub,
                     &self.model.scheme,
                     self.model.network,
                 ));
                 self.widgets.update_signers(&self.model.signers);
-                self.update_descriptor();
             }
             Msg::SignerFingerprintChange => {
                 let fingerprint = match Fingerprint::from_str(&self.widgets.signer_fingerprint()) {
@@ -183,36 +236,9 @@ impl Update for Component {
                 }
             }
             Msg::SignerOriginUpdate => {}
-            Msg::ToggleClass(class) => {
-                if self.widgets.should_update_descr_class(class)
-                    && self.model.toggle_descr_class(class)
-                {
-                    self.widgets.update_descr_class(self.model.class);
-                    self.update_descriptor();
-                }
-            }
-            Msg::ExportFormat(lnpbp) => {
-                self.model.format_lnpbp = lnpbp;
-                self.update_descriptor();
-            }
-            Msg::Apply => {
-                let descr = WalletDescriptor::from(&self.model);
-                if let Some(path) = self.new_wallet_path() {
-                    self.launcher_stream.as_ref().map(|stream| {
-                        stream.emit(launch::Msg::WalletCreated(path.to_owned()));
-                    });
-                } else {
-                    self.wallet_stream.as_ref().map(|stream| {
-                        stream.emit(wallet::Msg::Update(descr));
-                    });
-                }
-                self.widgets.hide();
-            }
-            Msg::Close => self.close(),
             Msg::ConditionAdd => {
                 self.model.spendings.append(&Condition::default());
                 self.condition_selection_change();
-                self.update_descriptor();
             }
             Msg::ConditionRemove => {
                 let index = if let Some(index) = self.widgets.selected_condition_index() {
@@ -221,21 +247,19 @@ impl Update for Component {
                     return;
                 };
                 self.model.spendings.remove(index as u32);
-                self.update_descriptor();
             }
-            Msg::ConditionSelect => {
-                self.condition_selection_change();
+            Msg::ConditionChange => {}
+            Msg::ToggleClass(class) => {
+                if self.widgets.should_update_descr_class(class)
+                    && self.model.toggle_descr_class(class)
+                {
+                    self.widgets.update_descr_class(self.model.class);
+                }
             }
-            Msg::ConditionChange => {
-                self.update_descriptor();
-            }
-            Msg::SetWallet(stream) => {
-                self.wallet_stream = Some(stream);
-            }
-            Msg::SetLauncher(stream) => {
-                self.launcher_stream = Some(stream);
-            }
+            _ => {}
         }
+
+        self.sync();
     }
 }
 
