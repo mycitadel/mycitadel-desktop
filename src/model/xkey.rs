@@ -67,6 +67,7 @@ pub enum NonStandardDerivation {
 
 /// Deterministic part of the extended public key descriptor
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
+#[derive(StrictEncode, StrictDecode)]
 pub struct XpubkeyCore {
     pub public_key: secp256k1::PublicKey,
     pub chain_code: ChainCode,

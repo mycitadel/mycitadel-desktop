@@ -9,21 +9,21 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
-use crate::model::TimelockReq;
 use bitcoin::util::bip32::{ChildNumber, DerivationPath, Fingerprint};
 use bitcoin::Network;
 use chrono::{DateTime, Utc};
 use miniscript::descriptor::DescriptorType;
 use std::collections::BTreeSet;
-use wallet::descriptors::DescrVariants;
+use std::ops::{Deref, DerefMut};
+use wallet::descriptors::{CompositeDescrType, DescrVariants};
 use wallet::hd::standards::DerivationBlockchain;
 use wallet::hd::{
-    Bip43, DerivationStandard, HardenedIndex, HardenedIndexExpected, UnhardenedIndex,
+    Bip43, DerivationStandard, HardenedIndex, HardenedIndexExpected, TerminalStep, UnhardenedIndex,
 };
 use wallet::psbt::Psbt;
 use wallet::slip132::KeyApplication;
 
-use super::{DescriptorClass, PublicNetwork, Signer, SigsReq, TimelockedSigs};
+use super::{DescriptorClass, Signer, SigsReq, TimelockReq, TimelockedSigs, XpubkeyCore};
 
 // TODO: Move to bpro library
 #[derive(Getters, Clone, Debug, Default)]
@@ -75,13 +75,55 @@ pub enum DescriptorError {
     InsufficientSignerCount(u16, SpendingCondition),
 }
 
-#[derive(Getters, Clone, Debug, Default)]
+#[derive(Getters, Clone, PartialEq, Eq, Hash, Debug, Default)]
 #[derive(StrictEncode, StrictDecode)]
 pub struct WalletDescriptor {
-    format: WalletStandard,
     signers: BTreeSet<Signer>,
-    conditions: BTreeSet<(u8, SpendingCondition)>,
-    network: PublicNetwork,
+    core: WalletCore,
+}
+
+impl Deref for WalletDescriptor {
+    type Target = WalletCore;
+
+    fn deref(&self) -> &Self::Target {
+        &self.core
+    }
+}
+
+impl DerefMut for WalletDescriptor {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.core
+    }
+}
+
+/// Wallet descriptor defines a deterministic part of the wallet. It fully controls how different
+/// scriptPubkeys can be formed and satisfied. Change in any of wallet descriptor parameters will
+/// create a different set of addresses/scriptPubkeys/satisfactions, thus changing the wallet.
+///
+/// Tagged hash of strict-encoded wallet descriptor data operates as a globally unique wallet
+/// descriptor.
+#[derive(Getters, Clone, PartialEq, Eq, Hash, Debug, Default)]
+#[derive(StrictEncode, StrictDecode)]
+pub struct WalletCore {
+    /// We commit to the information whether
+    pub(self) testnet: bool,
+    /// We operate set of descriptor types, such that each wallet can produce addresses of different
+    /// kind, depending on the co-signer software and supported addresses by the payee.
+    ///
+    /// Each descriptor type defines a deterministic way of transforming DFS-ordered tree of
+    /// spending conditions into a scriptPubkey. In case of taproot, this means that the descriptor
+    /// type must also define how the key path spending condition is constructed (aggregated key or
+    /// a unsatisfiable condition).
+    pub(self) descriptor_types: BTreeSet<CompositeDescrType>,
+    /// Terminal defines a way how a public keys are derived from signing extended keys. Terminals
+    /// always consists of unhardened indexes or unhardened index wildcards - and always contain
+    /// at least one wildcard marking index position.
+    // TODO: Define a TerminalPath type which will ensure that at least one wildcard is present
+    pub(self) terminal: Vec<TerminalStep>,
+    /// Deterministic information about signing keys
+    pub(self) signing_keys: BTreeSet<XpubkeyCore>,
+    /// DFS-ordered alternative spending conditions.
+    pub(self) spending_conditions: BTreeSet<(u8, SpendingCondition)>,
 }
 
 impl WalletDescriptor {
@@ -95,7 +137,7 @@ impl WalletDescriptor {
         if self.signers.is_empty() {
             return Err(DescriptorError::NoSigners);
         }
-        if self.conditions.contains(&(depth, condition)) {
+        if self.spending_conditions.contains(&(depth, condition)) {
             return Err(DescriptorError::DuplicateCondition(depth, condition));
         }
         let signer_count = self.signers.len();
@@ -105,6 +147,7 @@ impl WalletDescriptor {
                     Err(DescriptorError::InsufficientSignerCount(n, condition))
                 }
                 SigsReq::Specific(signer)
+                // TODO: Use XPubkeyCore
                     if self
                         .signers
                         .iter()
@@ -114,7 +157,7 @@ impl WalletDescriptor {
                     Err(DescriptorError::UnknownSigner(condition, signer))
                 }
                 _ => {
-                    self.conditions.insert((depth, condition));
+                    self.spending_conditions.insert((depth, condition));
                     Ok(())
                 }
             },
@@ -122,6 +165,7 @@ impl WalletDescriptor {
     }
 
     fn add_signer(&mut self, signer: Signer) -> bool {
+        // TODO: Insert into self.core.signing_keys
         self.signers.insert(signer)
     }
 }

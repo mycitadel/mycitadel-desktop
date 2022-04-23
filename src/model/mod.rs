@@ -17,7 +17,8 @@ mod wallet;
 mod xkey;
 
 pub use self::wallet::{
-    DerivationStandardExt, SpendingCondition, Wallet, WalletDescriptor, WalletStandard, WalletState,
+    DerivationStandardExt, SpendingCondition, Wallet, WalletCore, WalletDescriptor, WalletStandard,
+    WalletState,
 };
 pub use file::FileDocument;
 pub use template::{Requirement, WalletTemplate};
