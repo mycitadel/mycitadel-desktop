@@ -51,7 +51,7 @@ impl Widgets {
     pub fn show_error(&self, msg: &str) {
         self.dialog.set_response_sensitive(ResponseType::Ok, false);
         self.msg_img.set_icon_name(Some("dialog-error-symbolic"));
-        self.msg_lbl.set_label(msg);
+        self.msg_lbl.set_label(&format!("Error: {}", msg));
         self.msg_box.show_all();
     }
 
@@ -66,7 +66,10 @@ impl Widgets {
     pub fn show_warning(&self, msg: &str) {
         self.dialog.set_response_sensitive(ResponseType::Ok, true);
         self.msg_img.set_icon_name(Some("dialog-warning-symbolic"));
-        self.msg_lbl.set_label(msg);
+        self.msg_lbl.set_label(&format!(
+            "Warning: {}\nYou still may add this key if you understand the risk.",
+            msg
+        ));
         self.msg_box.show_all();
     }
 

@@ -23,7 +23,7 @@ use wallet::slip132::{DefaultResolver, FromSlip132, KeyVersion};
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display, Error)]
 #[display(doc_comments)]
 pub enum XpubRequirementError {
-    /// the provided extended public key can't be used under the required
+    /// The provided extended public key can't be used under the required
     /// derivation standard. The public key is suitable for {actual_standard}
     /// derivations, while a key for {required_standard} is needed.
     StandardMismatch {
@@ -31,8 +31,8 @@ pub enum XpubRequirementError {
         required_standard: String,
     },
 
-    /// the provided extended public key has a derivation depth {actual_depth},
-    /// whis is less than the depth of account-level key {required_depth}
+    /// The provided extended public key has a derivation depth {actual_depth},
+    /// which is less than the depth of account-level key {required_depth}
     /// according to {standard}.
     ShallowKey {
         required_depth: u8,
@@ -40,7 +40,7 @@ pub enum XpubRequirementError {
         standard: String,
     },
 
-    /// extended public key is invalid for the provided requirements.
+    /// Extended public key is invalid for the provided requirements.
     /// Specifically, network information in BIP-32 data ({bip_network}) does
     /// not match network information encoded in SLIP-132 key version prefix
     /// ({slip_network}).
@@ -49,7 +49,7 @@ pub enum XpubRequirementError {
         bip_network: bitcoin::Network,
     },
 
-    /// the given key is an account key according to the provided standard {0},
+    /// The given key is an account key according to the provided standard {0},
     /// however it uses a non-hardened derivation index {1}.
     UnhardenedAccountKey(String, UnhardenedIndex),
 }
@@ -186,6 +186,27 @@ where
         })
     }
 
+    pub(crate) fn with_unchecked(
+        master_fingerprint: Option<Fingerprint>,
+        xpub: ExtendedPubKey,
+        standard: Option<Standard>,
+        slip: Option<KeyVersion>,
+    ) -> XpubOrigin<Standard> {
+        let application = slip
+            .as_ref()
+            .and_then(KeyVersion::application::<DefaultResolver>);
+        let standard_slip = application.and_then(Standard::matching);
+
+        let account = HardenedIndex::try_from(xpub.child_number).ok();
+
+        XpubOrigin {
+            testnet: xpub.network == bitcoin::Network::Bitcoin,
+            master_fingerprint,
+            standard: standard.or(standard_slip),
+            account,
+        }
+    }
+
     /// Deduces key origin information, using derivation path, internal key
     /// metadata and optional SLIP132 version prefix.
     ///
@@ -299,7 +320,7 @@ where
 
         let slip = KeyVersion::from_xkey_str(s).ok();
 
-        XpubDescriptor::with(None, xpub, None, slip).map_err(XpubParseError::from)
+        Ok(XpubDescriptor::with_unchecked(None, xpub, None, slip))
     }
 }
 
@@ -421,6 +442,20 @@ where
         xd.master_fingerprint = master_fingerprint;
         xd.account = origin.account;
         Ok(xd)
+    }
+
+    pub fn with_unchecked(
+        master_fingerprint: Option<Fingerprint>,
+        xpub: ExtendedPubKey,
+        standard: Option<Standard>,
+        slip: Option<KeyVersion>,
+    ) -> XpubDescriptor<Standard> {
+        let mut xd = XpubDescriptor::from(xpub);
+        let origin = XpubOrigin::with_unchecked(master_fingerprint, xpub, standard.clone(), slip);
+        xd.standard = standard;
+        xd.master_fingerprint = master_fingerprint;
+        xd.account = origin.account;
+        xd
     }
 
     /// Deduces key origin information, using derivation path, internal key
