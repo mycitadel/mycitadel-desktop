@@ -11,7 +11,7 @@
 
 use gladis::Gladis;
 use gtk::prelude::*;
-use gtk::{ApplicationWindow, Button, Entry, HeaderBar, Popover, Statusbar};
+use gtk::{ApplicationWindow, Button, Entry, HeaderBar, ListStore, Popover, Statusbar};
 use relm::Relm;
 use std::ffi::OsStr;
 
@@ -26,6 +26,10 @@ pub struct Widgets {
     new_btn: Button,
     open_btn: Button,
     settings_btn: Button,
+
+    history_store: ListStore,
+    utxo_store: ListStore,
+    address_store: ListStore,
 
     status_bar: Statusbar,
 
