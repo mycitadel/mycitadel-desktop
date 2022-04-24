@@ -73,11 +73,28 @@ impl Component {
 
     fn sync(&mut self) {
         if let Err(err) = self.model.update_descriptor() {
-            self.widgets.show_error(&err.to_string());
-            return;
+            return self.widgets.show_error(&err.to_string());
         }
         self.widgets
             .update_descriptor(self.model.descriptor.as_ref(), self.model.export_lnpbp);
+
+        if let Some(ref template) = self.model.template {
+            let signer_count = self.model.signers.len() as u16;
+            let min_count = template.min_signer_count.unwrap_or_default();
+            let max_count = template.max_signer_count.unwrap_or(signer_count + 1);
+            if signer_count < min_count {
+                return self
+                    .widgets
+                    .show_error(&format!("You need at least {} signer(s)", min_count));
+            }
+            if signer_count > max_count {
+                return self.widgets.show_error(&format!(
+                    "Excessive signers: you need no more than {} signer(s)",
+                    max_count
+                ));
+            }
+        }
+
         if let Err(err) = self.model.save() {
             self.widgets.show_error(&err.to_string());
         } else {
