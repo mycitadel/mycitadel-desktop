@@ -27,12 +27,14 @@ pub struct Component {
     // TODO: Make a BTreeMap from wallet ids
     wallets: Vec<relm::Component<wallet::Component>>,
     wallet_count: usize,
+    window_count: usize,
 }
 
 impl Component {
     fn open_wallet(&mut self, path: PathBuf) {
         let wallet =
             init::<wallet::Component>(path).expect("unable to instantiate wallet settings");
+        self.window_count += 1;
         wallet.emit(wallet::Msg::RegisterLauncher(self.stream.clone()));
         self.wallets.push(wallet);
     }
@@ -53,7 +55,20 @@ impl Update for Component {
     fn update(&mut self, event: Msg) {
         match event {
             Msg::Show => self.widgets.show(),
-            Msg::Quit => gtk::main_quit(),
+            Msg::Close => {
+                if self.window_count == 0 {
+                    gtk::main_quit();
+                } else {
+                    self.widgets.hide();
+                }
+            }
+            Msg::WalletClosed => {
+                self.window_count -= 1;
+                if self.window_count == 0 {
+                    self.widgets.show();
+                }
+                // TODO: Remove wallet window from the list of windows
+            }
             Msg::TemplateSelected => {
                 if let Some(path) = file_create_dlg(
                     self.widgets.as_root(),
@@ -119,6 +134,7 @@ impl Widget for Component {
             wallets: empty!(),
             stream: relm.stream().clone(),
             wallet_count: 1,
+            window_count: 0,
         }
     }
 }

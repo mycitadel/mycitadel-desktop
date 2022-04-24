@@ -12,7 +12,7 @@
 use crate::model::{PublicNetwork, Requirement, WalletTemplate};
 use gladis::Gladis;
 use gtk::prelude::*;
-use gtk::{Adjustment, ApplicationWindow, Button, ListBox, RecentChooserWidget, Switch};
+use gtk::{Adjustment, ApplicationWindow, ListBox, RecentChooserWidget, Switch};
 use relm::Relm;
 use std::path::PathBuf;
 
@@ -21,8 +21,6 @@ use super::Msg;
 #[derive(Clone, Gladis)]
 pub struct Widgets {
     window: ApplicationWindow,
-    exit_btn: Button,
-
     hwcount_adj: Adjustment,
     taproot_swch: Switch,
     testnet_swch: Switch,
@@ -112,8 +110,6 @@ impl Widgets {
     }
 
     pub(super) fn connect(&self, relm: &Relm<super::Component>) {
-        connect!(relm, self.exit_btn, connect_clicked(_), Msg::Quit);
-
         connect!(
             relm,
             self.create_box,
@@ -137,6 +133,12 @@ impl Widgets {
             self.recent,
             connect_item_activated(_),
             Msg::RecentSelected
+        );
+        connect!(
+            relm,
+            self.window,
+            connect_delete_event(_, _),
+            return (Some(Msg::Close), Inhibit(true))
         );
     }
 }

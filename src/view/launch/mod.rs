@@ -22,11 +22,12 @@ pub struct ViewModel {}
 #[derive(Msg)]
 pub enum Msg {
     Show,
-    Quit,
+    Close,
     TemplateSelected,
     ImportSelected,
     OpenSelected,
     RecentSelected,
     WalletCreated(PathBuf),
+    WalletClosed,
     OpenWallet(PathBuf),
 }
