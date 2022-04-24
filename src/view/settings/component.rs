@@ -213,6 +213,12 @@ impl Update for Component {
                 ));
                 self.widgets.update_signers(&self.model.signers);
             }
+            Msg::RemoveSigner => {
+                self.widgets
+                    .remove_signer()
+                    .map(|index| self.model.signers.remove(index));
+                self.widgets.update_signer_details(None, self.model.network);
+            }
             Msg::SignerFingerprintChange => {
                 let fingerprint = match Fingerprint::from_str(&self.widgets.signer_fingerprint()) {
                     Err(_) => {

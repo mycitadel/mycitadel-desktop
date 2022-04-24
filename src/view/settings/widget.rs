@@ -19,7 +19,7 @@ use gtk::prelude::*;
 use gtk::{
     gdk, glib, Adjustment, Box, Button, ButtonBox, ComboBoxText, Dialog, Entry, Grid, HeaderBar,
     Image, Label, ListBox, ListBoxRow, ListStore, Notebook, ResponseType, SpinButton, TextBuffer,
-    ToggleButton, ToolButton, Toolbar, TreeView,
+    ToggleButton, ToolButton, Toolbar, TreePath, TreeView,
 };
 use miniscript::Descriptor;
 use relm::Relm;
@@ -183,6 +183,12 @@ impl Widgets {
     pub(super) fn connect(&self, relm: &Relm<super::Component>) {
         connect!(relm, self.devices_btn, connect_clicked(_), Msg::AddDevices);
         connect!(relm, self.addsign_btn, connect_clicked(_), Msg::AddReadOnly);
+        connect!(
+            relm,
+            self.removesign_btn,
+            connect_clicked(_),
+            Msg::RemoveSigner
+        );
 
         connect!(
             relm,
@@ -523,6 +529,26 @@ impl Widgets {
             true
         } else {
             false
+        }
+    }
+
+    pub fn remove_signer(&mut self) -> Option<usize> {
+        let selection = self
+            .signers_tree
+            .selection()
+            .selected()
+            .map(|(_, iter)| iter);
+        if let Some(selection) = selection {
+            let index = self
+                .signers_store
+                .path(&selection)
+                .as_ref()
+                .map(TreePath::indices)
+                .and_then(|indicies| indicies.first().map(|index| *index as usize));
+            self.signers_store.remove(&selection);
+            index
+        } else {
+            None
         }
     }
 

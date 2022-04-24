@@ -206,7 +206,6 @@ impl ViewModel {
             self.descriptor = None;
             return Err(s!("you need to add at least one signer"));
         }
-        // TODO: Return error
         let descriptor = WalletDescriptor::try_from(self as &Self)
             .ok()
             .as_ref()
