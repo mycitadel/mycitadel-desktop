@@ -11,6 +11,7 @@
 
 use std::path::PathBuf;
 
+use crate::model::{FileDocument, Wallet};
 use gladis::Gladis;
 use gtk::ApplicationWindow;
 use relm::{init, Relm, StreamHandle, Update, Widget};
@@ -25,6 +26,7 @@ pub struct Component {
     wallet_settings: relm::Component<settings::Component>,
     // TODO: Make a BTreeMap from wallet ids
     wallets: Vec<relm::Component<wallet::Component>>,
+    wallet_count: usize,
 }
 
 impl Component {
@@ -58,8 +60,9 @@ impl Update for Component {
                     "Create wallet",
                     "MyCitadel wallet",
                     "*.mcw",
-                    "citadel-01",
+                    &Wallet::file_name("citadel", self.wallet_count),
                 ) {
+                    self.wallet_count += 1;
                     self.widgets.hide();
                     self.wallet_settings
                         .emit(settings::Msg::New(self.widgets.selected_template(), path));
@@ -115,6 +118,7 @@ impl Widget for Component {
             wallet_settings: new_wallet,
             wallets: empty!(),
             stream: relm.stream().clone(),
+            wallet_count: 1,
         }
     }
 }

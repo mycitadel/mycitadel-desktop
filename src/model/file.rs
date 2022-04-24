@@ -96,10 +96,10 @@ pub trait FileDocument {
         u32::from_be_bytes(Self::DOC_MAGIC)
     }
 
-    fn file_name(base: &str) -> PathBuf {
-        let mut path = PathBuf::from(base);
+    fn file_name(base: &str, order_no: usize) -> String {
+        let mut path = PathBuf::from(format!("{}-{}", base, order_no));
         path.set_extension(Self::FILE_EXT);
-        path
+        path.display().to_string()
     }
 
     fn read_file(path: impl AsRef<Path>) -> Result<Self, Error>
