@@ -201,17 +201,18 @@ impl ViewModel {
         }
     }
 
-    pub fn update_descriptor(&mut self) -> Result<(), miniscript::Error> {
+    pub fn update_descriptor(&mut self) -> Result<(), String> {
         if self.signers.is_empty() {
             self.descriptor = None;
-            return Ok(());
+            return Err(s!("you need to add at least one signer"));
         }
         // TODO: Return error
         let descriptor = WalletDescriptor::try_from(self as &Self)
             .ok()
             .as_ref()
             .map(WalletDescriptor::descriptors_all)
-            .transpose()?
+            .transpose()
+            .map_err(|err| err.to_string())?
             .map(|(d, _)| d);
         self.descriptor = descriptor;
         Ok(())

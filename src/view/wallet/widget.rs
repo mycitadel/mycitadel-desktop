@@ -13,6 +13,7 @@ use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{ApplicationWindow, Button, Entry, HeaderBar, Popover, Statusbar};
 use relm::Relm;
+use std::ffi::OsStr;
 
 use super::{Msg, ViewModel};
 
@@ -53,6 +54,8 @@ impl Widgets {
     pub fn update_ui(&self, model: &ViewModel) {
         let address = model.as_wallet().next_address();
         self.address_fld.set_text(&address.to_string());
+        self.header_bar
+            .set_subtitle(model.path().file_name().and_then(OsStr::to_str));
     }
 
     pub(super) fn connect(&self, relm: &Relm<super::Component>) {

@@ -74,6 +74,7 @@ impl Component {
     fn sync(&mut self) {
         if let Err(err) = self.model.update_descriptor() {
             self.widgets.show_error(&err.to_string());
+            return;
         }
         self.widgets
             .update_descriptor(self.model.descriptor.as_ref(), self.model.export_lnpbp);
@@ -100,33 +101,6 @@ impl Update for Component {
     fn update(&mut self, event: Msg) {
         // First, we process events which does not update the state
         let event = match event {
-            Msg::New(template, path) => {
-                let template = template.unwrap_or_default();
-                self.model = match ViewModel::new(template.clone(), path) {
-                    Err(err) => {
-                        error_dlg(
-                            self.widgets.as_root(),
-                            "Error saving wallet",
-                            &self.model.filename(),
-                            Some(&err.to_string()),
-                        );
-                        // We need this, otherwise self.close() would not work
-                        self.model.template = Some(template);
-                        self.close();
-                        return;
-                    }
-                    Ok(model) => model,
-                };
-                self.widgets
-                    .reinit_ui(&self.model.template, self.model.path());
-                return;
-            }
-            Msg::View(descriptor, path) => {
-                self.model = ViewModel::with(descriptor, path);
-                self.widgets
-                    .reinit_ui(&self.model.template, &self.model.path());
-                return;
-            }
             Msg::AddDevices => {
                 self.devices.emit(devices::Msg::Show);
                 return;
@@ -203,6 +177,29 @@ impl Update for Component {
 
         // Than, events which update the state and require saving or descriptor change
         match event {
+            Msg::New(template, path) => {
+                let template = template.unwrap_or_default();
+                self.model = match ViewModel::new(template.clone(), path) {
+                    Err(err) => {
+                        error_dlg(
+                            self.widgets.as_root(),
+                            "Error saving wallet",
+                            &self.model.filename(),
+                            Some(&err.to_string()),
+                        );
+                        // We need this, otherwise self.close() would not work
+                        self.model.template = Some(template);
+                        self.close();
+                        return;
+                    }
+                    Ok(model) => model,
+                };
+                self.widgets.init_ui(&self.model);
+            }
+            Msg::View(descriptor, path) => {
+                self.model = ViewModel::with(descriptor, path);
+                self.widgets.init_ui(&self.model);
+            }
             Msg::SignerAddDevice(fingerprint, device) => {
                 self.model.devices.insert(fingerprint, device);
                 self.model.update_signers();

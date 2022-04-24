@@ -11,7 +11,7 @@
 
 use bitcoin::util::bip32::ExtendedPubKey;
 use std::collections::BTreeSet;
-use std::path::Path;
+use std::ffi::OsStr;
 use std::str::FromStr;
 
 use gladis::Gladis;
@@ -25,13 +25,11 @@ use miniscript::Descriptor;
 use relm::Relm;
 use wallet::hd::{DerivationStandard, SegmentIndexes, TrackingAccount};
 
-use super::Msg;
+use super::{spending_row, spending_row::SpendingModel, Msg, ViewModel};
 use crate::model::{
     DerivationStandardExt, DescriptorClass, OriginFormat, Ownership, PublicNetwork, Requirement,
     Signer, WalletStandard, WalletTemplate,
 };
-use crate::view::settings::spending_row;
-use crate::view::settings::spending_row::SpendingModel;
 
 // Create the structure that holds the widgets used in the view.
 #[derive(Clone, Gladis)]
@@ -86,17 +84,24 @@ pub struct Widgets {
 }
 
 impl Widgets {
-    pub fn reinit_ui(&self, template: &Option<WalletTemplate>, path: &Path) {
+    pub fn init_ui(&mut self, model: &ViewModel) {
+        self.hide_message();
+
         self.header_bar
-            .set_subtitle(Some(&path.display().to_string()));
-        self.set_new_wallet_mode(template.is_some());
+            .set_subtitle(model.path().file_name().and_then(OsStr::to_str));
+        self.set_new_wallet_mode(model.is_new_wallet());
+
         // New wallet
-        if let Some(template) = template {
+        if let Some(ref template) = model.template {
             self.update_template(template);
-            self.update_derivation(&template.format, template.network);
             self.update_signer_details(None, template.network);
             self.pages.set_page(0);
         }
+
+        self.update_signers(&model.signers);
+        self.update_signer_details(None, model.network);
+        self.update_descriptor(model.descriptor.as_ref(), model.export_lnpbp);
+
         self.dialog.show();
     }
 
