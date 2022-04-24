@@ -182,8 +182,6 @@ impl ViewModel {
                 self.network,
             ));
         }
-
-        self.update_descriptor();
     }
 
     pub fn toggle_descr_class(&mut self, class: DescriptorClass) -> bool {
@@ -198,23 +196,24 @@ impl ViewModel {
                 false
             } else {
                 self.descriptor_classes = bset![class];
-                self.update_descriptor();
                 true
             }
         }
     }
 
-    pub fn update_descriptor(&mut self) {
+    pub fn update_descriptor(&mut self) -> Result<(), miniscript::Error> {
         if self.signers.is_empty() {
             self.descriptor = None;
-            return;
+            return Ok(());
         }
         // TODO: Return error
         let descriptor = WalletDescriptor::try_from(self as &Self)
             .ok()
             .as_ref()
             .map(WalletDescriptor::descriptors_all)
+            .transpose()?
             .map(|(d, _)| d);
         self.descriptor = descriptor;
+        Ok(())
     }
 }

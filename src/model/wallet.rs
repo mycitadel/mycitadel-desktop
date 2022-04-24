@@ -273,42 +273,44 @@ impl WalletDescriptor {
 
     pub fn descriptors_all(
         &self,
-    ) -> (
-        Descriptor<TrackingAccount>,
-        Vec<Descriptor<TrackingAccount>>,
-    ) {
+    ) -> Result<
+        (
+            Descriptor<TrackingAccount>,
+            Vec<Descriptor<TrackingAccount>>,
+        ),
+        miniscript::Error,
+    > {
         let mut descriptors = self
             .descriptor_classes
             .iter()
             .map(|class| self.descriptor_for_class(*class));
-        (
+        Ok((
             descriptors
                 .next()
-                .expect("wallet core without descriptor class"),
-            descriptors.collect(),
-        )
+                .expect("wallet core without descriptor class")?,
+            descriptors.collect::<Result<_, _>>()?,
+        ))
     }
 
-    pub fn descriptor_for_class(&self, class: DescriptorClass) -> Descriptor<TrackingAccount> {
+    pub fn descriptor_for_class(
+        &self,
+        class: DescriptorClass,
+    ) -> Result<Descriptor<TrackingAccount>, miniscript::Error> {
         if self.signers.len() <= 1 {
             let first_key = self
                 .signers
                 .first()
-                .expect("wallet core does not contain any signers")
+                .ok_or(miniscript::Error::Unexpected(s!(
+                    "wallet core does not contain any signers"
+                )))?
                 .to_tracking_account(self.terminal.clone());
 
-            return match class {
+            return Ok(match class {
                 DescriptorClass::PreSegwit => Descriptor::new_pk(first_key),
-                DescriptorClass::SegwitV0 => {
-                    Descriptor::new_wpkh(first_key).expect("xpubs are always 'compressed'")
-                }
-                DescriptorClass::NestedV0 => {
-                    Descriptor::new_sh_wpkh(first_key).expect("xpubs are always 'compressed'")
-                }
-                DescriptorClass::TaprootC0 => {
-                    Descriptor::new_tr(first_key, None).expect("no script path spending")
-                }
-            };
+                DescriptorClass::SegwitV0 => Descriptor::new_wpkh(first_key)?,
+                DescriptorClass::NestedV0 => Descriptor::new_sh_wpkh(first_key)?,
+                DescriptorClass::TaprootC0 => Descriptor::new_tr(first_key, None)?,
+            });
         }
 
         // 1. Construct accounts
@@ -324,32 +326,27 @@ impl WalletDescriptor {
             .collect();
 
         // 2. Construct policy fragments
-        let dfs_tree = self
+        let mut dfs_tree = self
             .spending_conditions
             .iter()
             .map(|(depth, cond)| (depth, cond.policy(&accounts)));
 
         // 3. Pack miniscript fragments according to the descriptor class
         if class == DescriptorClass::TaprootC0 {
-            let tree = dfs_tree
-                .map(|(depth, policy)| {
-                    (
-                        *depth,
-                        policy
-                            .compile::<Tap>()
-                            .expect("spending condition policy inconsistency"),
-                    )
-                })
-                .collect::<Vec<(u8, _)>>();
+            let tree = dfs_tree.try_fold::<_, _, Result<_, miniscript::Error>>(
+                Vec::new(),
+                |mut acc, (depth, policy)| {
+                    acc.push((*depth, policy.compile::<Tap>()?));
+                    Ok(acc)
+                },
+            )?;
 
             return Descriptor::new_tr(
                 TrackingAccount::unsatisfiable((self.network, self.terminal.clone())),
-                Some(
-                    tree.to_tap_tree()
-                        .expect("unable to construct TapTree from the given spending conditions"),
-                ),
-            )
-            .expect("taproot descriptor can't be constructed from the given spending conditions");
+                Some(tree.to_tap_tree().ok_or(miniscript::Error::Unexpected(s!(
+                    "unable to construct TapTree from the given spending conditions"
+                )))?),
+            );
         }
 
         // Pack the tree into a linear structure
@@ -379,26 +376,22 @@ impl WalletDescriptor {
                 _ => unreachable!(),
             },
         );
-        let policy = policy
-            .or(remnant)
-            .expect("zero signing accounts must be filtered");
+        let policy = policy.or(remnant).ok_or(miniscript::Error::Unexpected(s!(
+            "zero signing accounts must be filtered"
+        )))?;
 
         if class.is_segwit_v0() {
-            let ms_witscript = policy
-                .compile::<Segwitv0>()
-                .expect("policy composition  is broken");
-            let wsh = Wsh::new(ms_witscript).expect("miniscript composition is broken");
-            return match class {
+            let ms_witscript = policy.compile::<Segwitv0>()?;
+            let wsh = Wsh::new(ms_witscript)?;
+            return Ok(match class {
                 DescriptorClass::SegwitV0 => Descriptor::Wsh(wsh),
                 DescriptorClass::NestedV0 => Descriptor::Sh(Sh::new_with_wsh(wsh)),
                 _ => unreachable!(),
-            };
+            });
         }
 
-        let ms = policy
-            .compile::<Legacy>()
-            .expect("policy composition  is broken");
-        Descriptor::Sh(Sh::new(ms).expect("miniscript composition is broken"))
+        let ms = policy.compile::<Legacy>()?;
+        Ok(Descriptor::Sh(Sh::new(ms)?))
     }
 }
 
