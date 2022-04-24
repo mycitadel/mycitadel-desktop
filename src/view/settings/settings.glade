@@ -109,7 +109,7 @@ If all of the requirements at least in a single row are satisfied, than the fund
                 <property name="can-focus">False</property>
                 <property name="orientation">vertical</property>
                 <child>
-                  <object class="GtkToolbar">
+                  <object class="GtkToolbar" id="signers_tb">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <child>
@@ -189,6 +189,7 @@ If all of the requirements at least in a single row are satisfied, than the fund
                     <property name="can-focus">True</property>
                     <property name="vexpand">True</property>
                     <property name="model">signers_store</property>
+                    <property name="reorderable">True</property>
                     <property name="search-column">0</property>
                     <property name="fixed-height-mode">True</property>
                     <child internal-child="selection">
@@ -650,7 +651,7 @@ If all of the requirements at least in a single row are satisfied, than the fund
               </packing>
             </child>
             <child>
-              <object class="GtkBox">
+              <object class="GtkBox" id="spending_box">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="orientation">vertical</property>
@@ -792,7 +793,7 @@ If all of the requirements at least in a single row are satisfied, than the fund
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkButtonBox">
+                      <object class="GtkButtonBox" id="descriptor_box">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                         <property name="homogeneous">True</property>
@@ -870,7 +871,7 @@ If all of the requirements at least in a single row are satisfied, than the fund
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkBox">
+                      <object class="GtkBox" id="derivation_box">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                         <property name="spacing">6</property>
@@ -1181,7 +1182,7 @@ However, they are not supported by other wallets. Wallets of this type can be us
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkButtonBox">
+                  <object class="GtkButtonBox" id="network_box">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <property name="halign">start</property>

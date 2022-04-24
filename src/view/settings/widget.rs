@@ -17,9 +17,9 @@ use std::str::FromStr;
 use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{
-    gdk, glib, Adjustment, Box, Button, ComboBoxText, Dialog, Entry, Grid, HeaderBar, Image, Label,
-    ListBox, ListBoxRow, ListStore, Notebook, ResponseType, SpinButton, TextBuffer, ToggleButton,
-    ToolButton, TreeView,
+    gdk, glib, Adjustment, Box, Button, ButtonBox, ComboBoxText, Dialog, Entry, Grid, HeaderBar,
+    Image, Label, ListBox, ListBoxRow, ListStore, Notebook, ResponseType, SpinButton, TextBuffer,
+    ToggleButton, ToolButton, Toolbar, TreeView,
 };
 use miniscript::Descriptor;
 use relm::Relm;
@@ -49,7 +49,9 @@ pub struct Widgets {
     removesign_btn: ToolButton,
     signers_tree: TreeView,
     signers_store: ListStore,
+    signers_tb: Toolbar,
 
+    spending_box: Box,
     spending_list: ListBox,
     spending_buf: TextBuffer,
     addcond_btn: ToolButton,
@@ -72,10 +74,14 @@ pub struct Widgets {
     seed_extern_tgl: ToggleButton,
 
     descriptor_buf: TextBuffer,
+    descriptor_box: ButtonBox,
+    derivation_box: Box,
     descr_legacy_tgl: ToggleButton,
     descr_segwit_tgl: ToggleButton,
     descr_nested_tgl: ToggleButton,
     descr_taproot_tgl: ToggleButton,
+
+    network_box: ButtonBox,
     mainnet_tgl: ToggleButton,
     testnet_tgl: ToggleButton,
     signet_tgl: ToggleButton,
@@ -89,17 +95,41 @@ impl Widgets {
 
         self.header_bar
             .set_subtitle(model.path().file_name().and_then(OsStr::to_str));
-        self.set_new_wallet_mode(model.is_new_wallet());
+        self.save_btn.set_label(if model.is_new_wallet() {
+            "Create"
+        } else {
+            "Save"
+        });
 
         // New wallet
         if let Some(ref template) = model.template {
             self.update_template(template);
             self.update_signer_details(None, template.network);
             self.pages.set_page(0);
+        } else {
+            self.signers_tb.set_sensitive(false);
+            self.spending_box.set_sensitive(false);
+            self.derivation_box.set_sensitive(false);
+            self.descriptor_box.set_sensitive(model.support_multiclass);
+
+            self.network_box.set_sensitive(false);
+            self.spending_buf
+                .set_text("Spending conditions can't be edited for an initialized wallet");
+
+            // Disable already used classes
+            for class in &model.descriptor_classes {
+                match class {
+                    DescriptorClass::PreSegwit => self.descr_legacy_tgl.set_sensitive(false),
+                    DescriptorClass::SegwitV0 => self.descr_segwit_tgl.set_sensitive(false),
+                    DescriptorClass::NestedV0 => self.descr_nested_tgl.set_sensitive(false),
+                    DescriptorClass::TaprootC0 => self.descr_taproot_tgl.set_sensitive(false),
+                }
+            }
         }
 
         self.update_signers(&model.signers);
         self.update_signer_details(None, model.network);
+        self.update_descr_classes(&model.descriptor_classes);
         self.update_descriptor(model.descriptor.as_ref(), model.export_lnpbp);
 
         self.dialog.show();
@@ -350,12 +380,6 @@ impl Widgets {
         } else {
             "Each row means alternative spending condition.\nIf all of the requirements at least in a single row are satisfied, than the funds from this wallet may be spent."
         });
-    }
-
-    fn set_new_wallet_mode(&self, new_wallet: bool) {
-        self.save_btn
-            .set_label(if new_wallet { "Create" } else { "Save" });
-        // TODO: Disable UI for non-new model
     }
 
     pub fn set_remove_condition(&self, allow: bool) {
