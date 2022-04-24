@@ -462,7 +462,7 @@ impl Widgets {
         }
     }
 
-    pub fn update_signers(&mut self, signers: &BTreeSet<Signer>) {
+    pub fn update_signers(&mut self, signers: &Vec<Signer>) {
         let store = &mut self.signers_store;
         store.clear();
         for signer in signers {

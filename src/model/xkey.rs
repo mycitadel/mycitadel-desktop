@@ -9,14 +9,17 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
+use std::fmt::{self, Display, Formatter};
+use std::io::Write;
+use std::str::FromStr;
+
 use bitcoin::hashes::Hash;
+use bitcoin::secp256k1::{PublicKey, Secp256k1, VerifyOnly};
 use bitcoin::util::bip32;
 use bitcoin::util::bip32::{ChainCode, ChildNumber, DerivationPath, ExtendedPubKey, Fingerprint};
 use bitcoin::{secp256k1, XpubIdentifier};
-use std::fmt::Display;
-use std::io::Write;
-use std::str::FromStr;
-use wallet::hd::{DerivationStandard, HardenedIndex, UnhardenedIndex};
+use miniscript::MiniscriptKey;
+use wallet::hd::{DerivationStandard, HardenedIndex, SegmentIndexes, UnhardenedIndex};
 use wallet::slip132;
 use wallet::slip132::{DefaultResolver, FromSlip132, KeyVersion};
 
@@ -73,6 +76,12 @@ pub struct XpubkeyCore {
     pub chain_code: ChainCode,
 }
 
+impl Display for XpubkeyCore {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        Display::fmt(&self.fingerprint(), f)
+    }
+}
+
 impl From<ExtendedPubKey> for XpubkeyCore {
     fn from(xpub: ExtendedPubKey) -> Self {
         XpubkeyCore {
@@ -89,6 +98,42 @@ impl XpubkeyCore {
 
     pub fn fingerprint(&self) -> Fingerprint {
         Fingerprint::from(&self.identifier()[0..4])
+    }
+}
+
+impl MiniscriptKey for XpubkeyCore {
+    type Hash = XpubkeyCore;
+
+    fn to_pubkeyhash(&self) -> Self::Hash {
+        *self
+    }
+}
+
+impl XpubkeyCore {
+    pub fn derive(
+        self,
+        secp: &Secp256k1<VerifyOnly>,
+        terminal: impl IntoIterator<Item = UnhardenedIndex>,
+    ) -> PublicKey {
+        let xpub = ExtendedPubKey {
+            network: bitcoin::Network::Bitcoin,
+            depth: 0,
+            parent_fingerprint: zero!(),
+            child_number: ChildNumber::Normal { index: 0 },
+            public_key: self.public_key,
+            chain_code: self.chain_code,
+        };
+        let xpub = xpub
+            .derive_pub(
+                secp,
+                &terminal
+                    .into_iter()
+                    .map(|i| i.first_index())
+                    .map(|index| ChildNumber::Normal { index })
+                    .collect::<Vec<_>>(),
+            )
+            .expect("unhardened derivation failure");
+        xpub.public_key
     }
 }
 

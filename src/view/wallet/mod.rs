@@ -33,7 +33,7 @@ pub enum Msg {
     FileError(PathBuf, String),
     Save,
     Settings,
-    Update(BTreeSet<Signer>, BTreeSet<DescriptorClass>),
+    Update(Vec<Signer>, BTreeSet<DescriptorClass>),
     Send,
     Receive,
     Refresh,

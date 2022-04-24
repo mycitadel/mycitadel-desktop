@@ -46,7 +46,7 @@ impl ViewModel {
 
     pub fn update_descriptor(
         &mut self,
-        signers: BTreeSet<Signer>,
+        signers: Vec<Signer>,
         descriptor_classes: BTreeSet<DescriptorClass>,
     ) -> Result<(), DescriptorError> {
         self.wallet.update_signers(signers)?;

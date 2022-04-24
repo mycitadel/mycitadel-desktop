@@ -22,7 +22,9 @@ use chrono::{DateTime, Utc};
 use hwi::error::Error as HwiError;
 use hwi::HWIDevice;
 use wallet::hd::standards::DerivationBlockchain;
-use wallet::hd::{Bip43, DerivationStandard, HardenedIndex};
+use wallet::hd::{
+    AccountStep, Bip43, DerivationStandard, HardenedIndex, TerminalStep, TrackingAccount, XpubRef,
+};
 
 // TODO: Move to descriptor wallet or BPro
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Display)]
@@ -333,6 +335,10 @@ impl Signer {
         }
     }
 
+    pub fn is_master_known(&self) -> bool {
+        self.master_fp != zero!()
+    }
+
     pub fn account_string(&self) -> String {
         self.account
             .as_ref()
@@ -350,6 +356,29 @@ impl Signer {
 
     pub fn fingerprint(&self) -> Fingerprint {
         self.xpub.fingerprint()
+    }
+
+    pub fn master_xpub(&self) -> XpubRef {
+        if self.is_master_known() {
+            XpubRef::Fingerprint(self.master_fp)
+        } else {
+            XpubRef::Unknown
+        }
+    }
+
+    pub fn to_tracking_account(&self, terminal_path: Vec<TerminalStep>) -> TrackingAccount {
+        let path: Vec<ChildNumber> = self.origin.clone().into();
+        TrackingAccount {
+            master: self.master_xpub(),
+            account_path: path
+                .into_iter()
+                .map(AccountStep::try_from)
+                .collect::<Result<_, _>>()
+                .expect("inconsistency in constructed derivation path"),
+            account_xpub: self.xpub,
+            revocation_seal: None,
+            terminal_path,
+        }
     }
 }
 
@@ -373,6 +402,13 @@ impl DescriptorClass {
             (DescriptorClass::SegwitV0, true) => Bip43::multisig_segwit0(),
             (DescriptorClass::NestedV0, true) => Bip43::multisig_nested0(),
             (DescriptorClass::TaprootC0, true) => Bip43::multisig_descriptor(),
+        }
+    }
+
+    pub fn is_segwit_v0(self) -> bool {
+        match self {
+            DescriptorClass::SegwitV0 | DescriptorClass::NestedV0 => true,
+            DescriptorClass::PreSegwit | DescriptorClass::TaprootC0 => false,
         }
     }
 }
@@ -405,7 +441,7 @@ pub enum TimelockReq {
     #[display("after {0}")]
     OlderTime(DateTime<Utc>),
     #[display("after {0} blocks")]
-    OlderBlock(u32),
+    OlderBlock(u16),
     #[display("after date {0}")]
     AfterTime(DateTime<Utc>),
     #[display("after block {0}")]

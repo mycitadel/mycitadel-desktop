@@ -66,8 +66,8 @@ impl Component {
     }
 
     fn condition_selection_change(&mut self) {
-        let removable =
-            self.widgets.selected_condition_index().is_some() && self.model.spendings.n_items() > 1;
+        let removable = self.widgets.selected_condition_index().is_some()
+            && self.model.spending_model.n_items() > 1;
         self.widgets.set_remove_condition(removable);
     }
 
@@ -207,7 +207,7 @@ impl Update for Component {
                 self.widgets.update_signers(&self.model.signers);
             }
             Msg::SignerAddXpub(xpub) => {
-                self.model.signers.insert(Signer::with_xpub(
+                self.model.signers.push(Signer::with_xpub(
                     xpub,
                     &self.model.bip43(),
                     self.model.network,
@@ -255,7 +255,7 @@ impl Update for Component {
             }
             Msg::SignerOriginUpdate => {}
             Msg::ConditionAdd => {
-                self.model.spendings.append(&Condition::default());
+                self.model.spending_model.append(&Condition::default());
                 self.condition_selection_change();
             }
             Msg::ConditionRemove => {
@@ -264,7 +264,7 @@ impl Update for Component {
                 } else {
                     return;
                 };
-                self.model.spendings.remove(index as u32);
+                self.model.spending_model.remove(index as u32);
             }
             Msg::ConditionChange => {}
             Msg::ToggleClass(class) => {
@@ -306,7 +306,7 @@ impl Widget for Component {
             .expect("error in xpub dialog component");
 
         widgets.connect(relm);
-        widgets.bind_spending_model(relm, &model.spendings);
+        widgets.bind_spending_model(relm, &model.spending_model);
 
         Component {
             model,

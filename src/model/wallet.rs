@@ -9,23 +9,28 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::ops::Deref;
 
 use bitcoin::util::bip32::{ChildNumber, DerivationPath, Fingerprint};
 use bitcoin::Network;
 use chrono::{DateTime, Utc};
-use miniscript::descriptor::DescriptorType;
+use miniscript::descriptor::{DescriptorType, Sh, Wsh};
+use miniscript::policy::concrete::Policy;
+use miniscript::{Descriptor, Legacy, Segwitv0, Tap};
 use wallet::descriptors::DescrVariants;
 use wallet::hd::standards::DerivationBlockchain;
 use wallet::hd::{
-    Bip43, DerivationStandard, HardenedIndex, HardenedIndexExpected, TerminalStep, UnhardenedIndex,
+    Bip43, DerivationStandard, HardenedIndex, HardenedIndexExpected, TerminalStep, TrackingAccount,
+    UnhardenedIndex,
 };
+use wallet::locks::{LockTime, SeqNo};
 use wallet::psbt::Psbt;
 use wallet::slip132::KeyApplication;
 
 use super::{
-    DescriptorClass, PublicNetwork, Signer, SigsReq, TimelockReq, TimelockedSigs, XpubkeyCore,
+    DescriptorClass, PublicNetwork, Signer, SigsReq, TimelockReq, TimelockedSigs, ToTapTree,
+    Unsatisfiable, XpubkeyCore,
 };
 
 // TODO: Move to bpro library
@@ -96,7 +101,7 @@ pub enum DescriptorError {
 #[derive(StrictEncode, StrictDecode)]
 pub struct WalletDescriptor {
     network: PublicNetwork,
-    signers: BTreeSet<Signer>,
+    signers: Vec<Signer>,
     core: WalletCore,
 }
 
@@ -132,8 +137,11 @@ pub struct WalletCore {
     /// at least one wildcard marking index position.
     // TODO: Define a TerminalPath type which will ensure that at least one wildcard is present
     pub(self) terminal: Vec<TerminalStep>,
-    /// Deterministic information about signing keys
-    pub(self) signing_keys: BTreeSet<XpubkeyCore>,
+    /// Deterministic information about signing keys.
+    ///
+    /// The order of keys matters only for BIP45, so we have maintain it using `Vec` instead of
+    /// `BTreeSet`.
+    pub(self) signing_keys: Vec<XpubkeyCore>,
     /// DFS-ordered alternative spending conditions.
     pub(self) spending_conditions: BTreeSet<(u8, SpendingCondition)>,
 }
@@ -228,13 +236,15 @@ impl WalletDescriptor {
     }
 
     fn add_signer(&mut self, signer: Signer) -> Result<(), DescriptorError> {
-        if !self.core.signing_keys.insert(signer.xpub.into()) {
+        let xpub = signer.xpub.into();
+        if self.core.signing_keys.contains(&xpub) {
             return Err(DescriptorError::DuplicateSigner(
                 signer.name.clone(),
                 signer.fingerprint(),
             ));
         }
-        self.signers.insert(signer);
+        self.core.signing_keys.push(xpub);
+        self.signers.push(signer);
         Ok(())
     }
 
@@ -257,7 +267,138 @@ impl WalletDescriptor {
         if !self.signers.contains(&signer) {
             return false;
         }
-        !self.signers.insert(signer)
+        self.signers.push(signer);
+        true
+    }
+
+    pub fn descriptors_all(
+        &self,
+    ) -> (
+        Descriptor<TrackingAccount>,
+        Vec<Descriptor<TrackingAccount>>,
+    ) {
+        let mut descriptors = self
+            .descriptor_classes
+            .iter()
+            .map(|class| self.descriptor_for_class(*class));
+        (
+            descriptors
+                .next()
+                .expect("wallet core without descriptor class"),
+            descriptors.collect(),
+        )
+    }
+
+    pub fn descriptor_for_class(&self, class: DescriptorClass) -> Descriptor<TrackingAccount> {
+        if self.signers.len() <= 1 {
+            let first_key = self
+                .signers
+                .first()
+                .expect("wallet core does not contain any signers")
+                .to_tracking_account(self.terminal.clone());
+
+            return match class {
+                DescriptorClass::PreSegwit => Descriptor::new_pk(first_key),
+                DescriptorClass::SegwitV0 => {
+                    Descriptor::new_wpkh(first_key).expect("xpubs are always 'compressed'")
+                }
+                DescriptorClass::NestedV0 => {
+                    Descriptor::new_sh_wpkh(first_key).expect("xpubs are always 'compressed'")
+                }
+                DescriptorClass::TaprootC0 => {
+                    Descriptor::new_tr(first_key, None).expect("no script path spending")
+                }
+            };
+        }
+
+        // 1. Construct accounts
+        let accounts: BTreeMap<Fingerprint, TrackingAccount> = self
+            .signers
+            .iter()
+            .map(|signer| {
+                (
+                    signer.fingerprint(),
+                    signer.to_tracking_account(self.terminal.clone()),
+                )
+            })
+            .collect();
+
+        // 2. Construct policy fragments
+        let dfs_tree = self
+            .spending_conditions
+            .iter()
+            .map(|(depth, cond)| (depth, cond.policy(&accounts)));
+
+        // 3. Pack miniscript fragments according to the descriptor class
+        if class == DescriptorClass::TaprootC0 {
+            let tree = dfs_tree
+                .map(|(depth, policy)| {
+                    (
+                        *depth,
+                        policy
+                            .compile::<Tap>()
+                            .expect("spending condition policy inconsistency"),
+                    )
+                })
+                .collect::<Vec<(u8, _)>>();
+
+            return Descriptor::new_tr(
+                TrackingAccount::unsatisfiable((self.network, self.terminal.clone())),
+                Some(
+                    tree.to_tap_tree()
+                        .expect("unable to construct TapTree from the given spending conditions"),
+                ),
+            )
+            .expect("taproot descriptor can't be constructed from the given spending conditions");
+        }
+
+        // Pack the tree into a linear structure
+        let (policy, remnant) = dfs_tree.rfold(
+            (None, None)
+                as (
+                    Option<Policy<TrackingAccount>>,
+                    Option<Policy<TrackingAccount>>,
+                ),
+            |(acc, prev), (index, pol)| match (acc, prev) {
+                (None, None) if index % 2 == 1 => (None, Some(pol.clone())),
+                (None, None) => (Some(pol.clone()), None),
+                (None, Some(prev)) => (
+                    Some(Policy::Or(vec![
+                        (*index as usize, pol.clone()),
+                        (*index as usize + 1, prev),
+                    ])),
+                    None,
+                ),
+                (Some(acc), None) => (
+                    Some(Policy::Or(vec![
+                        (*index as usize, pol.clone()),
+                        (*index as usize + 1, acc),
+                    ])),
+                    None,
+                ),
+                _ => unreachable!(),
+            },
+        );
+        let policy = policy
+            .or(remnant)
+            .expect("zero signing accounts must be filtered");
+
+        if class.is_segwit_v0() {
+            let ms_witscript = policy
+                .compile::<Segwitv0>()
+                .expect("policy composition  is broken");
+            let wsh = Wsh::new(ms_witscript).expect("miniscript composition is broken");
+            return match class {
+                DescriptorClass::SegwitV0 => Descriptor::Wsh(wsh),
+                DescriptorClass::NestedV0 => Descriptor::Sh(Sh::new_with_wsh(wsh)),
+                _ => unreachable!(),
+            };
+        }
+
+        let ms = policy
+            .compile::<Legacy>()
+            .expect("policy composition  is broken");
+        Descriptor::Sh(Sh::new(ms).expect("miniscript composition is broken"))
     }
 }
 
@@ -305,6 +446,73 @@ impl SpendingCondition {
             sigs,
             timelock: TimelockReq::AfterTime(date),
         })
+    }
+
+    pub fn policy(
+        &self,
+        accounts: &BTreeMap<Fingerprint, TrackingAccount>,
+    ) -> Policy<TrackingAccount> {
+        let count = accounts.len();
+        let key_policies = accounts.values().cloned().map(Policy::Key).collect();
+        let sigs = match self {
+            SpendingCondition::Sigs(TimelockedSigs {
+                sigs: SigsReq::All, ..
+            }) => Policy::Threshold(count, key_policies),
+            SpendingCondition::Sigs(TimelockedSigs {
+                sigs: SigsReq::Any, ..
+            }) => Policy::Threshold(1, key_policies),
+            SpendingCondition::Sigs(TimelockedSigs {
+                sigs: SigsReq::AtLeast(k),
+                ..
+            }) => Policy::Threshold(*k as usize, key_policies),
+            SpendingCondition::Sigs(TimelockedSigs {
+                sigs: SigsReq::Specific(fp),
+                ..
+            }) => Policy::Key(
+                accounts
+                    .get(fp)
+                    .expect("fingerprint is absent from the accounts")
+                    .clone(),
+            ),
+        };
+        let timelock = match self {
+            SpendingCondition::Sigs(TimelockedSigs {
+                timelock: TimelockReq::Anytime,
+                ..
+            }) => None,
+            // TODO: Check that this is correct
+            SpendingCondition::Sigs(TimelockedSigs {
+                timelock: TimelockReq::AfterTime(datetime),
+                ..
+            }) => Some(Policy::After(
+                LockTime::with_unix_timestamp(datetime.timestamp() as u32)
+                    .unwrap()
+                    .as_u32(),
+            )),
+            // TODO: Check that this is correct
+            SpendingCondition::Sigs(TimelockedSigs {
+                timelock: TimelockReq::AfterBlock(block),
+                ..
+            }) => Some(Policy::After(
+                LockTime::with_height(*block).unwrap().as_u32(),
+            )),
+            // TODO: Check that this is correct
+            SpendingCondition::Sigs(TimelockedSigs {
+                timelock: TimelockReq::OlderTime(datetime),
+                ..
+            }) => Some(Policy::Older(
+                SeqNo::with_time((datetime.timestamp() as u32 / 512) as u16).as_u32(),
+            )),
+            // TODO: Check that this is correct
+            SpendingCondition::Sigs(TimelockedSigs {
+                timelock: TimelockReq::OlderBlock(block),
+                ..
+            }) => Some(Policy::Older(SeqNo::with_height(*block).as_u32())),
+        };
+
+        timelock
+            .map(|timelock| Policy::And(vec![sigs.clone(), timelock]))
+            .unwrap_or(sigs)
     }
 }
 

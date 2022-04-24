@@ -11,12 +11,12 @@
 
 use std::path::PathBuf;
 
-use crate::model::{FileDocument, Wallet};
 use gladis::Gladis;
 use gtk::ApplicationWindow;
 use relm::{init, Relm, StreamHandle, Update, Widget};
 
 use super::{Msg, ViewModel, Widgets};
+use crate::model::{FileDocument, Wallet};
 use crate::view::{file_create_dlg, file_open_dlg, settings, wallet};
 
 pub struct Component {
