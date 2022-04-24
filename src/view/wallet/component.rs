@@ -121,6 +121,7 @@ impl Widget for Component {
         settings.emit(settings::Msg::SetWallet(relm.stream().clone()));
 
         widgets.connect(relm);
+        widgets.update_ui(&model);
         widgets.show();
 
         Component {

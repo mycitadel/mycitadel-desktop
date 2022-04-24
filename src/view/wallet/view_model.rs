@@ -36,6 +36,10 @@ impl ViewModel {
         self.wallet.write_file(path)
     }
 
+    pub fn as_wallet(&self) -> &Wallet {
+        &self.wallet
+    }
+
     pub fn as_descriptor(&self) -> &WalletDescriptor {
         self.wallet.as_descriptor()
     }

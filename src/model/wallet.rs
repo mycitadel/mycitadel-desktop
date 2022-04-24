@@ -12,8 +12,9 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::ops::Deref;
 
+use bitcoin::secp256k1::SECP256K1;
 use bitcoin::util::bip32::{ChildNumber, DerivationPath, Fingerprint};
-use bitcoin::Network;
+use bitcoin::{Address, Network, PublicKey};
 use chrono::{DateTime, Utc};
 use miniscript::descriptor::{DescriptorType, Sh, Wsh};
 use miniscript::policy::concrete::Policy;
@@ -21,8 +22,8 @@ use miniscript::{Descriptor, Legacy, Segwitv0, Tap};
 use wallet::descriptors::DescrVariants;
 use wallet::hd::standards::DerivationBlockchain;
 use wallet::hd::{
-    Bip43, DerivationStandard, HardenedIndex, HardenedIndexExpected, TerminalStep, TrackingAccount,
-    UnhardenedIndex,
+    Bip43, DerivationStandard, Descriptor as DescriptorExt, HardenedIndex, HardenedIndexExpected,
+    SegmentIndexes, TerminalStep, TrackingAccount, UnhardenedIndex,
 };
 use wallet::locks::{LockTime, SeqNo};
 use wallet::psbt::Psbt;
@@ -39,6 +40,7 @@ use super::{
 pub struct Wallet {
     #[getter(skip)]
     descriptor: WalletDescriptor,
+    last_indexes: BTreeMap<UnhardenedIndex, UnhardenedIndex>,
     state: WalletState,
     history: Vec<Psbt>,
     wip: Vec<Psbt>,
@@ -62,6 +64,26 @@ impl Wallet {
 
     pub fn into_descriptor(self) -> WalletDescriptor {
         self.descriptor
+    }
+
+    pub fn next_default_index(&self) -> UnhardenedIndex {
+        *self
+            .last_indexes
+            .get(&UnhardenedIndex::zero())
+            .unwrap_or(&UnhardenedIndex::zero())
+    }
+
+    pub fn next_address(&self) -> Address {
+        let (descriptor, _) = self
+            .as_descriptor()
+            .descriptors_all()
+            .expect("invalid wallet descriptor");
+        DescriptorExt::<PublicKey>::address(
+            &descriptor,
+            &SECP256K1,
+            &[UnhardenedIndex::zero(), self.next_default_index()],
+        )
+        .expect("unable to derive address for the wallet descriptor")
     }
 
     pub fn update_signers(

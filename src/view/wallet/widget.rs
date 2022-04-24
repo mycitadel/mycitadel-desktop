@@ -14,7 +14,7 @@ use gtk::prelude::*;
 use gtk::{ApplicationWindow, Button, Entry, HeaderBar, Popover, Statusbar};
 use relm::Relm;
 
-use super::Msg;
+use super::{Msg, ViewModel};
 
 // Create the structure that holds the widgets used in the view.
 #[derive(Clone, Gladis)]
@@ -48,6 +48,11 @@ impl Widgets {
     }
     pub fn as_root(&self) -> &ApplicationWindow {
         &self.window
+    }
+
+    pub fn update_ui(&self, model: &ViewModel) {
+        let address = model.as_wallet().next_address();
+        self.address_fld.set_text(&address.to_string());
     }
 
     pub(super) fn connect(&self, relm: &Relm<super::Component>) {
