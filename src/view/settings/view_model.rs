@@ -135,8 +135,8 @@ impl ViewModel {
 
     pub fn terminal_derivation(&self) -> Vec<TerminalStep> {
         match self.support_multiclass {
-            true => vec![TerminalStep::range(0u8, 1u8), TerminalStep::Wildcard],
-            false => vec![
+            false => vec![TerminalStep::range(0u8, 1u8), TerminalStep::Wildcard],
+            true => vec![
                 TerminalStep::Wildcard,
                 TerminalStep::Wildcard,
                 TerminalStep::Wildcard,
