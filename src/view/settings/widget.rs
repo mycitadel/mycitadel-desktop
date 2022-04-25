@@ -23,7 +23,7 @@ use gtk::{
 };
 use miniscript::Descriptor;
 use relm::Relm;
-use wallet::hd::{DerivationStandard, SegmentIndexes, TrackingAccount};
+use wallet::hd::{DerivationStandard, HardenedIndex, SegmentIndexes, TrackingAccount};
 
 use super::{spending_row, spending_row::SpendingModel, Msg, ViewModel};
 use crate::model::{
@@ -227,6 +227,12 @@ impl Widgets {
             connect_toggled(_),
             Msg::SignerOwnershipChange
         );
+        connect!(
+            relm,
+            self.account_adj,
+            connect_value_changed(_),
+            Msg::SignerAccountChange
+        );
 
         connect!(
             relm,
@@ -354,6 +360,15 @@ impl Widgets {
 
     pub fn signer_name(&self) -> String {
         self.name_fld.text().to_string()
+    }
+
+    pub fn signer_origin(&self) -> String {
+        self.path_fld.text().to_string()
+    }
+
+    pub fn signer_account(&self) -> HardenedIndex {
+        HardenedIndex::from_index(self.account_adj.value() as u32)
+            .expect("account adjustment max value exceeded")
     }
 
     pub fn signer_ownership(&self) -> Ownership {

@@ -13,7 +13,7 @@ use std::path::Path;
 use std::str::FromStr;
 
 use ::wallet::hd::DerivationStandard;
-use bitcoin::util::bip32::Fingerprint;
+use bitcoin::util::bip32::{DerivationPath, Fingerprint};
 use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{Dialog, ResponseType};
@@ -291,7 +291,32 @@ impl Update for Component {
                     self.replace_signer();
                 }
             }
-            Msg::SignerOriginUpdate => {}
+            Msg::SignerOriginUpdate => {
+                if let Some(ref mut signer) = self.model.active_signer {
+                    match DerivationPath::from_str(&self.widgets.signer_origin()) {
+                        Err(err) => {
+                            return self
+                                .widgets
+                                .show_error(&format!("Invalid key origin: {}", err))
+                        }
+                        Ok(origin) if signer.origin == origin => return,
+                        Ok(origin) => {
+                            signer.origin = origin;
+                            self.replace_signer();
+                        }
+                    }
+                }
+            }
+            Msg::SignerAccountChange => {
+                if let Some(ref mut signer) = self.model.active_signer {
+                    let account = self.widgets.signer_account();
+                    if signer.account == Some(account) {
+                        return;
+                    }
+                    signer.account = Some(account);
+                    self.replace_signer();
+                }
+            }
             Msg::ConditionAdd => {
                 self.model.spending_model.append(&Condition::default());
                 self.condition_selection_change();

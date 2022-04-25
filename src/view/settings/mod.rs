@@ -44,6 +44,7 @@ pub enum Msg {
     SignerFingerprintChange,
     SignerNameChange,
     SignerOwnershipChange,
+    SignerAccountChange,
     ConditionAdd,
     ConditionRemove,
     ConditionSelect,

@@ -18,8 +18,8 @@ use wallet::hd::{Bip43, TerminalStep, TrackingAccount};
 
 use super::spending_row::SpendingModel;
 use crate::model::{
-    file, DescriptorClass, DescriptorError, FileDocument, HardwareList, PublicNetwork, Signer,
-    Wallet, WalletDescriptor, WalletTemplate,
+    file, DescriptorClass, DescriptorError, ElectrumSec, FileDocument, HardwareList, PublicNetwork,
+    Signer, Wallet, WalletDescriptor, WalletTemplate,
 };
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
