@@ -9,23 +9,6 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
-#![allow(dead_code)]
+mod electrum_watcher;
 
-#[macro_use]
-extern crate amplify;
-#[macro_use]
-extern crate strict_encoding;
-#[macro_use]
-extern crate relm;
-#[macro_use]
-extern crate relm_derive;
-
-use relm::Widget;
-
-mod model;
-mod view;
-mod worker;
-
-fn main() {
-    view::launch::Component::run(()).expect("application failed")
-}
+pub use electrum_watcher::{ElectrumWatcher, WatchMsg};

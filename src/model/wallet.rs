@@ -10,9 +10,8 @@
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
 use std::collections::{BTreeMap, BTreeSet};
-use std::ops::Deref;
+use std::ops::{Deref, RangeInclusive};
 
-use crate::model::{ElectrumSec, ElectrumServer};
 use bitcoin::secp256k1::SECP256K1;
 use bitcoin::util::bip32::{ChildNumber, DerivationPath, Fingerprint};
 use bitcoin::{Address, Network, PublicKey};
@@ -28,19 +27,22 @@ use wallet::hd::{
 };
 use wallet::locks::{LockTime, SeqNo};
 use wallet::psbt::Psbt;
+use wallet::scripts::address::AddressCompat;
+use wallet::scripts::PubkeyScript;
 use wallet::slip132::KeyApplication;
 
 use super::{
     DescriptorClass, PublicNetwork, Signer, SigsReq, TimelockReq, TimelockedSigs, ToTapTree,
     Unsatisfiable, XpubkeyCore,
 };
+use crate::model::{ElectrumSec, ElectrumServer};
 
 // TODO: Move to bpro library
 #[derive(Getters, Clone, Debug, Default)]
 #[derive(StrictEncode, StrictDecode)]
 pub struct Wallet {
     #[getter(skip)]
-    descriptor: WalletSettings,
+    settings: WalletSettings,
     last_indexes: BTreeMap<UnhardenedIndex, UnhardenedIndex>,
     state: WalletState,
     history: Vec<Psbt>,
@@ -48,23 +50,23 @@ pub struct Wallet {
 }
 
 impl Wallet {
-    pub fn with(descriptor: WalletSettings) -> Self {
+    pub fn with(settings: WalletSettings) -> Self {
         Wallet {
-            descriptor,
+            settings,
             ..default!()
         }
     }
 
-    pub fn as_descriptor(&self) -> &WalletSettings {
-        &self.descriptor
+    pub fn as_settings(&self) -> &WalletSettings {
+        &self.settings
     }
 
-    pub fn to_descriptor(&self) -> WalletSettings {
-        self.descriptor.clone()
+    pub fn to_settings(&self) -> WalletSettings {
+        self.settings.clone()
     }
 
-    pub fn into_descriptor(self) -> WalletSettings {
-        self.descriptor
+    pub fn into_settings(self) -> WalletSettings {
+        self.settings
     }
 
     pub fn next_default_index(&self) -> UnhardenedIndex {
@@ -76,7 +78,7 @@ impl Wallet {
 
     pub fn next_address(&self) -> Address {
         let (descriptor, _) = self
-            .as_descriptor()
+            .as_settings()
             .descriptors_all()
             .expect("invalid wallet descriptor");
         DescriptorExt::<PublicKey>::address(
@@ -91,11 +93,11 @@ impl Wallet {
         &mut self,
         signers: impl IntoIterator<Item = Signer>,
     ) -> Result<u16, DescriptorError> {
-        self.descriptor.update_signers(signers)
+        self.settings.update_signers(signers)
     }
 
     pub fn add_descriptor_class(&mut self, descriptor_class: DescriptorClass) -> bool {
-        self.descriptor.add_descriptor_class(descriptor_class)
+        self.settings.add_descriptor_class(descriptor_class)
     }
 }
 
@@ -123,6 +125,7 @@ pub enum DescriptorError {
 #[derive(Getters, Clone, PartialEq, Eq, Hash, Debug)]
 #[derive(StrictEncode, StrictDecode)]
 pub struct WalletSettings {
+    #[getter(as_copy)]
     network: PublicNetwork,
     core: WalletDescriptor,
     signers: Vec<Signer>,
@@ -433,6 +436,54 @@ impl WalletSettings {
 
         let ms = policy.compile::<Legacy>()?;
         Ok(Descriptor::Sh(Sh::new(ms)?))
+    }
+
+    pub fn script_pubkeys(
+        &self,
+        change: bool,
+        range: RangeInclusive<u16>,
+    ) -> Result<BTreeMap<UnhardenedIndex, PubkeyScript>, miniscript::Error> {
+        let (descriptor, _) = self.descriptors_all()?;
+        let len = DescriptorExt::<PublicKey>::derive_pattern_len(&descriptor)
+            .expect("internal inconsistency in wallet descriptor");
+        debug_assert!(len >= 2);
+        let mut pat = vec![UnhardenedIndex::zero(); len];
+        pat[len - 2] = if change {
+            UnhardenedIndex::one()
+        } else {
+            UnhardenedIndex::zero()
+        };
+        range
+            .map(UnhardenedIndex::from)
+            .map(|index| -> Result<_, _> {
+                Ok((
+                    index,
+                    DescriptorExt::<PublicKey>::script_pubkey(&descriptor, &SECP256K1, &pat)
+                        .map_err(|_| {
+                            miniscript::Error::BadDescriptor(s!("unable to derive script pubkey"))
+                        })?
+                        .into(),
+                ))
+            })
+            .collect()
+    }
+
+    pub fn addresses(
+        &self,
+        change: bool,
+        range: RangeInclusive<u16>,
+    ) -> Result<BTreeMap<UnhardenedIndex, AddressCompat>, miniscript::Error> {
+        self.script_pubkeys(change, range)?
+            .into_iter()
+            .map(|(index, spk)| -> Result<_, _> {
+                Ok((
+                    index,
+                    AddressCompat::from_script(&spk, self.network.into()).ok_or(
+                        miniscript::Error::BadDescriptor(s!("address can't be generated")),
+                    )?,
+                ))
+            })
+            .collect()
     }
 }
 

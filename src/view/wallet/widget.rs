@@ -65,7 +65,8 @@ impl Widgets {
         self.address_fld.set_text(&address.to_string());
         self.header_bar
             .set_subtitle(model.path().file_name().and_then(OsStr::to_str));
-        for row in model.generate_addresses(20) {
+        // TODO: Display change addresses
+        for row in model.generate_addresses(true, 20) {
             row.insert_item(&self.address_store);
         }
     }

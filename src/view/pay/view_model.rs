@@ -26,10 +26,10 @@ impl ViewModel {
     }
 
     pub fn as_descriptor(&self) -> &WalletSettings {
-        self.wallet.as_descriptor()
+        self.wallet.as_settings()
     }
 
     pub fn to_descriptor(&self) -> WalletSettings {
-        self.wallet.to_descriptor()
+        self.wallet.to_settings()
     }
 }

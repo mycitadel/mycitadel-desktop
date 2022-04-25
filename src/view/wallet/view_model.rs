@@ -12,18 +12,19 @@
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
-use bitcoin::secp256k1::SECP256K1;
-use bitcoin::{Address, PublicKey};
 use gtk::prelude::*;
 use gtk::{ListStore, TreeIter};
-use wallet::hd::{Descriptor, SegmentIndexes, UnhardenedIndex};
+use wallet::hd::UnhardenedIndex;
+use wallet::scripts::address::AddressCompat;
 
 use crate::model::{
     file, DescriptorClass, DescriptorError, FileDocument, Signer, Wallet, WalletSettings,
 };
 
 pub(super) struct AddressRow {
-    pub address: Address,
+    pub change: bool,
+    pub index: UnhardenedIndex,
+    pub address: AddressCompat,
     pub balance: u64,
 }
 
@@ -56,11 +57,11 @@ impl ViewModel {
         self.wallet.clone()
     }
 
-    pub fn as_descriptor(&self) -> &WalletSettings {
-        self.wallet.as_descriptor()
+    pub fn as_settings(&self) -> &WalletSettings {
+        self.wallet.as_settings()
     }
-    pub fn to_descriptor(&self) -> WalletSettings {
-        self.wallet.to_descriptor()
+    pub fn to_settings(&self) -> WalletSettings {
+        self.wallet.to_settings()
     }
 
     pub fn update_descriptor(
@@ -76,24 +77,16 @@ impl ViewModel {
         Ok(())
     }
 
-    pub(super) fn generate_addresses(&self, count: u16) -> Vec<AddressRow> {
-        let (descriptor, _) = self
-            .as_descriptor()
-            .descriptors_all()
-            .expect("internal inconsistency in wallet descriptor");
-        let len = Descriptor::<PublicKey>::derive_pattern_len(&descriptor)
-            .expect("internal inconsistency in wallet descriptor");
-        let mut pat = vec![UnhardenedIndex::zero(); len];
-
-        (0u16..count)
-            .map(|i| {
-                pat[len - 1] = UnhardenedIndex::from(i);
-                let address = Descriptor::<PublicKey>::address(&descriptor, &SECP256K1, &pat)
-                    .expect("address derivation impossible");
-                AddressRow {
-                    address,
-                    balance: 0,
-                }
+    pub(super) fn generate_addresses(&self, change: bool, count: u16) -> Vec<AddressRow> {
+        self.as_settings()
+            .addresses(false, 0..=(count - 1))
+            .expect("internal inconsistency in wallet descriptor")
+            .into_iter()
+            .map(|(index, address)| AddressRow {
+                change,
+                index,
+                address,
+                balance: 0,
             })
             .collect()
     }

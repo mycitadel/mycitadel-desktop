@@ -199,10 +199,10 @@ impl ViewModel {
             stream,
             support_multiclass: descriptor_classes.len() > 1,
             descriptor_classes,
-            network: *descr.network(),
+            network: descr.network(),
             signers: descr.signers().clone(),
             spending_model: SpendingModel::from(descr.spending_conditions()),
-            electrum_model: ElectrumModel::new(*descr.network()),
+            electrum_model: ElectrumModel::new(descr.network()),
 
             export_lnpbp: true,
             template: None,
@@ -222,7 +222,7 @@ impl ViewModel {
             .map(Wallet::with)
             .map(|wallet| {
                 wallet.write_file(&self.path)?;
-                Ok(wallet.into_descriptor())
+                Ok(wallet.into_settings())
             })
             .transpose()
     }

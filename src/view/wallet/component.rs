@@ -13,15 +13,19 @@ use std::path::PathBuf;
 
 use gladis::Gladis;
 use gtk::{ApplicationWindow, ResponseType};
-use relm::{init, Relm, StreamHandle, Update, Widget};
+use relm::{init, Channel, Relm, StreamHandle, Update, Widget};
 
 use super::{Msg, ViewModel, Widgets};
 use crate::model::{FileDocument, Wallet};
+use crate::view::wallet::WatchMsg;
 use crate::view::{error_dlg, launch, pay, settings};
+use crate::worker::ElectrumWatcher;
 
 pub struct Component {
     model: ViewModel,
     widgets: Widgets,
+    channel: Channel<WatchMsg>,
+    watcher: ElectrumWatcher,
     settings: relm::Component<settings::Component>,
     payment: relm::Component<pay::Component>,
     launcher_stream: Option<StreamHandle<launch::Msg>>,
@@ -81,7 +85,7 @@ impl Update for Component {
             }
             Msg::Pay => self.payment.emit(pay::Msg::Show),
             Msg::Settings => self.settings.emit(settings::Msg::View(
-                self.model.to_descriptor(),
+                self.model.to_settings(),
                 self.model.path().clone(),
             )),
             Msg::Update(signers, descriptor_classes) => {
@@ -126,6 +130,11 @@ impl Widget for Component {
             init::<pay::Component>(model.to_wallet()).expect("error in settings component");
         payment.emit(pay::Msg::SetWallet(relm.stream().clone()));
 
+        let stream = relm.stream().clone();
+        let (channel, sender) = Channel::new(move |msg| stream.emit(Msg::ElectrumWatch(msg)));
+        let watcher = ElectrumWatcher::with(sender, model.as_wallet().to_settings())
+            .expect("unable to instantiate watcher thread");
+
         widgets.connect(relm);
         widgets.update_ui(&model);
         widgets.show();
@@ -135,6 +144,8 @@ impl Widget for Component {
             widgets,
             settings,
             payment,
+            channel,
+            watcher,
             launcher_stream: None,
         }
     }
