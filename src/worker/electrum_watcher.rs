@@ -9,11 +9,12 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
+use std::collections::BTreeMap;
 use std::io;
 use std::thread::JoinHandle;
 
 use amplify::Wrapper;
-use bitcoin::Txid;
+use bitcoin::{Transaction, Txid};
 use electrum_client::{Client as ElectrumClient, ElectrumApi, HeaderNotification};
 use relm::Sender;
 use wallet::address::address::AddressCompat;
@@ -26,12 +27,24 @@ pub enum WatchMsg {
     LastBlock(HeaderNotification),
     FeeEstimate(Vec<f64>),
     HistoryBatch(Vec<HistoryTxid>),
+    UtxoBatch(Vec<UtxoTxid>),
+    TxBatch(BTreeMap<Txid, Transaction>),
     Error(electrum_client::Error),
 }
 
 pub struct HistoryTxid {
     pub txid: Txid,
     pub height: i32,
+    pub address: AddressCompat,
+    pub index: UnhardenedIndex,
+    pub change: bool,
+}
+
+pub struct UtxoTxid {
+    pub txid: Txid,
+    pub height: u32,
+    pub pos: u32,
+    pub value: u64,
     pub address: AddressCompat,
     pub index: UnhardenedIndex,
     pub change: bool,
@@ -70,16 +83,16 @@ pub fn electrum_watcher(
     let last_block = client.block_headers_subscribe()?;
     sender
         .send(WatchMsg::LastBlock(last_block))
-        .expect("electrum watcher channel broken");
+        .expect("electrum watcher channel is broken");
 
     let fee = client.batch_estimate_fee([1, 2, 3])?;
     sender
         .send(WatchMsg::FeeEstimate(fee))
-        .expect("electrum watcher channel broken");
+        .expect("electrum watcher channel is broken");
 
     let network = bitcoin::Network::from(wallet_settings.network());
 
-    let mut txids = vec![];
+    let mut txids = bset![];
     let mut upto_index = map! { true => UnhardenedIndex::zero(), false => UnhardenedIndex::zero() };
     for change in [true, false] {
         let mut offset = 0u16;
@@ -91,14 +104,14 @@ pub fn electrum_watcher(
             let history_batch: Vec<_> = client
                 .batch_script_get_history(spk.values().map(PubkeyScript::as_inner))?
                 .into_iter()
-                .zip(spk)
+                .zip(&spk)
                 .flat_map(|(history, (index, script))| {
                     history.into_iter().map(move |res| HistoryTxid {
                         txid: res.tx_hash,
                         height: res.height,
                         address: AddressCompat::from_script(&script.clone().into(), network)
                             .expect("broken descriptor"),
-                        index,
+                        index: *index,
                         change,
                     })
                 })
@@ -115,13 +128,44 @@ pub fn electrum_watcher(
             txids.extend(history_batch.iter().map(|item| item.txid));
             sender
                 .send(WatchMsg::HistoryBatch(history_batch))
-                .expect("electrum watcher channel broken");
+                .expect("electrum watcher channel is broken");
+
+            let utxos: Vec<_> = client
+                .batch_script_list_unspent(spk.values().map(PubkeyScript::as_inner))?
+                .into_iter()
+                .zip(spk)
+                .flat_map(|(utxo, (index, script))| {
+                    utxo.into_iter().map(move |res| UtxoTxid {
+                        txid: res.tx_hash,
+                        height: res.height as u32,
+                        pos: res.tx_pos as u32,
+                        value: res.value,
+                        address: AddressCompat::from_script(&script.clone().into(), network)
+                            .expect("broken descriptor"),
+                        index,
+                        change,
+                    })
+                })
+                .collect();
+            txids.extend(utxos.iter().map(|item| item.txid));
+            sender
+                .send(WatchMsg::UtxoBatch(utxos))
+                .expect("electrum watcher channel is broken");
+
             offset += 20;
         };
     }
-    // TODO: Retrieve txids
-
-    // TODO: Retrieve utxos
+    let txids = txids.into_iter().collect::<Vec<_>>();
+    for chunk in txids.chunks(20) {
+        let txmap = chunk
+            .iter()
+            .copied()
+            .zip(client.batch_transaction_get(chunk)?)
+            .collect::<BTreeMap<_, _>>();
+        sender
+            .send(WatchMsg::TxBatch(txmap))
+            .expect("electrum watcher channel is broken");
+    }
 
     // TODO: Subscribe to invoices
 
