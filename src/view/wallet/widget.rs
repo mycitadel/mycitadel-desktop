@@ -16,8 +16,8 @@ use electrum_client::HeaderNotification;
 use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{
-    ApplicationWindow, Button, Entry, HeaderBar, Image, Label, ListStore, Popover, Spinner,
-    Statusbar, TreeView,
+    ApplicationWindow, Button, Entry, HeaderBar, IconSize, Image, Label, ListStore, Popover,
+    Spinner, Statusbar, TreeView,
 };
 use relm::Relm;
 use std::collections::BTreeMap;
@@ -172,6 +172,7 @@ impl Widgets {
 
     pub fn update_history(&mut self, history: &[HistoryTxid]) {
         self.history_store.clear();
+        let pixbuf = Image::from_icon_name(Some("list-add-symbolic"), IconSize::Menu).pixbuf();
         for item in history {
             let height = match item.height {
                 -1 => s!("pending"),
@@ -180,11 +181,11 @@ impl Widgets {
             self.history_store.insert_with_values(
                 None,
                 &[
-                    (0, &true),
+                    (0, &pixbuf),
                     (1, &item.address.to_string()),
                     (2, &item.txid.to_string()),
-                    (3, &"?"),
-                    (4, &"?"),
+                    (3, &0),
+                    (4, &0),
                     (5, &height),
                 ],
             );

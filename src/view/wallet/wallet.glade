@@ -58,8 +58,8 @@
   </object>
   <object class="GtkListStore" id="history_store">
     <columns>
-      <!-- column-name incoming -->
-      <column type="gboolean"/>
+      <!-- column-name direction -->
+      <column type="GdkPixbuf"/>
       <!-- column-name address -->
       <column type="gchararray"/>
       <!-- column-name txid -->

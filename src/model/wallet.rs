@@ -520,6 +520,7 @@ impl WalletSettings {
         range
             .map(UnhardenedIndex::from)
             .map(|index| -> Result<_, _> {
+                pat[len - 1] = index;
                 Ok((
                     index,
                     DescriptorExt::<PublicKey>::script_pubkey(&descriptor, &SECP256K1, &pat)
