@@ -146,7 +146,7 @@ impl Widgets {
         self.signet_tgl
             .set_active(model.network == PublicNetwork::Signet);
 
-        self.update_electrum(&mut model.electrum_model.clone());
+        self.update_electrum(&mut model.electrum_model.clone(), true, true);
 
         self.update_signers(&model.signers);
         self.update_signer_details(None, model.network);
@@ -346,6 +346,58 @@ impl Widgets {
 
         connect!(
             relm,
+            self.electr_blockstream_tgl,
+            connect_toggled(_),
+            Msg::ElectrumSelect(ElectrumPreset::Blockstream)
+        );
+        connect!(
+            relm,
+            self.electr_mycitadel_tgl,
+            connect_toggled(_),
+            Msg::ElectrumSelect(ElectrumPreset::MyCitadel)
+        );
+        connect!(
+            relm,
+            self.electr_custom_tgl,
+            connect_toggled(_),
+            Msg::ElectrumSelect(ElectrumPreset::Custom)
+        );
+
+        connect!(
+            relm,
+            self.tor_tgl,
+            connect_toggled(_),
+            Msg::ElectrumSecChange(ElectrumSec::Tor)
+        );
+        connect!(
+            relm,
+            self.tls_tgl,
+            connect_toggled(_),
+            Msg::ElectrumSecChange(ElectrumSec::Tls)
+        );
+        connect!(
+            relm,
+            self.nosec_tgl,
+            connect_toggled(_),
+            Msg::ElectrumSecChange(ElectrumSec::None)
+        );
+
+        connect!(
+            relm,
+            self.electrum_fld,
+            connect_changed(_),
+            Msg::ElectrumEdit
+        );
+        connect!(
+            relm,
+            self.port_adj,
+            connect_value_changed(_),
+            Msg::ElectrumPortChange
+        );
+        connect!(relm, self.test_btn, connect_clicked(_), Msg::ElectrumTest);
+
+        connect!(
+            relm,
             self.dialog,
             connect_response(_, resp),
             Msg::Response(resp)
@@ -414,23 +466,32 @@ impl Widgets {
         self.port_adj.value() as u16
     }
 
-    pub fn update_electrum(&self, model: &mut ElectrumModel) {
-        self.electr_mycitadel_tgl
-            .set_active(model.electrum_preset == ElectrumPreset::MyCitadel);
-        self.electr_blockstream_tgl
-            .set_active(model.electrum_preset == ElectrumPreset::Blockstream);
-        self.electr_custom_tgl
-            .set_active(model.electrum_preset == ElectrumPreset::Custom);
+    pub fn update_electrum(
+        &self,
+        model: &mut ElectrumModel,
+        update_preset: bool,
+        update_sec: bool,
+    ) {
+        if update_preset {
+            self.electr_mycitadel_tgl
+                .set_active(model.electrum_preset == ElectrumPreset::MyCitadel);
+            self.electr_blockstream_tgl
+                .set_active(model.electrum_preset == ElectrumPreset::Blockstream);
+            self.electr_custom_tgl
+                .set_active(model.electrum_preset == ElectrumPreset::Custom);
+        }
         if model.electrum_preset != ElectrumPreset::Custom {
             model.electrum_server = model.electrum_preset.to_string();
             model.electrum_port = self.network().electrum_port();
         }
-        self.tor_tgl
-            .set_active(model.electrum_sec == ElectrumSec::Tor);
-        self.tls_tgl
-            .set_active(model.electrum_sec == ElectrumSec::Tls);
-        self.nosec_tgl
-            .set_active(model.electrum_sec == ElectrumSec::None);
+        if update_sec {
+            self.tor_tgl
+                .set_active(model.electrum_sec == ElectrumSec::Tor);
+            self.tls_tgl
+                .set_active(model.electrum_sec == ElectrumSec::Tls);
+            self.nosec_tgl
+                .set_active(model.electrum_sec == ElectrumSec::None);
+        }
         self.electrum_fld.set_text(&model.electrum_server);
         self.port_adj.set_value(model.electrum_port as f64);
         self.connection_img.set_icon_name(None);

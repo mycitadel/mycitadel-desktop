@@ -16,7 +16,7 @@ mod widget;
 pub(self) mod xpub_dlg;
 
 pub use component::Component;
-pub(self) use view_model::ViewModel;
+pub(self) use view_model::{ElectrumPreset, ViewModel};
 pub(self) use widget::Widgets;
 
 use std::path::PathBuf;
@@ -26,7 +26,7 @@ use gtk::ResponseType;
 use relm::StreamHandle;
 
 use crate::model::{
-    DescriptorClass, HardwareDevice, PublicNetwork, WalletDescriptor, WalletTemplate,
+    DescriptorClass, ElectrumSec, HardwareDevice, PublicNetwork, WalletDescriptor, WalletTemplate,
 };
 use crate::view::{launch, wallet};
 
@@ -52,6 +52,11 @@ pub enum Msg {
     NetworkChange(PublicNetwork),
     ToggleClass(DescriptorClass),
     ExportFormat(bool),
+    ElectrumSelect(ElectrumPreset),
+    ElectrumEdit,
+    ElectrumPortChange,
+    ElectrumSecChange(ElectrumSec),
+    ElectrumTest,
     Response(ResponseType),
     SetWallet(StreamHandle<wallet::Msg>),
     SetLauncher(StreamHandle<launch::Msg>),

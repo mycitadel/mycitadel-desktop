@@ -21,6 +21,7 @@ use relm::{init, Channel, Relm, StreamHandle, Update, Widget};
 
 use super::{spending_row::Condition, xpub_dlg, Msg, ViewModel, Widgets};
 use crate::model::{PublicNetwork, Signer, WalletDescriptor};
+use crate::view::settings::view_model::ElectrumPreset;
 use crate::view::{devices, error_dlg, launch, wallet};
 
 pub struct Component {
@@ -163,6 +164,36 @@ impl Update for Component {
             }
             Msg::ConditionSelect => {
                 self.condition_selection_change();
+                return;
+            }
+            Msg::ElectrumSelect(preset) if self.model.electrum_model.electrum_preset != preset => {
+                self.model.electrum_model.electrum_preset = preset;
+                self.widgets
+                    .update_electrum(&mut self.model.electrum_model, false, false);
+                return;
+            }
+            Msg::ElectrumEdit
+                if self.model.electrum_model.electrum_server != self.widgets.electrum_server() =>
+            {
+                self.model.electrum_model.electrum_preset = ElectrumPreset::Custom;
+                self.model.electrum_model.electrum_server = self.widgets.electrum_server();
+                self.widgets
+                    .update_electrum(&mut self.model.electrum_model, false, false);
+                return;
+            }
+            Msg::ElectrumPortChange
+                if self.model.electrum_model.electrum_port != self.widgets.electrum_port() =>
+            {
+                self.model.electrum_model.electrum_preset = ElectrumPreset::Custom;
+                self.model.electrum_model.electrum_port = self.widgets.electrum_port();
+                self.widgets
+                    .update_electrum(&mut self.model.electrum_model, false, false);
+                return;
+            }
+            Msg::ElectrumSecChange(sec) if sec != self.model.electrum_model.electrum_sec => {
+                self.model.electrum_model.electrum_sec = sec;
+                self.widgets
+                    .update_electrum(&mut self.model.electrum_model, false, false);
                 return;
             }
             Msg::SetWallet(stream) => {
@@ -340,6 +371,8 @@ impl Update for Component {
             }
             Msg::NetworkChange(network) if network != self.model.network => {
                 self.model.network = network;
+                self.widgets
+                    .update_electrum(&mut self.model.electrum_model, false, false);
             }
             _ => {}
         }
