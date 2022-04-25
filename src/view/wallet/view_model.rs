@@ -19,7 +19,7 @@ use gtk::{ListStore, TreeIter};
 use wallet::hd::{Descriptor, SegmentIndexes, UnhardenedIndex};
 
 use crate::model::{
-    file, DescriptorClass, DescriptorError, FileDocument, Signer, Wallet, WalletDescriptor,
+    file, DescriptorClass, DescriptorError, FileDocument, Signer, Wallet, WalletSettings,
 };
 
 pub(super) struct AddressRow {
@@ -56,10 +56,10 @@ impl ViewModel {
         self.wallet.clone()
     }
 
-    pub fn as_descriptor(&self) -> &WalletDescriptor {
+    pub fn as_descriptor(&self) -> &WalletSettings {
         self.wallet.as_descriptor()
     }
-    pub fn to_descriptor(&self) -> WalletDescriptor {
+    pub fn to_descriptor(&self) -> WalletSettings {
         self.wallet.to_descriptor()
     }
 

@@ -9,7 +9,7 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
-use crate::model::{Wallet, WalletDescriptor};
+use crate::model::{Wallet, WalletSettings};
 
 #[derive(Getters)]
 pub struct ViewModel {
@@ -25,11 +25,11 @@ impl ViewModel {
         &self.wallet
     }
 
-    pub fn as_descriptor(&self) -> &WalletDescriptor {
+    pub fn as_descriptor(&self) -> &WalletSettings {
         self.wallet.as_descriptor()
     }
 
-    pub fn to_descriptor(&self) -> WalletDescriptor {
+    pub fn to_descriptor(&self) -> WalletSettings {
         self.wallet.to_descriptor()
     }
 }

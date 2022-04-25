@@ -20,7 +20,7 @@ use gtk::{Dialog, ResponseType};
 use relm::{init, Channel, Relm, StreamHandle, Update, Widget};
 
 use super::{spending_row::Condition, xpub_dlg, Msg, ViewModel, Widgets};
-use crate::model::{PublicNetwork, Signer, WalletDescriptor};
+use crate::model::{PublicNetwork, Signer, WalletSettings};
 use crate::view::settings::view_model::ElectrumPreset;
 use crate::view::{devices, error_dlg, launch, wallet};
 
@@ -218,7 +218,7 @@ impl Update for Component {
                 return;
             }
             Msg::Response(ResponseType::Ok) => {
-                let descr = match WalletDescriptor::try_from(&self.model) {
+                let descr = match WalletSettings::try_from(&self.model) {
                     Err(err) => {
                         error_dlg(
                             self.widgets.as_root(),

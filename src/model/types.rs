@@ -21,6 +21,7 @@ use bitcoin::Network;
 use chrono::{DateTime, Utc};
 use hwi::error::Error as HwiError;
 use hwi::HWIDevice;
+use miniscript::descriptor::DescriptorType;
 use wallet::hd::standards::DerivationBlockchain;
 use wallet::hd::{
     AccountStep, Bip43, DerivationStandard, HardenedIndex, TerminalStep, TrackingAccount, XpubRef,
@@ -409,6 +410,30 @@ pub enum DescriptorClass {
     SegwitV0,
     NestedV0,
     TaprootC0,
+}
+
+impl From<&DescriptorType> for DescriptorClass {
+    fn from(ty: &DescriptorType) -> Self {
+        match ty {
+            DescriptorType::Bare
+            | DescriptorType::Sh
+            | DescriptorType::ShSortedMulti
+            | DescriptorType::Pkh => DescriptorClass::PreSegwit,
+            DescriptorType::Wpkh | DescriptorType::WshSortedMulti | DescriptorType::Wsh => {
+                DescriptorClass::SegwitV0
+            }
+            DescriptorType::ShWsh | DescriptorType::ShWshSortedMulti | DescriptorType::ShWpkh => {
+                DescriptorClass::NestedV0
+            }
+            DescriptorType::Tr => DescriptorClass::TaprootC0,
+        }
+    }
+}
+
+impl From<DescriptorType> for DescriptorClass {
+    fn from(ty: DescriptorType) -> Self {
+        DescriptorClass::from(&ty)
+    }
 }
 
 impl DescriptorClass {

@@ -26,14 +26,14 @@ use gtk::ResponseType;
 use relm::StreamHandle;
 
 use crate::model::{
-    DescriptorClass, ElectrumSec, HardwareDevice, PublicNetwork, WalletDescriptor, WalletTemplate,
+    DescriptorClass, ElectrumSec, HardwareDevice, PublicNetwork, WalletSettings, WalletTemplate,
 };
 use crate::view::{launch, wallet};
 
 #[derive(Msg)]
 pub enum Msg {
     New(Option<WalletTemplate>, PathBuf),
-    View(WalletDescriptor, PathBuf),
+    View(WalletSettings, PathBuf),
     AddDevices,
     AddReadOnly,
     RemoveSigner,

@@ -12,6 +12,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::ops::Deref;
 
+use crate::model::{ElectrumSec, ElectrumServer};
 use bitcoin::secp256k1::SECP256K1;
 use bitcoin::util::bip32::{ChildNumber, DerivationPath, Fingerprint};
 use bitcoin::{Address, Network, PublicKey};
@@ -39,7 +40,7 @@ use super::{
 #[derive(StrictEncode, StrictDecode)]
 pub struct Wallet {
     #[getter(skip)]
-    descriptor: WalletDescriptor,
+    descriptor: WalletSettings,
     last_indexes: BTreeMap<UnhardenedIndex, UnhardenedIndex>,
     state: WalletState,
     history: Vec<Psbt>,
@@ -47,22 +48,22 @@ pub struct Wallet {
 }
 
 impl Wallet {
-    pub fn with(descriptor: WalletDescriptor) -> Self {
+    pub fn with(descriptor: WalletSettings) -> Self {
         Wallet {
             descriptor,
             ..default!()
         }
     }
 
-    pub fn as_descriptor(&self) -> &WalletDescriptor {
+    pub fn as_descriptor(&self) -> &WalletSettings {
         &self.descriptor
     }
 
-    pub fn to_descriptor(&self) -> WalletDescriptor {
+    pub fn to_descriptor(&self) -> WalletSettings {
         self.descriptor.clone()
     }
 
-    pub fn into_descriptor(self) -> WalletDescriptor {
+    pub fn into_descriptor(self) -> WalletSettings {
         self.descriptor
     }
 
@@ -119,16 +120,32 @@ pub enum DescriptorError {
     InsufficientSignerCount(u16, SpendingCondition),
 }
 
-#[derive(Getters, Clone, PartialEq, Eq, Hash, Debug, Default)]
+#[derive(Getters, Clone, PartialEq, Eq, Hash, Debug)]
 #[derive(StrictEncode, StrictDecode)]
-pub struct WalletDescriptor {
+pub struct WalletSettings {
     network: PublicNetwork,
+    core: WalletDescriptor,
     signers: Vec<Signer>,
-    core: WalletCore,
+    electrum: ElectrumServer,
 }
 
-impl Deref for WalletDescriptor {
-    type Target = WalletCore;
+impl Default for WalletSettings {
+    fn default() -> Self {
+        WalletSettings {
+            network: PublicNetwork::default(),
+            core: default!(),
+            signers: empty!(),
+            electrum: ElectrumServer {
+                sec: ElectrumSec::Tls,
+                server: s!("electrum.blockstream.info"),
+                port: PublicNetwork::default().electrum_port(),
+            },
+        }
+    }
+}
+
+impl Deref for WalletSettings {
+    type Target = WalletDescriptor;
 
     fn deref(&self) -> &Self::Target {
         &self.core
@@ -143,7 +160,7 @@ impl Deref for WalletDescriptor {
 /// descriptor.
 #[derive(Getters, Clone, PartialEq, Eq, Hash, Debug, Default)]
 #[derive(StrictEncode, StrictDecode)]
-pub struct WalletCore {
+pub struct WalletDescriptor {
     /// We commit to the information whether
     pub(self) testnet: bool,
     /// We operate set of descriptor types, such that each wallet can produce addresses of different
@@ -168,18 +185,20 @@ pub struct WalletCore {
     pub(self) spending_conditions: BTreeSet<(u8, SpendingCondition)>,
 }
 
-impl WalletDescriptor {
+impl WalletSettings {
     pub fn with(
         signers: impl IntoIterator<Item = Signer>,
         spending_conditions: impl IntoIterator<Item = (u8, SpendingCondition)>,
         descriptor_classes: impl IntoIterator<Item = DescriptorClass>,
         terminal: Vec<TerminalStep>,
         network: PublicNetwork,
-    ) -> Result<WalletDescriptor, DescriptorError> {
-        let mut descriptor = WalletDescriptor {
+        electrum: ElectrumServer,
+    ) -> Result<WalletSettings, DescriptorError> {
+        let mut descriptor = WalletSettings {
             signers: empty!(),
             network,
-            core: WalletCore {
+            electrum,
+            core: WalletDescriptor {
                 testnet: network.is_testnet(),
                 descriptor_classes: empty!(),
                 terminal,

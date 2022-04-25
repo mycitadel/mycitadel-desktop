@@ -17,13 +17,13 @@ use bitcoin::util::bip32::ExtendedPubKey;
 use electrum_client::Client as ElectrumClient;
 use miniscript::Descriptor;
 use relm::{Channel, StreamHandle};
-use wallet::hd::{Bip43, TerminalStep, TrackingAccount};
+use wallet::hd::{Bip43, DerivationStandard, TerminalStep, TrackingAccount};
 
 use super::spending_row::SpendingModel;
 use super::Msg;
 use crate::model::{
-    file, DescriptorClass, DescriptorError, ElectrumSec, FileDocument, HardwareList, PublicNetwork,
-    Signer, Wallet, WalletDescriptor, WalletTemplate,
+    file, DescriptorClass, DescriptorError, ElectrumSec, ElectrumServer, FileDocument,
+    HardwareList, PublicNetwork, Signer, Wallet, WalletSettings, WalletTemplate,
 };
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
@@ -46,17 +46,40 @@ pub struct ElectrumModel {
     pub electrum_sec: ElectrumSec,
 }
 
+impl From<ElectrumModel> for ElectrumServer {
+    fn from(model: ElectrumModel) -> Self {
+        ElectrumServer {
+            sec: model.electrum_sec,
+            server: model.host(),
+            port: model.electrum_port,
+        }
+    }
+}
+
+impl From<ElectrumServer> for ElectrumModel {
+    fn from(electrum: ElectrumServer) -> Self {
+        let electrum_preset = match electrum.server.as_str() {
+            "electrum.blockstream.info" => ElectrumPreset::Blockstream,
+            "electrum.mycitadel.io" => ElectrumPreset::MyCitadel,
+            _ => ElectrumPreset::Custom,
+        };
+        ElectrumModel {
+            electrum_preset,
+            electrum_server: electrum.server,
+            electrum_port: electrum.port,
+            electrum_sec: electrum.sec,
+        }
+    }
+}
+
 impl Display for ElectrumModel {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        let server = if self.electrum_preset == ElectrumPreset::Custom {
-            self.electrum_server.clone()
-        } else {
-            self.electrum_preset.to_string()
-        };
         write!(
             f,
             "{}://{}:{}",
-            self.electrum_sec, server, self.electrum_port
+            self.electrum_sec,
+            self.host(),
+            self.electrum_port
         )
     }
 }
@@ -68,6 +91,14 @@ impl ElectrumModel {
             electrum_server: ElectrumPreset::Blockstream.to_string(),
             electrum_port: network.electrum_port(),
             electrum_sec: ElectrumSec::Tls,
+        }
+    }
+
+    fn host(&self) -> String {
+        if self.electrum_preset == ElectrumPreset::Custom {
+            self.electrum_server.clone()
+        } else {
+            self.electrum_preset.to_string()
         }
     }
 }
@@ -93,16 +124,17 @@ pub struct ViewModel {
     pub descriptor: Option<Descriptor<TrackingAccount>>,
 }
 
-impl TryFrom<&ViewModel> for WalletDescriptor {
+impl TryFrom<&ViewModel> for WalletSettings {
     type Error = DescriptorError;
 
     fn try_from(model: &ViewModel) -> Result<Self, Self::Error> {
-        WalletDescriptor::with(
+        WalletSettings::with(
             model.signers.clone(),
             model.spending_model.spending_conditions(),
             model.descriptor_classes.clone(),
             model.terminal_derivation(),
             model.network,
+            model.electrum_model.clone().into(),
         )
     }
 }
@@ -134,7 +166,12 @@ impl ViewModel {
         let model = ViewModel {
             path,
             stream,
-            descriptor_classes: default!(),
+            descriptor_classes: template
+                .format
+                .descriptor_types()
+                .iter()
+                .map(DescriptorClass::from)
+                .collect(),
             support_multiclass: false,
             network: template.network,
             signers: empty!(),
@@ -153,7 +190,7 @@ impl ViewModel {
 
     pub fn with_descriptor(
         stream: StreamHandle<Msg>,
-        descr: WalletDescriptor,
+        descr: WalletSettings,
         path: PathBuf,
     ) -> ViewModel {
         let descriptor_classes = descr.descriptor_classes().clone();
@@ -179,8 +216,8 @@ impl ViewModel {
         self.stream.clone()
     }
 
-    pub fn save(&self) -> Result<Option<WalletDescriptor>, file::Error> {
-        WalletDescriptor::try_from(self)
+    pub fn save(&self) -> Result<Option<WalletSettings>, file::Error> {
+        WalletSettings::try_from(self)
             .ok()
             .map(Wallet::with)
             .map(|wallet| {
@@ -283,10 +320,10 @@ impl ViewModel {
             self.descriptor = None;
             return Err(s!("You need to add at least one signer"));
         }
-        let descriptor = WalletDescriptor::try_from(self as &Self)
+        let descriptor = WalletSettings::try_from(self as &Self)
             .ok()
             .as_ref()
-            .map(WalletDescriptor::descriptors_all)
+            .map(WalletSettings::descriptors_all)
             .transpose()
             .map_err(|err| err.to_string())?
             .map(|(d, _)| d);

@@ -8,23 +8,21 @@
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
+#[derive(StrictEncode, StrictDecode)]
 pub enum ElectrumSec {
     #[display("tor")]
     Tor,
     #[display("ssl")]
     Tls,
-    #[display("")]
+    #[display("tcp")]
     None,
 }
 
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
-pub enum ElectrumServer {
-    #[display("electrum.mycitadel.io")]
-    MyCitadel(bool),
-
-    #[display("electrum.blockstream.info")]
-    Blockstream(bool),
-
-    #[display("{0}:{1}")]
-    Custom(String, u16, ElectrumSec),
+#[derive(StrictEncode, StrictDecode)]
+#[display("{sec}://{server}:{port}")]
+pub struct ElectrumServer {
+    pub sec: ElectrumSec,
+    pub server: String,
+    pub port: u16,
 }
