@@ -27,9 +27,10 @@ use wallet::hd::{DerivationStandard, HardenedIndex, SegmentIndexes, TrackingAcco
 
 use super::{spending_row, spending_row::SpendingModel, Msg, ViewModel};
 use crate::model::{
-    DerivationStandardExt, DescriptorClass, OriginFormat, Ownership, PublicNetwork, Requirement,
-    Signer, WalletStandard, WalletTemplate,
+    DerivationStandardExt, DescriptorClass, ElectrumSec, OriginFormat, Ownership, PublicNetwork,
+    Requirement, Signer, WalletStandard, WalletTemplate,
 };
+use crate::view::settings::view_model::{ElectrumModel, ElectrumPreset};
 
 // Create the structure that holds the widgets used in the view.
 #[derive(Clone, Gladis)]
@@ -87,6 +88,17 @@ pub struct Widgets {
     signet_tgl: ToggleButton,
     export_core_tgl: ToggleButton,
     export_lnpbp_tgl: ToggleButton,
+    electr_blockstream_tgl: ToggleButton,
+    electr_mycitadel_tgl: ToggleButton,
+    electr_custom_tgl: ToggleButton,
+    tor_tgl: ToggleButton,
+    tls_tgl: ToggleButton,
+    nosec_tgl: ToggleButton,
+    electrum_fld: Entry,
+    port_stp: SpinButton,
+    port_adj: Adjustment,
+    test_btn: Button,
+    connection_img: Image,
 }
 
 impl Widgets {
@@ -133,6 +145,8 @@ impl Widgets {
             .set_active(model.network == PublicNetwork::Testnet);
         self.signet_tgl
             .set_active(model.network == PublicNetwork::Signet);
+
+        self.update_electrum(&mut model.electrum_model.clone());
 
         self.update_signers(&model.signers);
         self.update_signer_details(None, model.network);
@@ -390,6 +404,40 @@ impl Widgets {
             (_, _, true) => PublicNetwork::Signet,
             _ => unreachable!("inconsistent network togglers state"),
         }
+    }
+
+    pub fn electrum_server(&self) -> String {
+        self.electrum_fld.text().to_string()
+    }
+
+    pub fn electrum_port(&self) -> u16 {
+        self.port_adj.value() as u16
+    }
+
+    pub fn update_electrum(&self, model: &mut ElectrumModel) {
+        self.electr_mycitadel_tgl
+            .set_active(model.electrum_preset == ElectrumPreset::MyCitadel);
+        self.electr_blockstream_tgl
+            .set_active(model.electrum_preset == ElectrumPreset::Blockstream);
+        self.electr_custom_tgl
+            .set_active(model.electrum_preset == ElectrumPreset::Custom);
+        if model.electrum_preset != ElectrumPreset::Custom {
+            model.electrum_server = model.electrum_preset.to_string();
+            model.electrum_port = self.network().electrum_port();
+        }
+        self.tor_tgl
+            .set_active(model.electrum_sec == ElectrumSec::Tor);
+        self.tls_tgl
+            .set_active(model.electrum_sec == ElectrumSec::Tls);
+        self.nosec_tgl
+            .set_active(model.electrum_sec == ElectrumSec::None);
+        self.electrum_fld.set_text(&model.electrum_server);
+        self.port_adj.set_value(model.electrum_port as f64);
+        self.connection_img.set_icon_name(None);
+        self.electrum_fld
+            .set_sensitive(model.electrum_preset == ElectrumPreset::Custom);
+        self.port_stp
+            .set_sensitive(model.electrum_preset == ElectrumPreset::Custom);
     }
 
     fn update_derivation(&self, format: &WalletStandard, network: PublicNetwork) {
