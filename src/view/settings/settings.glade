@@ -1247,7 +1247,7 @@ However, they are not supported by other wallets. Wallets of this type can be us
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="hexpand">True</property>
-                        <property name="text" translatable="yes">electrum.blockstreamm.info</property>
+                        <property name="text" translatable="yes">electrum.blockstream.info</property>
                       </object>
                       <packing>
                         <property name="left-attach">0</property>

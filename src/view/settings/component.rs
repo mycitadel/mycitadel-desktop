@@ -297,6 +297,9 @@ impl Update for Component {
                         .update_descr_classes(&self.model.descriptor_classes);
                 }
             }
+            Msg::NetworkChange(network) if network != self.model.network => {
+                self.model.network = network;
+            }
             _ => {}
         }
 

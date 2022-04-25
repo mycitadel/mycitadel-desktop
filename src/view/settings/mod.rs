@@ -25,7 +25,9 @@ use bitcoin::util::bip32::{ExtendedPubKey, Fingerprint};
 use gtk::ResponseType;
 use relm::StreamHandle;
 
-use crate::model::{DescriptorClass, HardwareDevice, WalletDescriptor, WalletTemplate};
+use crate::model::{
+    DescriptorClass, HardwareDevice, PublicNetwork, WalletDescriptor, WalletTemplate,
+};
 use crate::view::{launch, wallet};
 
 #[derive(Msg)]
@@ -46,6 +48,7 @@ pub enum Msg {
     ConditionRemove,
     ConditionSelect,
     ConditionChange,
+    NetworkChange(PublicNetwork),
     ToggleClass(DescriptorClass),
     ExportFormat(bool),
     Response(ResponseType),

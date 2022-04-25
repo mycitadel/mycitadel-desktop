@@ -53,8 +53,8 @@ impl Widgets {
 
     fn network(&self) -> PublicNetwork {
         match self.testnet_swch.is_active() {
-            true => PublicNetwork::Mainnet,
-            false => PublicNetwork::Testnet,
+            true => PublicNetwork::Testnet,
+            false => PublicNetwork::Mainnet,
         }
     }
 

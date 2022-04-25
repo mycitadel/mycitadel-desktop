@@ -127,6 +127,13 @@ impl Widgets {
             }
         }
 
+        self.mainnet_tgl
+            .set_active(model.network == PublicNetwork::Mainnet);
+        self.testnet_tgl
+            .set_active(model.network == PublicNetwork::Testnet);
+        self.signet_tgl
+            .set_active(model.network == PublicNetwork::Signet);
+
         self.update_signers(&model.signers);
         self.update_signer_details(None, model.network);
         self.update_descr_classes(&model.descriptor_classes);
@@ -226,6 +233,25 @@ impl Widgets {
             self.signers_tree,
             connect_cursor_changed(_),
             Msg::SignerSelect
+        );
+
+        connect!(
+            relm,
+            self.mainnet_tgl,
+            connect_toggled(_),
+            Msg::NetworkChange(PublicNetwork::Mainnet)
+        );
+        connect!(
+            relm,
+            self.testnet_tgl,
+            connect_toggled(_),
+            Msg::NetworkChange(PublicNetwork::Testnet)
+        );
+        connect!(
+            relm,
+            self.signet_tgl,
+            connect_toggled(_),
+            Msg::NetworkChange(PublicNetwork::Signet)
         );
 
         connect!(
@@ -335,6 +361,19 @@ impl Widgets {
             Ownership::Mine
         } else {
             Ownership::External
+        }
+    }
+
+    pub fn network(&self) -> PublicNetwork {
+        match (
+            self.mainnet_tgl.is_active(),
+            self.testnet_tgl.is_active(),
+            self.signet_tgl.is_active(),
+        ) {
+            (true, false, false) => PublicNetwork::Mainnet,
+            (_, true, false) => PublicNetwork::Testnet,
+            (_, _, true) => PublicNetwork::Signet,
+            _ => unreachable!("inconsistent network togglers state"),
         }
     }
 

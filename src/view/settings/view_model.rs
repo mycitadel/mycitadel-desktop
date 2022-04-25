@@ -77,6 +77,7 @@ impl ViewModel {
     pub fn new(template: WalletTemplate, path: PathBuf) -> Result<ViewModel, file::Error> {
         let model = ViewModel {
             path,
+            network: template.network,
             template: Some(template),
             ..default!()
         };
