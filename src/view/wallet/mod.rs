@@ -34,7 +34,7 @@ pub enum Msg {
     Save,
     Settings,
     Update(Vec<Signer>, BTreeSet<DescriptorClass>),
-    Send,
+    Pay,
     Receive,
     Refresh,
     Select(usize),

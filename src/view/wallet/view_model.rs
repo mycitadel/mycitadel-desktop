@@ -52,11 +52,13 @@ impl ViewModel {
     pub fn as_wallet(&self) -> &Wallet {
         &self.wallet
     }
+    pub fn to_wallet(&self) -> Wallet {
+        self.wallet.clone()
+    }
 
     pub fn as_descriptor(&self) -> &WalletDescriptor {
         self.wallet.as_descriptor()
     }
-
     pub fn to_descriptor(&self) -> WalletDescriptor {
         self.wallet.to_descriptor()
     }

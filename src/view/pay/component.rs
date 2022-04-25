@@ -11,14 +11,16 @@
 
 use gladis::Gladis;
 use gtk::{Dialog, ResponseType};
-use relm::{Relm, Update, Widget};
+use relm::{Relm, StreamHandle, Update, Widget};
 
 use super::{Msg, ViewModel, Widgets};
 use crate::model::Wallet;
+use crate::view::wallet;
 
 pub struct Component {
     model: ViewModel,
     widgets: Widgets,
+    wallet_stream: Option<StreamHandle<wallet::Msg>>,
 }
 
 impl Component {}
@@ -48,6 +50,9 @@ impl Update for Component {
                 self.widgets.close();
             }
             Msg::Response(_) => unreachable!(),
+            Msg::SetWallet(stream) => {
+                self.wallet_stream = Some(stream);
+            }
         }
     }
 }
@@ -67,8 +72,11 @@ impl Widget for Component {
 
         widgets.connect(relm);
         widgets.update_ui(&model);
-        widgets.show();
 
-        Component { model, widgets }
+        Component {
+            model,
+            widgets,
+            wallet_stream: None,
+        }
     }
 }

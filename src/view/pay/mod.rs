@@ -18,9 +18,13 @@ pub(self) use view_model::ViewModel;
 pub(self) use widget::Widgets;
 
 use gtk::ResponseType;
+use relm::StreamHandle;
+
+use crate::view::wallet;
 
 #[derive(Msg)]
 pub enum Msg {
     Show,
     Response(ResponseType),
+    SetWallet(StreamHandle<wallet::Msg>),
 }

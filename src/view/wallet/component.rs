@@ -17,12 +17,13 @@ use relm::{init, Relm, StreamHandle, Update, Widget};
 
 use super::{Msg, ViewModel, Widgets};
 use crate::model::{FileDocument, Wallet};
-use crate::view::{error_dlg, launch, settings};
+use crate::view::{error_dlg, launch, pay, settings};
 
 pub struct Component {
     model: ViewModel,
     widgets: Widgets,
     settings: relm::Component<settings::Component>,
+    payment: relm::Component<pay::Component>,
     launcher_stream: Option<StreamHandle<launch::Msg>>,
 }
 
@@ -78,6 +79,7 @@ impl Update for Component {
                 );
                 self.close();
             }
+            Msg::Pay => self.payment.emit(pay::Msg::Show),
             Msg::Settings => self.settings.emit(settings::Msg::View(
                 self.model.to_descriptor(),
                 self.model.path().clone(),
@@ -120,6 +122,10 @@ impl Widget for Component {
         let settings = init::<settings::Component>(()).expect("error in settings component");
         settings.emit(settings::Msg::SetWallet(relm.stream().clone()));
 
+        let payment =
+            init::<pay::Component>(model.to_wallet()).expect("error in settings component");
+        payment.emit(pay::Msg::SetWallet(relm.stream().clone()));
+
         widgets.connect(relm);
         widgets.update_ui(&model);
         widgets.show();
@@ -128,6 +134,7 @@ impl Widget for Component {
             model,
             widgets,
             settings,
+            payment,
             launcher_stream: None,
         }
     }

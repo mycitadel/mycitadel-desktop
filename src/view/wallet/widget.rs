@@ -26,6 +26,7 @@ pub struct Widgets {
     new_btn: Button,
     open_btn: Button,
     settings_btn: Button,
+    pay_btn: Button,
 
     history_store: ListStore,
     utxo_store: ListStore,
@@ -73,6 +74,7 @@ impl Widgets {
         connect!(relm, self.new_btn, connect_clicked(_), Msg::New);
         connect!(relm, self.open_btn, connect_clicked(_), Msg::Open);
         connect!(relm, self.settings_btn, connect_clicked(_), Msg::Settings);
+        connect!(relm, self.pay_btn, connect_clicked(_), Msg::Pay);
         connect!(
             relm,
             self.window,
