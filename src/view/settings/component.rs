@@ -197,15 +197,16 @@ impl Update for Component {
                 return;
             }
             Msg::ElectrumTest => {
+                self.widgets.start_electrum_test();
                 self.model.test_electrum();
                 return;
             }
             Msg::ElectrumTestOk => {
-                self.widgets.update_electrum_test(None);
+                self.widgets.complete_electrum_test(None);
                 return;
             }
             Msg::ElectrumTestFailed(failure) => {
-                self.widgets.update_electrum_test(Some(failure));
+                self.widgets.complete_electrum_test(Some(failure));
                 return;
             }
             Msg::SetWallet(stream) => {

@@ -89,9 +89,9 @@ impl PublicNetwork {
 
     pub fn electrum_port(self) -> u16 {
         match self {
-            PublicNetwork::Mainnet => 50000,
-            PublicNetwork::Testnet => 60000,
-            PublicNetwork::Signet => 60060,
+            PublicNetwork::Mainnet => 50001,
+            PublicNetwork::Testnet => 60001,
+            PublicNetwork::Signet => 60601,
         }
     }
 }

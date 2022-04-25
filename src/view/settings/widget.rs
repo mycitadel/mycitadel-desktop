@@ -18,8 +18,8 @@ use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{
     gdk, glib, Adjustment, Box, Button, ButtonBox, ComboBoxText, Dialog, Entry, Grid, HeaderBar,
-    Image, Label, ListBox, ListBoxRow, ListStore, Notebook, ResponseType, SpinButton, TextBuffer,
-    ToggleButton, ToolButton, Toolbar, TreePath, TreeView,
+    Image, Label, ListBox, ListBoxRow, ListStore, Notebook, ResponseType, SpinButton, Spinner,
+    TextBuffer, ToggleButton, ToolButton, Toolbar, TreePath, TreeView,
 };
 use miniscript::Descriptor;
 use relm::Relm;
@@ -100,6 +100,7 @@ pub struct Widgets {
     port_adj: Adjustment,
     test_btn: Button,
     connection_img: Image,
+    connection_spin: Spinner,
 }
 
 impl Widgets {
@@ -502,16 +503,26 @@ impl Widgets {
             .set_sensitive(model.electrum_preset == ElectrumPreset::Custom);
     }
 
-    pub fn update_electrum_test(&self, err: Option<String>) {
+    pub fn start_electrum_test(&self) {
+        self.connection_spin.set_visible(true);
+        self.connection_spin.set_active(true);
+        self.connection_img.set_visible(false);
+        self.test_btn.set_sensitive(false);
+    }
+
+    pub fn complete_electrum_test(&self, err: Option<String>) {
+        self.connection_spin.set_visible(false);
         if let Some(err) = err {
             self.connection_img
-                .set_icon_name(Some("emblem-dialog-error"));
+                .set_icon_name(Some("emblem-important-symbolic"));
             self.connection_img.set_tooltip_text(Some(&err));
         } else {
             self.connection_img
                 .set_icon_name(Some("emblem-default-symbolic"));
             self.connection_img.set_tooltip_text(None);
         }
+        self.connection_img.set_visible(true);
+        self.test_btn.set_sensitive(true);
     }
 
     fn update_derivation(&self, format: &WalletStandard, network: PublicNetwork) {

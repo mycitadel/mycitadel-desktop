@@ -16,7 +16,7 @@ use std::path::{Path, PathBuf};
 use bitcoin::util::bip32::ExtendedPubKey;
 use electrum_client::Client as ElectrumClient;
 use miniscript::Descriptor;
-use relm::StreamHandle;
+use relm::{Channel, StreamHandle};
 use wallet::hd::{Bip43, TerminalStep, TrackingAccount};
 
 use super::spending_row::SpendingModel;
@@ -175,7 +175,7 @@ impl ViewModel {
         }
     }
 
-    pub fn stream(self) -> StreamHandle<Msg> {
+    pub fn stream(&self) -> StreamHandle<Msg> {
         self.stream.clone()
     }
 
@@ -295,14 +295,28 @@ impl ViewModel {
     }
 
     pub fn test_electrum(&self) {
+        enum ElectrumMsg {
+            Ok,
+            Failure(String),
+        }
         let stream = self.stream.clone();
         let url = self.electrum_model.to_string();
-        std::thread::spawn(move || match ElectrumClient::new(&url) {
+        let (_channel, sender) = Channel::new(move |msg| match msg {
+            ElectrumMsg::Ok => stream.emit(Msg::ElectrumTestOk),
+            ElectrumMsg::Failure(err) => stream.emit(Msg::ElectrumTestFailed(err)),
+        });
+        let config = electrum_client::ConfigBuilder::new()
+            .timeout(Some(5))
+            .expect("we do not use socks here")
+            .build();
+        std::thread::spawn(move || match ElectrumClient::from_config(&url, config) {
             Err(err) => {
-                stream.emit(Msg::ElectrumTestFailed(err.to_string()));
+                sender
+                    .send(ElectrumMsg::Failure(err.to_string()))
+                    .expect("channel broken");
             }
             Ok(_) => {
-                stream.emit(Msg::ElectrumTestOk);
+                sender.send(ElectrumMsg::Ok).expect("channel broken");
             }
         });
     }

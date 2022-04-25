@@ -7,12 +7,12 @@
     <property name="step-increment">1</property>
     <property name="page-increment">10</property>
   </object>
+  <object class="GtkTextBuffer" id="descriptor_buf"/>
   <object class="GtkAdjustment" id="port_adj">
     <property name="upper">65536</property>
     <property name="step-increment">1</property>
     <property name="page-increment">100</property>
   </object>
-  <object class="GtkTextBuffer" id="descriptor_buf"/>
   <object class="GtkListStore" id="signers_store">
     <columns>
       <!-- column-name name -->
@@ -1256,26 +1256,15 @@ However, they are not supported by other wallets. Wallets of this type can be us
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkImage" id="connection_img">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="icon-name">emblem-default-symbolic</property>
-                      </object>
-                      <packing>
-                        <property name="left-attach">3</property>
-                        <property name="top-attach">1</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkSpinButton" id = "port_stp">
+                      <object class="GtkSpinButton" id="port_stp">
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="tooltip-text" translatable="yes">Port number</property>
                         <property name="width-chars">6</property>
                         <property name="input-purpose">digits</property>
+                        <property name="adjustment">port_adj</property>
                         <property name="numeric">True</property>
                         <property name="value">50000</property>
-                        <property name="adjustment">port_adj</property>
                       </object>
                       <packing>
                         <property name="left-attach">2</property>
@@ -1322,10 +1311,10 @@ However, they are not supported by other wallets. Wallets of this type can be us
                           <object class="GtkRadioButton" id="tor_tgl">
                             <property name="label" translatable="yes">Tor</property>
                             <property name="visible">True</property>
+                            <property name="sensitive">False</property>
                             <property name="can-focus">True</property>
                             <property name="receives-default">False</property>
                             <property name="draw-indicator">False</property>
-                            <property name="sensitive">False</property>
                           </object>
                           <packing>
                             <property name="expand">True</property>
@@ -1353,6 +1342,39 @@ However, they are not supported by other wallets. Wallets of this type can be us
                         <property name="left-attach">0</property>
                         <property name="top-attach">1</property>
                         <property name="width">2</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkBox">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <child>
+                          <object class="GtkImage" id="connection_img">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="icon-name">emblem-default-symbolic</property>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkSpinner" id="connection_spin">
+                            <property name="can-focus">False</property>
+                            <property name="active">True</property>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
+                      </object>
+                      <packing>
+                        <property name="left-attach">3</property>
+                        <property name="top-attach">1</property>
                       </packing>
                     </child>
                   </object>
