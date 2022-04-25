@@ -53,6 +53,9 @@ impl ViewModel {
     pub fn as_wallet(&self) -> &Wallet {
         &self.wallet
     }
+    pub fn as_wallet_mut(&mut self) -> &mut Wallet {
+        &mut self.wallet
+    }
     pub fn to_wallet(&self) -> Wallet {
         self.wallet.clone()
     }

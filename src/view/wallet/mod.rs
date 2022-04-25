@@ -43,3 +43,22 @@ pub enum Msg {
     ElectrumWatch(WatchMsg),
     RegisterLauncher(StreamHandle<launch::Msg>),
 }
+
+#[derive(Clone, PartialEq, Debug, Display)]
+#[display(doc_comments)]
+pub enum ElectrumState {
+    /// Connecting to electrum server...
+    Connecting,
+    /// Checking latest blockchain state...
+    QueryingBlockchainState,
+    /// Retrieving fee information...
+    RetrievingFees,
+    /// Getting transaction history (batch {0})...
+    RetrievingHistory(usize),
+    /// Reading transactions: {0:.0}%
+    RetrievingTransactions(f32),
+    /// Ready.
+    Complete,
+    /// Electrum error: {0}
+    Error(String),
+}

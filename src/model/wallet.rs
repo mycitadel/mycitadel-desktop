@@ -10,15 +10,18 @@
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::io::{Read, Write};
 use std::ops::{Deref, RangeInclusive};
 
 use bitcoin::secp256k1::SECP256K1;
 use bitcoin::util::bip32::{ChildNumber, DerivationPath, Fingerprint};
-use bitcoin::{Address, Network, PublicKey};
+use bitcoin::{Address, BlockHash, Network, PublicKey, Transaction, Txid};
 use chrono::{DateTime, Utc};
+use electrum_client::HeaderNotification;
 use miniscript::descriptor::{DescriptorType, Sh, Wsh};
 use miniscript::policy::concrete::Policy;
 use miniscript::{Descriptor, Legacy, Segwitv0, Tap};
+use strict_encoding::{StrictDecode, StrictEncode};
 use wallet::descriptors::DescrVariants;
 use wallet::hd::standards::DerivationBlockchain;
 use wallet::hd::{
@@ -36,6 +39,7 @@ use super::{
     Unsatisfiable, XpubkeyCore,
 };
 use crate::model::{ElectrumSec, ElectrumServer};
+use crate::worker::{HistoryTxid, UtxoTxid};
 
 // TODO: Move to bpro library
 #[derive(Getters, Clone, Debug, Default)]
@@ -43,9 +47,26 @@ use crate::model::{ElectrumSec, ElectrumServer};
 pub struct Wallet {
     #[getter(skip)]
     settings: WalletSettings,
+
     last_indexes: BTreeMap<UnhardenedIndex, UnhardenedIndex>,
+
+    #[getter(as_copy)]
+    last_block: BlockHash,
+
+    #[getter(as_copy)]
+    height: u32,
+
+    #[getter(as_copy)]
     state: WalletState,
-    history: Vec<Psbt>,
+
+    ephemerals: WalletEphemerals,
+
+    utxos: Vec<UtxoTxid>,
+
+    history: Vec<HistoryTxid>,
+
+    transactions: BTreeMap<Txid, Transaction>,
+
     wip: Vec<Psbt>,
 }
 
@@ -67,6 +88,10 @@ impl Wallet {
 
     pub fn into_settings(self) -> WalletSettings {
         self.settings
+    }
+
+    pub fn tx_count(&self) -> usize {
+        self.transactions.len()
     }
 
     pub fn next_default_index(&self) -> UnhardenedIndex {
@@ -98,6 +123,45 @@ impl Wallet {
 
     pub fn add_descriptor_class(&mut self, descriptor_class: DescriptorClass) -> bool {
         self.settings.add_descriptor_class(descriptor_class)
+    }
+
+    pub fn update_last_block(&mut self, last_block: &HeaderNotification) {
+        self.last_block = last_block.header.block_hash();
+        self.height = last_block.height as u32;
+    }
+
+    pub fn update_fees(&mut self, f0: f64, f1: f64, f2: f64) {
+        self.ephemerals.fees = (f0, f1, f2);
+    }
+
+    pub fn update_history(&mut self, batch: Vec<HistoryTxid>) {
+        let txids: BTreeSet<_> = self.history.iter().map(|item| item.txid).collect();
+        for item in batch {
+            if !txids.contains(&item.txid) {
+                self.history.push(item);
+            }
+        }
+    }
+
+    pub fn update_utxos(&mut self, batch: Vec<UtxoTxid>) {
+        let txids: BTreeSet<_> = self.history.iter().map(|item| item.txid).collect();
+        let mut balance = 0u64;
+        for item in batch {
+            if !txids.contains(&item.txid) {
+                balance += item.value;
+                self.utxos.push(item);
+            }
+        }
+        self.state.balance = balance;
+    }
+
+    pub fn update_transactions(&mut self, batch: BTreeMap<Txid, Transaction>) {
+        self.transactions.extend(batch);
+        self.state.volume = 0;
+        for tx in self.transactions.values() {
+            // TODO: Fix algorithm
+            self.state.volume += tx.output.iter().map(|out| out.value).sum::<u64>();
+        }
     }
 }
 
@@ -755,12 +819,42 @@ impl DerivationStandardExt for Bip43 {
     }
 }
 
-#[derive(Clone, Eq, PartialEq, Hash, Debug, Default)]
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Default)]
 #[derive(StrictEncode, StrictDecode)]
 pub struct WalletState {
-    balance: Sats,
+    pub balance: u64,
+    pub volume: u64,
 }
 
-#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
 #[derive(StrictEncode, StrictDecode)]
 pub struct Sats(u64);
+
+#[derive(Clone, PartialEq, Debug, Default)]
+pub struct WalletEphemerals {
+    pub fees: (f64, f64, f64),
+    pub fiat: String,
+    pub exchange_rate: f64,
+}
+
+impl StrictEncode for WalletEphemerals {
+    fn strict_encode<E: Write>(&self, mut e: E) -> Result<usize, strict_encoding::Error> {
+        Ok(
+            strict_encode_list!(e; self.fees.0, self.fees.1, self.fees.2, self.fiat, self.exchange_rate),
+        )
+    }
+}
+
+impl StrictDecode for WalletEphemerals {
+    fn strict_decode<D: Read>(mut d: D) -> Result<Self, strict_encoding::Error> {
+        Ok(WalletEphemerals {
+            fees: (
+                f64::strict_decode(&mut d)?,
+                f64::strict_decode(&mut d)?,
+                f64::strict_decode(&mut d)?,
+            ),
+            fiat: String::strict_decode(&mut d)?,
+            exchange_rate: f64::strict_decode(&mut d)?,
+        })
+    }
+}

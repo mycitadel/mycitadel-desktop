@@ -10,8 +10,9 @@
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
 use std::collections::BTreeMap;
-use std::io;
 use std::thread::JoinHandle;
+use std::time::Duration;
+use std::{io, thread};
 
 use amplify::Wrapper;
 use bitcoin::{Transaction, Txid};
@@ -24,14 +25,20 @@ use wallet::scripts::PubkeyScript;
 use crate::model::WalletSettings;
 
 pub enum WatchMsg {
+    Connecting,
+    Connected,
+    Complete,
     LastBlock(HeaderNotification),
-    FeeEstimate(Vec<f64>),
-    HistoryBatch(Vec<HistoryTxid>),
-    UtxoBatch(Vec<UtxoTxid>),
-    TxBatch(BTreeMap<Txid, Transaction>),
+    LastBlockUpdate(HeaderNotification),
+    FeeEstimate(f64, f64, f64),
+    HistoryBatch(Vec<HistoryTxid>, u16),
+    UtxoBatch(Vec<UtxoTxid>, u16),
+    TxBatch(BTreeMap<Txid, Transaction>, f32),
     Error(electrum_client::Error),
 }
 
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
+#[derive(StrictEncode, StrictDecode)]
 pub struct HistoryTxid {
     pub txid: Txid,
     pub height: i32,
@@ -40,6 +47,8 @@ pub struct HistoryTxid {
     pub change: bool,
 }
 
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
+#[derive(StrictEncode, StrictDecode)]
 pub struct UtxoTxid {
     pub txid: Txid,
     pub height: u32,
@@ -74,11 +83,19 @@ pub fn electrum_watcher(
     sender: &Sender<WatchMsg>,
     wallet_settings: WalletSettings,
 ) -> Result<(), electrum_client::Error> {
+    sender
+        .send(WatchMsg::Connecting)
+        .expect("electrum watcher channel is broken");
+
     let config = electrum_client::ConfigBuilder::new()
         .timeout(Some(5))
         .expect("we do not use socks here")
         .build();
     let client = ElectrumClient::from_config(&wallet_settings.electrum().to_string(), config)?;
+
+    sender
+        .send(WatchMsg::Connected)
+        .expect("electrum watcher channel is broken");
 
     let last_block = client.block_headers_subscribe()?;
     sender
@@ -87,7 +104,7 @@ pub fn electrum_watcher(
 
     let fee = client.batch_estimate_fee([1, 2, 3])?;
     sender
-        .send(WatchMsg::FeeEstimate(fee))
+        .send(WatchMsg::FeeEstimate(fee[0], fee[1], fee[2]))
         .expect("electrum watcher channel is broken");
 
     let network = bitcoin::Network::from(wallet_settings.network());
@@ -127,7 +144,7 @@ pub fn electrum_watcher(
             }
             txids.extend(history_batch.iter().map(|item| item.txid));
             sender
-                .send(WatchMsg::HistoryBatch(history_batch))
+                .send(WatchMsg::HistoryBatch(history_batch, offset))
                 .expect("electrum watcher channel is broken");
 
             let utxos: Vec<_> = client
@@ -149,25 +166,41 @@ pub fn electrum_watcher(
                 .collect();
             txids.extend(utxos.iter().map(|item| item.txid));
             sender
-                .send(WatchMsg::UtxoBatch(utxos))
+                .send(WatchMsg::UtxoBatch(utxos, offset))
                 .expect("electrum watcher channel is broken");
 
             offset += 20;
         };
     }
     let txids = txids.into_iter().collect::<Vec<_>>();
-    for chunk in txids.chunks(20) {
+    for (no, chunk) in txids.chunks(20).enumerate() {
         let txmap = chunk
             .iter()
             .copied()
             .zip(client.batch_transaction_get(chunk)?)
             .collect::<BTreeMap<_, _>>();
         sender
-            .send(WatchMsg::TxBatch(txmap))
+            .send(WatchMsg::TxBatch(
+                txmap,
+                (no + 1) as f32 / txids.len() as f32 / 20.0,
+            ))
             .expect("electrum watcher channel is broken");
     }
 
     // TODO: Subscribe to invoices
 
-    unreachable!();
+    sender
+        .send(WatchMsg::Complete)
+        .expect("electrum watcher channel is broken");
+
+    loop {
+        thread::sleep(Duration::from_secs(60));
+
+        match client.block_headers_pop() {
+            Ok(Some(last_block)) => sender.send(WatchMsg::LastBlockUpdate(last_block)),
+            Err(err) => sender.send(WatchMsg::Error(err)),
+            _ => Ok(()),
+        }
+        .expect("electrum watcher channel is broken");
+    }
 }
