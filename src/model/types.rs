@@ -86,6 +86,14 @@ impl PublicNetwork {
     pub fn is_testnet(self) -> bool {
         matches!(self, PublicNetwork::Testnet | PublicNetwork::Signet)
     }
+
+    pub fn electrum_port(self) -> u16 {
+        match self {
+            PublicNetwork::Mainnet => 50000,
+            PublicNetwork::Testnet => 60000,
+            PublicNetwork::Signet => 60060,
+        }
+    }
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]

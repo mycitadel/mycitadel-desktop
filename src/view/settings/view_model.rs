@@ -22,6 +22,37 @@ use crate::model::{
     Wallet, WalletDescriptor, WalletTemplate,
 };
 
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
+pub enum ElectrumPreset {
+    #[display("electrum.mycitadel.io")]
+    MyCitadel,
+
+    #[display("electrum.blockstream.info")]
+    Blockstream,
+
+    #[display("")]
+    Custom,
+}
+
+#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
+pub struct ElectrumModel {
+    pub electrum_preset: ElectrumPreset,
+    pub electrum_server: String,
+    pub electrum_port: u16,
+    pub electrum_sec: ElectrumSec,
+}
+
+impl ElectrumModel {
+    fn new(network: PublicNetwork) -> Self {
+        ElectrumModel {
+            electrum_preset: ElectrumPreset::Blockstream,
+            electrum_server: ElectrumPreset::Blockstream.to_string(),
+            electrum_port: network.electrum_port(),
+            electrum_sec: ElectrumSec::Tls,
+        }
+    }
+}
+
 pub struct ViewModel {
     path: PathBuf,
 
@@ -30,6 +61,7 @@ pub struct ViewModel {
     pub network: PublicNetwork,
     pub signers: Vec<Signer>,
     pub spending_model: SpendingModel,
+    pub electrum_model: ElectrumModel,
 
     // Data provided by the parent window
     pub template: Option<WalletTemplate>,
@@ -49,6 +81,7 @@ impl Default for ViewModel {
             signers: none!(),
             active_signer: None,
             spending_model: SpendingModel::new(),
+            electrum_model: ElectrumModel::new(PublicNetwork::Mainnet),
             network: PublicNetwork::Mainnet,
             descriptor: None,
             template: None,
@@ -95,6 +128,7 @@ impl ViewModel {
             network: *descr.network(),
             signers: descr.signers().clone(),
             spending_model: SpendingModel::from(descr.spending_conditions()),
+            electrum_model: ElectrumModel::new(*descr.network()),
 
             export_lnpbp: true,
             template: None,

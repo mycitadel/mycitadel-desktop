@@ -9,6 +9,7 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
+mod electrum;
 pub mod file;
 mod taptree;
 mod template;
@@ -22,6 +23,7 @@ pub use self::wallet::{
     DerivationStandardExt, DescriptorError, SpendingCondition, Wallet, WalletCore,
     WalletDescriptor, WalletStandard, WalletState,
 };
+pub use electrum::{ElectrumSec, ElectrumServer};
 pub use file::FileDocument;
 pub use taptree::ToTapTree;
 pub use template::{Requirement, WalletTemplate};
