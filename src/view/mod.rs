@@ -12,17 +12,19 @@
 pub mod devices;
 pub mod invoice;
 pub mod launch;
+pub mod pay;
 pub mod psbt;
 pub mod settings;
 pub mod tx;
 pub mod wallet;
+
+use std::path::PathBuf;
 
 use gtk::prelude::*;
 use gtk::{
     ButtonsType, DialogFlags, FileChooserAction, FileChooserDialog, FileFilter, MessageDialog,
     MessageType, ResponseType,
 };
-use std::path::PathBuf;
 
 pub fn error_dlg(
     parent: &impl IsA<gtk::Window>,
