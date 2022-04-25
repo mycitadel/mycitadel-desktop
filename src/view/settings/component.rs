@@ -14,6 +14,7 @@ use std::str::FromStr;
 
 use ::wallet::hd::DerivationStandard;
 use bitcoin::util::bip32::{DerivationPath, Fingerprint};
+use electrum_client::Client as ElectrumClient;
 use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{Dialog, ResponseType};
@@ -196,6 +197,11 @@ impl Update for Component {
                     .update_electrum(&mut self.model.electrum_model, false, false);
                 return;
             }
+            Msg::ElectrumTest => {
+                let client = ElectrumClient::new(&self.model.electrum_model.to_string());
+                self.widgets.update_electrum_test(client.err());
+                return;
+            }
             Msg::SetWallet(stream) => {
                 self.wallet_stream = Some(stream);
                 return;
@@ -360,7 +366,7 @@ impl Update for Component {
                 };
                 self.model.spending_model.remove(index as u32);
             }
-            Msg::ConditionChange => {}
+            Msg::ConditionChange => { /* TODO: Implement */ }
             Msg::ToggleClass(class) => {
                 if self.widgets.should_update_descr_class(class)
                     && self.model.toggle_descr_class(class)

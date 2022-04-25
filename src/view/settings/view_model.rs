@@ -10,6 +10,7 @@
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
 use std::collections::BTreeSet;
+use std::fmt::{self, Display, Formatter};
 use std::path::{Path, PathBuf};
 
 use bitcoin::util::bip32::ExtendedPubKey;
@@ -40,6 +41,21 @@ pub struct ElectrumModel {
     pub electrum_server: String,
     pub electrum_port: u16,
     pub electrum_sec: ElectrumSec,
+}
+
+impl Display for ElectrumModel {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        let server = if self.electrum_preset == ElectrumPreset::Custom {
+            self.electrum_server.clone()
+        } else {
+            self.electrum_preset.to_string()
+        };
+        write!(
+            f,
+            "{}://{}:{}",
+            self.electrum_sec, server, self.electrum_port
+        )
+    }
 }
 
 impl ElectrumModel {

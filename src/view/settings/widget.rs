@@ -501,6 +501,18 @@ impl Widgets {
             .set_sensitive(model.electrum_preset == ElectrumPreset::Custom);
     }
 
+    pub fn update_electrum_test(&self, err: Option<electrum_client::Error>) {
+        if let Some(err) = err {
+            self.connection_img
+                .set_icon_name(Some("emblem-dialog-error"));
+            self.connection_img.set_tooltip_text(Some(&err.to_string()));
+        } else {
+            self.connection_img
+                .set_icon_name(Some("emblem-default-symbolic"));
+            self.connection_img.set_tooltip_text(None);
+        }
+    }
+
     fn update_derivation(&self, format: &WalletStandard, network: PublicNetwork) {
         match format {
             WalletStandard::LnpBp(_) => {
