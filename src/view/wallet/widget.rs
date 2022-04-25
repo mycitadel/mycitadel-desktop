@@ -9,9 +9,11 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
-use crate::model::WalletState;
-use crate::worker::{HistoryTxid, UtxoTxid};
+use std::collections::BTreeMap;
+use std::ffi::OsStr;
+
 use bitcoin::{Transaction, Txid};
+use chrono::{DateTime, NaiveDateTime, Utc};
 use electrum_client::HeaderNotification;
 use gladis::Gladis;
 use gtk::prelude::*;
@@ -20,10 +22,10 @@ use gtk::{
     Spinner, Statusbar, TreeView,
 };
 use relm::Relm;
-use std::collections::BTreeMap;
-use std::ffi::OsStr;
 
 use super::{ElectrumState, Msg, ViewModel};
+use crate::model::{AddressInfo, WalletState};
+use crate::worker::{HistoryTxid, UtxoTxid};
 
 // Create the structure that holds the widgets used in the view.
 #[derive(Clone, Gladis)]
@@ -59,7 +61,6 @@ pub struct Widgets {
     status_bar: Statusbar,
     status_lbl: Label,
     balance_lbl: Label,
-    balance_copy_img: Image,
     lastblock_lbl: Label,
     height_lbl: Label,
     network_lbl: Label,
@@ -93,17 +94,14 @@ impl Widgets {
         let settings = model.as_settings();
 
         self.header_bar
-            .set_subtitle(model.path().file_name().and_then(OsStr::to_str));
-        self.network_lbl.set_text(&settings.network().to_string());
+            .set_title(model.path().file_name().and_then(OsStr::to_str));
+        let network = settings.network().to_string();
+        self.network_lbl
+            .set_text(&(network[0..1].to_uppercase() + &network[1..]));
         self.electrum_lbl.set_text(&settings.electrum().server);
 
         let address = model.as_wallet().next_address();
         self.address_fld.set_text(&address.to_string());
-
-        // TODO: Display change addresses
-        for row in model.generate_addresses(true, 20) {
-            row.insert_item(&self.address_store);
-        }
     }
 
     pub(super) fn connect(&self, relm: &Relm<super::Component>) {
@@ -111,6 +109,7 @@ impl Widgets {
         connect!(relm, self.open_btn, connect_clicked(_), Msg::Open);
         connect!(relm, self.settings_btn, connect_clicked(_), Msg::Settings);
         connect!(relm, self.pay_btn, connect_clicked(_), Msg::Pay);
+
         connect!(
             relm,
             self.window,
@@ -163,7 +162,13 @@ impl Widgets {
     }
 
     pub fn update_last_block(&mut self, last_block: &HeaderNotification) {
-        self.lastblock_lbl.set_text(&last_block.height.to_string());
+        let ts = last_block.header.time;
+        let naive = NaiveDateTime::from_timestamp(ts as i64, 0);
+        let dt = DateTime::<Utc>::from_utc(naive, Utc);
+        let time = dt.time();
+        self.lastblock_lbl
+            .set_text(&format!("{}", time.format("%-I:%M %p")));
+        self.height_lbl.set_text(&last_block.height.to_string());
     }
 
     pub fn update_fees(&mut self, _: f64, _: f64, _: f64) {
@@ -213,6 +218,20 @@ impl Widgets {
 
     pub fn update_transactions(&mut self, _transactions: &BTreeMap<Txid, Transaction>) {
         // TODO: Refresh history basing on tx info
+    }
+
+    pub fn update_addresses(&mut self, address_info: &[AddressInfo]) {
+        for info in address_info {
+            self.address_store.insert_with_values(
+                None,
+                &[
+                    (0, &info.address.to_string()),
+                    (1, &info.balance),
+                    (2, &info.volume),
+                    (3, &info.tx_count),
+                ],
+            );
+        }
     }
 
     pub fn update_state(&mut self, state: WalletState, tx_count: usize) {

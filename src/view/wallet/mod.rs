@@ -57,7 +57,7 @@ pub enum ElectrumState {
     RetrievingHistory(usize),
     /// Reading transactions: {0:.0}%
     RetrievingTransactions(f32),
-    /// Ready.
+    /// Ready
     Complete,
     /// Electrum error: {0}
     Error(String),

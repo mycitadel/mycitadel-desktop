@@ -7,7 +7,11 @@
       <!-- column-name address -->
       <column type="gchararray"/>
       <!-- column-name balance -->
-      <column type="gint64"/>
+      <column type="guint64"/>
+      <!-- column-name volume -->
+      <column type="guint64"/>
+      <!-- column-name tx_count -->
+      <column type="guint"/>
     </columns>
   </object>
   <object class="GtkMenu" id="fiat_menu">
@@ -648,11 +652,11 @@ volume</property>
                     <property name="clickable">True</property>
                     <property name="reorderable">True</property>
                     <property name="sort-indicator">True</property>
-                    <property name="sort-column-id">2</property>
+                    <property name="sort-column-id">1</property>
                     <child>
                       <object class="GtkCellRendererText" id="beneficiary"/>
                       <attributes>
-                        <attribute name="text">2</attribute>
+                        <attribute name="text">1</attribute>
                       </attributes>
                     </child>
                   </object>
@@ -835,6 +839,7 @@ volume</property>
                 <child>
                   <object class="GtkTreeViewColumn">
                     <property name="resizable">True</property>
+                    <property name="sizing">autosize</property>
                     <property name="title" translatable="yes">Address</property>
                     <property name="clickable">True</property>
                     <property name="reorderable">True</property>
@@ -844,6 +849,36 @@ volume</property>
                       <object class="GtkCellRendererText" id="address"/>
                       <attributes>
                         <attribute name="text">0</attribute>
+                      </attributes>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkTreeViewColumn">
+                    <property name="resizable">True</property>
+                    <property name="title" translatable="yes">Transactions</property>
+                    <property name="clickable">True</property>
+                    <property name="reorderable">True</property>
+                    <property name="sort-column-id">3</property>
+                    <child>
+                      <object class="GtkCellRendererText" id="tx_count"/>
+                      <attributes>
+                        <attribute name="text">3</attribute>
+                      </attributes>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkTreeViewColumn">
+                    <property name="resizable">True</property>
+                    <property name="title" translatable="yes">Volume</property>
+                    <property name="clickable">True</property>
+                    <property name="reorderable">True</property>
+                    <property name="sort-column-id">2</property>
+                    <child>
+                      <object class="GtkCellRendererText" id="volume"/>
+                      <attributes>
+                        <attribute name="text">2</attribute>
                       </attributes>
                     </child>
                   </object>
@@ -957,9 +992,6 @@ volume</property>
                 <property name="label" translatable="yes">Connecting to electrum server...</property>
                 <property name="ellipsize">end</property>
                 <property name="single-line-mode">True</property>
-                <attributes>
-                  <attribute name="style" value="italic"/>
-                </attributes>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -976,7 +1008,6 @@ volume</property>
                   <object class="GtkLabel" id="network_lbl">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
-                    <property name="margin-top">3</property>
                     <property name="label" translatable="yes">Mainnet</property>
                     <attributes>
                       <attribute name="weight" value="bold"/>
@@ -992,7 +1023,6 @@ volume</property>
                   <object class="GtkLabel" id="electrum_lbl">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
-                    <property name="margin-top">3</property>
                     <property name="label" translatable="yes">electrum.blockstream.info</property>
                   </object>
                   <packing>
@@ -1147,6 +1177,21 @@ volume</property>
                 <property name="can-focus">False</property>
                 <property name="spacing">6</property>
                 <child>
+                  <object class="GtkSeparator">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="margin-left">6</property>
+                    <property name="margin-right">6</property>
+                    <property name="margin-start">6</property>
+                    <property name="margin-end">6</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
                   <object class="GtkLabel">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
@@ -1158,7 +1203,7 @@ volume</property>
                   <packing>
                     <property name="expand">False</property>
                     <property name="fill">True</property>
-                    <property name="position">0</property>
+                    <property name="position">1</property>
                   </packing>
                 </child>
                 <child>
@@ -1167,18 +1212,6 @@ volume</property>
                     <property name="can-focus">False</property>
                     <property name="margin-start">3</property>
                     <property name="label" translatable="yes">n/a</property>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="position">1</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkImage" id="balance_copy_img">
-                    <property name="visible">True</property>
-                    <property name="can-focus">False</property>
-                    <property name="icon-name">edit-copy-symbolic</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -1197,7 +1230,7 @@ volume</property>
                   <packing>
                     <property name="expand">False</property>
                     <property name="fill">True</property>
-                    <property name="position">3</property>
+                    <property name="position">4</property>
                   </packing>
                 </child>
               </object>

@@ -84,6 +84,7 @@ impl Component {
                 self.widgets.update_state(wallet.state(), wallet.tx_count());
             }
             WatchMsg::Complete => {
+                self.widgets.update_addresses(&wallet.address_info());
                 self.widgets.update_electrum_state(ElectrumState::Complete);
             }
             WatchMsg::Error(err) => {

@@ -12,27 +12,9 @@
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
-use gtk::prelude::*;
-use gtk::{ListStore, TreeIter};
-use wallet::hd::UnhardenedIndex;
-use wallet::scripts::address::AddressCompat;
-
 use crate::model::{
     file, DescriptorClass, DescriptorError, FileDocument, Signer, Wallet, WalletSettings,
 };
-
-pub(super) struct AddressRow {
-    pub change: bool,
-    pub index: UnhardenedIndex,
-    pub address: AddressCompat,
-    pub balance: u64,
-}
-
-impl AddressRow {
-    pub fn insert_item(&self, store: &ListStore) -> TreeIter {
-        store.insert_with_values(None, &[(0, &self.address.to_string()), (1, &self.balance)])
-    }
-}
 
 #[derive(Getters)]
 pub struct ViewModel {
@@ -78,19 +60,5 @@ impl ViewModel {
         }
         // TODO: Produce more addresses
         Ok(())
-    }
-
-    pub(super) fn generate_addresses(&self, change: bool, count: u16) -> Vec<AddressRow> {
-        self.as_settings()
-            .addresses(false, 0..=(count - 1))
-            .expect("internal inconsistency in wallet descriptor")
-            .into_iter()
-            .map(|(index, address)| AddressRow {
-                change,
-                index,
-                address,
-                balance: 0,
-            })
-            .collect()
     }
 }

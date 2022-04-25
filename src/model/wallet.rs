@@ -9,6 +9,7 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
+use std::collections::btree_map::Entry;
 use std::collections::{BTreeMap, BTreeSet};
 use std::io::{Read, Write};
 use std::ops::{Deref, RangeInclusive};
@@ -114,6 +115,62 @@ impl Wallet {
         .expect("unable to derive address for the wallet descriptor")
     }
 
+    pub fn address_info(&self) -> Vec<AddressInfo> {
+        let addresses = self
+            .utxos
+            .iter()
+            .map(|utxo| AddressInfo {
+                address: utxo.address,
+                balance: utxo.value,
+                volume: utxo.value,
+                tx_count: 1,
+                index: utxo.index,
+                change: utxo.change,
+            })
+            .fold(
+                BTreeMap::<AddressCompat, AddressInfo>::new(),
+                |mut list, info| {
+                    match list.entry(info.address) {
+                        Entry::Vacant(entry) => entry.insert(info),
+                        Entry::Occupied(entry) => {
+                            let info2 = entry.into_mut();
+                            info2.balance += info.balance;
+                            info2.volume += info.volume;
+                            info2.tx_count += 1;
+                            info2
+                        }
+                    };
+                    list
+                },
+            );
+
+        let addresses = self
+            .history
+            .iter()
+            .map(|item| AddressInfo {
+                address: item.address,
+                balance: 0,
+                volume: 0, // TODO: Update from transaction information
+                tx_count: 1,
+                index: item.index,
+                change: item.change,
+            })
+            .fold(addresses, |mut list, info| {
+                match list.entry(info.address) {
+                    Entry::Vacant(entry) => entry.insert(info),
+                    Entry::Occupied(entry) => {
+                        let info2 = entry.into_mut();
+                        info2.volume += info.volume;
+                        info2.tx_count += 1;
+                        info2
+                    }
+                };
+                list
+            });
+
+        addresses.into_values().collect()
+    }
+
     pub fn update_signers(
         &mut self,
         signers: impl IntoIterator<Item = Signer>,
@@ -144,7 +201,7 @@ impl Wallet {
     }
 
     pub fn update_utxos(&mut self, batch: Vec<UtxoTxid>) {
-        let txids: BTreeSet<_> = self.history.iter().map(|item| item.txid).collect();
+        let txids: BTreeSet<_> = self.utxos.iter().map(|item| item.txid).collect();
         let mut balance = 0u64;
         for item in batch {
             if !txids.contains(&item.txid) {
@@ -152,7 +209,7 @@ impl Wallet {
                 self.utxos.push(item);
             }
         }
-        self.state.balance = balance;
+        self.state.balance += balance;
     }
 
     pub fn update_transactions(&mut self, batch: BTreeMap<Txid, Transaction>) {
@@ -818,6 +875,16 @@ impl DerivationStandardExt for Bip43 {
             _ => return None,
         })
     }
+}
+
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
+pub struct AddressInfo {
+    pub address: AddressCompat,
+    pub balance: u64,
+    pub tx_count: u32,
+    pub volume: u64,
+    pub index: UnhardenedIndex,
+    pub change: bool,
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Default)]
