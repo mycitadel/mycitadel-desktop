@@ -14,10 +14,13 @@ use std::fmt::{self, Display, Formatter};
 use std::path::{Path, PathBuf};
 
 use bitcoin::util::bip32::ExtendedPubKey;
+use electrum_client::Client as ElectrumClient;
 use miniscript::Descriptor;
+use relm::StreamHandle;
 use wallet::hd::{Bip43, TerminalStep, TrackingAccount};
 
 use super::spending_row::SpendingModel;
+use super::Msg;
 use crate::model::{
     file, DescriptorClass, DescriptorError, ElectrumSec, FileDocument, HardwareList, PublicNetwork,
     Signer, Wallet, WalletDescriptor, WalletTemplate,
@@ -71,6 +74,7 @@ impl ElectrumModel {
 
 pub struct ViewModel {
     path: PathBuf,
+    stream: StreamHandle<Msg>,
 
     pub descriptor_classes: BTreeSet<DescriptorClass>,
     pub support_multiclass: bool,
@@ -89,25 +93,6 @@ pub struct ViewModel {
     pub descriptor: Option<Descriptor<TrackingAccount>>,
 }
 
-impl Default for ViewModel {
-    fn default() -> Self {
-        ViewModel {
-            path: PathBuf::default(),
-            devices: none!(),
-            signers: none!(),
-            active_signer: None,
-            spending_model: SpendingModel::new(),
-            electrum_model: ElectrumModel::new(PublicNetwork::Mainnet),
-            network: PublicNetwork::Mainnet,
-            descriptor: None,
-            template: None,
-            descriptor_classes: bset![DescriptorClass::SegwitV0],
-            support_multiclass: false,
-            export_lnpbp: true,
-        }
-    }
-}
-
 impl TryFrom<&ViewModel> for WalletDescriptor {
     type Error = DescriptorError;
 
@@ -123,22 +108,58 @@ impl TryFrom<&ViewModel> for WalletDescriptor {
 }
 
 impl ViewModel {
-    pub fn new(template: WalletTemplate, path: PathBuf) -> Result<ViewModel, file::Error> {
+    pub fn new(stream: StreamHandle<Msg>) -> Self {
+        ViewModel {
+            path: PathBuf::default(),
+            stream,
+            devices: none!(),
+            signers: none!(),
+            active_signer: None,
+            spending_model: SpendingModel::new(),
+            electrum_model: ElectrumModel::new(PublicNetwork::Mainnet),
+            network: PublicNetwork::Mainnet,
+            descriptor: None,
+            template: None,
+            descriptor_classes: bset![DescriptorClass::SegwitV0],
+            support_multiclass: false,
+            export_lnpbp: true,
+        }
+    }
+
+    pub fn with_template(
+        stream: StreamHandle<Msg>,
+        template: WalletTemplate,
+        path: PathBuf,
+    ) -> Result<ViewModel, file::Error> {
         let model = ViewModel {
             path,
+            stream,
+            descriptor_classes: default!(),
+            support_multiclass: false,
             network: template.network,
+            signers: empty!(),
             spending_model: template.conditions.clone().into(),
+            electrum_model: ElectrumModel::new(template.network),
             template: Some(template),
-            ..default!()
+
+            export_lnpbp: false,
+            active_signer: None,
+            devices: empty!(),
+            descriptor: None,
         };
         model.save()?;
         Ok(model)
     }
 
-    pub fn with(descr: WalletDescriptor, path: PathBuf) -> ViewModel {
+    pub fn with_descriptor(
+        stream: StreamHandle<Msg>,
+        descr: WalletDescriptor,
+        path: PathBuf,
+    ) -> ViewModel {
         let descriptor_classes = descr.descriptor_classes().clone();
         ViewModel {
             path,
+            stream,
             support_multiclass: descriptor_classes.len() > 1,
             descriptor_classes,
             network: *descr.network(),
@@ -152,6 +173,10 @@ impl ViewModel {
             devices: empty!(),
             descriptor: None,
         }
+    }
+
+    pub fn stream(self) -> StreamHandle<Msg> {
+        self.stream.clone()
     }
 
     pub fn save(&self) -> Result<Option<WalletDescriptor>, file::Error> {
@@ -267,5 +292,18 @@ impl ViewModel {
             .map(|(d, _)| d);
         self.descriptor = descriptor;
         Ok(())
+    }
+
+    pub fn test_electrum(&self) {
+        let stream = self.stream.clone();
+        let url = self.electrum_model.to_string();
+        std::thread::spawn(move || match ElectrumClient::new(&url) {
+            Err(err) => {
+                stream.emit(Msg::ElectrumTestFailed(err.to_string()));
+            }
+            Ok(_) => {
+                stream.emit(Msg::ElectrumTestOk);
+            }
+        });
     }
 }

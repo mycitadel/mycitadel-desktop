@@ -14,7 +14,6 @@ use std::str::FromStr;
 
 use ::wallet::hd::DerivationStandard;
 use bitcoin::util::bip32::{DerivationPath, Fingerprint};
-use electrum_client::Client as ElectrumClient;
 use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{Dialog, ResponseType};
@@ -129,8 +128,8 @@ impl Update for Component {
     // Specify the type of the messages sent to the update function.
     type Msg = Msg;
 
-    fn model(_relm: &Relm<Self>, _model: Self::ModelParam) -> Self::Model {
-        ViewModel::default()
+    fn model(relm: &Relm<Self>, _model: Self::ModelParam) -> Self::Model {
+        ViewModel::new(relm.stream().clone())
     }
 
     fn update(&mut self, event: Msg) {
@@ -198,8 +197,15 @@ impl Update for Component {
                 return;
             }
             Msg::ElectrumTest => {
-                let client = ElectrumClient::new(&self.model.electrum_model.to_string());
-                self.widgets.update_electrum_test(client.err());
+                self.model.test_electrum();
+                return;
+            }
+            Msg::ElectrumTestOk => {
+                self.widgets.update_electrum_test(None);
+                return;
+            }
+            Msg::ElectrumTestFailed(failure) => {
+                self.widgets.update_electrum_test(Some(failure));
                 return;
             }
             Msg::SetWallet(stream) => {
@@ -249,25 +255,26 @@ impl Update for Component {
         match event {
             Msg::New(template, path) => {
                 let template = template.unwrap_or_default();
-                self.model = match ViewModel::new(template.clone(), path) {
-                    Err(err) => {
-                        error_dlg(
-                            self.widgets.as_root(),
-                            "Error saving wallet",
-                            &self.model.filename(),
-                            Some(&err.to_string()),
-                        );
-                        // We need this, otherwise self.close() would not work
-                        self.model.template = Some(template);
-                        self.close();
-                        return;
-                    }
-                    Ok(model) => model,
-                };
+                self.model =
+                    match ViewModel::with_template(self.model.stream(), template.clone(), path) {
+                        Err(err) => {
+                            error_dlg(
+                                self.widgets.as_root(),
+                                "Error saving wallet",
+                                &self.model.filename(),
+                                Some(&err.to_string()),
+                            );
+                            // We need this, otherwise self.close() would not work
+                            self.model.template = Some(template);
+                            self.close();
+                            return;
+                        }
+                        Ok(model) => model,
+                    };
                 self.widgets.init_ui(&self.model);
             }
             Msg::View(descriptor, path) => {
-                self.model = ViewModel::with(descriptor, path);
+                self.model = ViewModel::with_descriptor(self.model.stream(), descriptor, path);
                 self.widgets.init_ui(&self.model);
             }
             Msg::SignerAddDevice(fingerprint, device) => {

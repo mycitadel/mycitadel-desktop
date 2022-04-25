@@ -16,7 +16,7 @@ mod widget;
 pub(self) mod xpub_dlg;
 
 pub use component::Component;
-pub(self) use view_model::{ElectrumPreset, ViewModel};
+pub(self) use view_model::{ElectrumModel, ElectrumPreset, ViewModel};
 pub(self) use widget::Widgets;
 
 use std::path::PathBuf;
@@ -57,6 +57,8 @@ pub enum Msg {
     ElectrumPortChange,
     ElectrumSecChange(ElectrumSec),
     ElectrumTest,
+    ElectrumTestOk,
+    ElectrumTestFailed(String),
     Response(ResponseType),
     SetWallet(StreamHandle<wallet::Msg>),
     SetLauncher(StreamHandle<launch::Msg>),

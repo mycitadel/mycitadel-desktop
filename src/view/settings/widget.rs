@@ -25,12 +25,13 @@ use miniscript::Descriptor;
 use relm::Relm;
 use wallet::hd::{DerivationStandard, HardenedIndex, SegmentIndexes, TrackingAccount};
 
-use super::{spending_row, spending_row::SpendingModel, Msg, ViewModel};
+use super::{
+    spending_row, spending_row::SpendingModel, ElectrumModel, ElectrumPreset, Msg, ViewModel,
+};
 use crate::model::{
     DerivationStandardExt, DescriptorClass, ElectrumSec, OriginFormat, Ownership, PublicNetwork,
     Requirement, Signer, WalletStandard, WalletTemplate,
 };
-use crate::view::settings::view_model::{ElectrumModel, ElectrumPreset};
 
 // Create the structure that holds the widgets used in the view.
 #[derive(Clone, Gladis)]
@@ -501,11 +502,11 @@ impl Widgets {
             .set_sensitive(model.electrum_preset == ElectrumPreset::Custom);
     }
 
-    pub fn update_electrum_test(&self, err: Option<electrum_client::Error>) {
+    pub fn update_electrum_test(&self, err: Option<String>) {
         if let Some(err) = err {
             self.connection_img
                 .set_icon_name(Some("emblem-dialog-error"));
-            self.connection_img.set_tooltip_text(Some(&err.to_string()));
+            self.connection_img.set_tooltip_text(Some(&err));
         } else {
             self.connection_img
                 .set_icon_name(Some("emblem-default-symbolic"));
