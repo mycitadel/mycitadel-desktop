@@ -12,9 +12,26 @@
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
+use bitcoin::secp256k1::SECP256K1;
+use bitcoin::{Address, PublicKey};
+use gtk::prelude::*;
+use gtk::{ListStore, TreeIter};
+use wallet::hd::{Descriptor, SegmentIndexes, UnhardenedIndex};
+
 use crate::model::{
     file, DescriptorClass, DescriptorError, FileDocument, Signer, Wallet, WalletDescriptor,
 };
+
+pub(super) struct AddressRow {
+    pub address: Address,
+    pub balance: u64,
+}
+
+impl AddressRow {
+    pub fn insert_item(&self, store: &ListStore) -> TreeIter {
+        store.insert_with_values(None, &[(0, &self.address.to_string()), (1, &self.balance)])
+    }
+}
 
 #[derive(Getters)]
 pub struct ViewModel {
@@ -24,11 +41,7 @@ pub struct ViewModel {
 
 impl ViewModel {
     pub fn with(wallet: Wallet, path: PathBuf) -> ViewModel {
-        ViewModel {
-            wallet,
-            // TODO: Add suffix with wallet id
-            path,
-        }
+        ViewModel { wallet, path }
     }
 
     pub fn save(&mut self, path: impl AsRef<Path>) -> Result<usize, file::Error> {
@@ -57,6 +70,29 @@ impl ViewModel {
         for class in descriptor_classes {
             self.wallet.add_descriptor_class(class);
         }
+        // TODO: Produce more addresses
         Ok(())
+    }
+
+    pub(super) fn generate_addresses(&self, count: u16) -> Vec<AddressRow> {
+        let (descriptor, _) = self
+            .as_descriptor()
+            .descriptors_all()
+            .expect("internal inconsistency in wallet descriptor");
+        let len = Descriptor::<PublicKey>::derive_pattern_len(&descriptor)
+            .expect("internal inconsistency in wallet descriptor");
+        let mut pat = vec![UnhardenedIndex::zero(); len];
+
+        (0u16..count)
+            .map(|i| {
+                pat[len - 1] = UnhardenedIndex::from(i);
+                let address = Descriptor::<PublicKey>::address(&descriptor, &SECP256K1, &pat)
+                    .expect("address derivation impossible");
+                AddressRow {
+                    address,
+                    balance: 0,
+                }
+            })
+            .collect()
     }
 }

@@ -442,7 +442,7 @@ volumes</property>
             <property name="vexpand">True</property>
             <property name="show-border">False</property>
             <child>
-              <object class="GtkTreeView">
+              <object class="GtkTreeView" id="history_list">
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="vexpand">True</property>
@@ -538,7 +538,7 @@ volumes</property>
               </packing>
             </child>
             <child>
-              <object class="GtkTreeView">
+              <object class="GtkTreeView" id="utxo_list">
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="vexpand">True</property>
@@ -589,7 +589,7 @@ volumes</property>
               </packing>
             </child>
             <child>
-              <object class="GtkTreeView">
+              <object class="GtkTreeView" id="address_list">
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="vexpand">True</property>

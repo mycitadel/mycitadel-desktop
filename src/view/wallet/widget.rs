@@ -11,7 +11,7 @@
 
 use gladis::Gladis;
 use gtk::prelude::*;
-use gtk::{ApplicationWindow, Button, Entry, HeaderBar, ListStore, Popover, Statusbar};
+use gtk::{ApplicationWindow, Button, Entry, HeaderBar, ListStore, Popover, Statusbar, TreeView};
 use relm::Relm;
 use std::ffi::OsStr;
 
@@ -30,6 +30,10 @@ pub struct Widgets {
     history_store: ListStore,
     utxo_store: ListStore,
     address_store: ListStore,
+
+    address_list: TreeView,
+    utxo_list: TreeView,
+    history_list: TreeView,
 
     status_bar: Statusbar,
 
@@ -60,6 +64,9 @@ impl Widgets {
         self.address_fld.set_text(&address.to_string());
         self.header_bar
             .set_subtitle(model.path().file_name().and_then(OsStr::to_str));
+        for row in model.generate_addresses(20) {
+            row.insert_item(&self.address_store);
+        }
     }
 
     pub(super) fn connect(&self, relm: &Relm<super::Component>) {
