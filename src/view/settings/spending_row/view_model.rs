@@ -404,6 +404,12 @@ glib::wrapper! {
     pub struct SpendingModel(ObjectSubclass<SpendingModelInner>) @implements gio::ListModel;
 }
 
+impl From<BTreeSet<(u8, SpendingCondition)>> for SpendingModel {
+    fn from(conditions: BTreeSet<(u8, SpendingCondition)>) -> Self {
+        SpendingModel::from(&conditions)
+    }
+}
+
 impl From<&BTreeSet<(u8, SpendingCondition)>> for SpendingModel {
     fn from(conditions: &BTreeSet<(u8, SpendingCondition)>) -> Self {
         let model = SpendingModel::new();

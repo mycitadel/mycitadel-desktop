@@ -10,6 +10,7 @@
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
 use chrono::prelude::*;
+use std::collections::BTreeSet;
 use wallet::hd::Bip43;
 
 use super::{PublicNetwork, SpendingCondition, WalletStandard};
@@ -38,7 +39,7 @@ pub struct WalletTemplate {
     pub max_signer_count: Option<u16>,
     pub hardware_req: Requirement,
     pub watch_only_req: Requirement,
-    pub conditions: Vec<SpendingCondition>,
+    pub conditions: BTreeSet<(u8, SpendingCondition)>,
     pub network: PublicNetwork,
 }
 
@@ -67,7 +68,7 @@ impl WalletTemplate {
             max_signer_count: Some(1),
             hardware_req,
             watch_only_req,
-            conditions: vec![SpendingCondition::default()],
+            conditions: bset![(0, SpendingCondition::default())],
             network,
         }
     }
@@ -85,9 +86,12 @@ impl WalletTemplate {
         if sigs_required < 3 {
             unreachable!("WalletTemplate::hodling must require at least 3 signers")
         }
-        let conditions = vec![
-            SpendingCondition::all(),
-            SpendingCondition::anybody_after_date(now.with_year(now.year() + 5).unwrap()),
+        let conditions = bset![
+            (1, SpendingCondition::all()),
+            (
+                2,
+                SpendingCondition::anybody_after_date(now.with_year(now.year() + 5).unwrap())
+            )
         ];
         WalletTemplate {
             format: Bip43::multisig_descriptor().into(),
@@ -111,23 +115,35 @@ impl WalletTemplate {
     ) -> WalletTemplate {
         let now = Utc::now();
         let conditions = match sigs_required {
-            None => vec![SpendingCondition::default()],
+            None => bset![(0, SpendingCondition::default())],
             Some(0) | Some(1) => unreachable!("WalletTemplate::multisig must expect > 1 signature"),
-            Some(2) => vec![
-                SpendingCondition::all(),
-                SpendingCondition::anybody_after_date(now.with_year(now.year() + 5).unwrap()),
+            Some(2) => bset![
+                (1, SpendingCondition::all()),
+                (
+                    2,
+                    SpendingCondition::anybody_after_date(now.with_year(now.year() + 5).unwrap())
+                )
             ],
-            Some(3) => vec![
-                SpendingCondition::at_least(2),
-                SpendingCondition::anybody_after_date(now.with_year(now.year() + 5).unwrap()),
+            Some(3) => bset![
+                (1, SpendingCondition::at_least(2)),
+                (
+                    2,
+                    SpendingCondition::anybody_after_date(now.with_year(now.year() + 5).unwrap())
+                )
             ],
-            Some(count) => vec![
-                SpendingCondition::at_least(count - 1),
-                SpendingCondition::after_date(
-                    SigsReq::AtLeast(count / 2 + count % 2),
-                    now.with_year(now.year() + 3).unwrap(),
+            Some(count) => bset![
+                (1, SpendingCondition::at_least(count - 1)),
+                (
+                    2,
+                    SpendingCondition::after_date(
+                        SigsReq::AtLeast(count / 2 + count % 2),
+                        now.with_year(now.year() + 3).unwrap(),
+                    )
                 ),
-                SpendingCondition::anybody_after_date(now.with_year(now.year() + 5).unwrap()),
+                (
+                    3,
+                    SpendingCondition::anybody_after_date(now.with_year(now.year() + 5).unwrap())
+                )
             ],
         };
         WalletTemplate {

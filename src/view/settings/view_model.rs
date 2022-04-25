@@ -78,6 +78,7 @@ impl ViewModel {
         let model = ViewModel {
             path,
             network: template.network,
+            spending_model: template.conditions.clone().into(),
             template: Some(template),
             ..default!()
         };
