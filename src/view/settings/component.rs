@@ -20,7 +20,7 @@ use gtk::{Dialog, ResponseType};
 use relm::{init, Channel, Relm, StreamHandle, Update, Widget};
 
 use super::{spending_row::Condition, xpub_dlg, Msg, ViewModel, Widgets};
-use crate::model::{Signer, WalletDescriptor};
+use crate::model::{PublicNetwork, Signer, WalletDescriptor};
 use crate::view::{devices, error_dlg, launch, wallet};
 
 pub struct Component {
@@ -77,6 +77,22 @@ impl Component {
         }
         self.widgets
             .update_descriptor(self.model.descriptor.as_ref(), self.model.export_lnpbp);
+
+        for signer in &self.model.signers {
+            let network =
+                PublicNetwork::try_from(signer.xpub.network).unwrap_or(PublicNetwork::Testnet);
+            if network.is_testnet() != self.model.network.is_testnet() {
+                return self.widgets.show_error(&format!(
+                    "Wallet uses {} while signer {} requires {}",
+                    self.model.network,
+                    signer.fingerprint(),
+                    PublicNetwork::try_from(signer.xpub.network)
+                        .as_ref()
+                        .map(PublicNetwork::to_string)
+                        .unwrap_or(s!("regtest"))
+                ));
+            }
+        }
 
         if let Some(ref template) = self.model.template {
             let signer_count = self.model.signers.len() as u16;

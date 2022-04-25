@@ -48,6 +48,18 @@ impl From<PublicNetwork> for Network {
     }
 }
 
+impl TryFrom<Network> for PublicNetwork {
+    type Error = ();
+    fn try_from(network: Network) -> Result<Self, Self::Error> {
+        Ok(match network {
+            Network::Bitcoin => PublicNetwork::Mainnet,
+            Network::Testnet => PublicNetwork::Testnet,
+            Network::Signet => PublicNetwork::Signet,
+            Network::Regtest => return Err(()),
+        })
+    }
+}
+
 impl From<PublicNetwork> for DerivationBlockchain {
     fn from(network: PublicNetwork) -> Self {
         DerivationBlockchain::from(&network)

@@ -15,7 +15,7 @@ use relm::{Relm, Sender, Update, Widget};
 use std::str::FromStr;
 
 use super::{Msg, ViewModel, Widgets};
-use crate::model::{WalletStandard, XpubDescriptor, XpubParseError};
+use crate::model::{WalletStandard, XpubDescriptor, XpubParseError, XpubRequirementError};
 use crate::view::settings;
 
 pub struct Component {
@@ -26,10 +26,20 @@ pub struct Component {
 impl Component {
     fn process_xpub(&mut self) {
         let xpub = self.widgets.xpub();
-        match XpubDescriptor::from_str_checked(&xpub, Some(self.model.standard.clone())) {
+        match XpubDescriptor::from_str_checked(
+            &xpub,
+            self.model.testnet,
+            Some(self.model.standard.clone()),
+        ) {
             Ok(xpub) => {
                 self.widgets.hide_message();
                 self.model.xpub = Some(xpub)
+            }
+            Err(XpubParseError::Inconsistency(
+                err @ XpubRequirementError::TestnetMismatch { .. },
+            )) => {
+                self.model.xpub = None;
+                self.widgets.show_error(&err.to_string())
             }
             Err(XpubParseError::Inconsistency(err)) => {
                 self.model.xpub = XpubDescriptor::from_str(&xpub).ok();

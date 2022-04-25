@@ -52,6 +52,10 @@ pub enum XpubRequirementError {
         bip_network: bitcoin::Network,
     },
 
+    /// Extended public key was created for the different bitcoin network than
+    /// the wallet.
+    TestnetMismatch { expected: bool, actual: bool },
+
     /// The given key is an account key according to the provided standard {0},
     /// however it uses a non-hardened derivation index {1}.
     UnhardenedAccountKey(String, UnhardenedIndex),
@@ -441,6 +445,7 @@ where
     /// derivation standard, they do match.
     pub fn from_str_checked(
         s: &str,
+        testnet: bool,
         standard: Option<Standard>,
     ) -> Result<XpubDescriptor<Standard>, XpubParseError>
     where
@@ -448,7 +453,7 @@ where
     {
         let mut xd = XpubDescriptor::from_str(s)?;
         let slip = KeyVersion::from_xkey_str(s).ok();
-        xd.checked(slip)?;
+        xd.checked(testnet, slip)?;
 
         match (&standard, &xd.standard) {
             (Some(required), Some(actual)) if required != actual => {
@@ -482,13 +487,14 @@ where
     pub fn with(
         master_fingerprint: Option<Fingerprint>,
         xpub: ExtendedPubKey,
+        testnet: bool,
         standard: Option<Standard>,
         slip: Option<KeyVersion>,
     ) -> Result<XpubDescriptor<Standard>, XpubRequirementError> {
         let mut xd = XpubDescriptor::from(xpub);
         xd.standard = standard;
         xd.master_fingerprint = master_fingerprint;
-        xd.checked(slip)?;
+        xd.checked(testnet, slip)?;
         Ok(xd)
     }
 
@@ -522,7 +528,18 @@ where
     ///
     /// Also checks that if there is a provided SLIP132 key version and
     /// derivation standard, they do match.
-    pub fn checked(&mut self, slip: Option<KeyVersion>) -> Result<(), XpubRequirementError> {
+    pub fn checked(
+        &mut self,
+        testnet: bool,
+        slip: Option<KeyVersion>,
+    ) -> Result<(), XpubRequirementError> {
+        if testnet != self.testnet {
+            return Err(XpubRequirementError::TestnetMismatch {
+                expected: testnet,
+                actual: self.testnet,
+            });
+        }
+
         let origin = XpubOrigin::with(
             self.master_fingerprint,
             self.clone().into(),
