@@ -135,6 +135,7 @@
                   <object class="GtkListBoxRow">
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
+                    <property name="selectable">False</property>
                     <child>
                       <!-- n-columns=2 n-rows=2 -->
                       <object class="GtkGrid">
@@ -199,6 +200,7 @@
                   <object class="GtkListBoxRow">
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
+                    <property name="selectable">False</property>
                     <child>
                       <!-- n-columns=2 n-rows=2 -->
                       <object class="GtkGrid">
@@ -267,6 +269,7 @@
                   <object class="GtkListBoxRow">
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
+                    <property name="selectable">False</property>
                     <child>
                       <!-- n-columns=2 n-rows=2 -->
                       <object class="GtkGrid">
@@ -335,6 +338,7 @@
                   <object class="GtkListBoxRow">
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
+                    <property name="selectable">False</property>
                     <child>
                       <!-- n-columns=2 n-rows=2 -->
                       <object class="GtkGrid">
@@ -439,6 +443,7 @@
                   <object class="GtkListBoxRow">
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
+                    <property name="selectable">False</property>
                     <child>
                       <!-- n-columns=2 n-rows=2 -->
                       <object class="GtkGrid">
@@ -507,6 +512,7 @@
                   <object class="GtkListBoxRow">
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
+                    <property name="selectable">False</property>
                     <child>
                       <!-- n-columns=2 n-rows=2 -->
                       <object class="GtkGrid">
@@ -747,6 +753,7 @@
                   <object class="GtkListBoxRow">
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
+                    <property name="selectable">False</property>
                     <child>
                       <!-- n-columns=2 n-rows=2 -->
                       <object class="GtkGrid">

@@ -113,19 +113,19 @@ impl Widgets {
         connect!(
             relm,
             self.create_box,
-            connect_row_selected(_, _),
+            connect_row_activated(_, _),
             Msg::TemplateSelected
         );
         connect!(
             relm,
             self.import_box,
-            connect_row_selected(_, _),
+            connect_row_activated(_, _),
             Msg::ImportSelected
         );
         connect!(
             relm,
             self.open_box,
-            connect_row_selected(_, _),
+            connect_row_activated(_, _),
             Msg::OpenSelected
         );
         connect!(
