@@ -3,9 +3,18 @@ name = "mycitadel-desktop"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+name = "mycitadel"
+
 [[bin]]
 name = "mycitadel"
-path = "src/main.rs"
+path = "src/bin/mycitadel.rs"
+required-features = ["ui"]
+
+[[bin]]
+name = "mc-tx"
+path = "src/bin/mc-tx.rs"
+required-features = ["cli"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -25,8 +34,22 @@ electrum-client = "0.10.0-rc.2"
 descriptor-wallet = { version = "0.7.0-beta.2", features = ["miniscript", "keygen"] }
 strict_encoding = "1.8.0-rc.9"
 
+clap = { version = "3.1", features = ["derive"], optional = true }
+serde_crate = { package = "serde", version = "1", optional = true }
+serde_with = { version = "1.13", optional = true }
+serde_json = { version = "1.0.79", optional = true }
+serde_yaml = { version = "0.8.23", optional = true }
+colored = { version = "2", optional = true }
+
 [patch.crates-io]
 bitcoin = { git = "https://github.com/rust-bitcoin/rust-bitcoin" }
 miniscript = { git = "https://github.com/LNP-BP/rust-miniscript", branch = "canary" }
 strict_encoding = { version = ">=1.8.0-rc.10", git = "https://github.com/LNP-BP/client_side_validation", branch = "sten/bitcoin-fixes" }
 descriptor-wallet = { git = "https://github.com/LNP-BP/descriptor-wallet" }
+
+[features]
+default = ["ui"]
+ui = []
+cli = ["clap", "serde", "colored"]
+serde = ["serde_crate", "serde_with", "serde_json", "serde_yaml",
+         "amplify/serde", "chrono/serde", "bitcoin/serde", "miniscript/serde", "descriptor-wallet/serde"]

@@ -19,13 +19,13 @@ extern crate strict_encoding;
 extern crate relm;
 #[macro_use]
 extern crate relm_derive;
+#[cfg(feature = "serde")]
+extern crate serde_crate as serde;
+#[cfg(feature = "serde")]
+#[macro_use]
+extern crate serde_with;
 
-use relm::Widget;
-
-mod model;
-mod view;
-mod worker;
-
-fn main() {
-    view::launch::Component::run(()).expect("application failed")
-}
+pub mod model;
+#[cfg(feature = "ui")]
+pub mod view;
+pub mod worker;
