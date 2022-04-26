@@ -17,16 +17,6 @@ use crate::model::{
     WalletSettings,
 };
 
-#[derive(Debug, Display, Error, From)]
-#[display(inner)]
-pub enum ModelError {
-    #[from]
-    Descriptor(DescriptorError),
-
-    #[from]
-    FileSave(file::Error),
-}
-
 #[derive(Getters)]
 pub struct ViewModel {
     wallet: Wallet,
@@ -64,13 +54,12 @@ impl ViewModel {
         signers: Vec<Signer>,
         descriptor_classes: BTreeSet<DescriptorClass>,
         electrum: ElectrumServer,
-    ) -> Result<Option<&ElectrumServer>, ModelError> {
+    ) -> Result<Option<&ElectrumServer>, DescriptorError> {
         self.wallet.update_signers(signers)?;
         for class in descriptor_classes {
             self.wallet.add_descriptor_class(class);
         }
         let electrum_updated = self.wallet.update_electrum(electrum);
-        self.save()?;
         Ok(if electrum_updated {
             Some(self.wallet.as_settings().electrum())
         } else {

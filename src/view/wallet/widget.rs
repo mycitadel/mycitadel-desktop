@@ -251,6 +251,7 @@ impl Widgets {
     }
 
     pub fn update_addresses(&mut self, address_info: &[AddressInfo]) {
+        self.address_store.clear();
         for info in address_info {
             self.address_store.insert_with_values(
                 None,

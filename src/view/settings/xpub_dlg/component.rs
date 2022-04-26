@@ -92,7 +92,7 @@ impl Update for Component {
                     self.widgets.show_notification();
                 }
             }
-            Msg::Response(resp) => {}
+            Msg::Response(_) => {}
         }
     }
 }

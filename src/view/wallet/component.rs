@@ -17,7 +17,6 @@ use relm::{init, Channel, Relm, StreamHandle, Update, Widget};
 
 use super::{ElectrumState, ViewModel, Widgets};
 use crate::model::{FileDocument, Wallet};
-use crate::view::wallet::view_model::ModelError;
 use crate::view::wallet::Msg;
 use crate::view::{error_dlg, launch, pay, settings};
 use crate::worker::{electrum, ElectrumWorker};
@@ -36,6 +35,18 @@ impl Component {
     fn close(&self) {
         // TODO: Signal to launcher
         self.widgets.close();
+    }
+
+    fn save(&mut self) {
+        match self.model.save() {
+            Ok(_) => {}
+            Err(err) => error_dlg(
+                self.widgets.as_root(),
+                "Error saving wallet",
+                "It was impossible to save changes to the wallet settings due to an error",
+                Some(&err.to_string()),
+            ),
+        }
     }
 
     fn handle_electrum(&mut self, msg: electrum::Msg) {
@@ -89,6 +100,7 @@ impl Component {
                 self.widgets.update_electrum_state(ElectrumState::Complete(
                     self.model.as_settings().electrum().sec,
                 ));
+                self.save();
             }
             electrum::Msg::Error(err) => {
                 self.widgets
@@ -159,16 +171,10 @@ impl Update for Component {
                     .model
                     .update_descriptor(signers, descriptor_classes, electrum)
                 {
-                    Err(ModelError::Descriptor(err)) => error_dlg(
+                    Err(err) => error_dlg(
                         self.widgets.as_root(),
                         "Internal error",
                         "Please report the following information to the developer",
-                        Some(&err.to_string()),
-                    ),
-                    Err(ModelError::FileSave(err)) => error_dlg(
-                        self.widgets.as_root(),
-                        "Error saving wallet",
-                        "It was impossible to save changes to the wallet settings due to an error",
                         Some(&err.to_string()),
                     ),
                     Ok(new_server) => {
@@ -178,6 +184,7 @@ impl Update for Component {
                             .emit(settings::Msg::Response(ResponseType::Cancel));
                     }
                 }
+                self.save();
             }
             Msg::RegisterLauncher(stream) => {
                 self.launcher_stream = Some(stream);
