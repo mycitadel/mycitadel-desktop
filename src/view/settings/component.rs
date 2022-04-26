@@ -22,12 +22,13 @@ use relm::{init, Channel, Relm, StreamHandle, Update, Widget};
 use super::{spending_row::Condition, xpub_dlg, Msg, ViewModel, Widgets};
 use crate::model::{PublicNetwork, Signer, WalletSettings};
 use crate::view::settings::view_model::ElectrumPreset;
-use crate::view::{devices, error_dlg, launch, wallet};
+use crate::view::{devices, error_dlg, launch, wallet, NotificationBoxExt};
 
 pub struct Component {
     model: ViewModel,
     widgets: Widgets,
     devices: relm::Component<devices::Component>,
+    channel: Channel<()>,
     xpub_dlg: relm::Component<xpub_dlg::Component>,
     launcher_stream: Option<StreamHandle<launch::Msg>>,
     wallet_stream: Option<StreamHandle<wallet::Msg>>,
@@ -419,13 +420,17 @@ impl Widget for Component {
             .expect("error in xpub dialog component");
 
         widgets.connect(relm);
-        widgets.bind_spending_model(relm, &model.spending_model);
+
+        let stream = relm.stream().clone();
+        let (channel, sender) = Channel::new(move |_| stream.emit(Msg::ConditionChange));
+        widgets.bind_spending_model(sender, &model.spending_model);
 
         Component {
             model,
             widgets,
             devices,
             xpub_dlg,
+            channel,
             launcher_stream: None,
             wallet_stream: None,
         }

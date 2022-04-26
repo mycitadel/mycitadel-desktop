@@ -16,10 +16,9 @@ use gtk::{
     glib, Adjustment, Calendar, Label, ListBoxRow, Menu, MenuButton, Popover, RadioMenuItem,
     SpinButton,
 };
-use relm::StreamHandle;
+use relm::Sender;
 
 use super::Condition;
-use crate::view::settings;
 
 #[derive(Clone, Gladis)]
 pub struct RowWidgets {
@@ -54,7 +53,7 @@ pub struct RowWidgets {
 }
 
 impl RowWidgets {
-    pub fn init(_stream: StreamHandle<settings::Msg>, item: &glib::Object) -> gtk::Widget {
+    pub fn init(sender: Sender<()>, item: &glib::Object) -> gtk::Widget {
         let glade_src = include_str!("spending_row.glade");
         let row_widgets = RowWidgets::from_string(glade_src).expect("glade file broken");
 
@@ -63,10 +62,16 @@ impl RowWidgets {
             .expect("Row data is of wrong type");
         row_widgets.bind_model(condition);
 
-        condition.connect_notify(None, move |_, _| {
-            // TODO: Change msg to avoid non-Send data and uncomment next line
-            // stream.emit(settings::Msg::SpendingConditionChange)
-        });
+        // We need this hack since mpsc::Sender does not implement Sync, as required by the
+        // glib event handler. However, since we `move` the object anyway, we do not need it to be
+        // Sync, and use workaround with unsafe call.
+        unsafe {
+            condition.connect_notify_unsafe(None, move |_, _| {
+                sender
+                    .send(())
+                    .expect("channel to settings window is broken");
+            })
+        };
 
         // We use hack re-utilizing `can-default` property, since updates to `active` property are
         // not working in GTK3

@@ -22,7 +22,7 @@ use gtk::{
     TextBuffer, ToggleButton, ToolButton, Toolbar, TreePath, TreeView,
 };
 use miniscript::Descriptor;
-use relm::Relm;
+use relm::{Relm, Sender};
 use wallet::hd::{DerivationStandard, HardenedIndex, SegmentIndexes, TrackingAccount};
 
 use super::{
@@ -32,6 +32,7 @@ use crate::model::{
     DerivationStandardExt, DescriptorClass, ElectrumSec, OriginFormat, Ownership, PublicNetwork,
     Requirement, Signer, WalletStandard, WalletTemplate,
 };
+use crate::view::NotificationBoxExt;
 
 // Create the structure that holds the widgets used in the view.
 #[derive(Clone, Gladis)]
@@ -170,37 +171,6 @@ impl Widgets {
     }
     pub fn as_root(&self) -> &Dialog {
         &self.dialog
-    }
-
-    pub fn show_notification(&self) {
-        self.msg_box.show_all();
-    }
-    pub fn show_error(&self, msg: &str) {
-        self.dialog.set_response_sensitive(ResponseType::Ok, false);
-        self.save_btn.set_sensitive(false);
-        self.msg_img.set_icon_name(Some("dialog-error-symbolic"));
-        self.msg_lbl.set_label(msg);
-        self.msg_box.show_all();
-    }
-    pub fn show_info(&self, msg: &str) {
-        self.dialog.set_response_sensitive(ResponseType::Ok, true);
-        self.save_btn.set_sensitive(true);
-        self.msg_img
-            .set_icon_name(Some("dialog-information-symbolic"));
-        self.msg_lbl.set_label(msg);
-        self.msg_box.show_all();
-    }
-    pub fn show_warning(&self, msg: &str) {
-        self.dialog.set_response_sensitive(ResponseType::Ok, true);
-        self.save_btn.set_sensitive(true);
-        self.msg_img.set_icon_name(Some("dialog-warning-symbolic"));
-        self.msg_lbl.set_label(msg);
-        self.msg_box.show_all();
-    }
-    pub fn hide_message(&self) {
-        self.dialog.set_response_sensitive(ResponseType::Ok, true);
-        self.save_btn.set_sensitive(true);
-        self.msg_box.hide()
     }
 
     pub(super) fn connect(&self, relm: &Relm<super::Component>) {
@@ -415,10 +385,9 @@ impl Widgets {
         );
     }
 
-    pub(super) fn bind_spending_model(&self, relm: &Relm<super::Component>, model: &SpendingModel) {
-        let stream = relm.stream().clone();
+    pub(super) fn bind_spending_model(&self, sender: Sender<()>, model: &SpendingModel) {
         self.spending_list.bind_model(Some(model), move |item| {
-            spending_row::RowWidgets::init(stream.clone(), item)
+            spending_row::RowWidgets::init(sender.clone(), item)
         });
     }
 
@@ -774,5 +743,23 @@ impl Widgets {
             .set_active(classes.contains(&DescriptorClass::NestedV0));
         self.descr_taproot_tgl
             .set_active(classes.contains(&DescriptorClass::TaprootC0));
+    }
+}
+
+impl NotificationBoxExt for Widgets {
+    fn notification_box(&self) -> &Box {
+        &self.msg_box
+    }
+    fn main_dialog(&self) -> &Dialog {
+        &self.dialog
+    }
+    fn main_action_button(&self) -> &Button {
+        &self.save_btn
+    }
+    fn notification_image(&self) -> &Image {
+        &self.msg_img
+    }
+    fn notification_label(&self) -> &Label {
+        &self.msg_lbl
     }
 }
