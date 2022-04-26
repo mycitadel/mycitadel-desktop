@@ -15,18 +15,18 @@ use gladis::Gladis;
 use gtk::{ApplicationWindow, ResponseType};
 use relm::{init, Channel, Relm, StreamHandle, Update, Widget};
 
-use super::{ElectrumState, Msg, ViewModel, Widgets};
+use super::{ElectrumState, ViewModel, Widgets};
 use crate::model::{FileDocument, Wallet};
 use crate::view::wallet::view_model::ModelError;
-use crate::view::wallet::ElectrumMsg;
+use crate::view::wallet::Msg;
 use crate::view::{error_dlg, launch, pay, settings};
-use crate::worker::ElectrumWatcher;
+use crate::worker::{electrum, ElectrumWorker};
 
 pub struct Component {
     model: ViewModel,
     widgets: Widgets,
-    channel: Channel<ElectrumMsg>,
-    watcher: ElectrumWatcher,
+    electrum_channel: Channel<electrum::Msg>,
+    electrum_worker: ElectrumWorker,
     settings: relm::Component<settings::Component>,
     payment: relm::Component<pay::Component>,
     launcher_stream: Option<StreamHandle<launch::Msg>>,
@@ -38,61 +38,61 @@ impl Component {
         self.widgets.close();
     }
 
-    fn handle_watch(&mut self, msg: ElectrumMsg) {
+    fn handle_electrum(&mut self, msg: electrum::Msg) {
         let wallet = self.model.as_wallet_mut();
         match msg {
-            ElectrumMsg::Connecting => {
+            electrum::Msg::Connecting => {
                 self.widgets
                     .update_electrum_state(ElectrumState::Connecting);
             }
-            ElectrumMsg::Connected => {
+            electrum::Msg::Connected => {
                 self.widgets
                     .update_electrum_state(ElectrumState::QueryingBlockchainState);
             }
-            ElectrumMsg::LastBlock(block_info) => {
+            electrum::Msg::LastBlock(block_info) => {
                 self.widgets
                     .update_electrum_state(ElectrumState::RetrievingFees);
                 wallet.update_last_block(&block_info);
                 self.widgets.update_last_block(&block_info);
             }
-            ElectrumMsg::LastBlockUpdate(block_info) => {
+            electrum::Msg::LastBlockUpdate(block_info) => {
                 wallet.update_last_block(&block_info);
                 self.widgets.update_last_block(&block_info);
             }
-            ElectrumMsg::FeeEstimate(f0, f1, f2) => {
+            electrum::Msg::FeeEstimate(f0, f1, f2) => {
                 self.widgets
                     .update_electrum_state(ElectrumState::RetrievingHistory(0));
                 wallet.update_fees(f0, f1, f2);
             }
-            ElectrumMsg::HistoryBatch(batch, no) => {
+            electrum::Msg::HistoryBatch(batch, no) => {
                 self.widgets
                     .update_electrum_state(ElectrumState::RetrievingHistory(no as usize * 2));
                 wallet.update_history(batch);
                 self.widgets.update_history(&wallet.history());
             }
-            ElectrumMsg::UtxoBatch(batch, no) => {
+            electrum::Msg::UtxoBatch(batch, no) => {
                 self.widgets
                     .update_electrum_state(ElectrumState::RetrievingHistory(no as usize * 2 + 1));
                 wallet.update_utxos(batch);
                 self.widgets.update_utxos(&wallet.utxos());
                 self.widgets.update_state(wallet.state(), wallet.tx_count());
             }
-            ElectrumMsg::TxBatch(batch, progress) => {
+            electrum::Msg::TxBatch(batch, progress) => {
                 self.widgets
                     .update_electrum_state(ElectrumState::RetrievingTransactions(progress));
                 wallet.update_transactions(batch);
                 self.widgets.update_transactions(&wallet.transactions());
                 self.widgets.update_state(wallet.state(), wallet.tx_count());
             }
-            ElectrumMsg::Complete => {
+            electrum::Msg::Complete => {
                 self.widgets.update_addresses(&wallet.address_info());
                 self.widgets.update_electrum_state(ElectrumState::Complete);
             }
-            ElectrumMsg::Error(err) => {
+            electrum::Msg::Error(err) => {
                 self.widgets
                     .update_electrum_state(ElectrumState::Error(err.to_string()));
             }
-            ElectrumMsg::ChannelDisconnected => {
+            electrum::Msg::ChannelDisconnected => {
                 panic!("Broken electrum thread")
             }
         }
@@ -150,7 +150,7 @@ impl Update for Component {
                 self.model.path().clone(),
             )),
             Msg::Refresh => {
-                self.watcher.sync();
+                self.electrum_worker.sync();
             }
             Msg::Update(signers, descriptor_classes, electrum) => {
                 match self
@@ -180,7 +180,7 @@ impl Update for Component {
             Msg::RegisterLauncher(stream) => {
                 self.launcher_stream = Some(stream);
             }
-            Msg::ElectrumWatch(msg) => self.handle_watch(msg),
+            Msg::ElectrumWatch(msg) => self.handle_electrum(msg),
             _ => { /* TODO: Implement main window event handling */ }
         }
     }
@@ -207,23 +207,24 @@ impl Widget for Component {
         payment.emit(pay::Msg::SetWallet(relm.stream().clone()));
 
         let stream = relm.stream().clone();
-        let (channel, sender) = Channel::new(move |msg| stream.emit(Msg::ElectrumWatch(msg)));
-        let watcher = ElectrumWatcher::with(sender, model.as_wallet().to_settings())
+        let (electrum_channel, sender) =
+            Channel::new(move |msg| stream.emit(Msg::ElectrumWatch(msg)));
+        let electrum_worker = ElectrumWorker::with(sender, model.as_wallet().to_settings(), 60)
             .expect("unable to instantiate watcher thread");
 
         widgets.connect(relm);
         widgets.update_ui(&model);
         widgets.show();
 
-        watcher.sync();
+        electrum_worker.sync();
 
         Component {
             model,
             widgets,
             settings,
             payment,
-            channel,
-            watcher,
+            electrum_channel,
+            electrum_worker,
             launcher_stream: None,
         }
     }

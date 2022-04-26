@@ -9,6 +9,6 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
-mod electrum_watcher;
+pub mod electrum;
 
-pub use electrum_watcher::{ElectrumMsg, ElectrumWatcher, HistoryTxid, UtxoTxid};
+pub use electrum::{ElectrumWorker, HistoryTxid, UtxoTxid};

@@ -10,9 +10,10 @@
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
 use std::collections::BTreeMap;
-use std::io;
 use std::sync::mpsc;
 use std::thread::JoinHandle;
+use std::time::Duration;
+use std::{io, thread};
 
 use amplify::Wrapper;
 use bitcoin::{Transaction, Txid};
@@ -24,13 +25,13 @@ use wallet::scripts::PubkeyScript;
 
 use crate::model::{ElectrumServer, WalletSettings};
 
-pub enum Cmd {
+enum Cmd {
     Sync,
     Pull,
     Update(ElectrumServer),
 }
 
-pub enum ElectrumMsg {
+pub enum Msg {
     Connecting,
     Connected,
     Complete,
@@ -78,58 +79,72 @@ pub struct UtxoTxid {
     pub change: bool,
 }
 
-pub struct ElectrumWatcher {
-    handle: JoinHandle<()>,
+pub struct ElectrumWorker {
+    worker_thread: JoinHandle<()>,
+    watcher_thread: JoinHandle<()>,
     tx: mpsc::Sender<Cmd>,
 }
 
-impl ElectrumWatcher {
+impl ElectrumWorker {
     pub fn with(
-        sender: Sender<ElectrumMsg>,
+        sender: Sender<Msg>,
         mut wallet_settings: WalletSettings,
+        interval: u64,
     ) -> Result<Self, io::Error> {
         let (tx, rx) = mpsc::channel::<Cmd>();
-        let handle = std::thread::Builder::new()
-            .name(s!("electrum"))
-            .spawn(move || {
-                let mut client = electrum_init(wallet_settings.electrum(), &sender);
+        let worker_thread = thread::Builder::new().name(s!("electrum")).spawn(move || {
+            let mut client = electrum_init(wallet_settings.electrum(), &sender);
 
-                loop {
-                    let _ = match (&client, rx.recv()) {
-                        (Some(_), Ok(Cmd::Update(electrum))) => {
-                            wallet_settings.update_electrum(electrum);
-                            client = electrum_init(wallet_settings.electrum(), &sender);
-                            Ok(())
-                        }
-                        (Some(client), Ok(Cmd::Sync)) => {
-                            electrum_sync(&client, &wallet_settings, &sender)
-                        }
-                        (Some(client), Ok(Cmd::Pull)) => client.block_headers_pop().map(|res| {
-                            if let Some(last_block) = res {
-                                sender
-                                    .send(ElectrumMsg::LastBlockUpdate(last_block))
-                                    .expect("electrum watcher channel is broken");
-                            }
-                        }),
-                        (None, Ok(_)) => {
-                            /* Can't handle since no client avaliable */
-                            Ok(())
-                        }
-                        (_, Err(_)) => {
-                            sender
-                                .send(ElectrumMsg::ChannelDisconnected)
-                                .expect("electrum channel is broken");
-                            Ok(())
-                        }
+            loop {
+                let _ = match (&client, rx.recv()) {
+                    (Some(_), Ok(Cmd::Update(electrum))) => {
+                        wallet_settings.update_electrum(electrum);
+                        client = electrum_init(wallet_settings.electrum(), &sender);
+                        Ok(())
                     }
-                    .map_err(|err| {
+                    (Some(client), Ok(Cmd::Sync)) => {
+                        electrum_sync(&client, &wallet_settings, &sender)
+                    }
+                    (Some(client), Ok(Cmd::Pull)) => client.block_headers_pop().map(|res| {
+                        if let Some(last_block) = res {
+                            sender
+                                .send(Msg::LastBlockUpdate(last_block))
+                                .expect("electrum watcher channel is broken");
+                        }
+                    }),
+                    (None, Ok(_)) => {
+                        /* Can't handle since no client avaliable */
+                        Ok(())
+                    }
+                    (_, Err(_)) => {
                         sender
-                            .send(ElectrumMsg::Error(err))
+                            .send(Msg::ChannelDisconnected)
                             .expect("electrum channel is broken");
-                    });
+                        Ok(())
+                    }
                 }
-            })?;
-        Ok(ElectrumWatcher { tx, handle })
+                .map_err(|err| {
+                    sender
+                        .send(Msg::Error(err))
+                        .expect("electrum channel is broken");
+                });
+            }
+        })?;
+
+        let sender = tx.clone();
+        let watcher_thread = thread::Builder::new()
+            .name(s!("blockwatcher"))
+            .spawn(move || loop {
+                thread::sleep(Duration::from_secs(interval));
+                sender.send(Cmd::Pull).expect("Electrum thread is dead")
+            })
+            .expect("unable to start blockchain watching thread");
+
+        Ok(ElectrumWorker {
+            tx,
+            worker_thread,
+            watcher_thread,
+        })
     }
 
     pub fn sync(&self) {
@@ -149,10 +164,7 @@ impl ElectrumWatcher {
     }
 }
 
-pub fn electrum_init(
-    electrum: &ElectrumServer,
-    sender: &Sender<ElectrumMsg>,
-) -> Option<ElectrumClient> {
+pub fn electrum_init(electrum: &ElectrumServer, sender: &Sender<Msg>) -> Option<ElectrumClient> {
     let config = electrum_client::ConfigBuilder::new()
         .timeout(Some(5))
         .expect("we do not use socks here")
@@ -160,7 +172,7 @@ pub fn electrum_init(
     ElectrumClient::from_config(&electrum.to_string(), config)
         .map_err(|err| {
             sender
-                .send(ElectrumMsg::Error(err))
+                .send(Msg::Error(err))
                 .expect("electrum channel is broken");
         })
         .ok()
@@ -169,24 +181,24 @@ pub fn electrum_init(
 pub fn electrum_sync(
     client: &ElectrumClient,
     wallet_settings: &WalletSettings,
-    sender: &Sender<ElectrumMsg>,
+    sender: &Sender<Msg>,
 ) -> Result<(), electrum_client::Error> {
     sender
-        .send(ElectrumMsg::Connecting)
+        .send(Msg::Connecting)
         .expect("electrum watcher channel is broken");
 
     sender
-        .send(ElectrumMsg::Connected)
+        .send(Msg::Connected)
         .expect("electrum watcher channel is broken");
 
     let last_block = client.block_headers_subscribe()?;
     sender
-        .send(ElectrumMsg::LastBlock(last_block))
+        .send(Msg::LastBlock(last_block))
         .expect("electrum watcher channel is broken");
 
     let fee = client.batch_estimate_fee([1, 2, 3])?;
     sender
-        .send(ElectrumMsg::FeeEstimate(fee[0], fee[1], fee[2]))
+        .send(Msg::FeeEstimate(fee[0], fee[1], fee[2]))
         .expect("electrum watcher channel is broken");
 
     let network = bitcoin::Network::from(wallet_settings.network());
@@ -226,7 +238,7 @@ pub fn electrum_sync(
             }
             txids.extend(history_batch.iter().map(|item| item.txid));
             sender
-                .send(ElectrumMsg::HistoryBatch(history_batch, offset))
+                .send(Msg::HistoryBatch(history_batch, offset))
                 .expect("electrum watcher channel is broken");
 
             let utxos: Vec<_> = client
@@ -248,7 +260,7 @@ pub fn electrum_sync(
                 .collect();
             txids.extend(utxos.iter().map(|item| item.txid));
             sender
-                .send(ElectrumMsg::UtxoBatch(utxos, offset))
+                .send(Msg::UtxoBatch(utxos, offset))
                 .expect("electrum watcher channel is broken");
 
             offset += 20;
@@ -262,7 +274,7 @@ pub fn electrum_sync(
             .zip(client.batch_transaction_get(chunk)?)
             .collect::<BTreeMap<_, _>>();
         sender
-            .send(ElectrumMsg::TxBatch(
+            .send(Msg::TxBatch(
                 txmap,
                 (no + 1) as f32 / txids.len() as f32 / 20.0,
             ))
@@ -270,7 +282,7 @@ pub fn electrum_sync(
     }
 
     sender
-        .send(ElectrumMsg::Complete)
+        .send(Msg::Complete)
         .expect("electrum watcher channel is broken");
 
     Ok(())
