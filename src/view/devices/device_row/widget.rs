@@ -11,7 +11,7 @@
 
 use gladis::Gladis;
 use gtk::prelude::*;
-use gtk::{glib, Adjustment, Button, Label, ListBox, ListBoxRow, SpinButton, Spinner};
+use gtk::{glib, Adjustment, Button, Label, ListBoxRow, SpinButton, Spinner};
 use relm::StreamHandle;
 
 use super::DeviceData;
@@ -19,7 +19,6 @@ use crate::view::devices;
 
 #[derive(Clone, Gladis)]
 pub struct RowWidgets {
-    pub device_list: ListBox,
     pub device_row: ListBoxRow,
     name_lbl: Label,
     fingerprint_lbl: Label,
@@ -52,7 +51,6 @@ impl RowWidgets {
             stream.emit(devices::Msg::Add(fingerprint));
         });
 
-        row_widgets.device_list.remove(&row_widgets.device_row);
         row_widgets.device_row.upcast::<gtk::Widget>()
     }
 
