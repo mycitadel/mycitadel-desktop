@@ -26,7 +26,12 @@ use crate::view::wallet;
 #[derive(Msg)]
 pub enum Msg {
     Show,
-    BeneficiaryChange,
+    BeneficiaryAdd,
+    BeneficiaryRemove,
+    BeneficiaryEdit(u32),
+    SelectBeneficiary(u32),
+    FeeChange,
+    FeeSetBlocks(u8),
     Response(ResponseType),
     SetWallet(StreamHandle<wallet::Msg>),
 }

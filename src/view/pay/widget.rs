@@ -12,8 +12,8 @@
 use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{
-    Box, Button, Dialog, HeaderBar, Image, Label, ListBox, Menu, RadioMenuItem, ResponseType,
-    Scale, SpinButton, ToolButton,
+    Box, Button, Dialog, HeaderBar, Image, Label, ListBox, ListBoxRow, Menu, RadioMenuItem,
+    ResponseType, Scale, SpinButton, ToolButton,
 };
 use relm::Relm;
 
@@ -68,6 +68,25 @@ impl Widgets {
     }
 
     pub(super) fn connect(&self, relm: &Relm<super::Component>) {
+        connect!(relm, self.add_btn, connect_clicked(_), Msg::BeneficiaryAdd);
+        connect!(
+            relm,
+            self.remove_btn,
+            connect_clicked(_),
+            Msg::BeneficiaryRemove
+        );
+
+        self.beneficiary_list.connect_row_activated(|list, row| {
+            list.select_row(Some(row));
+        });
+
+        self.remove_btn.set_sensitive(false);
+        let remove_btn = self.remove_btn.clone();
+        self.beneficiary_list
+            .connect_selected_rows_changed(move |list| {
+                remove_btn.set_sensitive(list.selected_row().is_some())
+            });
+
         connect!(
             relm,
             self.dialog,
@@ -84,7 +103,7 @@ impl Widgets {
         );
     }
 
-    pub(super) fn bind_spending_model(
+    pub(super) fn bind_beneficiary_model(
         &self,
         relm: &Relm<super::Component>,
         model: &BeneficiaryModel,
@@ -93,6 +112,19 @@ impl Widgets {
         self.beneficiary_list.bind_model(Some(model), move |item| {
             beneficiary_row::RowWidgets::init(relm.clone(), item)
         });
+    }
+
+    pub fn select_beneficiary(&self, index: u32) {
+        self.beneficiary_list
+            .select_row(self.beneficiary_list.row_at_index(index as i32).as_ref())
+    }
+
+    pub fn selected_beneficiary_index(&self) -> Option<u32> {
+        self.beneficiary_list
+            .selected_row()
+            .as_ref()
+            .map(ListBoxRow::index)
+            .map(|i| i as u32)
     }
 }
 

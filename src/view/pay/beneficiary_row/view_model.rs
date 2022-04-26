@@ -9,6 +9,7 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
+use bitcoin::util::address;
 use std::cell::RefCell;
 use std::str::FromStr;
 
@@ -16,7 +17,7 @@ use glib::subclass::prelude::*;
 use gtk::prelude::*;
 use gtk::subclass::prelude::ListModelImpl;
 use gtk::{gio, glib};
-use wallet::address::address::AddressCompat;
+use wallet::scripts::address::AddressCompat;
 
 // The actual data structure that stores our values. This is not accessible
 // directly from the outside.
@@ -105,13 +106,18 @@ glib::wrapper! {
 }
 
 impl Beneficiary {
-    pub fn new(address: AddressCompat, amount: u64) -> Beneficiary {
+    pub fn new() -> Beneficiary {
+        glib::Object::new(&[("address", &""), ("amount", &0u64)])
+            .expect("Failed to create row data")
+    }
+
+    pub fn with(address: AddressCompat, amount: u64) -> Beneficiary {
         glib::Object::new(&[("address", &address.to_string()), ("amount", &amount)])
             .expect("Failed to create row data")
     }
 
-    pub fn address(&self) -> AddressCompat {
-        AddressCompat::from_str(&self.property::<String>("address")).expect("address failure")
+    pub fn address(&self) -> Result<AddressCompat, address::Error> {
+        AddressCompat::from_str(&self.property::<String>("address"))
     }
 }
 

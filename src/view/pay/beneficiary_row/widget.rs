@@ -34,17 +34,19 @@ impl RowWidgets {
             .expect("Row data is of wrong type");
         row_widgets.bind_model(beneficiary);
 
+        let row = row_widgets.beneficiary_row.clone();
         connect!(
             relm,
             row_widgets.address_fld,
             connect_changed(_),
-            pay::Msg::BeneficiaryChange
+            pay::Msg::BeneficiaryEdit(row.index() as u32)
         );
+        let row = row_widgets.beneficiary_row.clone();
         connect!(
             relm,
             row_widgets.amount_fld,
             connect_changed(_),
-            pay::Msg::BeneficiaryChange
+            pay::Msg::BeneficiaryEdit(row.index() as u32)
         );
 
         row_widgets.beneficiary_row.upcast::<gtk::Widget>()

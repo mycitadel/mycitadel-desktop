@@ -9,16 +9,21 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
+use super::beneficiary_row::BeneficiaryModel;
 use crate::model::{Wallet, WalletSettings};
 
 #[derive(Getters)]
 pub struct ViewModel {
     wallet: Wallet,
+    pub beneficiaries: BeneficiaryModel,
 }
 
 impl ViewModel {
     pub fn with(wallet: Wallet) -> ViewModel {
-        ViewModel { wallet }
+        ViewModel {
+            wallet,
+            beneficiaries: BeneficiaryModel::new(),
+        }
     }
 
     pub fn as_wallet(&self) -> &Wallet {

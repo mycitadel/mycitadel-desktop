@@ -15,6 +15,7 @@ use relm::{Relm, StreamHandle, Update, Widget};
 
 use super::{Msg, ViewModel, Widgets};
 use crate::model::Wallet;
+use crate::view::pay::beneficiary_row::Beneficiary;
 use crate::view::wallet;
 
 pub struct Component {
@@ -40,10 +41,25 @@ impl Update for Component {
     fn update(&mut self, event: Msg) {
         match event {
             Msg::Show => {
+                self.model.beneficiaries.clear();
                 self.widgets.update_ui(&self.model);
                 self.widgets.show();
             }
-            Msg::BeneficiaryChange => {}
+            Msg::BeneficiaryAdd => {
+                self.model.beneficiaries.append(&Beneficiary::new());
+            }
+            Msg::BeneficiaryRemove => {
+                self.widgets.selected_beneficiary_index().map(|index| {
+                    self.model.beneficiaries.remove(index);
+                });
+            }
+            Msg::SelectBeneficiary(index) => self.widgets.select_beneficiary(index),
+            Msg::BeneficiaryEdit(index) => {
+                self.widgets.select_beneficiary(index);
+                /* Check correctness of the model data */
+            }
+            Msg::FeeChange => { /* Update fee and total tx amount */ }
+            Msg::FeeSetBlocks(_) => { /* Update fee and total tx amount */ }
             Msg::Response(ResponseType::Ok) => {
                 self.widgets.hide();
             }
@@ -72,6 +88,8 @@ impl Widget for Component {
         let widgets = Widgets::from_string(glade_src).expect("glade file broken");
 
         widgets.connect(relm);
+        widgets.bind_beneficiary_model(relm, &model.beneficiaries);
+
         widgets.update_ui(&model);
 
         Component {
