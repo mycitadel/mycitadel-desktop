@@ -43,14 +43,14 @@ impl Update for Component {
                 self.widgets.update_ui(&self.model);
                 self.widgets.show();
             }
+            Msg::BeneficiaryChange => {}
             Msg::Response(ResponseType::Ok) => {
                 self.widgets.hide();
             }
             Msg::Response(ResponseType::Cancel) => {
-                self.widgets.close();
+                self.widgets.hide();
             }
-            Msg::BeneficiaryChange => {}
-            Msg::Response(_) => unreachable!(),
+            Msg::Response(_) => {}
             Msg::SetWallet(stream) => {
                 self.wallet_stream = Some(stream);
             }

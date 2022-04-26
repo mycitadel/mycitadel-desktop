@@ -47,7 +47,7 @@ impl Update for Component {
             Msg::Response(ResponseType::Cancel) => {
                 self.widgets.close();
             }
-            Msg::Response(_) => unreachable!(),
+            Msg::Response(_) => {}
         }
     }
 }

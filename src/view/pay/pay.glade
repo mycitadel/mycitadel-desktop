@@ -9,6 +9,10 @@
     <property name="default-width">400</property>
     <property name="default-height">300</property>
     <property name="type-hint">dialog</property>
+    <action-widgets>
+      <action-widget response="cancel">cancel_btn</action-widget>
+      <action-widget response="ok" default="true">prepare_btn</action-widget>
+    </action-widgets>
     <child internal-child="vbox">
       <object class="GtkBox">
         <property name="can-focus">False</property>
@@ -477,6 +481,9 @@
             <property name="can-focus">True</property>
             <property name="receives-default">True</property>
             <property name="always-show-image">True</property>
+            <style>
+              <class name="suggested-action"/>
+            </style>
           </object>
           <packing>
             <property name="pack-type">end</property>

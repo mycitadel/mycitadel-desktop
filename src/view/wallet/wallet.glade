@@ -508,6 +508,9 @@ volume</property>
                     <property name="sensitive">False</property>
                     <property name="can-focus">True</property>
                     <property name="receives-default">True</property>
+                    <style>
+                      <class name="destructive-action"/>
+                    </style>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -529,6 +532,9 @@ volume</property>
                         <property name="label" translatable="yes">Receive</property>
                       </object>
                     </child>
+                    <style>
+                      <class name="suggested-action"/>
+                    </style>
                   </object>
                   <packing>
                     <property name="expand">False</property>

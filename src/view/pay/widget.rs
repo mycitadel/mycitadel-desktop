@@ -59,9 +59,6 @@ impl Widgets {
     pub fn hide(&self) {
         self.dialog.hide()
     }
-    pub fn close(&self) {
-        self.dialog.close()
-    }
 
     pub fn to_root(&self) -> Dialog {
         self.dialog.clone()
@@ -78,13 +75,6 @@ impl Widgets {
             Msg::Response(resp)
         );
         self.dialog.set_response_sensitive(ResponseType::Ok, false);
-
-        connect!(
-            relm,
-            self.cancel_btn,
-            connect_clicked(_),
-            Msg::Response(ResponseType::Cancel)
-        );
 
         connect!(
             relm,
