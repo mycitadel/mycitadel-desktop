@@ -453,11 +453,12 @@ impl WalletSettings {
     }
 
     fn update_signer(&mut self, signer: Signer) -> bool {
-        if !self.signers.contains(&signer) {
-            return false;
+        if let Some(index) = self.signers.iter().position(|s| s == &signer) {
+            self.signers[index] = signer;
+            true
+        } else {
+            false
         }
-        self.signers.push(signer);
-        true
     }
 
     pub fn descriptors_all(
