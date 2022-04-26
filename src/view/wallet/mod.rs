@@ -24,7 +24,7 @@ use relm::StreamHandle;
 
 use crate::model::{DescriptorClass, ElectrumServer, Signer};
 use crate::view::launch;
-use crate::worker::WatchMsg;
+use crate::worker::ElectrumMsg;
 
 #[derive(Msg)]
 pub enum Msg {
@@ -40,7 +40,7 @@ pub enum Msg {
     Refresh,
     Select(usize),
     Create,
-    ElectrumWatch(WatchMsg),
+    ElectrumWatch(ElectrumMsg),
     RegisterLauncher(StreamHandle<launch::Msg>),
 }
 

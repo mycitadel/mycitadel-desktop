@@ -18,14 +18,14 @@ use relm::{init, Channel, Relm, StreamHandle, Update, Widget};
 use super::{ElectrumState, Msg, ViewModel, Widgets};
 use crate::model::{FileDocument, Wallet};
 use crate::view::wallet::view_model::ModelError;
-use crate::view::wallet::WatchMsg;
+use crate::view::wallet::ElectrumMsg;
 use crate::view::{error_dlg, launch, pay, settings};
 use crate::worker::ElectrumWatcher;
 
 pub struct Component {
     model: ViewModel,
     widgets: Widgets,
-    channel: Channel<WatchMsg>,
+    channel: Channel<ElectrumMsg>,
     watcher: ElectrumWatcher,
     settings: relm::Component<settings::Component>,
     payment: relm::Component<pay::Component>,
@@ -38,59 +38,62 @@ impl Component {
         self.widgets.close();
     }
 
-    fn handle_watch(&mut self, msg: WatchMsg) {
+    fn handle_watch(&mut self, msg: ElectrumMsg) {
         let wallet = self.model.as_wallet_mut();
         match msg {
-            WatchMsg::Connecting => {
+            ElectrumMsg::Connecting => {
                 self.widgets
                     .update_electrum_state(ElectrumState::Connecting);
             }
-            WatchMsg::Connected => {
+            ElectrumMsg::Connected => {
                 self.widgets
                     .update_electrum_state(ElectrumState::QueryingBlockchainState);
             }
-            WatchMsg::LastBlock(block_info) => {
+            ElectrumMsg::LastBlock(block_info) => {
                 self.widgets
                     .update_electrum_state(ElectrumState::RetrievingFees);
                 wallet.update_last_block(&block_info);
                 self.widgets.update_last_block(&block_info);
             }
-            WatchMsg::LastBlockUpdate(block_info) => {
+            ElectrumMsg::LastBlockUpdate(block_info) => {
                 wallet.update_last_block(&block_info);
                 self.widgets.update_last_block(&block_info);
             }
-            WatchMsg::FeeEstimate(f0, f1, f2) => {
+            ElectrumMsg::FeeEstimate(f0, f1, f2) => {
                 self.widgets
                     .update_electrum_state(ElectrumState::RetrievingHistory(0));
                 wallet.update_fees(f0, f1, f2);
             }
-            WatchMsg::HistoryBatch(batch, no) => {
+            ElectrumMsg::HistoryBatch(batch, no) => {
                 self.widgets
                     .update_electrum_state(ElectrumState::RetrievingHistory(no as usize * 2));
                 wallet.update_history(batch);
                 self.widgets.update_history(&wallet.history());
             }
-            WatchMsg::UtxoBatch(batch, no) => {
+            ElectrumMsg::UtxoBatch(batch, no) => {
                 self.widgets
                     .update_electrum_state(ElectrumState::RetrievingHistory(no as usize * 2 + 1));
                 wallet.update_utxos(batch);
                 self.widgets.update_utxos(&wallet.utxos());
                 self.widgets.update_state(wallet.state(), wallet.tx_count());
             }
-            WatchMsg::TxBatch(batch, progress) => {
+            ElectrumMsg::TxBatch(batch, progress) => {
                 self.widgets
                     .update_electrum_state(ElectrumState::RetrievingTransactions(progress));
                 wallet.update_transactions(batch);
                 self.widgets.update_transactions(&wallet.transactions());
                 self.widgets.update_state(wallet.state(), wallet.tx_count());
             }
-            WatchMsg::Complete => {
+            ElectrumMsg::Complete => {
                 self.widgets.update_addresses(&wallet.address_info());
                 self.widgets.update_electrum_state(ElectrumState::Complete);
             }
-            WatchMsg::Error(err) => {
+            ElectrumMsg::Error(err) => {
                 self.widgets
                     .update_electrum_state(ElectrumState::Error(err.to_string()));
+            }
+            ElectrumMsg::ChannelDisconnected => {
+                panic!("Broken electrum thread")
             }
         }
     }
@@ -146,6 +149,9 @@ impl Update for Component {
                 self.model.to_settings(),
                 self.model.path().clone(),
             )),
+            Msg::Refresh => {
+                self.watcher.sync();
+            }
             Msg::Update(signers, descriptor_classes, electrum) => {
                 match self
                     .model
@@ -208,6 +214,8 @@ impl Widget for Component {
         widgets.connect(relm);
         widgets.update_ui(&model);
         widgets.show();
+
+        watcher.sync();
 
         Component {
             model,

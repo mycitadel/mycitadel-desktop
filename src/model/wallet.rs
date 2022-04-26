@@ -227,12 +227,7 @@ impl Wallet {
     }
 
     pub fn update_electrum(&mut self, electrum: ElectrumServer) -> bool {
-        if self.settings.electrum != electrum {
-            self.settings.electrum = electrum;
-            true
-        } else {
-            false
-        }
+        self.settings.update_electrum(electrum)
     }
 }
 
@@ -455,6 +450,15 @@ impl WalletSettings {
     fn update_signer(&mut self, signer: Signer) -> bool {
         if let Some(index) = self.signers.iter().position(|s| s == &signer) {
             self.signers[index] = signer;
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn update_electrum(&mut self, electrum: ElectrumServer) -> bool {
+        if self.electrum != electrum {
+            self.electrum = electrum;
             true
         } else {
             false

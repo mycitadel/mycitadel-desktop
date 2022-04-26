@@ -11,4 +11,4 @@
 
 mod electrum_watcher;
 
-pub use electrum_watcher::{ElectrumWatcher, HistoryTxid, UtxoTxid, WatchMsg};
+pub use electrum_watcher::{ElectrumMsg, ElectrumWatcher, HistoryTxid, UtxoTxid};

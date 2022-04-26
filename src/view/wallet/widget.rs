@@ -109,6 +109,7 @@ impl Widgets {
         connect!(relm, self.open_btn, connect_clicked(_), Msg::Open);
         connect!(relm, self.settings_btn, connect_clicked(_), Msg::Settings);
         connect!(relm, self.pay_btn, connect_clicked(_), Msg::Pay);
+        connect!(relm, self.refresh_btn, connect_clicked(_), Msg::Refresh);
 
         connect!(
             relm,
