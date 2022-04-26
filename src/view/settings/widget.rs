@@ -453,7 +453,9 @@ impl Widgets {
         }
         if model.electrum_preset != ElectrumPreset::Custom {
             model.electrum_server = model.electrum_preset.to_string();
-            model.electrum_port = self.network().electrum_port();
+            model.electrum_port = model
+                .electrum_preset
+                .electrum_port(model.electrum_sec, self.network());
         }
         if update_sec {
             self.tor_tgl
