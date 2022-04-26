@@ -86,7 +86,9 @@ impl Component {
             }
             electrum::Msg::Complete => {
                 self.widgets.update_addresses(&wallet.address_info());
-                self.widgets.update_electrum_state(ElectrumState::Complete);
+                self.widgets.update_electrum_state(ElectrumState::Complete(
+                    self.model.as_settings().electrum().sec,
+                ));
             }
             electrum::Msg::Error(err) => {
                 self.widgets
@@ -170,7 +172,7 @@ impl Update for Component {
                         Some(&err.to_string()),
                     ),
                     Ok(new_server) => {
-                        new_server.map(|server| self.widgets.update_electrum_server(server));
+                        new_server.map(|electrum| self.widgets.update_electrum_server(&electrum));
                         self.widgets.show();
                         self.settings
                             .emit(settings::Msg::Response(ResponseType::Cancel));

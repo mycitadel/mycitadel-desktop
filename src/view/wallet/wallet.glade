@@ -1023,7 +1023,7 @@ volume</property>
                   <object class="GtkLabel" id="electrum_lbl">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
-                    <property name="label" translatable="yes">electrum.blockstream.info</property>
+                    <property name="label" translatable="yes">blockstream.info</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>

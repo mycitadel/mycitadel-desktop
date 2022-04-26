@@ -22,7 +22,7 @@ use std::path::PathBuf;
 
 use relm::StreamHandle;
 
-use crate::model::{DescriptorClass, ElectrumServer, Signer};
+use crate::model::{DescriptorClass, ElectrumSec, ElectrumServer, Signer};
 use crate::view::launch;
 use crate::worker::electrum;
 
@@ -58,7 +58,7 @@ pub enum ElectrumState {
     /// Reading transactions: {0:.0}%
     RetrievingTransactions(f32),
     /// Ready
-    Complete,
+    Complete(ElectrumSec),
     /// Electrum error: {0}
     Error(String),
 }

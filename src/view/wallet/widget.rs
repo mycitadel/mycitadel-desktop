@@ -24,8 +24,26 @@ use gtk::{
 use relm::Relm;
 
 use super::{ElectrumState, Msg, ViewModel};
-use crate::model::{AddressInfo, WalletState};
+use crate::model::{AddressInfo, ElectrumSec, ElectrumServer, WalletState};
 use crate::worker::{HistoryTxid, UtxoTxid};
+
+impl ElectrumSec {
+    pub fn icon_name(self) -> &'static str {
+        match self {
+            ElectrumSec::Tor => "security-high-symbolic",
+            ElectrumSec::Tls => "security-medium-symbolic",
+            ElectrumSec::None => "security-low-symbolic",
+        }
+    }
+
+    pub fn tooltip(self) -> &'static str {
+        match self {
+            ElectrumSec::Tor => "high security and privacy connection using Tor",
+            ElectrumSec::Tls => "medium security connection using SSL/TLS",
+            ElectrumSec::None => "unsecure connection",
+        }
+    }
+}
 
 // Create the structure that holds the widgets used in the view.
 #[derive(Clone, Gladis)]
@@ -119,13 +137,13 @@ impl Widgets {
         );
     }
 
-    pub fn update_electrum_server(&self, server: &str) {
+    pub fn update_electrum_server(&self, electrum: &ElectrumServer) {
         self.status_lbl
             .set_text(&"New electrum server, please refresh");
-        self.electrum_lbl.set_text(server);
+        self.electrum_lbl.set_text(&electrum.server);
         self.electrum_spin.set_visible(false);
         self.connection_img
-            .set_icon_name(Some("emblem-default-symbolic"));
+            .set_icon_name(Some(electrum.sec.icon_name()));
         self.connection_img
             .set_tooltip_text(Some("New electrum server: data needs refresh"));
         self.connection_img.set_visible(true);
@@ -144,15 +162,14 @@ impl Widgets {
                 self.electrum_spin.set_visible(true);
                 self.electrum_spin.set_visible(true);
             }
-            ElectrumState::Complete => {
+            ElectrumState::Complete(sec) => {
                 self.refresh_btn.set_sensitive(true);
                 self.refresh_img.set_visible(true);
                 self.refresh_spin.set_visible(false);
 
                 self.electrum_spin.set_visible(false);
-                self.connection_img
-                    .set_icon_name(Some("emblem-default-symbolic"));
-                self.connection_img.set_tooltip_text(None);
+                self.connection_img.set_icon_name(Some(sec.icon_name()));
+                self.connection_img.set_tooltip_text(Some(sec.tooltip()));
                 self.connection_img.set_visible(true);
                 self.pay_btn.set_sensitive(true);
             }
