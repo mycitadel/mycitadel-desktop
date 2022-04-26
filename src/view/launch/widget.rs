@@ -12,7 +12,7 @@
 use crate::model::{PublicNetwork, Requirement, WalletTemplate};
 use gladis::Gladis;
 use gtk::prelude::*;
-use gtk::{Adjustment, ApplicationWindow, ListBox, RecentChooserWidget, Switch};
+use gtk::{Adjustment, ApplicationWindow, ListBox, Notebook, RecentChooserWidget, Switch};
 use relm::Relm;
 use std::path::PathBuf;
 
@@ -21,6 +21,7 @@ use super::Msg;
 #[derive(Clone, Gladis)]
 pub struct Widgets {
     window: ApplicationWindow,
+    pages: Notebook,
     hwcount_adj: Adjustment,
     taproot_swch: Switch,
     testnet_swch: Switch,
@@ -33,7 +34,8 @@ pub struct Widgets {
 
 impl Widgets {
     pub fn show(&self) {
-        self.window.show()
+        self.window.show();
+        self.pages.set_current_page(Some(0));
     }
 
     pub fn hide(&self) {

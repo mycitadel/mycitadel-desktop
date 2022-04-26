@@ -53,7 +53,9 @@ impl RowWidgets {
     }
 
     fn bind_model(&self, beneficiary: &Beneficiary) {
-        let flags_ro = glib::BindingFlags::DEFAULT | glib::BindingFlags::SYNC_CREATE;
+        let flags_ro = glib::BindingFlags::DEFAULT
+            | glib::BindingFlags::SYNC_CREATE
+            | glib::BindingFlags::BIDIRECTIONAL;
 
         self.address_fld
             .bind_property("text", beneficiary, "address")

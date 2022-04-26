@@ -303,6 +303,10 @@ impl Widgets {
             Msg::ConditionSelect
         );
 
+        self.spending_list.connect_row_activated(|list, row| {
+            list.select_row(Some(row));
+        });
+
         for entry in [
             &self.fingerprint_fld,
             &self.name_fld,
