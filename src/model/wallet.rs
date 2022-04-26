@@ -45,6 +45,11 @@ use crate::worker::{HistoryTxid, UtxoTxid};
 // TODO: Move to bpro library
 #[derive(Getters, Clone, Debug, Default)]
 #[derive(StrictEncode, StrictDecode)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate")
+)]
 pub struct Wallet {
     #[getter(skip)]
     settings: WalletSettings,
@@ -220,6 +225,15 @@ impl Wallet {
             self.state.volume += tx.output.iter().map(|out| out.value).sum::<u64>();
         }
     }
+
+    pub fn update_electrum(&mut self, electrum: ElectrumServer) -> bool {
+        if self.settings.electrum != electrum {
+            self.settings.electrum = electrum;
+            true
+        } else {
+            false
+        }
+    }
 }
 
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display, Error)]
@@ -245,6 +259,11 @@ pub enum DescriptorError {
 
 #[derive(Getters, Clone, PartialEq, Eq, Hash, Debug)]
 #[derive(StrictEncode, StrictDecode)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate")
+)]
 pub struct WalletSettings {
     #[getter(as_copy)]
     network: PublicNetwork,
@@ -284,6 +303,11 @@ impl Deref for WalletSettings {
 /// descriptor.
 #[derive(Getters, Clone, PartialEq, Eq, Hash, Debug, Default)]
 #[derive(StrictEncode, StrictDecode)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate")
+)]
 pub struct WalletDescriptor {
     /// We commit to the information whether
     pub(self) testnet: bool,
@@ -614,6 +638,11 @@ impl WalletSettings {
 )]
 #[derive(StrictEncode, StrictDecode)]
 #[display(inner)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate")
+)]
 pub enum SpendingCondition {
     #[from]
     Sigs(TimelockedSigs),
@@ -889,6 +918,11 @@ pub struct AddressInfo {
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Default)]
 #[derive(StrictEncode, StrictDecode)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate")
+)]
 pub struct WalletState {
     pub balance: u64,
     pub volume: u64,
@@ -896,9 +930,19 @@ pub struct WalletState {
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
 #[derive(StrictEncode, StrictDecode)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate")
+)]
 pub struct Sats(u64);
 
 #[derive(Clone, PartialEq, Debug, Default)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate")
+)]
 pub struct WalletEphemerals {
     pub fees: (f64, f64, f64),
     pub fiat: String,

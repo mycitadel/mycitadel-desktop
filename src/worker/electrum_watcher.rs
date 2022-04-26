@@ -39,9 +39,15 @@ pub enum WatchMsg {
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 #[derive(StrictEncode, StrictDecode)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate")
+)]
 pub struct HistoryTxid {
     pub txid: Txid,
     pub height: i32,
+    #[cfg_attr(feature = "serde", serde(with = "serde_with::rust::display_fromstr"))]
     pub address: AddressCompat,
     pub index: UnhardenedIndex,
     pub change: bool,
@@ -49,11 +55,17 @@ pub struct HistoryTxid {
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 #[derive(StrictEncode, StrictDecode)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate")
+)]
 pub struct UtxoTxid {
     pub txid: Txid,
     pub height: u32,
     pub pos: u32,
     pub value: u64,
+    #[cfg_attr(feature = "serde", serde(with = "serde_with::rust::display_fromstr"))]
     pub address: AddressCompat,
     pub index: UnhardenedIndex,
     pub change: bool,

@@ -17,6 +17,7 @@ use relm::{init, Channel, Relm, StreamHandle, Update, Widget};
 
 use super::{ElectrumState, Msg, ViewModel, Widgets};
 use crate::model::{FileDocument, Wallet};
+use crate::view::wallet::view_model::ModelError;
 use crate::view::wallet::WatchMsg;
 use crate::view::{error_dlg, launch, pay, settings};
 use crate::worker::ElectrumWatcher;
@@ -145,18 +146,29 @@ impl Update for Component {
                 self.model.to_settings(),
                 self.model.path().clone(),
             )),
-            Msg::Update(signers, descriptor_classes) => {
-                if let Err(err) = self.model.update_descriptor(signers, descriptor_classes) {
-                    error_dlg(
+            Msg::Update(signers, descriptor_classes, electrum) => {
+                match self
+                    .model
+                    .update_descriptor(signers, descriptor_classes, electrum)
+                {
+                    Err(ModelError::Descriptor(err)) => error_dlg(
                         self.widgets.as_root(),
                         "Internal error",
                         "Please report the following information to the developer",
                         Some(&err.to_string()),
-                    );
-                } else {
-                    self.widgets.show();
-                    self.settings
-                        .emit(settings::Msg::Response(ResponseType::Cancel));
+                    ),
+                    Err(ModelError::FileSave(err)) => error_dlg(
+                        self.widgets.as_root(),
+                        "Error saving wallet",
+                        "It was impossible to save changes to the wallet settings due to an error",
+                        Some(&err.to_string()),
+                    ),
+                    Ok(new_server) => {
+                        new_server.map(|server| self.widgets.update_electrum_server(server));
+                        self.widgets.show();
+                        self.settings
+                            .emit(settings::Msg::Response(ResponseType::Cancel));
+                    }
                 }
             }
             Msg::RegisterLauncher(stream) => {

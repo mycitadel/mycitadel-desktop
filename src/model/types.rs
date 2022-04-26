@@ -30,11 +30,18 @@ use wallet::hd::{
 // TODO: Move to descriptor wallet or BPro
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Display)]
 #[derive(StrictEncode, StrictDecode)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate")
+)]
 pub enum PublicNetwork {
     #[display("mainnet")]
     Mainnet,
+
     #[display("testnet")]
     Testnet,
+
     #[display("signet")]
     Signet,
 }
@@ -99,6 +106,11 @@ impl PublicNetwork {
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 #[derive(StrictEncode, StrictDecode)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate")
+)]
 pub enum Ownership {
     Mine,
     External,
@@ -275,6 +287,11 @@ impl OriginFormat {
 
 #[derive(Clone, Debug)]
 #[derive(StrictEncode, StrictDecode)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate")
+)]
 pub struct Signer {
     pub master_fp: Fingerprint,
     pub origin: DerivationPath,
@@ -405,6 +422,11 @@ impl Signer {
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 #[derive(StrictEncode, StrictDecode)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate")
+)]
 pub enum DescriptorClass {
     PreSegwit,
     SegwitV0,
@@ -460,6 +482,11 @@ impl DescriptorClass {
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Display)]
 #[derive(StrictEncode, StrictDecode)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate")
+)]
 pub enum SigsReq {
     #[display("all signatures")]
     All,
@@ -480,6 +507,11 @@ impl Default for SigsReq {
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Display)]
 #[derive(StrictEncode, StrictDecode)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate")
+)]
 pub enum TimelockReq {
     #[display("anytime")]
     Anytime,
@@ -501,6 +533,11 @@ impl Default for TimelockReq {
 
 #[derive(
     Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default, Display
+)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate")
 )]
 #[derive(StrictEncode, StrictDecode)]
 #[display("{sigs} {timelock}")]

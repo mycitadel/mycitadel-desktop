@@ -10,11 +10,22 @@
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
 use std::collections::BTreeSet;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use crate::model::{
-    file, DescriptorClass, DescriptorError, FileDocument, Signer, Wallet, WalletSettings,
+    file, DescriptorClass, DescriptorError, ElectrumServer, FileDocument, Signer, Wallet,
+    WalletSettings,
 };
+
+#[derive(Debug, Display, Error, From)]
+#[display(inner)]
+pub enum ModelError {
+    #[from]
+    Descriptor(DescriptorError),
+
+    #[from]
+    FileSave(file::Error),
+}
 
 #[derive(Getters)]
 pub struct ViewModel {
@@ -27,9 +38,8 @@ impl ViewModel {
         ViewModel { wallet, path }
     }
 
-    pub fn save(&mut self, path: impl AsRef<Path>) -> Result<usize, file::Error> {
-        self.path = path.as_ref().to_owned();
-        self.wallet.write_file(path)
+    pub fn save(&mut self) -> Result<usize, file::Error> {
+        self.wallet.write_file(&self.path)
     }
 
     pub fn as_wallet(&self) -> &Wallet {
@@ -53,12 +63,18 @@ impl ViewModel {
         &mut self,
         signers: Vec<Signer>,
         descriptor_classes: BTreeSet<DescriptorClass>,
-    ) -> Result<(), DescriptorError> {
+        electrum: ElectrumServer,
+    ) -> Result<Option<&str>, ModelError> {
         self.wallet.update_signers(signers)?;
         for class in descriptor_classes {
             self.wallet.add_descriptor_class(class);
         }
-        // TODO: Produce more addresses
-        Ok(())
+        let electrum_updated = self.wallet.update_electrum(electrum);
+        self.save()?;
+        Ok(if electrum_updated {
+            Some(&self.wallet.as_settings().electrum().server)
+        } else {
+            None
+        })
     }
 }

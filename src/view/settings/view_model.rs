@@ -14,7 +14,7 @@ use std::fmt::{self, Display, Formatter};
 use std::path::{Path, PathBuf};
 
 use bitcoin::util::bip32::ExtendedPubKey;
-use electrum_client::Client as ElectrumClient;
+use electrum_client::{Client as ElectrumClient, ElectrumApi};
 use miniscript::Descriptor;
 use relm::{Channel, StreamHandle};
 use wallet::hd::{Bip43, DerivationStandard, TerminalStep, TrackingAccount};
@@ -48,6 +48,12 @@ pub struct ElectrumModel {
 
 impl From<ElectrumModel> for ElectrumServer {
     fn from(model: ElectrumModel) -> Self {
+        ElectrumServer::from(&model)
+    }
+}
+
+impl From<&ElectrumModel> for ElectrumServer {
+    fn from(model: &ElectrumModel) -> Self {
         ElectrumServer {
             sec: model.electrum_sec,
             server: model.host(),
@@ -190,19 +196,19 @@ impl ViewModel {
 
     pub fn with_descriptor(
         stream: StreamHandle<Msg>,
-        descr: WalletSettings,
+        settings: WalletSettings,
         path: PathBuf,
     ) -> ViewModel {
-        let descriptor_classes = descr.descriptor_classes().clone();
+        let descriptor_classes = settings.descriptor_classes().clone();
         ViewModel {
             path,
             stream,
             support_multiclass: descriptor_classes.len() > 1,
             descriptor_classes,
-            network: descr.network(),
-            signers: descr.signers().clone(),
-            spending_model: SpendingModel::from(descr.spending_conditions()),
-            electrum_model: ElectrumModel::new(descr.network()),
+            network: settings.network(),
+            signers: settings.signers().clone(),
+            spending_model: SpendingModel::from(settings.spending_conditions()),
+            electrum_model: settings.electrum().clone().into(),
 
             export_lnpbp: true,
             template: None,
@@ -217,14 +223,18 @@ impl ViewModel {
     }
 
     pub fn save(&self) -> Result<Option<WalletSettings>, file::Error> {
-        WalletSettings::try_from(self)
-            .ok()
-            .map(Wallet::with)
-            .map(|wallet| {
-                wallet.write_file(&self.path)?;
-                Ok(wallet.into_settings())
-            })
-            .transpose()
+        let settings = WalletSettings::try_from(self).ok();
+        if self.is_new_wallet() {
+            settings
+                .map(Wallet::with)
+                .map(|wallet| {
+                    wallet.write_file(&self.path)?;
+                    Ok(wallet.into_settings())
+                })
+                .transpose()
+        } else {
+            Ok(settings)
+        }
     }
 
     pub fn path(&self) -> &Path {
@@ -342,18 +352,23 @@ impl ViewModel {
             ElectrumMsg::Ok => stream.emit(Msg::ElectrumTestOk),
             ElectrumMsg::Failure(err) => stream.emit(Msg::ElectrumTestFailed(err)),
         });
+        eprint!("Testing connection to {} ... ", url);
         let config = electrum_client::ConfigBuilder::new()
             .timeout(Some(5))
             .expect("we do not use socks here")
             .build();
-        std::thread::spawn(move || match ElectrumClient::from_config(&url, config) {
-            Err(err) => {
-                sender
-                    .send(ElectrumMsg::Failure(err.to_string()))
-                    .expect("channel broken");
-            }
-            Ok(_) => {
-                sender.send(ElectrumMsg::Ok).expect("channel broken");
+        std::thread::spawn(move || {
+            match ElectrumClient::from_config(&url, config).and_then(|client| client.ping()) {
+                Err(err) => {
+                    eprintln!("failure: {}", err);
+                    sender
+                        .send(ElectrumMsg::Failure(err.to_string()))
+                        .expect("channel broken");
+                }
+                Ok(_) => {
+                    eprintln!("success");
+                    sender.send(ElectrumMsg::Ok).expect("channel broken");
+                }
             }
         });
     }

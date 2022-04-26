@@ -22,7 +22,7 @@ use std::path::PathBuf;
 
 use relm::StreamHandle;
 
-use crate::model::{DescriptorClass, Signer};
+use crate::model::{DescriptorClass, ElectrumServer, Signer};
 use crate::view::launch;
 use crate::worker::WatchMsg;
 
@@ -34,7 +34,7 @@ pub enum Msg {
     FileError(PathBuf, String),
     Save,
     Settings,
-    Update(Vec<Signer>, BTreeSet<DescriptorClass>),
+    Update(Vec<Signer>, BTreeSet<DescriptorClass>, ElectrumServer),
     Pay,
     Receive,
     Refresh,

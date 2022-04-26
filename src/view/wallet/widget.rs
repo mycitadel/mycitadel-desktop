@@ -118,6 +118,18 @@ impl Widgets {
         );
     }
 
+    pub fn update_electrum_server(&self, server: &str) {
+        self.status_lbl
+            .set_text(&"New electrum server, please refresh");
+        self.electrum_lbl.set_text(server);
+        self.electrum_spin.set_visible(false);
+        self.connection_img
+            .set_icon_name(Some("emblem-default-symbolic"));
+        self.connection_img
+            .set_tooltip_text(Some("New electrum server: data needs refresh"));
+        self.connection_img.set_visible(true);
+    }
+
     pub fn update_electrum_state(&self, state: ElectrumState) {
         self.status_lbl.set_text(&state.to_string());
         match state {

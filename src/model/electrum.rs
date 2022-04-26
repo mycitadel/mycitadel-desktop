@@ -9,6 +9,11 @@
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
 #[derive(StrictEncode, StrictDecode)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate")
+)]
 pub enum ElectrumSec {
     #[display("tor")]
     Tor,
@@ -20,6 +25,11 @@ pub enum ElectrumSec {
 
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
 #[derive(StrictEncode, StrictDecode)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate")
+)]
 #[display("{sec}://{server}:{port}")]
 pub struct ElectrumServer {
     pub sec: ElectrumSec,

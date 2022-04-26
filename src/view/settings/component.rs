@@ -36,14 +36,6 @@ pub struct Component {
 
 impl Component {
     fn close(&self) {
-        if let Err(err) = self.model.save() {
-            error_dlg(
-                self.widgets.as_root(),
-                "Error saving new wallet",
-                &self.model.filename(),
-                Some(&err.to_string()),
-            );
-        }
         self.widgets.hide();
         if self.model.is_new_wallet() {
             self.launcher_stream
@@ -219,7 +211,7 @@ impl Update for Component {
                 return;
             }
             Msg::Response(ResponseType::Ok) => {
-                let descr = match WalletSettings::try_from(&self.model) {
+                let settings = match WalletSettings::try_from(&self.model) {
                     Err(err) => {
                         error_dlg(
                             self.widgets.as_root(),
@@ -238,8 +230,9 @@ impl Update for Component {
                 } else {
                     self.wallet_stream.as_ref().map(|stream| {
                         stream.emit(wallet::Msg::Update(
-                            descr.signers().clone(),
-                            descr.descriptor_classes().clone(),
+                            settings.signers().clone(),
+                            settings.descriptor_classes().clone(),
+                            settings.electrum().clone(),
                         ));
                     });
                 }
