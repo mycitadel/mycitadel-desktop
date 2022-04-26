@@ -9,24 +9,8 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
-pub(self) mod beneficiary_row;
-mod component;
 mod view_model;
 mod widget;
 
-pub use self::component::Component;
-pub(self) use view_model::ViewModel;
-pub(self) use widget::Widgets;
-
-use gtk::ResponseType;
-use relm::StreamHandle;
-
-use crate::view::wallet;
-
-#[derive(Msg)]
-pub enum Msg {
-    Show,
-    BeneficiaryChange,
-    Response(ResponseType),
-    SetWallet(StreamHandle<wallet::Msg>),
-}
+pub use view_model::{Beneficiary, BeneficiaryModel};
+pub use widget::RowWidgets;

@@ -49,6 +49,7 @@ impl Update for Component {
             Msg::Response(ResponseType::Cancel) => {
                 self.widgets.close();
             }
+            Msg::BeneficiaryChange => {}
             Msg::Response(_) => unreachable!(),
             Msg::SetWallet(stream) => {
                 self.wallet_stream = Some(stream);

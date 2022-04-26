@@ -26,6 +26,51 @@ use gtk::{
     MessageType, ResponseType,
 };
 
+pub trait NotificationBoxExt {
+    fn notification_box(&self) -> &gtk::Box;
+    fn main_dialog(&self) -> &gtk::Dialog;
+    fn main_action_button(&self) -> &gtk::Button;
+    fn notification_image(&self) -> &gtk::Image;
+    fn notification_label(&self) -> &gtk::Label;
+
+    fn show_notification(&self) {
+        self.notification_box().show_all();
+    }
+    fn show_error(&self, msg: &str) {
+        self.main_dialog()
+            .set_response_sensitive(ResponseType::Ok, false);
+        self.main_action_button().set_sensitive(false);
+        self.notification_image()
+            .set_icon_name(Some("dialog-error-symbolic"));
+        self.notification_label().set_label(msg);
+        self.notification_box().show_all();
+    }
+    fn show_info(&self, msg: &str) {
+        self.main_dialog()
+            .set_response_sensitive(ResponseType::Ok, true);
+        self.main_action_button().set_sensitive(true);
+        self.notification_image()
+            .set_icon_name(Some("dialog-information-symbolic"));
+        self.notification_label().set_label(msg);
+        self.notification_box().show_all();
+    }
+    fn show_warning(&self, msg: &str) {
+        self.main_dialog()
+            .set_response_sensitive(ResponseType::Ok, true);
+        self.main_action_button().set_sensitive(true);
+        self.notification_image()
+            .set_icon_name(Some("dialog-warning-symbolic"));
+        self.notification_label().set_label(msg);
+        self.notification_box().show_all();
+    }
+    fn hide_message(&self) {
+        self.main_dialog()
+            .set_response_sensitive(ResponseType::Ok, true);
+        self.main_action_button().set_sensitive(true);
+        self.notification_box().hide()
+    }
+}
+
 pub fn error_dlg(
     parent: &impl IsA<gtk::Window>,
     title: &str,
