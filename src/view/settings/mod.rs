@@ -62,4 +62,5 @@ pub enum Msg {
     Response(ResponseType),
     SetWallet(StreamHandle<wallet::Msg>),
     SetLauncher(StreamHandle<launch::Msg>),
+    NoOp,
 }

@@ -204,13 +204,13 @@ impl Widgets {
         connect!(
             relm,
             self.seed_mine_tgl,
-            connect_toggled(_),
+            connect_clicked(_),
             Msg::ExportFormat(false)
         );
         connect!(
             relm,
             self.seed_extern_tgl,
-            connect_toggled(_),
+            connect_clicked(_),
             Msg::SignerOwnershipChange
         );
         connect!(
@@ -230,32 +230,32 @@ impl Widgets {
         connect!(
             relm,
             self.mainnet_tgl,
-            connect_toggled(_),
+            connect_clicked(_),
             Msg::NetworkChange(PublicNetwork::Mainnet)
         );
         connect!(
             relm,
             self.testnet_tgl,
-            connect_toggled(_),
+            connect_clicked(_),
             Msg::NetworkChange(PublicNetwork::Testnet)
         );
         connect!(
             relm,
             self.signet_tgl,
-            connect_toggled(_),
+            connect_clicked(_),
             Msg::NetworkChange(PublicNetwork::Signet)
         );
 
         connect!(
             relm,
             self.export_core_tgl,
-            connect_toggled(_),
+            connect_clicked(_),
             Msg::ExportFormat(false)
         );
         connect!(
             relm,
             self.export_lnpbp_tgl,
-            connect_toggled(_),
+            connect_clicked(_),
             Msg::ExportFormat(true)
         );
 
@@ -319,38 +319,38 @@ impl Widgets {
         connect!(
             relm,
             self.electr_blockstream_tgl,
-            connect_toggled(_),
+            connect_clicked(_),
             Msg::ElectrumSelect(ElectrumPreset::Blockstream)
         );
         connect!(
             relm,
             self.electr_mycitadel_tgl,
-            connect_toggled(_),
+            connect_clicked(_),
             Msg::ElectrumSelect(ElectrumPreset::MyCitadel)
         );
         connect!(
             relm,
             self.electr_custom_tgl,
-            connect_toggled(_),
+            connect_clicked(_),
             Msg::ElectrumSelect(ElectrumPreset::Custom)
         );
 
         connect!(
             relm,
             self.tor_tgl,
-            connect_toggled(_),
+            connect_clicked(_),
             Msg::ElectrumSecChange(ElectrumSec::Tor)
         );
         connect!(
             relm,
             self.tls_tgl,
-            connect_toggled(_),
+            connect_clicked(_),
             Msg::ElectrumSecChange(ElectrumSec::Tls)
         );
         connect!(
             relm,
             self.nosec_tgl,
-            connect_toggled(_),
+            connect_clicked(_),
             Msg::ElectrumSecChange(ElectrumSec::None)
         );
 
