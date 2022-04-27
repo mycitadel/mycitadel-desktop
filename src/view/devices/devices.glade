@@ -4,14 +4,14 @@
   <requires lib="gtk+" version="3.24"/>
   <object class="GtkMessageDialog" id="error_dlg">
     <property name="can-focus">False</property>
+    <property name="modal">True</property>
+    <property name="window-position">center</property>
+    <property name="destroy-with-parent">True</property>
     <property name="type-hint">dialog</property>
     <property name="message-type">error</property>
     <property name="buttons">close</property>
     <property name="text" translatable="yes">Error connecting devices</property>
     <property name="secondary-text" translatable="yes">error details</property>
-    <property name="modal">True</property>
-    <property name="window-position">center</property>
-    <property name="destroy-with-parent">True</property>
     <child internal-child="vbox">
       <object class="GtkBox">
         <property name="can-focus">False</property>
@@ -21,13 +21,7 @@
           <object class="GtkButtonBox">
             <property name="can-focus">False</property>
             <property name="homogeneous">True</property>
-            <property name="layout-style">end</property>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
+            <property name="layout-style">expand</property>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -150,29 +144,6 @@ for the check to finish</property>
             <property name="hexpand">True</property>
             <property name="vexpand">True</property>
             <property name="selection-mode">none</property>
-            <child type="placeholder">
-              <object class="GtkListBoxRow" id="placeholder_row">
-                <property name="visible">True</property>
-                <property name="can-focus">True</property>
-                <property name="activatable">False</property>
-                <property name="selectable">False</property>
-                <child>
-                  <object class="GtkLabel">
-                    <property name="visible">True</property>
-                    <property name="can-focus">False</property>
-                    <property name="margin-start">13</property>
-                    <property name="margin-end">13</property>
-                    <property name="margin-top">13</property>
-                    <property name="margin-bottom">13</property>
-                    <property name="hexpand">True</property>
-                    <property name="vexpand">True</property>
-                    <property name="label" translatable="yes">No connected hardware wallets are detected</property>
-                    <property name="justify">center</property>
-                    <property name="wrap">True</property>
-                  </object>
-                </child>
-              </object>
-            </child>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -204,6 +175,9 @@ for the check to finish</property>
             <property name="receives-default">True</property>
             <property name="image">refresh_img</property>
             <property name="always-show-image">True</property>
+            <style>
+              <class name="suggested-action"/>
+            </style>
           </object>
           <packing>
             <property name="pack-type">end</property>

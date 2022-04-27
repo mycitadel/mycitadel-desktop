@@ -79,34 +79,133 @@
   <object class="GtkPopover" id="invoice_popover">
     <property name="can-focus">False</property>
     <child>
-      <object class="GtkBox">
+      <!-- n-columns=3 n-rows=3 -->
+      <object class="GtkGrid">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
         <property name="margin-start">6</property>
         <property name="margin-end">6</property>
         <property name="margin-top">6</property>
         <property name="margin-bottom">6</property>
-        <property name="orientation">vertical</property>
-        <property name="spacing">6</property>
+        <property name="row-spacing">6</property>
+        <property name="column-spacing">6</property>
+        <child>
+          <object class="GtkCheckButton" id="amount_chk">
+            <property name="label" translatable="yes">Request specific amount:</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">False</property>
+            <property name="draw-indicator">True</property>
+          </object>
+          <packing>
+            <property name="left-attach">0</property>
+            <property name="top-attach">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkCheckButton" id="index_chk">
+            <property name="label" translatable="yes">Use custom address no:</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">False</property>
+            <property name="draw-indicator">True</property>
+          </object>
+          <packing>
+            <property name="left-attach">0</property>
+            <property name="top-attach">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkSpinButton" id="amount_stp">
+            <property name="visible">True</property>
+            <property name="sensitive">False</property>
+            <property name="can-focus">True</property>
+            <property name="hexpand">True</property>
+            <property name="width-chars">12</property>
+            <property name="text" translatable="yes">0.000000</property>
+            <property name="digits">6</property>
+          </object>
+          <packing>
+            <property name="left-attach">1</property>
+            <property name="top-attach">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkSpinButton" id="index_stp">
+            <property name="visible">True</property>
+            <property name="sensitive">False</property>
+            <property name="can-focus">True</property>
+            <property name="text" translatable="yes">0</property>
+          </object>
+          <packing>
+            <property name="left-attach">1</property>
+            <property name="top-attach">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkImage" id="index_img">
+            <property name="can-focus">False</property>
+            <property name="tooltip-text" translatable="yes">Address re-use</property>
+            <property name="icon-name">dialog-warning-symbolic</property>
+          </object>
+          <packing>
+            <property name="left-attach">2</property>
+            <property name="top-attach">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel">
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="label" translatable="yes">BTC</property>
+          </object>
+          <packing>
+            <property name="left-attach">2</property>
+            <property name="top-attach">0</property>
+          </packing>
+        </child>
         <child>
           <object class="GtkEntry" id="address_fld">
             <property name="visible">True</property>
             <property name="can-focus">True</property>
             <property name="hexpand">True</property>
             <property name="editable">False</property>
-            <property name="width-chars">64</property>
-            <property name="progress-fraction">1</property>
             <property name="secondary-icon-name">edit-copy-symbolic</property>
-            <property name="primary-icon-tooltip-text" translatable="yes">Next address</property>
-            <property name="secondary-icon-tooltip-text" translatable="yes">Previous address</property>
+            <property name="secondary-icon-tooltip-text" translatable="yes">Copy to clipboard</property>
             <property name="secondary-icon-tooltip-markup" translatable="yes">Copy to clipboard</property>
           </object>
           <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
-            <property name="position">0</property>
+            <property name="left-attach">0</property>
+            <property name="top-attach">2</property>
+            <property name="width">3</property>
           </packing>
         </child>
+      </object>
+    </child>
+  </object>
+  <object class="GtkMenu" id="menu">
+    <property name="visible">True</property>
+    <property name="can-focus">False</property>
+    <child>
+      <object class="GtkMenuItem" id="import_mi">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+        <property name="label" translatable="yes">_Import wallet</property>
+        <property name="use-underline">True</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkSeparatorMenuItem">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="about_mi">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+        <property name="label" translatable="yes">_About</property>
+        <property name="use-underline">True</property>
       </object>
     </child>
   </object>
@@ -1295,6 +1394,27 @@ volume</property>
           </packing>
         </child>
         <child>
+          <object class="GtkMenuButton" id="menu_btn">
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="focus-on-click">False</property>
+            <property name="receives-default">True</property>
+            <property name="popup">menu</property>
+            <property name="use-popover">False</property>
+            <child>
+              <object class="GtkImage">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="icon-name">open-menu-symbolic</property>
+              </object>
+            </child>
+          </object>
+          <packing>
+            <property name="pack-type">end</property>
+            <property name="position">2</property>
+          </packing>
+        </child>
+        <child>
           <object class="GtkButton" id="new_btn">
             <property name="visible">True</property>
             <property name="can-focus">True</property>
@@ -1303,7 +1423,7 @@ volume</property>
             <property name="always-show-image">True</property>
           </object>
           <packing>
-            <property name="position">2</property>
+            <property name="position">3</property>
           </packing>
         </child>
         <child>
@@ -1317,7 +1437,7 @@ volume</property>
           </object>
           <packing>
             <property name="pack-type">end</property>
-            <property name="position">2</property>
+            <property name="position">3</property>
           </packing>
         </child>
       </object>

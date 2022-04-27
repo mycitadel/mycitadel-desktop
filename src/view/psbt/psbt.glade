@@ -10,6 +10,78 @@
       <column type="gdouble"/>
     </columns>
   </object>
+  <object class="GtkMenu" id="menu">
+    <property name="visible">True</property>
+    <property name="can-focus">False</property>
+    <child>
+      <object class="GtkMenuItem" id="new_wallet_mi">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+        <property name="label" translatable="yes">New _wallet</property>
+        <property name="use-underline">True</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="new_template_mi">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+        <property name="label" translatable="yes">Wallet from _template...</property>
+        <property name="use-underline">True</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="open_wallet_mi">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+        <property name="label" translatable="yes">_Open wallet...</property>
+        <property name="use-underline">True</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="open_psbt_mi">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+        <property name="label" translatable="yes">Open _PSBT...</property>
+        <property name="use-underline">True</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkSeparatorMenuItem">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="import_mi">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+        <property name="label" translatable="yes">_Import wallet...</property>
+        <property name="use-underline">True</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkSeparatorMenuItem">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="launcher_mi">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+        <property name="label" translatable="yes">_Launch screen</property>
+        <property name="use-underline">True</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="about_mi">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+        <property name="label" translatable="yes">_About</property>
+        <property name="use-underline">True</property>
+      </object>
+    </child>
+  </object>
   <object class="GtkImage" id="publish_img">
     <property name="visible">True</property>
     <property name="can-focus">False</property>
@@ -81,7 +153,7 @@
                 <property name="can-focus">True</property>
                 <property name="hexpand">True</property>
                 <property name="editable">False</property>
-                <property name="secondary-icon-name">edit-copy</property>
+                <property name="secondary-icon-name">edit-copy-symbolic</property>
                 <property name="secondary-icon-tooltip-text" translatable="yes">Copy to clipboard</property>
                 <property name="secondary-icon-tooltip-markup" translatable="yes">Copy to clipboard</property>
               </object>
@@ -95,9 +167,7 @@
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="hexpand">True</property>
-                <property name="secondary-icon-name">edit-copy</property>
                 <property name="secondary-icon-tooltip-text" translatable="yes">Copy to clipboard</property>
-                <property name="secondary-icon-tooltip-markup" translatable="yes">Copy to clipboard</property>
               </object>
               <packing>
                 <property name="left-attach">1</property>
@@ -105,7 +175,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkExpander">
+              <object class="GtkExpander" id="notes_exp">
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="resize-toplevel">True</property>
@@ -389,7 +459,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkLevelBar">
+                      <object class="GtkLevelBar" id="progress_bar">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                         <property name="value">4</property>
@@ -506,6 +576,9 @@
                                             <property name="receives-default">True</property>
                                             <property name="image">sign_img</property>
                                             <property name="always-show-image">True</property>
+                                            <style>
+                                              <class name="suggested-action"/>
+                                            </style>
                                           </object>
                                           <packing>
                                             <property name="expand">False</property>
@@ -633,7 +706,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkLabel">
+                  <object class="GtkLabel" id="fee_lbl">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <property name="label" translatable="yes">2560 sats, 2 sat/vbyte</property>
@@ -742,7 +815,7 @@
         <property name="visible">True</property>
         <property name="can-focus">False</property>
         <property name="title" translatable="yes">Transaction</property>
-        <property name="subtitle" translatable="yes">Partially signed transaction</property>
+        <property name="subtitle" translatable="yes">New partially signed transaction</property>
         <property name="show-close-button">True</property>
         <child>
           <object class="GtkImage">
@@ -752,6 +825,27 @@
           </object>
         </child>
         <child>
+          <object class="GtkMenuButton" id="menu_btn">
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="focus-on-click">False</property>
+            <property name="receives-default">True</property>
+            <property name="popup">menu</property>
+            <property name="use-popover">False</property>
+            <child>
+              <object class="GtkImage">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="icon-name">open-menu-symbolic</property>
+              </object>
+            </child>
+          </object>
+          <packing>
+            <property name="pack-type">end</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child>
           <object class="GtkButton" id="publish_btn">
             <property name="label" translatable="yes">Broadcast</property>
             <property name="visible">True</property>
@@ -759,10 +853,13 @@
             <property name="receives-default">True</property>
             <property name="image">publish_img</property>
             <property name="always-show-image">True</property>
+            <style>
+              <class name="destructive-action"/>
+            </style>
           </object>
           <packing>
             <property name="pack-type">end</property>
-            <property name="position">1</property>
+            <property name="position">2</property>
           </packing>
         </child>
         <child>
@@ -773,10 +870,13 @@
             <property name="receives-default">True</property>
             <property name="image">save_img</property>
             <property name="always-show-image">True</property>
+            <style>
+              <class name="suggested-action"/>
+            </style>
           </object>
           <packing>
             <property name="pack-type">end</property>
-            <property name="position">2</property>
+            <property name="position">3</property>
           </packing>
         </child>
       </object>
