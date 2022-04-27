@@ -67,8 +67,6 @@ impl Widgets {
         let mut vsize = tx.vsize() as f32;
 
         let mut volume = 0u64;
-        let sigs_required = psbt.inputs.len() as u32;
-        let mut sigs_present = 0u32;
         for input in &psbt.inputs {
             if let Some(txout) = &input.witness_utxo {
                 volume += txout.value;
@@ -91,16 +89,18 @@ impl Widgets {
                 None
             }
             .map(|witness_size| vsize += witness_size as f32 / WITNESS_SCALE_FACTOR as f32);
+        }
 
-            let present = if !input.tap_key_origins.is_empty() {
-                input.tap_key_sig.map(|_| 1u32).unwrap_or_default()
-                    + input.tap_script_sigs.len() as u32
-            } else {
-                input.partial_sigs.len() as u32
-            };
-
-            if present >= 1 {
-                sigs_present += 1;
+        let sigs_required = psbt.inputs.len() as u32;
+        let mut sigs_present = 0u32;
+        let signing_model: &SigningModel = model.signing();
+        for no in 0..signing_model.n_items() {
+            if let Some(signing) = signing_model.item(no) {
+                let present: u32 = signing.property("sigs-present");
+                let required: u32 = signing.property("sigs-required");
+                if present >= required {
+                    sigs_present += 1;
+                }
             }
         }
 
