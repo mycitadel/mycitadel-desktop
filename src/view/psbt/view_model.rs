@@ -9,27 +9,27 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
-use crate::model::{Wallet, WalletSettings};
+use bitcoin::consensus::Encodable;
+use bitcoin::psbt::PartiallySignedTransaction;
+use std::path::PathBuf;
+use std::{fs, io};
 
-#[derive(Getters)]
+use wallet::psbt::Psbt;
+
+#[derive(Getters, Default)]
 pub struct ViewModel {
-    wallet: Wallet,
+    psbt: Psbt,
+    path: PathBuf,
 }
 
 impl ViewModel {
-    pub fn with(wallet: Wallet) -> ViewModel {
-        ViewModel { wallet }
+    pub fn with(psbt: Psbt, path: PathBuf) -> ViewModel {
+        ViewModel { psbt, path }
     }
 
-    pub fn as_wallet(&self) -> &Wallet {
-        &self.wallet
-    }
-
-    pub fn as_descriptor(&self) -> &WalletSettings {
-        self.wallet.as_settings()
-    }
-
-    pub fn to_descriptor(&self) -> WalletSettings {
-        self.wallet.to_settings()
+    pub fn save(&mut self) -> Result<usize, io::Error> {
+        let psbt = PartiallySignedTransaction::from(self.psbt.clone());
+        let file = fs::File::create(&self.path)?;
+        psbt.consensus_encode(file)
     }
 }

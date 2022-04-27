@@ -9,13 +9,16 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
+use bitcoin::consensus::Decodable;
+use bitcoin::psbt::PartiallySignedTransaction;
 use gladis::Gladis;
 use gtk::ApplicationWindow;
 use relm::{Relm, StreamHandle, Update, Widget};
+use std::fs;
+use std::path::PathBuf;
 
 use super::{Msg, ViewModel, Widgets};
-use crate::model::Wallet;
-use crate::view::launch;
+use crate::view::{error_dlg, launch};
 
 pub struct Component {
     model: ViewModel,
@@ -34,17 +37,48 @@ impl Update for Component {
     // Specify the model used for this widget.
     type Model = ViewModel;
     // Specify the model parameter used to init the model.
-    type ModelParam = Wallet;
+    type ModelParam = PathBuf;
     // Specify the type of the messages sent to the update function.
     type Msg = Msg;
 
-    fn model(_relm: &Relm<Self>, wallet: Self::ModelParam) -> Self::Model {
-        ViewModel::with(wallet)
+    fn model(relm: &Relm<Self>, path: Self::ModelParam) -> Self::Model {
+        let file = match fs::File::open(&path) {
+            Ok(file) => file,
+            Err(err) => {
+                relm.stream()
+                    .emit(Msg::FileError(path.clone(), err.to_string()));
+                relm.stream().emit(Msg::Close);
+                return ViewModel::default();
+            }
+        };
+        let psbt = match PartiallySignedTransaction::consensus_decode(&file) {
+            Ok(psbt) => psbt,
+            Err(err) => {
+                relm.stream()
+                    .emit(Msg::FileError(path.clone(), err.to_string()));
+                relm.stream().emit(Msg::Close);
+                return ViewModel::default();
+            }
+        };
+        ViewModel::with(psbt.into(), path)
     }
 
     fn update(&mut self, event: Msg) {
         match event {
             Msg::Close => self.close(),
+            Msg::FileError(path, err) => {
+                self.widgets.hide();
+                error_dlg(
+                    self.widgets.as_root(),
+                    "Error opening wallet",
+                    &path.display().to_string(),
+                    Some(&err.to_string()),
+                );
+                self.close();
+            }
+            Msg::RegisterLauncher(stream) => {
+                self.launcher_stream = Some(stream);
+            }
         }
     }
 }

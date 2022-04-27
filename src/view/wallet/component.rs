@@ -141,7 +141,7 @@ impl Update for Component {
             Msg::Open => {
                 self.launcher_stream
                     .as_ref()
-                    .map(|stream| stream.emit(launch::Msg::OpenSelected));
+                    .map(|stream| stream.emit(launch::Msg::Wallet));
             }
             Msg::Close => {
                 self.launcher_stream

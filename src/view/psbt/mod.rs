@@ -17,7 +17,15 @@ pub use self::component::Component;
 pub(self) use view_model::ViewModel;
 pub(self) use widget::Widgets;
 
+use std::path::PathBuf;
+
+use relm::StreamHandle;
+
+use crate::view::launch;
+
 #[derive(Msg)]
 pub enum Msg {
     Close,
+    FileError(PathBuf, String),
+    RegisterLauncher(StreamHandle<launch::Msg>),
 }

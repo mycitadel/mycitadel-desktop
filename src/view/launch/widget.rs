@@ -116,26 +116,22 @@ impl Widgets {
             relm,
             self.create_box,
             connect_row_activated(_, _),
-            Msg::TemplateSelected
+            Msg::Template
         );
         connect!(
             relm,
             self.import_box,
             connect_row_activated(_, _),
-            Msg::ImportSelected
+            Msg::Import
         );
-        connect!(
-            relm,
-            self.open_box,
-            connect_row_activated(_, _),
-            Msg::OpenSelected
-        );
-        connect!(
-            relm,
-            self.recent,
-            connect_item_activated(_),
-            Msg::RecentSelected
-        );
+        connect!(relm, self.open_box, connect_row_activated(_, row), {
+            if row.index() == 0 {
+                Msg::Wallet
+            } else {
+                Msg::Psbt
+            }
+        });
+        connect!(relm, self.recent, connect_item_activated(_), Msg::Recent);
         connect!(
             relm,
             self.window,

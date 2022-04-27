@@ -17,7 +17,7 @@ use relm::{init, Relm, StreamHandle, Update, Widget};
 
 use super::{Msg, ViewModel, Widgets};
 use crate::model::{FileDocument, Wallet};
-use crate::view::{file_create_dlg, file_open_dlg, settings, wallet};
+use crate::view::{file_create_dlg, file_open_dlg, psbt, settings, wallet};
 
 pub struct Component {
     model: ViewModel,
@@ -26,6 +26,7 @@ pub struct Component {
     wallet_settings: relm::Component<settings::Component>,
     // TODO: Make a BTreeMap from wallet ids
     wallets: Vec<relm::Component<wallet::Component>>,
+    psbts: Vec<relm::Component<psbt::Component>>,
     wallet_count: usize,
     window_count: usize,
 }
@@ -37,6 +38,13 @@ impl Component {
         self.window_count += 1;
         wallet.emit(wallet::Msg::RegisterLauncher(self.stream.clone()));
         self.wallets.push(wallet);
+    }
+
+    fn open_psbt(&mut self, path: PathBuf) {
+        let psbt = init::<psbt::Component>(path).expect("unable to instantiate wallet settings");
+        self.window_count += 1;
+        psbt.emit(psbt::Msg::RegisterLauncher(self.stream.clone()));
+        self.psbts.push(psbt);
     }
 }
 
@@ -69,7 +77,7 @@ impl Update for Component {
                 }
                 // TODO: Remove wallet window from the list of windows
             }
-            Msg::TemplateSelected => {
+            Msg::Template => {
                 if let Some(path) = file_create_dlg(
                     self.widgets.as_root(),
                     "Create wallet",
@@ -83,8 +91,8 @@ impl Update for Component {
                         .emit(settings::Msg::New(self.widgets.selected_template(), path));
                 }
             }
-            Msg::ImportSelected => {}
-            Msg::OpenSelected => {
+            Msg::Import => {}
+            Msg::Wallet => {
                 if let Some(path) = file_open_dlg(
                     self.widgets.as_root(),
                     "Open wallet",
@@ -95,7 +103,18 @@ impl Update for Component {
                     self.open_wallet(path)
                 }
             }
-            Msg::RecentSelected => {
+            Msg::Psbt => {
+                if let Some(path) = file_open_dlg(
+                    self.widgets.as_root(),
+                    "Open PSBT",
+                    "Partially signed bitcoin transaction",
+                    "*.psbt",
+                ) {
+                    self.widgets.hide();
+                    self.open_psbt(path)
+                }
+            }
+            Msg::Recent => {
                 if let Some(path) = self.widgets.selected_recent() {
                     self.widgets.hide();
                     self.open_wallet(path)
@@ -132,6 +151,7 @@ impl Widget for Component {
             model,
             wallet_settings: new_wallet,
             wallets: empty!(),
+            psbts: empty!(),
             stream: relm.stream().clone(),
             wallet_count: 1,
             window_count: 0,
