@@ -10,11 +10,10 @@
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
 use gladis::Gladis;
-use gtk::{Dialog, ResponseType};
+use gtk::Dialog;
 use relm::{Relm, Update, Widget};
 
 use super::{Msg, ViewModel, Widgets};
-use crate::model::Wallet;
 
 pub struct Component {
     model: ViewModel,
@@ -27,12 +26,12 @@ impl Update for Component {
     // Specify the model used for this widget.
     type Model = ViewModel;
     // Specify the model parameter used to init the model.
-    type ModelParam = Wallet;
+    type ModelParam = ();
     // Specify the type of the messages sent to the update function.
     type Msg = Msg;
 
-    fn model(_relm: &Relm<Self>, wallet: Self::ModelParam) -> Self::Model {
-        ViewModel::with(wallet)
+    fn model(_relm: &Relm<Self>, _param: Self::ModelParam) -> Self::Model {
+        ViewModel::default()
     }
 
     fn update(&mut self, event: Msg) {
@@ -41,13 +40,9 @@ impl Update for Component {
                 self.widgets.update_ui(&self.model);
                 self.widgets.show();
             }
-            Msg::Response(ResponseType::Ok) => {
+            Msg::Response(_) => {
                 self.widgets.hide();
             }
-            Msg::Response(ResponseType::Cancel) => {
-                self.widgets.close();
-            }
-            Msg::Response(_) => {}
         }
     }
 }
@@ -62,7 +57,7 @@ impl Widget for Component {
     }
 
     fn view(relm: &Relm<Self>, model: Self::Model) -> Self {
-        let glade_src = include_str!("invoice.glade");
+        let glade_src = include_str!("about.glade");
         let widgets = Widgets::from_string(glade_src).expect("glade file broken");
 
         widgets.connect(relm);

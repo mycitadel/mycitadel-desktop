@@ -26,6 +26,7 @@ use crate::view::launch;
 #[derive(Msg)]
 pub enum Msg {
     Close,
+    About,
     FileError(PathBuf, String),
     RegisterLauncher(StreamHandle<launch::Msg>),
 }

@@ -18,8 +18,8 @@ use electrum_client::HeaderNotification;
 use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{
-    ApplicationWindow, Button, Entry, HeaderBar, IconSize, Image, Label, ListStore, Popover,
-    Spinner, Statusbar, TreeView,
+    ApplicationWindow, Button, Entry, HeaderBar, IconSize, Image, Label, ListStore, MenuItem,
+    Popover, Spinner, Statusbar, TreeView,
 };
 use relm::Relm;
 
@@ -55,6 +55,7 @@ pub struct Widgets {
     open_btn: Button,
     settings_btn: Button,
     pay_btn: Button,
+    about_mi: MenuItem,
 
     balance_btc_lbl: Label,
     balance_sat_lbl: Label,
@@ -128,6 +129,7 @@ impl Widgets {
         connect!(relm, self.settings_btn, connect_clicked(_), Msg::Settings);
         connect!(relm, self.pay_btn, connect_clicked(_), Msg::Pay);
         connect!(relm, self.refresh_btn, connect_clicked(_), Msg::Refresh);
+        connect!(relm, self.about_mi, connect_activate(_), Msg::About);
 
         connect!(
             relm,

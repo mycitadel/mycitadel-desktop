@@ -31,6 +31,7 @@ pub enum Msg {
     New,
     Open,
     Close,
+    About,
     FileError(PathBuf, String),
     Save,
     Settings,

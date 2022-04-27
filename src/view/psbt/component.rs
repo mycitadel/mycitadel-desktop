@@ -66,6 +66,11 @@ impl Update for Component {
     fn update(&mut self, event: Msg) {
         match event {
             Msg::Close => self.close(),
+            Msg::About => {
+                self.launcher_stream
+                    .as_ref()
+                    .map(|stream| stream.emit(launch::Msg::About));
+            }
             Msg::FileError(path, err) => {
                 self.widgets.hide();
                 error_dlg(

@@ -12,12 +12,12 @@
 use std::path::PathBuf;
 
 use gladis::Gladis;
-use gtk::ApplicationWindow;
+use gtk::{ApplicationWindow, ResponseType};
 use relm::{init, Relm, StreamHandle, Update, Widget};
 
 use super::{Msg, ViewModel, Widgets};
 use crate::model::{FileDocument, Wallet};
-use crate::view::{file_create_dlg, file_open_dlg, psbt, settings, wallet};
+use crate::view::{about, file_create_dlg, file_open_dlg, psbt, settings, wallet};
 
 pub struct Component {
     model: ViewModel,
@@ -27,6 +27,7 @@ pub struct Component {
     // TODO: Make a BTreeMap from wallet ids
     wallets: Vec<relm::Component<wallet::Component>>,
     psbts: Vec<relm::Component<psbt::Component>>,
+    about: relm::Component<about::Component>,
     wallet_count: usize,
     window_count: usize,
 }
@@ -120,6 +121,7 @@ impl Update for Component {
                     self.open_wallet(path)
                 }
             }
+            Msg::About => self.about.emit(about::Msg::Show),
             Msg::WalletCreated(path) => self.open_wallet(path),
             Msg::OpenWallet(path) => self.open_wallet(path),
         }
@@ -142,6 +144,8 @@ impl Widget for Component {
         let new_wallet =
             init::<settings::Component>(()).expect("unable to instantiate wallet settings");
         new_wallet.emit(settings::Msg::SetLauncher(relm.stream().clone()));
+        let about = init::<about::Component>(()).expect("unable to instantiate about settings");
+        about.emit(about::Msg::Response(ResponseType::Close));
 
         widgets.connect(relm);
         widgets.show();
@@ -152,6 +156,7 @@ impl Widget for Component {
             wallet_settings: new_wallet,
             wallets: empty!(),
             psbts: empty!(),
+            about,
             stream: relm.stream().clone(),
             wallet_count: 1,
             window_count: 0,

@@ -28,6 +28,7 @@ pub enum Msg {
     Wallet,
     Psbt,
     Recent,
+    About,
     WalletCreated(PathBuf),
     WalletClosed,
     OpenWallet(PathBuf),

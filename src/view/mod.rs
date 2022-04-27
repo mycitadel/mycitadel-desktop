@@ -9,13 +9,12 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
+pub mod about;
 pub mod devices;
-pub mod invoice;
 pub mod launch;
 pub mod pay;
 pub mod psbt;
 pub mod settings;
-pub mod tx;
 pub mod wallet;
 
 use std::path::PathBuf;

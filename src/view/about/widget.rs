@@ -11,7 +11,7 @@
 
 use gladis::Gladis;
 use gtk::prelude::*;
-use gtk::{Dialog, ResponseType};
+use gtk::{gdk, Dialog, Entry};
 use relm::Relm;
 
 use super::{Msg, ViewModel};
@@ -20,7 +20,9 @@ use super::{Msg, ViewModel};
 #[derive(Clone, Gladis)]
 pub struct Widgets {
     dialog: Dialog,
+    pgp_fld: Entry,
 }
+
 impl Widgets {
     pub fn update_ui(&self, _model: &ViewModel) {}
 
@@ -29,9 +31,6 @@ impl Widgets {
     }
     pub fn hide(&self) {
         self.dialog.hide()
-    }
-    pub fn close(&self) {
-        self.dialog.close()
     }
 
     pub fn to_root(&self) -> Dialog {
@@ -42,13 +41,17 @@ impl Widgets {
     }
 
     pub(super) fn connect(&self, relm: &Relm<super::Component>) {
+        self.pgp_fld.connect_icon_press(|entry, _, _| {
+            let val = entry.text();
+            gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).set_text(&val);
+        });
+
         connect!(
             relm,
             self.dialog,
             connect_response(_, resp),
             Msg::Response(resp)
         );
-        self.dialog.set_response_sensitive(ResponseType::Ok, false);
 
         connect!(
             relm,

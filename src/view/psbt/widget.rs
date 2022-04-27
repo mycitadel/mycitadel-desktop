@@ -11,7 +11,7 @@
 
 use gladis::Gladis;
 use gtk::prelude::*;
-use gtk::ApplicationWindow;
+use gtk::{ApplicationWindow, MenuItem};
 use relm::Relm;
 
 use super::{Msg, ViewModel};
@@ -20,6 +20,7 @@ use super::{Msg, ViewModel};
 #[derive(Clone, Gladis)]
 pub struct Widgets {
     window: ApplicationWindow,
+    about_mi: MenuItem,
 }
 
 impl Widgets {
@@ -43,6 +44,7 @@ impl Widgets {
     }
 
     pub(super) fn connect(&self, relm: &Relm<super::Component>) {
+        connect!(relm, self.about_mi, connect_activate(_), Msg::About);
         connect!(
             relm,
             self.window,

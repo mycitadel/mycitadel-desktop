@@ -148,6 +148,11 @@ impl Update for Component {
                     .as_ref()
                     .map(|stream| stream.emit(launch::Msg::WalletClosed));
             }
+            Msg::About => {
+                self.launcher_stream
+                    .as_ref()
+                    .map(|stream| stream.emit(launch::Msg::About));
+            }
             Msg::FileError(path, err) => {
                 self.widgets.hide();
                 error_dlg(
