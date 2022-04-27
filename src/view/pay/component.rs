@@ -9,7 +9,9 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
+use ::wallet::psbt::Psbt;
 use gladis::Gladis;
+use gtk::prelude::*;
 use gtk::{Dialog, ResponseType};
 use relm::{Relm, StreamHandle, Update, Widget};
 
@@ -24,7 +26,18 @@ pub struct Component {
     wallet_stream: Option<StreamHandle<wallet::Msg>>,
 }
 
-impl Component {}
+impl Component {
+    pub fn compose_psbt(&self) -> Option<Psbt> {
+        for no in 0..self.model.beneficiaries().n_items() {
+            let item = self
+                .model
+                .beneficiaries()
+                .item(no)
+                .expect("BeneficiaryModel is broken");
+        }
+        None
+    }
+}
 
 impl Update for Component {
     // Specify the model used for this widget.
@@ -41,16 +54,17 @@ impl Update for Component {
     fn update(&mut self, event: Msg) {
         match event {
             Msg::Show => {
-                self.model.beneficiaries.clear();
-                self.widgets.update_ui(&self.model);
+                self.model.beneficiaries_mut().clear();
+                self.model.beneficiaries_mut().append(&Beneficiary::new());
+                self.widgets.init_ui(&self.model);
                 self.widgets.show();
             }
             Msg::BeneficiaryAdd => {
-                self.model.beneficiaries.append(&Beneficiary::new());
+                self.model.beneficiaries_mut().append(&Beneficiary::new());
             }
             Msg::BeneficiaryRemove => {
                 self.widgets.selected_beneficiary_index().map(|index| {
-                    self.model.beneficiaries.remove(index);
+                    self.model.beneficiaries_mut().remove(index);
                 });
             }
             Msg::SelectBeneficiary(index) => self.widgets.select_beneficiary(index),
@@ -88,8 +102,8 @@ impl Widget for Component {
         let widgets = Widgets::from_string(glade_src).expect("glade file broken");
 
         widgets.connect(relm);
-        widgets.bind_beneficiary_model(relm, &model.beneficiaries);
-        widgets.update_ui(&model);
+        widgets.bind_beneficiary_model(relm, &model);
+        widgets.init_ui(&model);
 
         Component {
             model,

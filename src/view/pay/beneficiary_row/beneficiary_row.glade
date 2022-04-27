@@ -22,6 +22,9 @@
             <property name="hexpand">True</property>
             <property name="width-chars">66</property>
             <property name="max-width-chars">66</property>
+            <property name="truncate-multiline">True</property>
+            <property name="input-purpose">alpha</property>
+            <property name="input-hints">GTK_INPUT_HINT_NO_SPELLCHECK | GTK_INPUT_HINT_NO_EMOJI | GTK_INPUT_HINT_NONE</property>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -33,6 +36,9 @@
           <object class="GtkEntry" id="amount_fld">
             <property name="visible">True</property>
             <property name="can-focus">True</property>
+            <property name="truncate-multiline">True</property>
+            <property name="input-purpose">number</property>
+            <property name="input-hints">GTK_INPUT_HINT_NO_SPELLCHECK | GTK_INPUT_HINT_NO_EMOJI | GTK_INPUT_HINT_NONE</property>
           </object>
           <packing>
             <property name="expand">False</property>

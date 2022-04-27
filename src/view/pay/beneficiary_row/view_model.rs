@@ -10,6 +10,7 @@
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
 use bitcoin::util::address;
+use bitcoin::Address;
 use std::cell::RefCell;
 use std::str::FromStr;
 
@@ -116,7 +117,11 @@ impl Beneficiary {
             .expect("Failed to create row data")
     }
 
-    pub fn address(&self) -> Result<AddressCompat, address::Error> {
+    pub fn address(&self) -> Result<Address, address::Error> {
+        Address::from_str(&self.property::<String>("address"))
+    }
+
+    pub fn address_compat(&self) -> Result<AddressCompat, address::Error> {
         AddressCompat::from_str(&self.property::<String>("address"))
     }
 }

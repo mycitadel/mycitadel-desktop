@@ -15,7 +15,8 @@ use crate::model::{Wallet, WalletSettings};
 #[derive(Getters)]
 pub struct ViewModel {
     wallet: Wallet,
-    pub beneficiaries: BeneficiaryModel,
+    #[getter(as_mut)]
+    beneficiaries: BeneficiaryModel,
 }
 
 impl ViewModel {
@@ -29,12 +30,10 @@ impl ViewModel {
     pub fn as_wallet(&self) -> &Wallet {
         &self.wallet
     }
-
-    pub fn as_descriptor(&self) -> &WalletSettings {
+    pub fn as_settings(&self) -> &WalletSettings {
         self.wallet.as_settings()
     }
-
-    pub fn to_descriptor(&self) -> WalletSettings {
+    pub fn to_settings(&self) -> WalletSettings {
         self.wallet.to_settings()
     }
 }

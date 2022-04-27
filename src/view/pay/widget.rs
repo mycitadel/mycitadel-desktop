@@ -17,7 +17,7 @@ use gtk::{
 };
 use relm::Relm;
 
-use super::{beneficiary_row, beneficiary_row::BeneficiaryModel, Msg, ViewModel};
+use super::{beneficiary_row, Msg, ViewModel};
 use crate::view::NotificationBoxExt;
 
 // Create the structure that holds the widgets used in the view.
@@ -51,7 +51,7 @@ pub struct Widgets {
 }
 
 impl Widgets {
-    pub fn update_ui(&self, _model: &ViewModel) {}
+    pub fn init_ui(&self, _model: &ViewModel) {}
 
     pub fn show(&self) {
         self.dialog.show()
@@ -103,15 +103,13 @@ impl Widgets {
         );
     }
 
-    pub(super) fn bind_beneficiary_model(
-        &self,
-        relm: &Relm<super::Component>,
-        model: &BeneficiaryModel,
-    ) {
+    pub(super) fn bind_beneficiary_model(&self, relm: &Relm<super::Component>, model: &ViewModel) {
         let relm = relm.clone();
-        self.beneficiary_list.bind_model(Some(model), move |item| {
-            beneficiary_row::RowWidgets::init(relm.clone(), item)
-        });
+        let network = model.as_settings().network();
+        self.beneficiary_list
+            .bind_model(Some(model.beneficiaries()), move |item| {
+                beneficiary_row::RowWidgets::init(relm.clone(), item, network)
+            });
     }
 
     pub fn select_beneficiary(&self, index: u32) {
