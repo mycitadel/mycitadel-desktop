@@ -89,7 +89,6 @@ impl Widget for Component {
 
         widgets.connect(relm);
         widgets.bind_beneficiary_model(relm, &model.beneficiaries);
-
         widgets.update_ui(&model);
 
         Component {

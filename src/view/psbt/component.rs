@@ -65,6 +65,10 @@ impl Update for Component {
 
     fn update(&mut self, event: Msg) {
         match event {
+            Msg::Sign(_output_no) => {
+                // TODO: Implement signing
+            }
+
             Msg::Close => self.close(),
             Msg::About => {
                 self.launcher_stream
@@ -102,6 +106,7 @@ impl Widget for Component {
         let widgets = Widgets::from_string(glade_src).expect("glade file broken");
 
         widgets.connect(relm);
+        widgets.bind_signing_model(relm, &model.signing);
         widgets.update_ui(&model);
         widgets.show();
 

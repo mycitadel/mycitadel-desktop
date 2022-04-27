@@ -9,26 +9,8 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
-mod component;
-pub(self) mod sign_row;
 mod view_model;
 mod widget;
 
-pub use self::component::Component;
-pub(self) use view_model::ViewModel;
-pub(self) use widget::Widgets;
-
-use std::path::PathBuf;
-
-use relm::StreamHandle;
-
-use crate::view::launch;
-
-#[derive(Msg)]
-pub enum Msg {
-    Close,
-    About,
-    FileError(PathBuf, String),
-    Sign(u32),
-    RegisterLauncher(StreamHandle<launch::Msg>),
-}
+pub use view_model::{Signing, SigningModel};
+pub use widget::RowWidgets;
