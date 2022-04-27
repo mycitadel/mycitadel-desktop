@@ -33,8 +33,10 @@ pub struct Component {
 
 impl Component {
     fn close(&self) {
-        // TODO: Signal to launcher
         self.widgets.close();
+        self.launcher_stream
+            .as_ref()
+            .map(|stream| stream.emit(launch::Msg::WalletClosed));
     }
 
     fn save(&mut self) {
@@ -143,11 +145,7 @@ impl Update for Component {
                     .as_ref()
                     .map(|stream| stream.emit(launch::Msg::Wallet));
             }
-            Msg::Close => {
-                self.launcher_stream
-                    .as_ref()
-                    .map(|stream| stream.emit(launch::Msg::WalletClosed));
-            }
+            Msg::Close => self.close(),
             Msg::About => {
                 self.launcher_stream
                     .as_ref()

@@ -29,7 +29,9 @@ pub struct Component {
 impl Component {
     pub fn close(&self) {
         self.widgets.close();
-        // TODO: Notify launcher
+        self.launcher_stream
+            .as_ref()
+            .map(|stream| stream.emit(launch::Msg::PsbtClosed));
     }
 }
 
@@ -79,7 +81,7 @@ impl Update for Component {
                 self.widgets.hide();
                 error_dlg(
                     self.widgets.as_root(),
-                    "Error opening wallet",
+                    "Error opening PSBT",
                     &path.display().to_string(),
                     Some(&err.to_string()),
                 );

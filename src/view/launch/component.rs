@@ -86,6 +86,13 @@ impl Update for Component {
                 }
                 // TODO: Remove wallet window from the list of windows
             }
+            Msg::PsbtClosed => {
+                self.window_count -= 1;
+                if self.window_count == 0 {
+                    self.widgets.show();
+                }
+                // TODO: Remove PSBT window from the list of windows
+            }
             Msg::Template => {
                 if let Some(path) = file_create_dlg(
                     self.widgets.as_root(),
@@ -132,6 +139,7 @@ impl Update for Component {
             Msg::About => self.about.emit(about::Msg::Show),
             Msg::WalletCreated(path) => self.open_wallet(path),
             Msg::OpenWallet(path) => self.open_wallet(path),
+            Msg::OpenPsbt(path) => self.open_psbt(path),
         }
     }
 }
