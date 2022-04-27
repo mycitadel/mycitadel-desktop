@@ -8,7 +8,16 @@
       <column type="gchararray"/>
       <!-- column-name value -->
       <column type="gchararray"/>
+      <!-- column-name change -->
+      <column type="gboolean"/>
+      <!-- column-name type -->
+      <column type="gchararray"/>
     </columns>
+  </object>
+  <object class="GtkImage" id="change_img">
+    <property name="visible">True</property>
+    <property name="can-focus">False</property>
+    <property name="icon-name">edit-undo-symbolic</property>
   </object>
   <object class="GtkMenu" id="menu">
     <property name="visible">True</property>
@@ -343,15 +352,17 @@
                         <child>
                           <object class="GtkTreeViewColumn">
                             <property name="resizable">True</property>
-                            <property name="title" translatable="yes">Address</property>
+                            <property name="title" translatable="yes">Change</property>
                             <property name="clickable">True</property>
                             <property name="reorderable">True</property>
                             <property name="sort-indicator">True</property>
-                            <property name="sort-column-id">0</property>
+                            <property name="sort-column-id">2</property>
                             <child>
-                              <object class="GtkCellRendererText" id="address"/>
+                              <object class="GtkCellRendererPixbuf" id="change">
+                                <property name="icon-name">edit-undo-symbolic</property>
+                              </object>
                               <attributes>
-                                <attribute name="text">0</attribute>
+                                <attribute name="visible">2</attribute>
                               </attributes>
                             </child>
                           </object>
@@ -370,6 +381,42 @@
                               </object>
                               <attributes>
                                 <attribute name="text">1</attribute>
+                              </attributes>
+                            </child>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkTreeViewColumn">
+                            <property name="resizable">True</property>
+                            <property name="title" translatable="yes">Type</property>
+                            <property name="clickable">True</property>
+                            <property name="reorderable">True</property>
+                            <property name="sort-indicator">True</property>
+                            <property name="sort-column-id">3</property>
+                            <child>
+                              <object class="GtkCellRendererText" id="type"/>
+                              <attributes>
+                                <attribute name="text">3</attribute>
+                              </attributes>
+                            </child>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkTreeViewColumn">
+                            <property name="resizable">True</property>
+                            <property name="sizing">autosize</property>
+                            <property name="title" translatable="yes">Address</property>
+                            <property name="clickable">True</property>
+                            <property name="reorderable">True</property>
+                            <property name="sort-indicator">True</property>
+                            <property name="sort-column-id">0</property>
+                            <child>
+                              <object class="GtkCellRendererText" id="address">
+                                <property name="ellipsize">middle</property>
+                                <property name="width-chars">50</property>
+                              </object>
+                              <attributes>
+                                <attribute name="text">0</attribute>
                               </attributes>
                             </child>
                           </object>

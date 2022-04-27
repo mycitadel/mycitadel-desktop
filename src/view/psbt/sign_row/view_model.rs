@@ -185,7 +185,7 @@ impl Signing {
             ("status", &status),
             ("sigs-present", &sigs_present),
             ("sigs-required", &sigs_required),
-            ("signable", &(sigs_required < sigs_present)),
+            ("signable", &(sigs_present < sigs_required)),
         ])
         .expect("Failed to create row data")
     }
