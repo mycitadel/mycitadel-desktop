@@ -17,6 +17,8 @@ pub(self) use widget::Widgets;
 
 use std::path::PathBuf;
 
+use crate::model::PublicNetwork;
+
 pub struct ViewModel {}
 
 #[derive(Msg)]
@@ -26,7 +28,7 @@ pub enum Msg {
     Template,
     Import,
     Wallet,
-    Psbt,
+    Psbt(Option<PublicNetwork>),
     Recent,
     About,
     WalletCreated(PathBuf),

@@ -130,7 +130,7 @@ impl Widgets {
             if row.index() == 0 {
                 Msg::Wallet
             } else {
-                Msg::Psbt
+                Msg::Psbt(None)
             }
         });
         connect!(relm, self.recent, connect_item_activated(_), Msg::Recent);

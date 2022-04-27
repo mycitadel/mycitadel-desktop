@@ -37,7 +37,7 @@ impl Component {
     fn open_file(&mut self, path: PathBuf) {
         match path.extension().and_then(OsStr::to_str) {
             Some("mcw") => self.open_wallet(path),
-            _ => self.open_psbt(path),
+            _ => self.open_psbt(path, default!()),
         }
     }
 
@@ -49,8 +49,8 @@ impl Component {
         self.wallets.push(wallet);
     }
 
-    fn open_psbt(&mut self, path: PathBuf) {
-        let psbt = init::<psbt::Component>((path, PublicNetwork::Mainnet))
+    fn open_psbt(&mut self, path: PathBuf, network: Option<PublicNetwork>) {
+        let psbt = init::<psbt::Component>((path, network.unwrap_or_default()))
             .expect("unable to instantiate wallet settings");
         self.window_count += 1;
         psbt.emit(psbt::Msg::RegisterLauncher(self.stream.clone()));
@@ -120,7 +120,7 @@ impl Update for Component {
                     self.open_wallet(path)
                 }
             }
-            Msg::Psbt => {
+            Msg::Psbt(network) => {
                 if let Some(path) = file_open_dlg(
                     self.widgets.as_root(),
                     "Open PSBT",
@@ -128,7 +128,7 @@ impl Update for Component {
                     "*.psbt",
                 ) {
                     self.widgets.hide();
-                    self.open_psbt(path)
+                    self.open_psbt(path, network)
                 }
             }
             Msg::Recent => {
@@ -140,7 +140,7 @@ impl Update for Component {
             Msg::About => self.about.emit(about::Msg::Show),
             Msg::WalletCreated(path) => self.open_wallet(path),
             Msg::OpenWallet(path) => self.open_wallet(path),
-            Msg::OpenPsbt(path) => self.open_psbt(path),
+            Msg::OpenPsbt(path) => self.open_psbt(path, default!()),
         }
     }
 }
