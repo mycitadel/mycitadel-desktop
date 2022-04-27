@@ -9,6 +9,7 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
+use std::ffi::OsStr;
 use std::path::PathBuf;
 
 use gladis::Gladis;
@@ -33,6 +34,13 @@ pub struct Component {
 }
 
 impl Component {
+    fn open_file(&mut self, path: PathBuf) {
+        match path.extension().and_then(OsStr::to_str) {
+            Some("mcw") => self.open_wallet(path),
+            _ => self.open_psbt(path),
+        }
+    }
+
     fn open_wallet(&mut self, path: PathBuf) {
         let wallet =
             init::<wallet::Component>(path).expect("unable to instantiate wallet settings");
@@ -118,7 +126,7 @@ impl Update for Component {
             Msg::Recent => {
                 if let Some(path) = self.widgets.selected_recent() {
                     self.widgets.hide();
-                    self.open_wallet(path)
+                    self.open_file(path)
                 }
             }
             Msg::About => self.about.emit(about::Msg::Show),
