@@ -114,7 +114,8 @@ impl Widgets {
             change += output.amount;
         }
         let fee = volume - sent;
-        let amount = sent - change;
+        sent += fee;
+        let spent = sent - change;
 
         self.header_bar
             .set_subtitle(model.path().file_name().and_then(OsStr::to_str));
@@ -128,7 +129,7 @@ impl Widgets {
             .set_label(&format!("{} of {} required", sigs_present, sigs_required));
 
         self.amount_lbl
-            .set_label(&format!("{:.8} BTC", amount as f64 / 100_000_000.0));
+            .set_label(&format!("{:.8} BTC", spent as f64 / 100_000_000.0));
         self.volume_lbl
             .set_label(&format!("{:.8} BTC", volume as f64 / 100_000_000.0));
         self.fee_lbl.set_label(&format!(
