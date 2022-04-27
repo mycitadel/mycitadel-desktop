@@ -32,7 +32,7 @@ pub const MC_PSBT_GLOBAL_SIGNER_NAME: u8 = 0;
 pub struct ViewModel {
     psbt: Psbt,
     path: PathBuf,
-    pub signing: SigningModel,
+    signing: SigningModel,
 }
 
 impl ViewModel {

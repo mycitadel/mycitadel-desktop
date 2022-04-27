@@ -106,7 +106,7 @@ impl Widget for Component {
         let widgets = Widgets::from_string(glade_src).expect("glade file broken");
 
         widgets.connect(relm);
-        widgets.bind_signing_model(relm, &model.signing);
+        widgets.bind_signing_model(relm, model.signing());
         widgets.update_ui(&model);
         widgets.show();
 

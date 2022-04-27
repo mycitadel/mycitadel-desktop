@@ -50,20 +50,20 @@ impl RowWidgets {
     fn bind_model(&self, signing: &Signing) {
         let flags_ro = glib::BindingFlags::DEFAULT | glib::BindingFlags::SYNC_CREATE;
 
-        self.name_lbl
-            .bind_property("label", signing, "name")
+        signing
+            .bind_property("name", &self.name_lbl, "label")
             .flags(flags_ro)
             .build();
-        self.fingerprint_lbl
-            .bind_property("label", signing, "fingerprint")
+        signing
+            .bind_property("fingerprint", &self.fingerprint_lbl, "label")
             .flags(flags_ro)
             .build();
-        self.sign_btn
-            .bind_property("visible", signing, "signable")
+        signing
+            .bind_property("signable", &self.sign_btn, "visible")
             .flags(flags_ro)
             .build();
-        self.status_lbl
-            .bind_property("label", signing, "status")
+        signing
+            .bind_property("status", &self.status_lbl, "label")
             .flags(flags_ro)
             .build();
     }
