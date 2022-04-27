@@ -24,6 +24,7 @@ use miniscript::ToPublicKey;
 use wallet::psbt::Psbt;
 
 use super::sign_row::SigningModel;
+use crate::model::PublicNetwork;
 use crate::view::psbt::sign_row::Signing;
 
 pub const MC_PSBT_GLOBAL_SIGNER_NAME: u8 = 0;
@@ -33,10 +34,11 @@ pub struct ViewModel {
     psbt: Psbt,
     path: PathBuf,
     signing: SigningModel,
+    network: PublicNetwork,
 }
 
 impl ViewModel {
-    pub fn with(psbt: Psbt, path: PathBuf) -> ViewModel {
+    pub fn with(psbt: Psbt, path: PathBuf, network: PublicNetwork) -> ViewModel {
         let mut keys = BTreeMap::<Fingerprint, (Fingerprint, u32, u32)>::new();
         let mut bpk = BTreeMap::<secp256k1::PublicKey, Fingerprint>::new();
         let mut xpk = BTreeMap::<XOnlyPublicKey, Fingerprint>::new();
@@ -92,6 +94,7 @@ impl ViewModel {
             psbt,
             path,
             signing,
+            network,
         }
     }
 

@@ -17,7 +17,7 @@ use gtk::{ApplicationWindow, ResponseType};
 use relm::{init, Relm, StreamHandle, Update, Widget};
 
 use super::{Msg, ViewModel, Widgets};
-use crate::model::{FileDocument, Wallet};
+use crate::model::{FileDocument, PublicNetwork, Wallet};
 use crate::view::{about, file_create_dlg, file_open_dlg, psbt, settings, wallet};
 
 pub struct Component {
@@ -50,7 +50,8 @@ impl Component {
     }
 
     fn open_psbt(&mut self, path: PathBuf) {
-        let psbt = init::<psbt::Component>(path).expect("unable to instantiate wallet settings");
+        let psbt = init::<psbt::Component>((path, PublicNetwork::Mainnet))
+            .expect("unable to instantiate wallet settings");
         self.window_count += 1;
         psbt.emit(psbt::Msg::RegisterLauncher(self.stream.clone()));
         self.psbts.push(psbt);

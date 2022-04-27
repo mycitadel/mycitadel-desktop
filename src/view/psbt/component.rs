@@ -9,6 +9,7 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
+use crate::model::PublicNetwork;
 use bitcoin::consensus::Decodable;
 use bitcoin::psbt::PartiallySignedTransaction;
 use gladis::Gladis;
@@ -39,11 +40,12 @@ impl Update for Component {
     // Specify the model used for this widget.
     type Model = ViewModel;
     // Specify the model parameter used to init the model.
-    type ModelParam = PathBuf;
+    type ModelParam = (PathBuf, PublicNetwork);
     // Specify the type of the messages sent to the update function.
     type Msg = Msg;
 
-    fn model(relm: &Relm<Self>, path: Self::ModelParam) -> Self::Model {
+    fn model(relm: &Relm<Self>, param: Self::ModelParam) -> Self::Model {
+        let (path, network) = param;
         let file = match fs::File::open(&path) {
             Ok(file) => file,
             Err(err) => {
@@ -62,7 +64,7 @@ impl Update for Component {
                 return ViewModel::default();
             }
         };
-        ViewModel::with(psbt.into(), path)
+        ViewModel::with(psbt.into(), path, network)
     }
 
     fn update(&mut self, event: Msg) {

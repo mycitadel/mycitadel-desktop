@@ -48,6 +48,12 @@ pub enum PublicNetwork {
 
 impl From<PublicNetwork> for Network {
     fn from(network: PublicNetwork) -> Self {
+        Network::from(&network)
+    }
+}
+
+impl From<&PublicNetwork> for Network {
+    fn from(network: &PublicNetwork) -> Self {
         match network {
             PublicNetwork::Mainnet => Network::Bitcoin,
             PublicNetwork::Testnet => Network::Testnet,

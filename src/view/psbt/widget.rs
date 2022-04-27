@@ -12,6 +12,7 @@
 use crate::view::psbt::sign_row;
 use crate::view::psbt::sign_row::SigningModel;
 use bitcoin::blockdata::constants::WITNESS_SCALE_FACTOR;
+use bitcoin::Address;
 use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{
@@ -139,7 +140,20 @@ impl Widgets {
         ));
         self.inputs_lbl.set_label(&format!("{}", psbt.inputs.len()));
 
-        // TODO: Fill in beneficiaries information
+        self.address_store.clear();
+        for txout in &psbt.outputs {
+            let address = Address::from_script(&txout.script, model.network().into())
+                .as_ref()
+                .map(Address::to_string)
+                .unwrap_or_else(|| txout.script.to_string());
+            self.address_store.insert_with_values(
+                None,
+                &[
+                    (0, &address),
+                    (1, &format!("{:.08}", txout.amount as f64 / 100_000_000.0)),
+                ],
+            );
+        }
     }
 
     pub fn show(&self) {
