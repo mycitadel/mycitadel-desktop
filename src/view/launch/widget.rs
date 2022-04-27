@@ -9,12 +9,15 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
-use crate::model::{PublicNetwork, Requirement, WalletTemplate};
+use std::borrow::Cow;
+use std::path::PathBuf;
+
 use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{Adjustment, ApplicationWindow, Button, ListBox, Notebook, RecentChooserWidget, Switch};
 use relm::Relm;
-use std::path::PathBuf;
+
+use crate::model::{PublicNetwork, Requirement, WalletTemplate};
 
 use super::Msg;
 
@@ -109,6 +112,7 @@ impl Widgets {
             .current_uri()
             .map(String::from)
             .map(|s| s.trim_start_matches("file://").to_owned())
+            .and_then(|s| urlencoding::decode(&s).map(Cow::into_owned).ok())
             .map(PathBuf::from)
     }
 

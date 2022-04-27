@@ -25,6 +25,7 @@ relm-derive = "0.23.0"
 gladis = "2.0.0"
 once_cell = "1.10.0"
 chrono = "0.4.19"
+urlencoding = "2.1.0"
 
 amplify = "3.12.0"
 bitcoin = "0.28.0"
