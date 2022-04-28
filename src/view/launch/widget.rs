@@ -17,7 +17,7 @@ use gtk::prelude::*;
 use gtk::{Adjustment, ApplicationWindow, Button, ListBox, Notebook, RecentChooserWidget, Switch};
 use relm::Relm;
 
-use crate::model::{PublicNetwork, Requirement, WalletTemplate};
+use crate::model::{DescriptorClass, PublicNetwork, Requirement, WalletTemplate};
 
 use super::Msg;
 
@@ -65,23 +65,40 @@ impl Widgets {
     }
 
     pub fn template(&self, index: i32) -> WalletTemplate {
-        let taproot = self.is_taproot();
+        let class = if self.is_taproot() {
+            DescriptorClass::TaprootC0
+        } else {
+            DescriptorClass::SegwitV0
+        };
         let network = self.network();
         match index {
-            0 => WalletTemplate::singlesig(taproot, network, false),
-            1 => WalletTemplate::singlesig(taproot, network, true),
-            2 => WalletTemplate::hodling(network, 4, Requirement::Allow, Requirement::Allow),
+            0 => WalletTemplate::singlesig(class, network, false),
+            1 => WalletTemplate::singlesig(class, network, true),
+            2 => WalletTemplate::hodling(class, network, 4, Requirement::Allow, Requirement::Allow),
             3 => {
                 let count = self.hwcount_adj.value() as u16;
                 WalletTemplate::multisig(
+                    class,
                     network,
                     Some(count),
                     Requirement::Require,
                     Requirement::Deny,
                 )
             }
-            4 => WalletTemplate::multisig(network, None, Requirement::Allow, Requirement::Require),
-            5 => WalletTemplate::multisig(network, None, Requirement::Allow, Requirement::Allow),
+            4 => WalletTemplate::multisig(
+                class,
+                network,
+                None,
+                Requirement::Allow,
+                Requirement::Require,
+            ),
+            5 => WalletTemplate::multisig(
+                class,
+                network,
+                None,
+                Requirement::Allow,
+                Requirement::Allow,
+            ),
             6 => todo!("Lightning wallets"),
             _ => unreachable!("unknown template"),
         }

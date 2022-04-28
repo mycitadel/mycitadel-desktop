@@ -20,8 +20,8 @@ mod wallet;
 mod xkey;
 
 pub use self::wallet::{
-    AddressInfo, DerivationStandardExt, DescriptorError, SpendingCondition, Wallet,
-    WalletDescriptor, WalletSettings, WalletStandard, WalletState,
+    AddressInfo, DerivationStandardExt, DerivationType, DescriptorError, SpendingCondition, Wallet,
+    WalletDescriptor, WalletSettings, WalletState,
 };
 pub use electrum::{ElectrumSec, ElectrumServer};
 pub use file::FileDocument;

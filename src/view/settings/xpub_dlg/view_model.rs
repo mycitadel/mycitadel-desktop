@@ -12,20 +12,20 @@
 use relm::Sender;
 use wallet::slip132::KeyApplication;
 
-use crate::model::{Notification, WalletStandard, XpubDescriptor};
+use crate::model::{DerivationType, Notification, XpubDescriptor};
 use crate::view::settings;
 
 pub struct ViewModel {
     pub(super) testnet: bool,
     pub(super) slip_format: Option<KeyApplication>,
-    pub(super) xpub: Option<XpubDescriptor<WalletStandard>>,
-    pub(super) standard: WalletStandard,
+    pub(super) xpub: Option<XpubDescriptor<DerivationType>>,
+    pub(super) standard: DerivationType,
     pub(super) notification: Option<Notification>,
     pub(super) sender: Sender<settings::Msg>,
 }
 
 impl ViewModel {
-    pub fn with(standard: WalletStandard, sender: Sender<settings::Msg>) -> ViewModel {
+    pub fn with(standard: DerivationType, sender: Sender<settings::Msg>) -> ViewModel {
         ViewModel {
             testnet: false,
             slip_format: None,

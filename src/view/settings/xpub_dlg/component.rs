@@ -15,7 +15,7 @@ use relm::{Relm, Sender, Update, Widget};
 use std::str::FromStr;
 
 use super::{Msg, ViewModel, Widgets};
-use crate::model::{WalletStandard, XpubDescriptor, XpubParseError, XpubRequirementError};
+use crate::model::{DerivationType, XpubDescriptor, XpubParseError, XpubRequirementError};
 use crate::view::settings;
 
 pub struct Component {
@@ -57,7 +57,7 @@ impl Update for Component {
     // Specify the model used for this widget.
     type Model = ViewModel;
     // Specify the model parameter used to init the model.
-    type ModelParam = (WalletStandard, Sender<settings::Msg>);
+    type ModelParam = (DerivationType, Sender<settings::Msg>);
     // Specify the type of the messages sent to the update function.
     type Msg = Msg;
 

@@ -796,88 +796,88 @@ impl SpendingCondition {
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Display, From)]
 #[derive(StrictEncode, StrictDecode)]
 #[display(inner)]
-pub enum WalletStandard {
+pub enum DerivationType {
     #[from]
     LnpBp(DescrVariants),
     #[from]
     Bip43(Bip43),
 }
 
-impl Default for WalletStandard {
+impl Default for DerivationType {
     fn default() -> Self {
-        WalletStandard::Bip43(Bip43::Bip48Native)
+        DerivationType::Bip43(Bip43::Bip48Native)
     }
 }
 
-impl DerivationStandard for WalletStandard {
+impl DerivationStandard for DerivationType {
     fn deduce(derivation: &DerivationPath) -> Option<Self>
     where
         Self: Sized,
     {
         // TODO: Support LNPBP standard derivation
-        Bip43::deduce(derivation).map(WalletStandard::Bip43)
+        Bip43::deduce(derivation).map(DerivationType::Bip43)
     }
 
     fn matching(slip: KeyApplication) -> Option<Self>
     where
         Self: Sized,
     {
-        Bip43::matching(slip).map(WalletStandard::Bip43)
+        Bip43::matching(slip).map(DerivationType::Bip43)
     }
 
     fn purpose(&self) -> Option<HardenedIndex> {
         match self {
             // TODO: Support LNPBP standard derivation
-            WalletStandard::LnpBp(_) => None,
-            WalletStandard::Bip43(bip43) => bip43.purpose(),
+            DerivationType::LnpBp(_) => None,
+            DerivationType::Bip43(bip43) => bip43.purpose(),
         }
     }
 
     fn account_depth(&self) -> Option<u8> {
         match self {
             // TODO: Support LNPBP standard derivation
-            WalletStandard::LnpBp(_) => None,
-            WalletStandard::Bip43(bip43) => bip43.account_depth(),
+            DerivationType::LnpBp(_) => None,
+            DerivationType::Bip43(bip43) => bip43.account_depth(),
         }
     }
 
     fn coin_type_depth(&self) -> Option<u8> {
         match self {
             // TODO: Support LNPBP standard derivation
-            WalletStandard::LnpBp(_) => None,
-            WalletStandard::Bip43(bip43) => bip43.coin_type_depth(),
+            DerivationType::LnpBp(_) => None,
+            DerivationType::Bip43(bip43) => bip43.coin_type_depth(),
         }
     }
 
     fn is_account_last_hardened(&self) -> Option<bool> {
         match self {
             // TODO: Support LNPBP standard derivation
-            WalletStandard::LnpBp(_) => None,
-            WalletStandard::Bip43(bip43) => bip43.is_account_last_hardened(),
+            DerivationType::LnpBp(_) => None,
+            DerivationType::Bip43(bip43) => bip43.is_account_last_hardened(),
         }
     }
 
     fn network(&self, path: &DerivationPath) -> Option<Result<Network, HardenedIndexExpected>> {
         match self {
             // TODO: Support LNPBP standard derivation
-            WalletStandard::LnpBp(_) => None,
-            WalletStandard::Bip43(bip43) => bip43.network(path),
+            DerivationType::LnpBp(_) => None,
+            DerivationType::Bip43(bip43) => bip43.network(path),
         }
     }
 
     fn account_template_string(&self, blockchain: DerivationBlockchain) -> String {
         match self {
             // TODO: Support LNPBP standard derivation
-            WalletStandard::LnpBp(_) => s!("m/"),
-            WalletStandard::Bip43(bip43) => bip43.account_template_string(blockchain),
+            DerivationType::LnpBp(_) => s!("m/"),
+            DerivationType::Bip43(bip43) => bip43.account_template_string(blockchain),
         }
     }
 
     fn to_origin_derivation(&self, blockchain: DerivationBlockchain) -> DerivationPath {
         match self {
             // TODO: Support LNPBP standard derivation
-            WalletStandard::LnpBp(_) => empty!(),
-            WalletStandard::Bip43(bip43) => bip43.to_origin_derivation(blockchain),
+            DerivationType::LnpBp(_) => empty!(),
+            DerivationType::Bip43(bip43) => bip43.to_origin_derivation(blockchain),
         }
     }
 
@@ -888,8 +888,8 @@ impl DerivationStandard for WalletStandard {
     ) -> DerivationPath {
         match self {
             // TODO: Support LNPBP standard derivation
-            WalletStandard::LnpBp(_) => empty!(),
-            WalletStandard::Bip43(bip43) => bip43.to_account_derivation(account_index, blockchain),
+            DerivationType::LnpBp(_) => empty!(),
+            DerivationType::Bip43(bip43) => bip43.to_account_derivation(account_index, blockchain),
         }
     }
 
@@ -902,8 +902,8 @@ impl DerivationStandard for WalletStandard {
     ) -> DerivationPath {
         match self {
             // TODO: Support LNPBP standard derivation
-            WalletStandard::LnpBp(_) => empty!(),
-            WalletStandard::Bip43(bip43) => {
+            DerivationType::LnpBp(_) => empty!(),
+            DerivationType::Bip43(bip43) => {
                 bip43.to_key_derivation(account_index, blockchain, index, case)
             }
         }
@@ -912,16 +912,16 @@ impl DerivationStandard for WalletStandard {
     fn descriptor_types(&self) -> &'static [DescriptorType] {
         match self {
             // TODO: Support LNPBP standard derivation
-            WalletStandard::LnpBp(_) => &[],
-            WalletStandard::Bip43(bip43) => bip43.descriptor_types(),
+            DerivationType::LnpBp(_) => &[],
+            DerivationType::Bip43(bip43) => bip43.descriptor_types(),
         }
     }
 
     fn slip_application(&self) -> Option<KeyApplication> {
         match self {
             // TODO: Support LNPBP standard derivation
-            WalletStandard::LnpBp(_) => None,
-            WalletStandard::Bip43(bip43) => bip43.slip_application(),
+            DerivationType::LnpBp(_) => None,
+            DerivationType::Bip43(bip43) => bip43.slip_application(),
         }
     }
 }

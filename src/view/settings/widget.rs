@@ -29,8 +29,8 @@ use super::{
     spending_row, spending_row::SpendingModel, ElectrumModel, ElectrumPreset, Msg, ViewModel,
 };
 use crate::model::{
-    DerivationStandardExt, DescriptorClass, ElectrumSec, OriginFormat, Ownership, PublicNetwork,
-    Requirement, Signer, WalletStandard, WalletTemplate,
+    DerivationStandardExt, DerivationType, DescriptorClass, ElectrumSec, OriginFormat, Ownership,
+    PublicNetwork, Requirement, Signer, WalletTemplate,
 };
 use crate::view::NotificationBoxExt;
 
@@ -503,15 +503,15 @@ impl Widgets {
         self.test_btn.set_sensitive(true);
     }
 
-    fn update_derivation(&self, format: &WalletStandard, network: PublicNetwork) {
+    fn update_derivation(&self, format: &DerivationType, network: PublicNetwork) {
         match format {
-            WalletStandard::LnpBp(_) => {
+            DerivationType::LnpBp(_) => {
                 self.descr_legacy_tgl.set_active(true);
                 self.descr_segwit_tgl.set_active(true);
                 self.descr_nested_tgl.set_active(true);
                 self.descr_taproot_tgl.set_active(true);
             }
-            WalletStandard::Bip43(ref bip43) => {
+            DerivationType::Bip43(ref bip43) => {
                 let class = bip43
                     .descriptor_class()
                     .unwrap_or(DescriptorClass::SegwitV0);

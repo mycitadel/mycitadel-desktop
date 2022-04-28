@@ -17,7 +17,7 @@ use bitcoin::util::bip32::ExtendedPubKey;
 use electrum_client::{Client as ElectrumClient, ElectrumApi};
 use miniscript::Descriptor;
 use relm::{Channel, StreamHandle};
-use wallet::hd::{Bip43, DerivationStandard, TerminalStep, TrackingAccount};
+use wallet::hd::{Bip43, TerminalStep, TrackingAccount};
 
 use super::spending_row::SpendingModel;
 use super::Msg;
@@ -198,12 +198,7 @@ impl ViewModel {
         let model = ViewModel {
             path,
             stream,
-            descriptor_classes: template
-                .format
-                .descriptor_types()
-                .iter()
-                .map(DescriptorClass::from)
-                .collect(),
+            descriptor_classes: bset![template.descriptor_class],
             support_multiclass: false,
             network: template.network,
             signers: empty!(),

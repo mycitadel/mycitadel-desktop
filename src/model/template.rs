@@ -13,8 +13,8 @@ use chrono::prelude::*;
 use std::collections::BTreeSet;
 use wallet::hd::Bip43;
 
-use super::{PublicNetwork, SpendingCondition, WalletStandard};
-use crate::model::SigsReq;
+use super::{DerivationType, PublicNetwork, SpendingCondition};
+use crate::model::{DescriptorClass, SigsReq};
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 pub enum Requirement {
@@ -34,7 +34,8 @@ impl Default for Requirement {
 /// signatures already present and condition parameters.
 #[derive(Clone, Eq, PartialEq, Hash, Debug)]
 pub struct WalletTemplate {
-    pub format: WalletStandard,
+    pub default_derivation: DerivationType,
+    pub descriptor_class: DescriptorClass,
     pub min_signer_count: Option<u16>,
     pub max_signer_count: Option<u16>,
     pub hardware_req: Requirement,
@@ -43,23 +44,13 @@ pub struct WalletTemplate {
     pub network: PublicNetwork,
 }
 
-impl Default for WalletTemplate {
-    fn default() -> Self {
-        WalletTemplate::multisig(default!(), None, Requirement::Allow, Requirement::Allow)
-    }
-}
-
 impl WalletTemplate {
     pub fn singlesig(
-        taproot: bool,
+        descriptor_class: DescriptorClass,
         network: PublicNetwork,
         require_hardware: bool,
     ) -> WalletTemplate {
-        let format = if taproot {
-            Bip43::singlesig_segwit0()
-        } else {
-            Bip43::singlelsig_taproot()
-        };
+        let format = descriptor_class.bip43(1);
         let hardware_req = match require_hardware {
             true => Requirement::Require,
             false => Requirement::Deny,
@@ -69,7 +60,8 @@ impl WalletTemplate {
             false => Requirement::Require,
         };
         WalletTemplate {
-            format: format.into(),
+            default_derivation: format.into(),
+            descriptor_class,
             min_signer_count: Some(1),
             max_signer_count: Some(1),
             hardware_req,
@@ -83,6 +75,7 @@ impl WalletTemplate {
     ///
     /// If `sigs_required` is less than 3.
     pub fn hodling(
+        descriptor_class: DescriptorClass,
         network: PublicNetwork,
         sigs_required: u16,
         hardware_req: Requirement,
@@ -100,7 +93,8 @@ impl WalletTemplate {
             )
         ];
         WalletTemplate {
-            format: Bip43::multisig_descriptor().into(),
+            default_derivation: Bip43::multisig_descriptor().into(),
+            descriptor_class,
             min_signer_count: Some(sigs_required),
             max_signer_count: None,
             hardware_req,
@@ -114,6 +108,7 @@ impl WalletTemplate {
     ///
     /// If `sigs_required` is `Some(0)` or `Some(1)`.
     pub fn multisig(
+        descriptor_class: DescriptorClass,
         network: PublicNetwork,
         sigs_required: Option<u16>,
         hardware_req: Requirement,
@@ -153,7 +148,8 @@ impl WalletTemplate {
             ],
         };
         WalletTemplate {
-            format: Bip43::multisig_descriptor().into(),
+            default_derivation: Bip43::multisig_descriptor().into(),
+            descriptor_class,
             min_signer_count: sigs_required.or(Some(2)),
             max_signer_count: None,
             hardware_req,
