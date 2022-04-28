@@ -266,11 +266,11 @@ impl Update for Component {
                         }
                         Ok(model) => model,
                     };
-                self.widgets.init_ui(&self.model);
+                self.widgets.reset_ui(&self.model);
             }
             Msg::View(descriptor, path) => {
                 self.model = ViewModel::with_descriptor(self.model.stream(), descriptor, path);
-                self.widgets.init_ui(&self.model);
+                self.widgets.reset_ui(&self.model);
             }
             Msg::SignerAddDevice(fingerprint, device) => {
                 self.model.devices.insert(fingerprint, device);

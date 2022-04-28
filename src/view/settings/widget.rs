@@ -105,7 +105,7 @@ pub struct Widgets {
 }
 
 impl Widgets {
-    pub fn init_ui(&mut self, model: &ViewModel) {
+    pub fn reset_ui(&mut self, model: &ViewModel) {
         self.hide_message();
 
         self.header_bar
@@ -584,13 +584,40 @@ impl Widgets {
         details: Option<(&Signer, TrackingAccount)>,
         network: PublicNetwork,
     ) {
+        let signer = details.as_ref().map(|d| d.0);
+
         self.removesign_btn.set_sensitive(details.is_some());
         self.signer_grid.set_sensitive(details.is_some());
-        if let Some((signer, ref derivation)) = details {
-            self.name_fld.set_text(&signer.name);
-            self.fingerprint_fld.set_text(&signer.master_fp.to_string());
-            self.xpub_fld.set_text(&signer.xpub.to_string());
 
+        self.name_fld
+            .set_text(&signer.map(|s| s.name.clone()).unwrap_or_default());
+        self.fingerprint_fld
+            .set_text(&signer.map(|s| s.master_fp.to_string()).unwrap_or_default());
+        self.xpub_fld
+            .set_text(&signer.map(|s| s.xpub.to_string()).unwrap_or_default());
+        self.accfp_fld.set_text(
+            &signer
+                .map(|s| s.xpub.fingerprint().to_string())
+                .unwrap_or_default(),
+        );
+
+        if let Some((signer, device)) = signer.and_then(|s| s.device.as_ref().map(|d| (s, d))) {
+            self.seed_mine_tgl.set_sensitive(false);
+            self.seed_extern_tgl.set_sensitive(false);
+            self.name_fld.set_editable(false);
+            self.fingerprint_fld.set_editable(false);
+            self.device_img.set_visible(true);
+            self.device_status_img.set_visible(true);
+            self.device_lbl
+                .set_text(&format!("{} ({})", device, signer.name));
+        } else {
+            self.device_img.set_visible(false);
+            self.device_status_img.set_visible(false);
+            self.device_lbl.set_visible(false);
+            self.device_lbl.set_text("none / unknown");
+        }
+
+        if let Some((signer, ref derivation)) = details {
             let origin_format = signer.origin_format(network);
             gtk::prelude::ComboBoxTextExt::remove(&self.path_cmb, 2);
             self.account_stp.set_visible(true);
@@ -632,33 +659,24 @@ impl Widgets {
                 self.account_adj.set_value(0.0);
             }
 
-            self.accfp_fld
-                .set_text(&signer.xpub.fingerprint().to_string());
             self.derivation_fld.set_text(&derivation.to_string());
             self.seed_mine_tgl
                 .set_active(signer.ownership == Ownership::Mine);
             self.seed_extern_tgl
                 .set_active(signer.ownership == Ownership::External);
 
-            if let Some(ref device) = signer.device {
-                self.seed_mine_tgl.set_sensitive(false);
-                self.seed_extern_tgl.set_sensitive(false);
-                self.name_fld.set_editable(false);
-                self.fingerprint_fld.set_editable(false);
-                self.device_img.set_visible(true);
-                self.device_status_img.set_visible(true);
-                self.device_lbl
-                    .set_text(&format!("{} ({})", device, signer.name));
-            } else {
+            if signer.device.is_none() {
                 self.seed_mine_tgl.set_sensitive(true);
                 self.seed_extern_tgl.set_sensitive(true);
                 self.name_fld.set_editable(true);
                 self.fingerprint_fld
                     .set_editable(origin_format.master_fingerprint_editable());
-                self.device_img.set_visible(false);
-                self.device_status_img.set_visible(false);
-                self.device_lbl.set_text("none / unknown");
+                self.device_lbl.set_visible(true);
             }
+        } else {
+            self.account_adj.set_value(0.0);
+            self.path_fld.set_text("");
+            self.derivation_fld.set_text("");
         }
     }
 
