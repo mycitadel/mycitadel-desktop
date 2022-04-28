@@ -16,7 +16,7 @@ use std::time::Duration;
 use std::{io, thread};
 
 use amplify::Wrapper;
-use bitcoin::{OutPoint, Transaction, Txid};
+use bitcoin::{OutPoint, Txid};
 use chrono::{DateTime, NaiveDateTime, Utc};
 use electrum_client::{Client as ElectrumClient, ElectrumApi, HeaderNotification};
 use gtk::gdk;
@@ -25,7 +25,7 @@ use wallet::address::AddressCompat;
 use wallet::hd::{SegmentIndexes, UnhardenedIndex};
 use wallet::scripts::PubkeyScript;
 
-use crate::model::{ElectrumServer, Prevout, WalletSettings};
+use crate::model::{ElectrumServer, Prevout, TxMeta, WalletSettings};
 
 enum Cmd {
     Sync,
@@ -42,7 +42,7 @@ pub enum Msg {
     FeeEstimate(f64, f64, f64),
     HistoryBatch(Vec<HistoryTxid>, u16),
     UtxoBatch(Vec<UtxoTxid>, u16),
-    TxBatch(BTreeMap<Txid, Transaction>, f32),
+    TxBatch(BTreeMap<Txid, TxMeta>, f32),
     ChannelDisconnected,
     Error(electrum_client::Error),
 }
@@ -92,14 +92,20 @@ impl HistoryType {
 )]
 pub struct HistoryTxid {
     pub txid: Txid,
+    pub vout: Option<u32>,
     pub height: i32,
     #[cfg_attr(feature = "serde", serde(with = "serde_with::rust::display_fromstr"))]
     pub address: AddressCompat,
     pub index: UnhardenedIndex,
     pub ty: HistoryType,
+    pub amount: Option<i64>,
 }
 
 impl HistoryTxid {
+    pub fn outpoint(self) -> Option<OutPoint> {
+        self.vout.map(|vout| OutPoint::new(self.txid, vout))
+    }
+
     pub fn date_time_est(self) -> DateTime<chrono::Local> {
         height_date_time_est(self.height)
     }
@@ -161,6 +167,39 @@ impl From<&UtxoTxid> for Prevout {
 impl From<UtxoTxid> for Prevout {
     fn from(utxo: UtxoTxid) -> Prevout {
         Prevout::from(&utxo)
+    }
+}
+
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
+pub struct TxidMeta {
+    pub txid: Txid,
+    pub height: i32,
+    pub address: AddressCompat,
+    pub index: UnhardenedIndex,
+    pub change: bool,
+}
+
+impl From<&HistoryTxid> for TxidMeta {
+    fn from(item: &HistoryTxid) -> Self {
+        TxidMeta {
+            txid: item.txid,
+            height: item.height,
+            address: item.address,
+            index: item.index,
+            change: item.ty == HistoryType::Change,
+        }
+    }
+}
+
+impl From<&UtxoTxid> for TxidMeta {
+    fn from(item: &UtxoTxid) -> Self {
+        TxidMeta {
+            txid: item.txid,
+            height: item.height as i32,
+            address: item.address,
+            index: item.index,
+            change: item.change,
+        }
     }
 }
 
@@ -288,9 +327,9 @@ pub fn electrum_sync(
 
     let network = bitcoin::Network::from(wallet_settings.network());
 
-    let mut txids = bset![];
+    let mut tx_meta = bmap![];
     let mut upto_index = map! { true => UnhardenedIndex::zero(), false => UnhardenedIndex::zero() };
-    for change in [true, false] {
+    for change in [false, true] {
         let mut offset = 0u16;
         let mut upto = UnhardenedIndex::zero();
         *upto_index.entry(change).or_default() = loop {
@@ -304,6 +343,7 @@ pub fn electrum_sync(
                 .flat_map(|(history, (index, script))| {
                     history.into_iter().map(move |res| HistoryTxid {
                         txid: res.tx_hash,
+                        vout: None,
                         height: res.height,
                         address: AddressCompat::from_script(&script.clone().into(), network)
                             .expect("broken descriptor"),
@@ -311,8 +351,9 @@ pub fn electrum_sync(
                         ty: if change {
                             HistoryType::Change
                         } else {
-                            HistoryType::Incoming /* TODO: do proper type classification */
+                            HistoryType::Incoming
                         },
+                        amount: None,
                     })
                 })
                 .collect();
@@ -325,7 +366,11 @@ pub fn electrum_sync(
                     .max()
                     .unwrap_or_default();
             }
-            txids.extend(history_batch.iter().map(|item| item.txid));
+            tx_meta.extend(
+                history_batch
+                    .iter()
+                    .map(|item| (item.txid, TxidMeta::from(item))),
+            );
             sender
                 .send(Msg::HistoryBatch(history_batch, offset))
                 .expect("electrum watcher channel is broken");
@@ -347,7 +392,7 @@ pub fn electrum_sync(
                     })
                 })
                 .collect();
-            txids.extend(utxos.iter().map(|item| item.txid));
+            tx_meta.extend(utxos.iter().map(|item| (item.txid, TxidMeta::from(item))));
             sender
                 .send(Msg::UtxoBatch(utxos, offset))
                 .expect("electrum watcher channel is broken");
@@ -355,17 +400,20 @@ pub fn electrum_sync(
             offset += 20;
         };
     }
-    let txids = txids.into_iter().collect::<Vec<_>>();
-    for (no, chunk) in txids.chunks(20).enumerate() {
+
+    let tx_meta = tx_meta.into_values().collect::<Vec<_>>();
+    for (no, chunk) in tx_meta.chunks(20).enumerate() {
+        let txlist = client.batch_transaction_get(tx_meta.iter().map(|meta| &meta.txid))?;
         let txmap = chunk
             .iter()
             .copied()
-            .zip(client.batch_transaction_get(chunk)?)
+            .zip(txlist)
+            .map(|(meta, tx)| (meta.txid, TxMeta::with(meta, tx)))
             .collect::<BTreeMap<_, _>>();
         sender
             .send(Msg::TxBatch(
                 txmap,
-                (no + 1) as f32 / txids.len() as f32 / 20.0,
+                (no + 1) as f32 / tx_meta.len() as f32 / 20.0,
             ))
             .expect("electrum watcher channel is broken");
     }

@@ -14,7 +14,7 @@ use std::path::{Path, PathBuf};
 use std::{fs, io};
 use strict_encoding::{StrictDecode, StrictEncode};
 
-use crate::model::Wallet;
+use crate::model::{Wallet, WalletSettings};
 
 /// Equals to first 4 bytes of SHA256("mycitadel:wallet:v1")
 /// = a4546a8ef3a51f1faf2dab1517346e9d84b249f7f52d29339b4ee53fe870d14f
@@ -87,10 +87,15 @@ pub enum Error {
     DataNotEntirelyConsumed,
 }
 
-pub trait FileDocument {
+pub trait FileDocument
+where
+    Self: From<Self::FallbackDocType>,
+{
     const DOC_MAGIC: [u8; 4];
 
     const FILE_EXT: &'static str;
+
+    type FallbackDocType: StrictDecode;
 
     fn magic_u32() -> u32 {
         u32::from_be_bytes(Self::DOC_MAGIC)
@@ -111,10 +116,23 @@ pub trait FileDocument {
             .write(false)
             .read(true)
             .open(&path)?;
-        let doc = DocReader::<Self>::strict_decode(&mut file)?;
-        if fs::metadata(path)?.len() != file.stream_position()? {
-            return Err(Error::DataNotEntirelyConsumed);
-        }
+        let doc = DocReader::<Self>::strict_decode(&mut file)
+            .map_err(Error::from)
+            .and_then(|doc| {
+                if fs::metadata(path)?.len() != file.stream_position()? {
+                    return Err(Error::DataNotEntirelyConsumed);
+                }
+                Ok(doc)
+            })
+            .or_else(|_| {
+                file.rewind()?;
+                DocReader::<Self::FallbackDocType>::strict_decode(&mut file).map(|r| DocReader::<
+                    Self,
+                > {
+                    magic: r.magic,
+                    data: r.data.into(),
+                })
+            })?;
         if doc.magic != Self::DOC_MAGIC {
             return Err(Error::Magic {
                 expected: Self::magic_u32(),
@@ -137,4 +155,5 @@ pub trait FileDocument {
 impl FileDocument for Wallet {
     const DOC_MAGIC: [u8; 4] = WALLET_DOC_MAGIC;
     const FILE_EXT: &'static str = "mcw";
+    type FallbackDocType = WalletSettings;
 }

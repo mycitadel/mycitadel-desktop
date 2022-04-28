@@ -247,7 +247,7 @@ impl ViewModel {
         let settings = WalletSettings::try_from(self).ok();
         if self.is_new_wallet() {
             settings
-                .map(Wallet::with)
+                .map(Wallet::from)
                 .map(|wallet| {
                     wallet.write_file(&self.path)?;
                     Ok(wallet.into_settings())

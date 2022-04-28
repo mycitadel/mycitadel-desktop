@@ -19,7 +19,6 @@ pub(super) use view_model::ViewModel;
 pub(self) use widget::Widgets;
 
 use std::collections::BTreeSet;
-use std::path::PathBuf;
 
 use relm::StreamHandle;
 
@@ -33,7 +32,6 @@ pub enum Msg {
     Open,
     Close,
     About,
-    FileError(PathBuf, String),
     Import,
     Save,
     Settings,

@@ -9,16 +9,14 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
-use std::collections::BTreeMap;
 use std::ffi::OsStr;
 
-use bitcoin::{Transaction, Txid};
 use chrono::{DateTime, NaiveDateTime, Utc};
 use electrum_client::HeaderNotification;
 use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{
-    ApplicationWindow, Button, Entry, HeaderBar, Image, Label, ListStore, MenuItem, Popover,
+    gdk, ApplicationWindow, Button, Entry, HeaderBar, Image, Label, ListStore, MenuItem, Popover,
     Spinner, Statusbar, TreeView,
 };
 use relm::Relm;
@@ -210,23 +208,31 @@ impl Widgets {
         self.height_lbl.set_text(&last_block.height.to_string());
     }
 
-    pub fn update_fees(&mut self, _: f64, _: f64, _: f64) {
-        // TODO: Nothing yet
-    }
-
     pub fn update_history(&mut self, history: &[HistoryTxid]) {
         self.history_store.clear();
         for item in history {
+            let (btc, color) = item
+                .amount
+                .map(|amount| {
+                    (
+                        format!("{:+.08}", amount as f64 / 100_000_000.0),
+                        item.ty.color(),
+                    )
+                })
+                .unwrap_or((
+                    s!("?"),
+                    gdk::RGBA::new(119.0 / 256.0, 118.0 / 256.0, 123.0 / 256.0, 1.0),
+                ));
             self.history_store.insert_with_values(
                 None,
                 &[
                     (0, &item.ty.icon_name()),
                     (1, &item.address.to_string()),
                     (2, &item.txid.to_string()),
-                    (3, &"+0"),
-                    (4, &"0"),
+                    (3, &btc),
+                    (4, &"?"),
                     (5, &item.mining_info()),
-                    (6, &item.ty.color()),
+                    (6, &color),
                 ],
             );
         }
@@ -246,10 +252,6 @@ impl Widgets {
                 ],
             );
         }
-    }
-
-    pub fn update_transactions(&mut self, _transactions: &BTreeMap<Txid, Transaction>) {
-        // TODO: Refresh history basing on tx info
     }
 
     pub fn update_addresses(&mut self, address_info: &[AddressInfo]) {

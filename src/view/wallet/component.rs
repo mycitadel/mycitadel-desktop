@@ -197,12 +197,12 @@ impl Component {
                 self.widgets
                     .update_electrum_state(ElectrumState::RetrievingHistory(0));
                 wallet.update_fees(f0, f1, f2);
+                wallet.clear_history();
             }
             electrum::Msg::HistoryBatch(batch, no) => {
                 self.widgets
                     .update_electrum_state(ElectrumState::RetrievingHistory(no as usize * 2));
                 wallet.update_history(batch);
-                self.widgets.update_history(&wallet.history());
             }
             electrum::Msg::UtxoBatch(batch, no) => {
                 self.widgets
@@ -215,10 +215,12 @@ impl Component {
                 self.widgets
                     .update_electrum_state(ElectrumState::RetrievingTransactions(progress));
                 wallet.update_transactions(batch);
-                self.widgets.update_transactions(&wallet.transactions());
                 self.widgets.update_state(wallet.state(), wallet.tx_count());
             }
             electrum::Msg::Complete => {
+                wallet.update_complete();
+                self.widgets.update_history(&wallet.history());
+                self.widgets.update_state(wallet.state(), wallet.tx_count());
                 self.widgets.update_addresses(&wallet.address_info());
                 self.widgets.update_electrum_state(ElectrumState::Complete(
                     self.model.as_settings().electrum().sec,
@@ -244,13 +246,8 @@ impl Update for Component {
     // Specify the type of the messages sent to the update function.
     type Msg = Msg;
 
-    fn model(relm: &Relm<Self>, path: Self::ModelParam) -> Self::Model {
-        let wallet = Wallet::read_file(&path)
-            .map_err(|err| {
-                relm.stream()
-                    .emit(Msg::FileError(path.clone(), err.to_string()))
-            })
-            .unwrap_or_default();
+    fn model(_relm: &Relm<Self>, path: Self::ModelParam) -> Self::Model {
+        let wallet = Wallet::read_file(&path).expect("fatal wallet file error");
         ViewModel::with(wallet, path)
     }
 
@@ -276,16 +273,6 @@ impl Update for Component {
                 self.launcher_stream
                     .as_ref()
                     .map(|stream| stream.emit(launch::Msg::About));
-            }
-            Msg::FileError(path, err) => {
-                self.widgets.hide();
-                error_dlg(
-                    self.widgets.as_root(),
-                    "Error opening wallet",
-                    &path.display().to_string(),
-                    Some(&err.to_string()),
-                );
-                self.close();
             }
             Msg::Pay(msg) => self.update_pay(msg),
             Msg::Settings => self.settings.emit(settings::Msg::View(

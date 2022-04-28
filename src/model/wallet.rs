@@ -16,7 +16,7 @@ use std::ops::{Deref, RangeInclusive};
 
 use bitcoin::secp256k1::SECP256K1;
 use bitcoin::util::bip32::{ChildNumber, DerivationPath, Fingerprint};
-use bitcoin::{Address, BlockHash, Network, PublicKey, Transaction, Txid};
+use bitcoin::{Address, BlockHash, Network, OutPoint, PublicKey, Transaction, Txid};
 use chrono::{DateTime, Utc};
 use electrum_client::HeaderNotification;
 use miniscript::descriptor::{DescriptorType, Sh, Wsh};
@@ -40,12 +40,12 @@ use super::{
     DescriptorClass, PublicNetwork, Signer, SigsReq, TimelockReq, TimelockedSigs, ToTapTree,
     Unsatisfiable, XpubkeyCore,
 };
-use crate::model::{ElectrumSec, ElectrumServer, Prevout};
-use crate::worker::electrum::HistoryType;
+use crate::model::{ElectrumServer, Prevout};
+use crate::worker::electrum::{HistoryType, TxidMeta};
 use crate::worker::{HistoryTxid, UtxoTxid};
 
 // TODO: Move to bpro library
-#[derive(Getters, Clone, Debug, Default)]
+#[derive(Getters, Clone, Debug)]
 #[derive(StrictEncode, StrictDecode)]
 #[cfg_attr(
     feature = "serde",
@@ -73,19 +73,29 @@ pub struct Wallet {
 
     history: Vec<HistoryTxid>,
 
-    transactions: BTreeMap<Txid, Transaction>,
+    transactions: BTreeMap<Txid, TxMeta>,
 
     wip: Vec<Psbt>,
 }
 
-impl Wallet {
-    pub fn with(settings: WalletSettings) -> Self {
+impl From<WalletSettings> for Wallet {
+    fn from(settings: WalletSettings) -> Self {
         Wallet {
             settings,
-            ..default!()
+            last_indexes: empty!(),
+            last_block: zero!(),
+            height: 0,
+            state: zero!(),
+            ephemerals: zero!(),
+            utxos: vec![],
+            history: vec![],
+            transactions: empty!(),
+            wip: vec![],
         }
     }
+}
 
+impl Wallet {
     pub fn as_settings(&self) -> &WalletSettings {
         &self.settings
     }
@@ -134,6 +144,13 @@ impl Wallet {
             &[UnhardenedIndex::zero(), self.next_default_index()],
         )
         .expect("unable to derive address for the wallet descriptor")
+    }
+
+    pub fn outpoint_value(&self, outpoint: OutPoint) -> Option<u64> {
+        self.transactions
+            .get(&outpoint.txid)
+            .and_then(|meta| meta.tx.output.get(outpoint.vout as usize))
+            .map(|txout| txout.value)
     }
 
     // TODO: Implement multiple coinselect algorithms
@@ -205,7 +222,10 @@ impl Wallet {
             .map(|item| AddressInfo {
                 address: item.address,
                 balance: 0,
-                volume: 0, // TODO: Update from transaction information
+                volume: item
+                    .outpoint()
+                    .and_then(|outpoint| self.outpoint_value(outpoint))
+                    .unwrap_or_default(),
                 tx_count: 1,
                 index: item.index,
                 change: item.ty == HistoryType::Change,
@@ -246,12 +266,17 @@ impl Wallet {
         self.ephemerals.fees = (f0 as f32, f1 as f32, f2 as f32);
     }
 
+    // TODO: Consider whether this function is needed
+    pub fn clear_history(&mut self) {
+        self.history = vec![];
+    }
+
     pub fn update_history(&mut self, batch: Vec<HistoryTxid>) {
-        let txids: BTreeSet<_> = self.history.iter().map(|item| item.txid).collect();
+        // let txids: BTreeSet<_> = self.history.iter().map(|item| item.txid).collect();
         for item in batch {
-            if !txids.contains(&item.txid) {
-                self.history.push(item);
-            }
+            // if !txids.contains(&item.txid) {
+            self.history.push(item);
+            // }
         }
     }
 
@@ -267,12 +292,47 @@ impl Wallet {
         self.state.balance += balance;
     }
 
-    pub fn update_transactions(&mut self, batch: BTreeMap<Txid, Transaction>) {
+    pub fn update_transactions(&mut self, batch: BTreeMap<Txid, TxMeta>) {
         self.transactions.extend(batch);
+    }
+
+    pub fn update_complete(&mut self) {
         self.state.volume = 0;
-        for tx in self.transactions.values() {
-            // TODO: Fix algorithm
-            self.state.volume += tx.output.iter().map(|out| out.value).sum::<u64>();
+        for meta in self.transactions.values() {
+            let tx = &meta.tx;
+            // Improve algorithm by using in-memory index of txid to history items
+            if let Some(hist) = self.history.iter_mut().find(|item| item.txid == tx.txid()) {
+                if let Some(index) = tx
+                    .output
+                    .iter()
+                    .position(|txout| txout.script_pubkey == hist.address.script_pubkey().into())
+                {
+                    let txout = &tx.output[index];
+                    hist.vout = Some(index as u32);
+                    hist.amount = Some(txout.value as i64);
+                    if hist.ty != HistoryType::Change {
+                        self.state.volume += txout.value;
+                    }
+                }
+            }
+            // Detect spending transactions
+            for (meta_spent, vout_spent) in tx.input.iter().filter_map(|txin| {
+                self.transactions
+                    .get(&txin.previous_output.txid)
+                    .map(|tx| (tx, txin.previous_output.vout))
+            }) {
+                let value = meta_spent.tx.output[vout_spent as usize].value;
+                self.history.push(HistoryTxid {
+                    txid: meta_spent.tx.txid(),
+                    vout: Some(vout_spent),
+                    height: meta_spent.height,
+                    address: meta_spent.address,
+                    index: meta_spent.index,
+                    ty: HistoryType::Outcoming,
+                    amount: Some(-(value as i64)),
+                });
+                self.state.volume += value;
+            }
         }
     }
 
@@ -285,7 +345,7 @@ impl ResolveTx for Wallet {
     fn resolve_tx(&self, txid: Txid) -> Result<Transaction, TxResolverError> {
         self.transactions
             .get(&txid)
-            .cloned()
+            .map(|meta| meta.tx.clone())
             .ok_or(TxResolverError::with(txid))
     }
 }
@@ -326,21 +386,6 @@ pub struct WalletSettings {
     electrum: ElectrumServer,
 }
 
-impl Default for WalletSettings {
-    fn default() -> Self {
-        WalletSettings {
-            network: PublicNetwork::default(),
-            core: default!(),
-            signers: empty!(),
-            electrum: ElectrumServer {
-                sec: ElectrumSec::Tls,
-                server: s!("electrum.blockstream.info"),
-                port: PublicNetwork::default().electrum_port(),
-            },
-        }
-    }
-}
-
 impl Deref for WalletSettings {
     type Target = WalletDescriptor;
 
@@ -355,7 +400,7 @@ impl Deref for WalletSettings {
 ///
 /// Tagged hash of strict-encoded wallet descriptor data operates as a globally unique wallet
 /// descriptor.
-#[derive(Getters, Clone, PartialEq, Eq, Hash, Debug, Default)]
+#[derive(Getters, Clone, PartialEq, Eq, Hash, Debug)]
 #[derive(StrictEncode, StrictDecode)]
 #[cfg_attr(
     feature = "serde",
@@ -1056,5 +1101,32 @@ impl StrictDecode for WalletEphemerals {
             fiat: String::strict_decode(&mut d)?,
             exchange_rate: f64::strict_decode(&mut d)?,
         })
+    }
+}
+
+#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
+#[derive(StrictEncode, StrictDecode)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate")
+)]
+pub struct TxMeta {
+    pub tx: Transaction,
+    pub height: i32,
+    pub address: AddressCompat,
+    pub change: bool,
+    pub index: UnhardenedIndex,
+}
+
+impl TxMeta {
+    pub fn with(meta: TxidMeta, tx: Transaction) -> TxMeta {
+        TxMeta {
+            tx,
+            height: meta.height,
+            address: meta.address,
+            change: meta.change,
+            index: meta.index,
+        }
     }
 }
