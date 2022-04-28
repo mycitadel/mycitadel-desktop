@@ -95,8 +95,8 @@ impl Component {
         let change_index = wallet.next_change_index();
 
         let fee_rate = self.model.fee_rate();
-        let mut fee = DUST_RELAY_TX_FEE;
-        let mut next_fee = fee;
+        let mut fee = 0;
+        let mut next_fee = DUST_RELAY_TX_FEE;
         let mut prevouts = bset! {};
         let satisfaciton_weights = descriptor.max_satisfaction_weight()? as f32;
         let mut cycle_lim = 0usize;

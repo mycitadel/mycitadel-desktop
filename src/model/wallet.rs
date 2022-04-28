@@ -140,11 +140,26 @@ impl Wallet {
         let mut prevouts = self.utxos.iter().map(Prevout::from).collect::<Vec<_>>();
         prevouts.sort_by_key(|p| p.amount);
         let mut acc = 0u64;
+        let mut take_next = true;
         let prevouts = prevouts
             .into_iter()
             .take_while(|p| {
+                let take_this = take_next;
+                take_next = acc < value;
                 acc += p.amount;
-                acc < value
+                take_this
+            })
+            .collect::<Vec<_>>();
+        let mut acc = 0u64;
+        // Going back to remove small inputs if larger inputs are enough
+        let prevouts = prevouts
+            .into_iter()
+            .rev()
+            .take_while(|p| {
+                let take_this = take_next;
+                take_next = acc < value;
+                acc += p.amount;
+                take_this
             })
             .collect();
         if acc < value {

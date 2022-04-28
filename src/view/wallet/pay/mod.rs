@@ -43,11 +43,15 @@ pub enum Error {
     /// One or more of payment amounts are zeros.
     Amount,
 
-    /// Internal error (wallet descriptor inconsistency)
+    /// Internal error in descriptor; please provide the developer with the following details:
+    ///
+    /// {0}
     #[from]
     Miniscript(miniscript::Error),
 
-    /// Internal error (PSBT constructor inconsistency)
+    /// Internal error in PSBT; please provide the developer with the following details:
+    ///
+    /// {0}
     #[from]
     PsbtConstruct(psbt::construct::Error),
 

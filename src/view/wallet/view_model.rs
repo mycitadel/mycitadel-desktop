@@ -30,7 +30,7 @@ pub struct ViewModel {
 impl ViewModel {
     pub fn with(wallet: Wallet, path: PathBuf) -> ViewModel {
         ViewModel {
-            fee_rate: wallet.ephemerals().fees.0,
+            fee_rate: wallet.ephemerals().fees.0 * 100_000_000.0, // TODO: Update on window opening
             wallet,
             path,
             beneficiaries: BeneficiaryModel::new(),
