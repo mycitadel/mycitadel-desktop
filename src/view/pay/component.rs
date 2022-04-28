@@ -28,29 +28,32 @@ use relm::{Relm, StreamHandle, Update, Widget};
 use super::{Msg, ViewModel, Widgets};
 use crate::model::Wallet;
 use crate::view::pay::beneficiary_row::{AmountError, Beneficiary};
-use crate::view::wallet;
+use crate::view::{wallet, NotificationBoxExt};
 
 #[derive(Debug, Display, From, Error)]
 #[display(doc_comments)]
 pub enum Error {
-    /// available wallet funds are insufficient to cover the transaction
+    /// Available wallet funds are insufficient to cover the transaction
     InsufficientFunds,
 
-    /// one or more of beneficiaries has incorrect address (please see exclamation marks next to the addresses).
+    /// One or more of beneficiaries has incorrect address (please see exclamation marks next to the addresses).
     #[from(address::Error)]
     Address,
 
-    /// one or more of payment amounts are invalid (please see exclamation marks next to the addresses).
+    /// One or more of payment amounts are invalid (please see exclamation marks next to the addresses).
     #[from(AmountError)]
     Amount,
 
-    /// internal error (wallet descriptor inconsistency)
+    /// Internal error (wallet descriptor inconsistency)
     #[from]
     Miniscript(miniscript::Error),
 
-    /// internal error (PSBT constructor inconsistency)
+    /// Internal error (PSBT constructor inconsistency)
     #[from]
     PsbtConstruct(psbt::construct::Error),
+
+    /// Unable to compute proper fee
+    FeeFailure,
 }
 
 pub struct Component {
@@ -60,7 +63,7 @@ pub struct Component {
 }
 
 impl Component {
-    pub fn compose_psbt(&mut self) -> Result<Psbt, Error> {
+    pub fn compose_psbt(&self) -> Result<Psbt, Error> {
         let wallet = self.model.as_wallet();
 
         let output_count = self.model.beneficiaries().n_items();
@@ -93,7 +96,7 @@ impl Component {
         let mut next_fee = fee;
         let mut prevouts = bset! {};
         let satisfaciton_weights = descriptor.max_satisfaction_weight()? as f32;
-        // TODO: Test that his fee selection algorithm has deterministic end
+        let mut cycle_lim = 0usize;
         while fee <= DUST_RELAY_TX_FEE && fee != next_fee {
             fee = next_fee;
             prevouts = wallet
@@ -118,6 +121,10 @@ impl Component {
             };
             let vsize = tx.vsize() as f32 + satisfaciton_weights / WITNESS_SCALE_FACTOR as f32;
             next_fee = (fee_rate * vsize).ceil() as u32;
+            cycle_lim += 1;
+            if cycle_lim > 6 {
+                return Err(Error::FeeFailure);
+            }
         }
 
         let inputs = prevouts
@@ -146,9 +153,20 @@ impl Component {
             wallet,
         )?;
 
-        // TODO: Update latest change index in wallet settings and save the wallet by sending message to the wallet
-
         Ok(psbt)
+    }
+
+    pub fn sync(&self) -> Option<Psbt> {
+        match self.compose_psbt() {
+            Ok(psbt) => {
+                self.widgets.hide_message();
+                Some(psbt)
+            }
+            Err(err) => {
+                self.widgets.show_error(&err.to_string());
+                None
+            }
+        }
     }
 }
 
@@ -171,7 +189,33 @@ impl Update for Component {
                 self.model.beneficiaries_mut().append(&Beneficiary::new());
                 self.widgets.init_ui(&self.model);
                 self.widgets.show();
+                return;
             }
+            Msg::Response(ResponseType::Ok) => {
+                let psbt = match self.sync() {
+                    Some(psbt) => psbt,
+                    None => return,
+                };
+                // self.wallet_stream.as_ref().map(|stream| stream.emit(wallet::Msg::Psbt(psbt)));
+                // TODO: Update latest change index in wallet settings by sending message to the wallet component
+                self.widgets.hide();
+                return;
+            }
+            Msg::Response(ResponseType::Cancel) => {
+                self.widgets.hide();
+                return;
+            }
+            Msg::Response(_) => {
+                return;
+            }
+            Msg::SetWallet(stream) => {
+                self.wallet_stream = Some(stream);
+                return;
+            }
+            _ => {} // Changes which update wallet tx
+        }
+
+        match event {
             Msg::BeneficiaryAdd => {
                 self.model.beneficiaries_mut().append(&Beneficiary::new());
             }
@@ -187,17 +231,10 @@ impl Update for Component {
             }
             Msg::FeeChange => { /* Update fee and total tx amount */ }
             Msg::FeeSetBlocks(_) => { /* Update fee and total tx amount */ }
-            Msg::Response(ResponseType::Ok) => {
-                self.widgets.hide();
-            }
-            Msg::Response(ResponseType::Cancel) => {
-                self.widgets.hide();
-            }
-            Msg::Response(_) => {}
-            Msg::SetWallet(stream) => {
-                self.wallet_stream = Some(stream);
-            }
+            _ => {} // Changes which do not update wallet tx
         }
+
+        self.sync();
     }
 }
 

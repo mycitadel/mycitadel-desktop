@@ -14,6 +14,7 @@ use crate::model::{Wallet, WalletSettings};
 
 #[derive(Getters)]
 pub struct ViewModel {
+    #[getter(skip)]
     wallet: Wallet,
     #[getter(as_mut)]
     beneficiaries: BeneficiaryModel,
