@@ -278,6 +278,15 @@ impl Update for Component {
                 self.widgets.update_signers(&self.model.signers);
             }
             Msg::SignerAddXpub(xpub) => {
+                if self.model.signers.iter().find(|s| s.xpub == xpub).is_some() {
+                    error_dlg(
+                        self.widgets.as_root(),
+                        "Error",
+                        "Can't add xpub since it is already present among signers",
+                        None,
+                    );
+                    return;
+                }
                 self.model.signers.push(Signer::with_xpub(
                     xpub,
                     &self.model.bip43(),
