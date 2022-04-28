@@ -460,9 +460,14 @@ where
         let slip = KeyVersion::from_xkey_str(s).ok();
         xd.checked(testnet, slip)?;
 
-        match (&standard, &xd.standard) {
-            (Some(required), Some(actual)) if required != actual => {
-                // TODO: Report error
+        match (&standard, &xd.standard, slip) {
+            (Some(required), Some(actual), Some(_)) if required != actual => {
+                return Err(XpubParseError::Inconsistency(
+                    XpubRequirementError::StandardMismatch {
+                        actual_standard: actual.to_string(),
+                        required_standard: required.to_string(),
+                    },
+                ))
             }
             _ => {}
         }
