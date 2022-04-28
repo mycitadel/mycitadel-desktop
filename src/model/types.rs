@@ -355,19 +355,39 @@ impl Signer {
     }
 
     pub fn with_xpub(xpub: ExtendedPubKey, schema: &Bip43, network: PublicNetwork) -> Self {
-        let (fingerprint, origin, account) = match xpub.depth {
-            0 => (xpub.fingerprint(), empty!(), None),
-            1 => (
+        let (fingerprint, origin, account) = match (xpub.depth, schema.account_depth()) {
+            (0, _) => (xpub.fingerprint(), empty!(), None),
+            (1, _) => (
                 xpub.parent_fingerprint,
                 vec![xpub.child_number].into(),
                 HardenedIndex::try_from(xpub.child_number).ok(),
             ),
-            _ if xpub.child_number.is_hardened() => (
-                Fingerprint::default(),
-                schema.to_account_derivation(xpub.child_number, network.into()),
+            (depth, Some(account_depth))
+                if xpub.child_number.is_hardened() && depth == account_depth =>
+            {
+                let coin_depth = schema.coin_type_depth().unwrap_or(account_depth);
+                let max_depth = coin_depth.max(account_depth) as usize;
+                let min_depth = coin_depth.min(account_depth) as usize;
+                let path = if max_depth - min_depth != 1 {
+                    vec![xpub.child_number]
+                } else {
+                    let mut path = vec![ChildNumber::zero(); 2];
+                    path[coin_depth as usize - min_depth] =
+                        DerivationBlockchain::from(network).coin_type().into();
+                    path[account_depth as usize - min_depth] = xpub.child_number;
+                    path
+                };
+                (
+                    zero!(),
+                    path.into(),
+                    HardenedIndex::try_from(xpub.child_number).ok(),
+                )
+            }
+            _ => (
+                zero!(),
+                vec![xpub.child_number].into(),
                 HardenedIndex::try_from(xpub.child_number).ok(),
             ),
-            _ => (Fingerprint::default(), vec![xpub.child_number].into(), None),
         };
         Signer {
             master_fp: fingerprint,
