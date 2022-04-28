@@ -25,7 +25,7 @@ pub struct ViewModel {}
 pub enum Msg {
     Show,
     Close,
-    Template,
+    Template(i32),
     Import,
     Wallet,
     Psbt(Option<PublicNetwork>),

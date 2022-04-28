@@ -94,7 +94,7 @@ impl Update for Component {
                 }
                 // TODO: Remove PSBT window from the list of windows
             }
-            Msg::Template => {
+            Msg::Template(index) => {
                 if let Some(path) = file_create_dlg(
                     self.widgets.as_root(),
                     "Create wallet",
@@ -102,10 +102,11 @@ impl Update for Component {
                     "*.mcw",
                     &Wallet::file_name("citadel", self.wallet_count),
                 ) {
+                    let template = self.widgets.template(index);
                     self.wallet_count += 1;
                     self.widgets.hide();
                     self.wallet_settings
-                        .emit(settings::Msg::New(self.widgets.selected_template(), path));
+                        .emit(settings::Msg::New(template, path));
                 }
             }
             Msg::Import => {}

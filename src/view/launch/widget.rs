@@ -64,45 +64,25 @@ impl Widgets {
         }
     }
 
-    pub fn selected_template(&self) -> Option<WalletTemplate> {
-        let index = if let Some(row) = self.create_box.selected_row() {
-            row.index()
-        } else {
-            return None;
-        };
+    pub fn template(&self, index: i32) -> WalletTemplate {
         let taproot = self.is_taproot();
         let network = self.network();
         match index {
-            0 => Some(WalletTemplate::singlesig(taproot, network, false)),
-            1 => Some(WalletTemplate::singlesig(taproot, network, true)),
-            2 => Some(WalletTemplate::hodling(
-                network,
-                4,
-                Requirement::Allow,
-                Requirement::Allow,
-            )),
+            0 => WalletTemplate::singlesig(taproot, network, false),
+            1 => WalletTemplate::singlesig(taproot, network, true),
+            2 => WalletTemplate::hodling(network, 4, Requirement::Allow, Requirement::Allow),
             3 => {
                 let count = self.hwcount_adj.value() as u16;
-                Some(WalletTemplate::multisig(
+                WalletTemplate::multisig(
                     network,
                     Some(count),
                     Requirement::Require,
                     Requirement::Deny,
-                ))
+                )
             }
-            4 => Some(WalletTemplate::multisig(
-                network,
-                None,
-                Requirement::Allow,
-                Requirement::Require,
-            )),
-            5 => Some(WalletTemplate::multisig(
-                network,
-                None,
-                Requirement::Allow,
-                Requirement::Allow,
-            )),
-            6 => None,
+            4 => WalletTemplate::multisig(network, None, Requirement::Allow, Requirement::Require),
+            5 => WalletTemplate::multisig(network, None, Requirement::Allow, Requirement::Allow),
+            6 => todo!("Lightning wallets"),
             _ => unreachable!("unknown template"),
         }
     }
@@ -121,8 +101,8 @@ impl Widgets {
         connect!(
             relm,
             self.create_box,
-            connect_row_activated(_, _),
-            Msg::Template
+            connect_row_activated(_, row),
+            Msg::Template(row.index())
         );
         connect!(
             relm,

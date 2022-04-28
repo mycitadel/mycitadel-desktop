@@ -32,7 +32,7 @@ impl Default for Requirement {
 /// Wallet template is a way to define constrained version of a wallet descriptor, but unlike
 /// [`super::WalletDescriptor`] not having restrains on the internal consistency between amount of
 /// signatures already present and condition parameters.
-#[derive(Clone, Eq, PartialEq, Hash, Debug, Default)]
+#[derive(Clone, Eq, PartialEq, Hash, Debug)]
 pub struct WalletTemplate {
     pub format: WalletStandard,
     pub min_signer_count: Option<u16>,
@@ -41,6 +41,12 @@ pub struct WalletTemplate {
     pub watch_only_req: Requirement,
     pub conditions: BTreeSet<(u8, SpendingCondition)>,
     pub network: PublicNetwork,
+}
+
+impl Default for WalletTemplate {
+    fn default() -> Self {
+        WalletTemplate::multisig(default!(), None, Requirement::Allow, Requirement::Allow)
+    }
 }
 
 impl WalletTemplate {

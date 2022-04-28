@@ -249,7 +249,6 @@ impl Update for Component {
         // Than, events which update the state and require saving or descriptor change
         match event {
             Msg::New(template, path) => {
-                let template = template.unwrap_or_default();
                 self.model =
                     match ViewModel::with_template(self.model.stream(), template.clone(), path) {
                         Err(err) => {
