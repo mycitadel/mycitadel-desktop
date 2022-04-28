@@ -19,7 +19,7 @@ use relm::Relm;
 
 use crate::model::{DescriptorClass, PublicNetwork, Requirement, WalletTemplate};
 
-use super::Msg;
+use super::{Msg, Page};
 
 #[derive(Clone, Gladis)]
 pub struct Widgets {
@@ -37,9 +37,9 @@ pub struct Widgets {
 }
 
 impl Widgets {
-    pub fn show(&self) {
+    pub fn show(&self, page: Page) {
         self.window.show();
-        self.pages.set_current_page(Some(0));
+        self.pages.set_current_page(Some(page as u32));
     }
 
     pub fn hide(&self) {

@@ -259,12 +259,17 @@ impl Update for Component {
             Msg::New => {
                 self.launcher_stream
                     .as_ref()
-                    .map(|stream| stream.emit(launch::Msg::Show));
+                    .map(|stream| stream.emit(launch::Msg::Show(launch::Page::Template)));
             }
             Msg::Open => {
                 self.launcher_stream
                     .as_ref()
                     .map(|stream| stream.emit(launch::Msg::Wallet));
+            }
+            Msg::Import => {
+                self.launcher_stream
+                    .as_ref()
+                    .map(|stream| stream.emit(launch::Msg::Show(launch::Page::Import)));
             }
             Msg::Close => self.close(),
             Msg::About => {

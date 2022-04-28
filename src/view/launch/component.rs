@@ -19,6 +19,7 @@ use relm::{init, Relm, StreamHandle, Update, Widget};
 
 use super::{Msg, ViewModel, Widgets};
 use crate::model::{FileDocument, PublicNetwork, Wallet};
+use crate::view::launch::Page;
 use crate::view::{about, file_create_dlg, file_open_dlg, psbt, settings, wallet};
 
 pub struct Component {
@@ -82,7 +83,7 @@ impl Update for Component {
 
     fn update(&mut self, event: Msg) {
         match event {
-            Msg::Show => self.widgets.show(),
+            Msg::Show(page) => self.widgets.show(page),
             Msg::Close => {
                 if self.window_count == 0 {
                     gtk::main_quit();
@@ -93,14 +94,14 @@ impl Update for Component {
             Msg::WalletClosed => {
                 self.window_count -= 1;
                 if self.window_count == 0 {
-                    self.widgets.show();
+                    self.widgets.show(Page::Template);
                 }
                 // TODO: Remove wallet window from the list of windows
             }
             Msg::PsbtClosed => {
                 self.window_count -= 1;
                 if self.window_count == 0 {
-                    self.widgets.show();
+                    self.widgets.show(Page::Template);
                 }
                 // TODO: Remove PSBT window from the list of windows
             }
@@ -177,7 +178,7 @@ impl Widget for Component {
         about.emit(about::Msg::Response(ResponseType::Close));
 
         widgets.connect(relm);
-        widgets.show();
+        widgets.show(Page::Template);
 
         Component {
             widgets,

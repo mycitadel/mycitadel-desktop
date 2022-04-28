@@ -17,7 +17,9 @@ use std::{io, thread};
 
 use amplify::Wrapper;
 use bitcoin::{OutPoint, Transaction, Txid};
+use chrono::{DateTime, NaiveDateTime, Utc};
 use electrum_client::{Client as ElectrumClient, ElectrumApi, HeaderNotification};
+use gtk::gdk;
 use relm::Sender;
 use wallet::address::AddressCompat;
 use wallet::hd::{SegmentIndexes, UnhardenedIndex};
@@ -47,6 +49,42 @@ pub enum Msg {
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 #[derive(StrictEncode, StrictDecode)]
+#[strict_encoding(repr = u8)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate", rename_all = "lowercase")
+)]
+pub enum HistoryType {
+    Incoming,
+    Outcoming,
+    Change,
+}
+
+impl HistoryType {
+    pub fn icon_name(self) -> &'static str {
+        match self {
+            HistoryType::Incoming => "media-playlist-consecutive-symbolic",
+            HistoryType::Outcoming => "mail-send-symbolic",
+            HistoryType::Change => "view-refresh-symbolic",
+        }
+    }
+
+    pub fn color(self) -> gdk::RGBA {
+        match self {
+            HistoryType::Incoming => {
+                gdk::RGBA::new(38.0 / 256.0, 162.0 / 256.0, 105.0 / 256.0, 1.0)
+            }
+            HistoryType::Outcoming => {
+                gdk::RGBA::new(165.0 / 256.0, 29.0 / 256.0, 45.0 / 256.0, 1.0)
+            }
+            HistoryType::Change => gdk::RGBA::new(119.0 / 256.0, 118.0 / 256.0, 123.0 / 256.0, 1.0),
+        }
+    }
+}
+
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
+#[derive(StrictEncode, StrictDecode)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -58,7 +96,20 @@ pub struct HistoryTxid {
     #[cfg_attr(feature = "serde", serde(with = "serde_with::rust::display_fromstr"))]
     pub address: AddressCompat,
     pub index: UnhardenedIndex,
-    pub change: bool,
+    pub ty: HistoryType,
+}
+
+impl HistoryTxid {
+    pub fn date_time_est(self) -> DateTime<chrono::Local> {
+        height_date_time_est(self.height)
+    }
+
+    pub fn mining_info(self) -> String {
+        match self.height {
+            -1 => s!("pending"),
+            _ => format!("{}", self.date_time_est().format("%F %l %P")),
+        }
+    }
 }
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
@@ -82,6 +133,17 @@ pub struct UtxoTxid {
 impl UtxoTxid {
     pub fn outpoint(&self) -> OutPoint {
         OutPoint::new(self.txid, self.vout)
+    }
+
+    pub fn date_time_est(self) -> DateTime<chrono::Local> {
+        height_date_time_est(self.height as i32)
+    }
+
+    pub fn mining_info(self) -> String {
+        match self.height {
+            0 => s!("mempool"),
+            _ => format!("{}", self.date_time_est().format("%F %l %P")),
+        }
     }
 }
 
@@ -246,7 +308,11 @@ pub fn electrum_sync(
                         address: AddressCompat::from_script(&script.clone().into(), network)
                             .expect("broken descriptor"),
                         index: *index,
-                        change,
+                        ty: if change {
+                            HistoryType::Change
+                        } else {
+                            HistoryType::Incoming /* TODO: do proper type classification */
+                        },
                     })
                 })
                 .collect();
@@ -309,4 +375,17 @@ pub fn electrum_sync(
         .expect("electrum watcher channel is broken");
 
     Ok(())
+}
+
+// TODO: Do a binary file indexed by height, representing date/time information for each height
+pub fn height_date_time_est(height: i32) -> DateTime<chrono::Local> {
+    if height <= 0 {
+        return chrono::Local::now();
+    }
+    let reference_height = 733961;
+    let reference_time = 1651158666;
+    let height_diff = height - reference_height;
+    let timestamp = reference_time + height_diff * 600;
+    let block_time = NaiveDateTime::from_timestamp(timestamp as i64, 0);
+    DateTime::<chrono::Local>::from(DateTime::<Utc>::from_utc(block_time, Utc))
 }

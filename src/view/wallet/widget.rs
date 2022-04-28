@@ -18,8 +18,8 @@ use electrum_client::HeaderNotification;
 use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{
-    ApplicationWindow, Button, Entry, HeaderBar, IconSize, Image, Label, ListStore, MenuItem,
-    Popover, Spinner, Statusbar, TreeView,
+    ApplicationWindow, Button, Entry, HeaderBar, Image, Label, ListStore, MenuItem, Popover,
+    Spinner, Statusbar, TreeView,
 };
 use relm::Relm;
 
@@ -55,6 +55,7 @@ pub struct Widgets {
     open_btn: Button,
     settings_btn: Button,
     pay_btn: Button,
+    import_mi: MenuItem,
     about_mi: MenuItem,
 
     balance_btc_lbl: Label,
@@ -134,6 +135,7 @@ impl Widgets {
             Msg::Pay(pay::Msg::Show)
         );
         connect!(relm, self.refresh_btn, connect_clicked(_), Msg::Refresh);
+        connect!(relm, self.import_mi, connect_activate(_), Msg::Import);
         connect!(relm, self.about_mi, connect_activate(_), Msg::About);
 
         connect!(
@@ -201,7 +203,7 @@ impl Widgets {
     pub fn update_last_block(&mut self, last_block: &HeaderNotification) {
         let ts = last_block.header.time;
         let naive = NaiveDateTime::from_timestamp(ts as i64, 0);
-        let dt = DateTime::<Utc>::from_utc(naive, Utc);
+        let dt = DateTime::<chrono::Local>::from(DateTime::<Utc>::from_utc(naive, Utc));
         let time = dt.time();
         self.lastblock_lbl
             .set_text(&format!("{}", time.format("%-I:%M %p")));
@@ -214,21 +216,17 @@ impl Widgets {
 
     pub fn update_history(&mut self, history: &[HistoryTxid]) {
         self.history_store.clear();
-        let pixbuf = Image::from_icon_name(Some("list-add-symbolic"), IconSize::Menu).pixbuf();
         for item in history {
-            let height = match item.height {
-                -1 => s!("pending"),
-                height => height.to_string(),
-            };
             self.history_store.insert_with_values(
                 None,
                 &[
-                    (0, &pixbuf),
+                    (0, &item.ty.icon_name()),
                     (1, &item.address.to_string()),
                     (2, &item.txid.to_string()),
-                    (3, &0),
-                    (4, &0),
-                    (5, &height),
+                    (3, &"+0"),
+                    (4, &"0"),
+                    (5, &item.mining_info()),
+                    (6, &item.ty.color()),
                 ],
             );
         }
@@ -237,17 +235,14 @@ impl Widgets {
     pub fn update_utxos(&mut self, utxos: &[UtxoTxid]) {
         self.utxo_store.clear();
         for item in utxos {
-            let height = match item.height {
-                0 => s!("pending"),
-                height => height.to_string(),
-            };
+            let btc = format_btc_value(item.value);
             self.utxo_store.insert_with_values(
                 None,
                 &[
                     (0, &item.address.to_string()),
                     (1, &item.txid.to_string()),
-                    (2, &item.value),
-                    (3, &height),
+                    (2, &btc),
+                    (3, &item.mining_info()),
                 ],
             );
         }
@@ -260,13 +255,18 @@ impl Widgets {
     pub fn update_addresses(&mut self, address_info: &[AddressInfo]) {
         self.address_store.clear();
         for info in address_info {
+            let balance = format_btc_value(info.balance);
+            let volume = format_btc_value(info.volume);
+            let terminal = info.terminal_string();
             self.address_store.insert_with_values(
                 None,
                 &[
                     (0, &info.address.to_string()),
-                    (1, &info.balance),
-                    (2, &info.volume),
+                    (1, &balance),
+                    (2, &volume),
                     (3, &info.tx_count),
+                    (4, &info.icon_name()),
+                    (5, &terminal),
                 ],
             );
         }
@@ -282,5 +282,13 @@ impl Widgets {
             .set_text(&format!("{:.2}", state.volume as f64 / 100_000_000.0));
         self.volume_sat_lbl.set_text(&state.volume.to_string());
         self.txcount_lbl.set_text(&tx_count.to_string());
+    }
+}
+
+fn format_btc_value(value: u64) -> String {
+    if value == 0 {
+        s!("0")
+    } else {
+        format!("{:.08}", value as f64 / 100_000_000.0)
     }
 }

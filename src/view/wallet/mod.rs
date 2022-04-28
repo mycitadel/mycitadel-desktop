@@ -34,6 +34,7 @@ pub enum Msg {
     Close,
     About,
     FileError(PathBuf, String),
+    Import,
     Save,
     Settings,
     Update(Vec<Signer>, BTreeSet<DescriptorClass>, ElectrumServer),

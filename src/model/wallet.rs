@@ -41,6 +41,7 @@ use super::{
     Unsatisfiable, XpubkeyCore,
 };
 use crate::model::{ElectrumSec, ElectrumServer, Prevout};
+use crate::worker::electrum::HistoryType;
 use crate::worker::{HistoryTxid, UtxoTxid};
 
 // TODO: Move to bpro library
@@ -207,7 +208,7 @@ impl Wallet {
                 volume: 0, // TODO: Update from transaction information
                 tx_count: 1,
                 index: item.index,
-                change: item.change,
+                change: item.ty == HistoryType::Change,
             })
             .fold(addresses, |mut list, info| {
                 match list.entry(info.address) {
@@ -988,6 +989,19 @@ pub struct AddressInfo {
     pub volume: u64,
     pub index: UnhardenedIndex,
     pub change: bool,
+}
+
+impl AddressInfo {
+    pub fn icon_name(self) -> Option<&'static str> {
+        match self.change {
+            true => Some("view-refresh-symbolic"),
+            false => None,
+        }
+    }
+
+    pub fn terminal_string(self) -> String {
+        format!("/{}/{}", if self.change { 1 } else { 0 }, self.index)
+    }
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Default)]

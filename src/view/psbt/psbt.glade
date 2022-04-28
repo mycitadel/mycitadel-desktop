@@ -354,7 +354,7 @@
                             <property name="sort-column-id">2</property>
                             <child>
                               <object class="GtkCellRendererPixbuf" id="change">
-                                <property name="icon-name">edit-undo-symbolic</property>
+                                <property name="icon-name">view-refresh-symbolic</property>
                               </object>
                               <attributes>
                                 <attribute name="visible">2</attribute>
@@ -401,6 +401,7 @@
                             <property name="resizable">True</property>
                             <property name="sizing">autosize</property>
                             <property name="title" translatable="yes">Address</property>
+                            <property name="expand">True</property>
                             <property name="clickable">True</property>
                             <property name="reorderable">True</property>
                             <property name="sort-indicator">True</property>

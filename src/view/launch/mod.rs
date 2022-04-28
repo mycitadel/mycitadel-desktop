@@ -25,7 +25,7 @@ pub struct ViewModel {}
 
 #[derive(Msg)]
 pub enum Msg {
-    Show,
+    Show(Page),
     Close,
     Template(i32),
     Import,
@@ -39,4 +39,11 @@ pub enum Msg {
     OpenPsbt(PathBuf),
     CreatePsbt(Psbt, PublicNetwork),
     PsbtClosed,
+}
+
+#[derive(Clone, Copy, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
+pub enum Page {
+    Template = 0,
+    Open = 1,
+    Import = 2,
 }

@@ -40,7 +40,7 @@ impl Component {
         if self.model.is_new_wallet() {
             self.launcher_stream
                 .as_ref()
-                .map(|stream| stream.emit(launch::Msg::Show));
+                .map(|stream| stream.emit(launch::Msg::Show(launch::Page::Template)));
         }
     }
 
