@@ -9,17 +9,18 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
-use crate::model::PublicNetwork;
+use std::str::FromStr;
+
+use ::wallet::address::AddressCompat;
 use bitcoin::Address;
 use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{glib, Entry, ListBoxRow};
 use relm::Relm;
-use std::str::FromStr;
-use wallet::address::AddressCompat;
 
 use super::Beneficiary;
-use crate::view::pay;
+use crate::model::PublicNetwork;
+use crate::view::{pay, wallet};
 
 #[derive(Clone, Gladis)]
 pub struct RowWidgets {
@@ -30,7 +31,7 @@ pub struct RowWidgets {
 
 impl RowWidgets {
     pub fn init(
-        relm: Relm<pay::Component>,
+        relm: Relm<wallet::Component>,
         item: &glib::Object,
         network: PublicNetwork,
     ) -> gtk::Widget {
@@ -47,14 +48,14 @@ impl RowWidgets {
             relm,
             row_widgets.address_fld,
             connect_changed(_),
-            pay::Msg::BeneficiaryEdit(row.index() as u32)
+            wallet::Msg::PayMsg(pay::Msg::BeneficiaryEdit(row.index() as u32))
         );
         let row = row_widgets.beneficiary_row.clone();
         connect!(
             relm,
             row_widgets.amount_fld,
             connect_changed(_),
-            pay::Msg::BeneficiaryEdit(row.index() as u32)
+            wallet::Msg::PayMsg(pay::Msg::BeneficiaryEdit(row.index() as u32))
         );
 
         row_widgets.beneficiary_row.upcast::<gtk::Widget>()

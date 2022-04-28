@@ -17,7 +17,8 @@ use gtk::{
 };
 use relm::Relm;
 
-use super::{beneficiary_row, Msg, ViewModel};
+use super::{beneficiary_row, Msg};
+use crate::view::wallet;
 use crate::view::NotificationBoxExt;
 
 // Create the structure that holds the widgets used in the view.
@@ -51,7 +52,7 @@ pub struct Widgets {
 }
 
 impl Widgets {
-    pub fn init_ui(&self, _model: &ViewModel) {}
+    pub fn init_ui(&self, _model: &wallet::ViewModel) {}
 
     pub fn show(&self) {
         self.dialog.show()
@@ -67,13 +68,18 @@ impl Widgets {
         &self.dialog
     }
 
-    pub(super) fn connect(&self, relm: &Relm<super::Component>) {
-        connect!(relm, self.add_btn, connect_clicked(_), Msg::BeneficiaryAdd);
+    pub fn connect(&self, relm: &Relm<wallet::Component>) {
+        connect!(
+            relm,
+            self.add_btn,
+            connect_clicked(_),
+            wallet::Msg::PayMsg(Msg::BeneficiaryAdd)
+        );
         connect!(
             relm,
             self.remove_btn,
             connect_clicked(_),
-            Msg::BeneficiaryRemove
+            wallet::Msg::PayMsg(Msg::BeneficiaryRemove)
         );
 
         self.beneficiary_list.connect_row_activated(|list, row| {
@@ -91,7 +97,7 @@ impl Widgets {
             relm,
             self.dialog,
             connect_response(_, resp),
-            Msg::Response(resp)
+            wallet::Msg::PayMsg(Msg::Response(resp))
         );
         self.dialog.set_response_sensitive(ResponseType::Ok, false);
 
@@ -105,7 +111,11 @@ impl Widgets {
         // TODO: Connect fee editing
     }
 
-    pub(super) fn bind_beneficiary_model(&self, relm: &Relm<super::Component>, model: &ViewModel) {
+    pub fn bind_beneficiary_model(
+        &self,
+        relm: &Relm<wallet::Component>,
+        model: &wallet::ViewModel,
+    ) {
         let relm = relm.clone();
         let network = model.as_settings().network();
         self.beneficiary_list

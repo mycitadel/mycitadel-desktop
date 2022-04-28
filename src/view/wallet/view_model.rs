@@ -16,16 +16,25 @@ use crate::model::{
     file, DescriptorClass, DescriptorError, ElectrumServer, FileDocument, Signer, Wallet,
     WalletSettings,
 };
+use crate::view::pay::beneficiary_row::BeneficiaryModel;
 
 #[derive(Getters)]
 pub struct ViewModel {
     wallet: Wallet,
     path: PathBuf,
+    #[getter(as_mut)]
+    beneficiaries: BeneficiaryModel,
+    fee_rate: f32, // Used by payment window
 }
 
 impl ViewModel {
     pub fn with(wallet: Wallet, path: PathBuf) -> ViewModel {
-        ViewModel { wallet, path }
+        ViewModel {
+            fee_rate: wallet.ephemerals().fees.0,
+            wallet,
+            path,
+            beneficiaries: BeneficiaryModel::new(),
+        }
     }
 
     pub fn save(&mut self) -> Result<usize, file::Error> {

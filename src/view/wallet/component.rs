@@ -12,22 +12,33 @@
 use std::path::PathBuf;
 
 use gladis::Gladis;
+use gtk::prelude::*;
 use gtk::{ApplicationWindow, ResponseType};
 use relm::{init, Channel, Relm, StreamHandle, Update, Widget};
 
-use super::{ElectrumState, ViewModel, Widgets};
+use ::wallet::descriptors::InputDescriptor;
+use ::wallet::locks::{LockTime, SeqNo};
+use ::wallet::psbt::{Construct, Psbt};
+use ::wallet::scripts::PubkeyScript;
+use bitcoin::blockdata::constants::WITNESS_SCALE_FACTOR;
+use bitcoin::policy::DUST_RELAY_TX_FEE;
+use bitcoin::secp256k1::SECP256K1;
+use bitcoin::{EcdsaSighashType, Transaction, TxIn, TxOut};
+use miniscript::DescriptorTrait;
+
+use super::{ElectrumState, Msg, ViewModel, Widgets};
 use crate::model::{FileDocument, Wallet};
-use crate::view::wallet::Msg;
-use crate::view::{error_dlg, launch, pay, settings};
+use crate::view::pay::beneficiary_row::Beneficiary;
+use crate::view::{error_dlg, launch, pay, settings, NotificationBoxExt};
 use crate::worker::{electrum, ElectrumWorker};
 
 pub struct Component {
     model: ViewModel,
     widgets: Widgets,
+    pay_widgets: pay::Widgets,
     electrum_channel: Channel<electrum::Msg>,
     electrum_worker: ElectrumWorker,
     settings: relm::Component<settings::Component>,
-    payment: relm::Component<pay::Component>,
     launcher_stream: Option<StreamHandle<launch::Msg>>,
 }
 
@@ -48,6 +59,112 @@ impl Component {
                 "It was impossible to save changes to the wallet settings due to an error",
                 Some(&err.to_string()),
             ),
+        }
+    }
+
+    pub fn compose_psbt(&self) -> Result<Psbt, pay::Error> {
+        let wallet = self.model.as_wallet();
+
+        let output_count = self.model.beneficiaries().n_items();
+        let mut txouts = Vec::with_capacity(output_count as usize);
+        let mut output_value = 0u64;
+        for no in 0..output_count {
+            let beneficiary = self
+                .model
+                .beneficiaries()
+                .item(no)
+                .expect("BeneficiaryModel is broken")
+                .downcast::<Beneficiary>()
+                .expect("BeneficiaryModel is broken");
+            let script_pubkey = beneficiary.address()?.script_pubkey();
+            let value = beneficiary.amount_sats()?;
+            output_value += value;
+            txouts.push(TxOut {
+                script_pubkey,
+                value,
+            });
+        }
+
+        // TODO: Support constructing PSBTs from multiple descriptors (at descriptor-wallet lib)
+        let (descriptor, _) = self.model.as_settings().descriptors_all()?;
+        let lock_time = LockTime::since_now();
+        let change_index = wallet.next_change_index();
+
+        let fee_rate = self.model.fee_rate();
+        let mut fee = DUST_RELAY_TX_FEE;
+        let mut next_fee = fee;
+        let mut prevouts = bset! {};
+        let satisfaciton_weights = descriptor.max_satisfaction_weight()? as f32;
+        let mut cycle_lim = 0usize;
+        while fee <= DUST_RELAY_TX_FEE && fee != next_fee {
+            fee = next_fee;
+            prevouts = wallet
+                .coinselect(output_value + fee as u64)
+                .ok_or(pay::Error::InsufficientFunds)?
+                .0;
+            let txins = prevouts
+                .iter()
+                .map(|p| TxIn {
+                    previous_output: p.outpoint,
+                    script_sig: none!(),
+                    sequence: 0, // TODO: Support spending from CSV outputs
+                    witness: none!(),
+                })
+                .collect::<Vec<_>>();
+
+            let tx = Transaction {
+                version: 1,
+                lock_time: lock_time.as_u32(),
+                input: txins,
+                output: txouts.clone(),
+            };
+            let vsize = tx.vsize() as f32 + satisfaciton_weights / WITNESS_SCALE_FACTOR as f32;
+            next_fee = (fee_rate * vsize).ceil() as u32;
+            cycle_lim += 1;
+            if cycle_lim > 6 {
+                return Err(pay::Error::FeeFailure);
+            }
+        }
+
+        let inputs = prevouts
+            .into_iter()
+            .map(|prevout| InputDescriptor {
+                outpoint: prevout.outpoint,
+                terminal: prevout.terminal(),
+                seq_no: SeqNo::default(), // TODO: Support spending from CSV outputs
+                tweak: None,
+                sighash_type: EcdsaSighashType::All, // TODO: Support more sighashes in the UI
+            })
+            .collect::<Vec<_>>();
+        let outputs = txouts
+            .into_iter()
+            .map(|txout| (PubkeyScript::from(txout.script_pubkey), txout.value))
+            .collect::<Vec<_>>();
+
+        let psbt = Psbt::construct(
+            &SECP256K1,
+            &descriptor,
+            lock_time,
+            &inputs,
+            &outputs,
+            change_index,
+            fee as u64,
+            wallet,
+        )?;
+
+        Ok(psbt)
+    }
+
+    pub fn sync_pay(&self) -> Option<Psbt> {
+        match self.compose_psbt() {
+            Ok(psbt) => {
+                self.pay_widgets.hide_message();
+                Some(psbt)
+            }
+            Err(err) => {
+                self.pay_widgets.show_error(&err.to_string());
+                None
+            }
         }
     }
 
@@ -161,7 +278,7 @@ impl Update for Component {
                 );
                 self.close();
             }
-            Msg::Pay => self.payment.emit(pay::Msg::Show),
+            Msg::PayMsg(msg) => self.update_pay(msg),
             Msg::Settings => self.settings.emit(settings::Msg::View(
                 self.model.to_settings(),
                 self.model.path().clone(),
@@ -198,6 +315,59 @@ impl Update for Component {
     }
 }
 
+impl Component {
+    fn update_pay(&mut self, event: pay::Msg) {
+        match event {
+            pay::Msg::Show => {
+                self.model.beneficiaries_mut().clear();
+                self.model.beneficiaries_mut().append(&Beneficiary::new());
+                self.pay_widgets.init_ui(&self.model);
+                self.pay_widgets.show();
+                return;
+            }
+            pay::Msg::Response(ResponseType::Ok) => {
+                let psbt = match self.sync_pay() {
+                    Some(psbt) => psbt,
+                    None => return,
+                };
+                // self.wallet_stream.as_ref().map(|stream| stream.emit(wallet::Msg::Psbt(psbt)));
+                // TODO: Update latest change index in wallet settings by sending message to the wallet component
+                self.pay_widgets.hide();
+                return;
+            }
+            pay::Msg::Response(ResponseType::Cancel) => {
+                self.pay_widgets.hide();
+                return;
+            }
+            pay::Msg::Response(_) => {
+                return;
+            }
+            _ => {} // Changes which update wallet tx
+        }
+
+        match event {
+            pay::Msg::BeneficiaryAdd => {
+                self.model.beneficiaries_mut().append(&Beneficiary::new());
+            }
+            pay::Msg::BeneficiaryRemove => {
+                self.pay_widgets.selected_beneficiary_index().map(|index| {
+                    self.model.beneficiaries_mut().remove(index);
+                });
+            }
+            pay::Msg::SelectBeneficiary(index) => self.pay_widgets.select_beneficiary(index),
+            pay::Msg::BeneficiaryEdit(index) => {
+                self.pay_widgets.select_beneficiary(index);
+                /* Check correctness of the model data */
+            }
+            pay::Msg::FeeChange => { /* Update fee and total tx amount */ }
+            pay::Msg::FeeSetBlocks(_) => { /* Update fee and total tx amount */ }
+            _ => {} // Changes which do not update wallet tx
+        }
+
+        self.sync_pay();
+    }
+}
+
 impl Widget for Component {
     // Specify the type of the root widget.
     type Root = ApplicationWindow;
@@ -214,10 +384,6 @@ impl Widget for Component {
         let settings = init::<settings::Component>(()).expect("error in settings component");
         settings.emit(settings::Msg::SetWallet(relm.stream().clone()));
 
-        let payment =
-            init::<pay::Component>(model.to_wallet()).expect("error in settings component");
-        payment.emit(pay::Msg::SetWallet(relm.stream().clone()));
-
         let stream = relm.stream().clone();
         let (electrum_channel, sender) =
             Channel::new(move |msg| stream.emit(Msg::ElectrumWatch(msg)));
@@ -228,13 +394,20 @@ impl Widget for Component {
         widgets.update_ui(&model);
         widgets.show();
 
+        let glade_src = include_str!("../pay/pay.glade");
+        let pay_widgets = pay::Widgets::from_string(glade_src).expect("glade file broken");
+
+        pay_widgets.connect(relm);
+        pay_widgets.bind_beneficiary_model(relm, &model);
+        pay_widgets.init_ui(&model);
+
         electrum_worker.sync();
 
         Component {
             model,
             widgets,
+            pay_widgets,
             settings,
-            payment,
             electrum_channel,
             electrum_worker,
             launcher_stream: None,

@@ -25,6 +25,7 @@ use relm::Relm;
 
 use super::{ElectrumState, Msg, ViewModel};
 use crate::model::{AddressInfo, ElectrumSec, ElectrumServer, WalletState};
+use crate::view::pay;
 use crate::worker::{HistoryTxid, UtxoTxid};
 
 impl ElectrumSec {
@@ -127,7 +128,12 @@ impl Widgets {
         connect!(relm, self.new_btn, connect_clicked(_), Msg::New);
         connect!(relm, self.open_btn, connect_clicked(_), Msg::Open);
         connect!(relm, self.settings_btn, connect_clicked(_), Msg::Settings);
-        connect!(relm, self.pay_btn, connect_clicked(_), Msg::Pay);
+        connect!(
+            relm,
+            self.pay_btn,
+            connect_clicked(_),
+            Msg::PayMsg(pay::Msg::Show)
+        );
         connect!(relm, self.refresh_btn, connect_clicked(_), Msg::Refresh);
         connect!(relm, self.about_mi, connect_activate(_), Msg::About);
 

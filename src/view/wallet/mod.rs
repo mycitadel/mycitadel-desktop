@@ -14,7 +14,7 @@ mod view_model;
 mod widget;
 
 pub use self::component::Component;
-pub(self) use view_model::ViewModel;
+pub(super) use view_model::ViewModel;
 pub(self) use widget::Widgets;
 
 use std::collections::BTreeSet;
@@ -23,7 +23,7 @@ use std::path::PathBuf;
 use relm::StreamHandle;
 
 use crate::model::{DescriptorClass, ElectrumSec, ElectrumServer, Signer};
-use crate::view::launch;
+use crate::view::{launch, pay};
 use crate::worker::electrum;
 
 #[derive(Msg)]
@@ -36,7 +36,7 @@ pub enum Msg {
     Save,
     Settings,
     Update(Vec<Signer>, BTreeSet<DescriptorClass>, ElectrumServer),
-    Pay,
+    PayMsg(pay::Msg),
     Receive,
     Refresh,
     Select(usize),
