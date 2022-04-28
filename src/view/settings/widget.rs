@@ -150,6 +150,7 @@ impl Widgets {
             .set_active(model.network == PublicNetwork::Signet);
 
         self.update_electrum(&mut model.electrum_model.clone(), true, true);
+        self.update_network();
 
         self.update_signers(&model.signers);
         self.update_signer_details(None, model.network);
@@ -434,6 +435,16 @@ impl Widgets {
             (_, _, true) => PublicNetwork::Signet,
             _ => unreachable!("inconsistent network togglers state"),
         }
+    }
+
+    pub fn update_network(&self) {
+        let network = self.network();
+        self.devices_btn.set_sensitive(!network.is_testnet());
+        self.devices_btn.set_tooltip_text(if network.is_testnet() {
+            Some("Hardware signers can be only used on mainnet")
+        } else {
+            None
+        });
     }
 
     pub fn electrum_server(&self) -> String {

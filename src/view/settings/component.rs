@@ -378,6 +378,7 @@ impl Update for Component {
             }
             Msg::NetworkChange(network) if network != self.model.network => {
                 self.model.network = network;
+                self.widgets.update_network();
                 self.widgets
                     .update_electrum(&mut self.model.electrum_model, false, false);
             }
