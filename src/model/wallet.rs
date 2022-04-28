@@ -259,11 +259,11 @@ impl Wallet {
 }
 
 impl ResolveTx for Wallet {
-    fn resolve_tx(&self, txid: &Txid) -> Result<Transaction, TxResolverError> {
+    fn resolve_tx(&self, txid: Txid) -> Result<Transaction, TxResolverError> {
         self.transactions
-            .get(txid)
+            .get(&txid)
             .cloned()
-            .ok_or(TxResolverError::with(*txid))
+            .ok_or(TxResolverError::with(txid))
     }
 }
 

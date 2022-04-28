@@ -404,7 +404,10 @@ impl Widgets {
     }
 
     pub fn signer_origin(&self) -> String {
-        self.path_fld.text().to_string()
+        self.path_fld
+            .text()
+            .replace("*h", &format!("{}", self.signer_account()))
+            .to_string()
     }
 
     pub fn signer_account(&self) -> HardenedIndex {
