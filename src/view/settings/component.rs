@@ -293,6 +293,7 @@ impl Update for Component {
                     .update_signer_details(None, self.model.network, self.model.bip43());
             }
             Msg::SignerFingerprintChange => {
+                let terminal = self.model.terminal_derivation();
                 let fingerprint = match Fingerprint::from_str(&self.widgets.signer_fingerprint()) {
                     Err(_) => {
                         self.widgets.show_error("incorrect fingerprint value");
@@ -308,6 +309,8 @@ impl Update for Component {
                         return;
                     }
                     signer.master_fp = fingerprint;
+                    self.widgets
+                        .update_signer_derivation(&signer.to_tracking_account(terminal));
                     self.replace_signer();
                 }
             }
@@ -332,6 +335,7 @@ impl Update for Component {
                 }
             }
             Msg::SignerOriginUpdate => {
+                let terminal = self.model.terminal_derivation();
                 if let Some(ref mut signer) = self.model.active_signer {
                     match DerivationPath::from_str(&self.widgets.signer_origin()) {
                         Err(err) => {
@@ -342,18 +346,23 @@ impl Update for Component {
                         Ok(origin) if signer.origin == origin => return,
                         Ok(origin) => {
                             signer.origin = origin;
+                            self.widgets
+                                .update_signer_derivation(&signer.to_tracking_account(terminal));
                             self.replace_signer();
                         }
                     }
                 }
             }
             Msg::SignerAccountChange => {
+                let terminal = self.model.terminal_derivation();
                 if let Some(ref mut signer) = self.model.active_signer {
                     let account = self.widgets.signer_account();
                     if signer.account == Some(account) {
                         return;
                     }
                     signer.account = Some(account);
+                    self.widgets
+                        .update_signer_derivation(&signer.to_tracking_account(terminal));
                     self.replace_signer();
                 }
             }

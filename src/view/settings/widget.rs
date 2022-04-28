@@ -672,7 +672,7 @@ impl Widgets {
                 self.account_adj.set_value(0.0);
             }
 
-            self.derivation_fld.set_text(&derivation.to_string());
+            self.update_signer_derivation(derivation);
             self.seed_mine_tgl
                 .set_active(signer.ownership == Ownership::Mine);
             self.seed_extern_tgl
@@ -691,6 +691,10 @@ impl Widgets {
             self.path_fld.set_text("");
             self.derivation_fld.set_text("");
         }
+    }
+
+    pub fn update_signer_derivation(&self, derivation: &TrackingAccount) {
+        self.derivation_fld.set_text(&derivation.to_string());
     }
 
     pub fn update_signers(&mut self, signers: &Vec<Signer>) {

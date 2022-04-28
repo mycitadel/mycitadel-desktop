@@ -283,10 +283,10 @@ impl OriginFormat {
             OriginFormat::Master => false,
             OriginFormat::SubMaster(_) => false,
             OriginFormat::Standard(s, _, network) => {
-                s.to_origin_derivation((*network).into()).len() > 2
+                s.to_origin_derivation((*network).into()).len() > 1
             }
             OriginFormat::Custom(derivation) | OriginFormat::CustomAccount(derivation) => {
-                derivation.len() > 2
+                derivation.len() > 1
             }
         }
     }
