@@ -186,8 +186,8 @@ impl Widgets {
 
         connect!(
             relm,
-            self.path_cmb,
-            connect_active_id_notify(_),
+            self.path_fld,
+            connect_changed(_),
             Msg::SignerOriginUpdate
         );
         connect!(
