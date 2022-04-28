@@ -73,13 +73,13 @@ impl Widgets {
             relm,
             self.add_btn,
             connect_clicked(_),
-            wallet::Msg::PayMsg(Msg::BeneficiaryAdd)
+            wallet::Msg::Pay(Msg::BeneficiaryAdd)
         );
         connect!(
             relm,
             self.remove_btn,
             connect_clicked(_),
-            wallet::Msg::PayMsg(Msg::BeneficiaryRemove)
+            wallet::Msg::Pay(Msg::BeneficiaryRemove)
         );
 
         self.beneficiary_list.connect_row_activated(|list, row| {
@@ -97,7 +97,7 @@ impl Widgets {
             relm,
             self.dialog,
             connect_response(_, resp),
-            wallet::Msg::PayMsg(Msg::Response(resp))
+            wallet::Msg::Pay(Msg::Response(resp))
         );
         self.dialog.set_response_sensitive(ResponseType::Ok, false);
 

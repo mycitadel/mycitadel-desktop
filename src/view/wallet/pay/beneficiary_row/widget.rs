@@ -20,7 +20,7 @@ use relm::Relm;
 
 use super::Beneficiary;
 use crate::model::PublicNetwork;
-use crate::view::{pay, wallet};
+use crate::view::wallet::{self, pay};
 
 #[derive(Clone, Gladis)]
 pub struct RowWidgets {
@@ -48,14 +48,14 @@ impl RowWidgets {
             relm,
             row_widgets.address_fld,
             connect_changed(_),
-            wallet::Msg::PayMsg(pay::Msg::BeneficiaryEdit(row.index() as u32))
+            wallet::Msg::Pay(pay::Msg::BeneficiaryEdit(row.index() as u32))
         );
         let row = row_widgets.beneficiary_row.clone();
         connect!(
             relm,
             row_widgets.amount_fld,
             connect_changed(_),
-            wallet::Msg::PayMsg(pay::Msg::BeneficiaryEdit(row.index() as u32))
+            wallet::Msg::Pay(pay::Msg::BeneficiaryEdit(row.index() as u32))
         );
 
         row_widgets.beneficiary_row.upcast::<gtk::Widget>()

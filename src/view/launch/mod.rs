@@ -17,6 +17,8 @@ pub(self) use widget::Widgets;
 
 use std::path::PathBuf;
 
+use wallet::psbt::Psbt;
+
 use crate::model::PublicNetwork;
 
 pub struct ViewModel {}
@@ -35,5 +37,6 @@ pub enum Msg {
     WalletClosed,
     OpenWallet(PathBuf),
     OpenPsbt(PathBuf),
+    CreatePsbt(Psbt, PublicNetwork),
     PsbtClosed,
 }

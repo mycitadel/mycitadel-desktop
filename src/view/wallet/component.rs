@@ -25,11 +25,12 @@ use bitcoin::policy::DUST_RELAY_TX_FEE;
 use bitcoin::secp256k1::SECP256K1;
 use bitcoin::{EcdsaSighashType, Transaction, TxIn, TxOut};
 use miniscript::DescriptorTrait;
+use wallet::hd::UnhardenedIndex;
 
-use super::{ElectrumState, Msg, ViewModel, Widgets};
+use super::pay::beneficiary_row::Beneficiary;
+use super::{pay, ElectrumState, Msg, ViewModel, Widgets};
 use crate::model::{FileDocument, Wallet};
-use crate::view::pay::beneficiary_row::Beneficiary;
-use crate::view::{error_dlg, launch, pay, settings, NotificationBoxExt};
+use crate::view::{error_dlg, launch, settings, NotificationBoxExt};
 use crate::worker::{electrum, ElectrumWorker};
 
 pub struct Component {
@@ -62,7 +63,7 @@ impl Component {
         }
     }
 
-    pub fn compose_psbt(&self) -> Result<Psbt, pay::Error> {
+    pub fn compose_psbt(&self) -> Result<(Psbt, UnhardenedIndex), pay::Error> {
         let wallet = self.model.as_wallet();
 
         let output_count = self.model.beneficiaries().n_items();
@@ -152,10 +153,10 @@ impl Component {
             wallet,
         )?;
 
-        Ok(psbt)
+        Ok((psbt, change_index))
     }
 
-    pub fn sync_pay(&self) -> Option<Psbt> {
+    pub fn sync_pay(&self) -> Option<(Psbt, UnhardenedIndex)> {
         match self.compose_psbt() {
             Ok(psbt) => {
                 self.pay_widgets.hide_message();
@@ -278,7 +279,7 @@ impl Update for Component {
                 );
                 self.close();
             }
-            Msg::PayMsg(msg) => self.update_pay(msg),
+            Msg::Pay(msg) => self.update_pay(msg),
             Msg::Settings => self.settings.emit(settings::Msg::View(
                 self.model.to_settings(),
                 self.model.path().clone(),
@@ -326,13 +327,25 @@ impl Component {
                 return;
             }
             pay::Msg::Response(ResponseType::Ok) => {
-                let psbt = match self.sync_pay() {
-                    Some(psbt) => psbt,
+                let (psbt, change_index) = match self.sync_pay() {
+                    Some(data) => data,
                     None => return,
                 };
-                // self.wallet_stream.as_ref().map(|stream| stream.emit(wallet::Msg::Psbt(psbt)));
-                // TODO: Update latest change index in wallet settings by sending message to the wallet component
                 self.pay_widgets.hide();
+                self.launcher_stream.as_ref().map(|stream| {
+                    stream.emit(launch::Msg::CreatePsbt(
+                        psbt,
+                        self.model.as_settings().network(),
+                    ))
+                });
+                // Update latest change index in wallet settings by sending message to the wallet component
+                if self
+                    .model
+                    .as_wallet_mut()
+                    .update_next_change_index(change_index)
+                {
+                    self.save();
+                }
                 return;
             }
             pay::Msg::Response(ResponseType::Cancel) => {
@@ -394,7 +407,7 @@ impl Widget for Component {
         widgets.update_ui(&model);
         widgets.show();
 
-        let glade_src = include_str!("../pay/pay.glade");
+        let glade_src = include_str!("pay/pay.glade");
         let pay_widgets = pay::Widgets::from_string(glade_src).expect("glade file broken");
 
         pay_widgets.connect(relm);

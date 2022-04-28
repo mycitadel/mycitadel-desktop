@@ -15,6 +15,7 @@ mod view_model;
 mod widget;
 
 pub use self::component::Component;
+pub(super) use view_model::ModelParam;
 pub(self) use view_model::ViewModel;
 pub(self) use widget::Widgets;
 

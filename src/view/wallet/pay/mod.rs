@@ -18,7 +18,7 @@ use ::wallet::psbt;
 use bitcoin::util::address;
 use gtk::ResponseType;
 
-use crate::view::pay::beneficiary_row::AmountError;
+use self::beneficiary_row::AmountError;
 
 #[derive(Msg)]
 pub enum Msg {

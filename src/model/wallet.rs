@@ -115,6 +115,13 @@ impl Wallet {
             .unwrap_or(&UnhardenedIndex::zero())
     }
 
+    pub fn update_next_change_index(&mut self, new_index: UnhardenedIndex) -> bool {
+        let index = self.last_indexes.entry(UnhardenedIndex::one()).or_default();
+        let prev_index = *index;
+        *index = new_index;
+        prev_index != new_index
+    }
+
     pub fn next_address(&self) -> Address {
         let (descriptor, _) = self
             .as_settings()

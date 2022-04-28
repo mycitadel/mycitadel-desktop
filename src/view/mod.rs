@@ -12,7 +12,6 @@
 pub mod about;
 pub mod devices;
 pub mod launch;
-pub mod pay;
 pub mod psbt;
 pub mod settings;
 pub mod wallet;

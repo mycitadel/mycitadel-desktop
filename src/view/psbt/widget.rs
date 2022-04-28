@@ -119,8 +119,13 @@ impl Widgets {
         sent += fee;
         let spent = sent - change;
 
-        self.header_bar
-            .set_subtitle(model.path().file_name().and_then(OsStr::to_str));
+        self.header_bar.set_subtitle(
+            model
+                .path()
+                .as_ref()
+                .and_then(|p| p.file_name())
+                .and_then(OsStr::to_str),
+        );
 
         self.txid_fld.set_text(&tx.txid().to_string());
         // TODO: Extract notes and description from proprietary keys

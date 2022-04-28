@@ -12,6 +12,7 @@
 use std::ffi::OsStr;
 use std::path::PathBuf;
 
+use ::wallet::psbt::Psbt;
 use gladis::Gladis;
 use gtk::{ApplicationWindow, ResponseType};
 use relm::{init, Relm, StreamHandle, Update, Widget};
@@ -50,7 +51,16 @@ impl Component {
     }
 
     fn open_psbt(&mut self, path: PathBuf, network: Option<PublicNetwork>) {
-        let psbt = init::<psbt::Component>((path, network.unwrap_or_default()))
+        let psbt =
+            init::<psbt::Component>(psbt::ModelParam::Open(path, network.unwrap_or_default()))
+                .expect("unable to instantiate wallet settings");
+        self.window_count += 1;
+        psbt.emit(psbt::Msg::RegisterLauncher(self.stream.clone()));
+        self.psbts.push(psbt);
+    }
+
+    fn create_psbt(&mut self, psbt: Psbt, network: PublicNetwork) {
+        let psbt = init::<psbt::Component>(psbt::ModelParam::Create(psbt, network))
             .expect("unable to instantiate wallet settings");
         self.window_count += 1;
         psbt.emit(psbt::Msg::RegisterLauncher(self.stream.clone()));
@@ -142,6 +152,7 @@ impl Update for Component {
             Msg::WalletCreated(path) => self.open_wallet(path),
             Msg::OpenWallet(path) => self.open_wallet(path),
             Msg::OpenPsbt(path) => self.open_psbt(path, default!()),
+            Msg::CreatePsbt(psbt, network) => self.create_psbt(psbt, network),
         }
     }
 }

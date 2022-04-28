@@ -23,9 +23,8 @@ use gtk::{
 };
 use relm::Relm;
 
-use super::{ElectrumState, Msg, ViewModel};
+use super::{pay, ElectrumState, Msg, ViewModel};
 use crate::model::{AddressInfo, ElectrumSec, ElectrumServer, WalletState};
-use crate::view::pay;
 use crate::worker::{HistoryTxid, UtxoTxid};
 
 impl ElectrumSec {
@@ -132,7 +131,7 @@ impl Widgets {
             relm,
             self.pay_btn,
             connect_clicked(_),
-            Msg::PayMsg(pay::Msg::Show)
+            Msg::Pay(pay::Msg::Show)
         );
         connect!(relm, self.refresh_btn, connect_clicked(_), Msg::Refresh);
         connect!(relm, self.about_mi, connect_activate(_), Msg::About);

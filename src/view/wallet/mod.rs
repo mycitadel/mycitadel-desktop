@@ -10,6 +10,7 @@
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
 mod component;
+mod pay;
 mod view_model;
 mod widget;
 
@@ -23,7 +24,7 @@ use std::path::PathBuf;
 use relm::StreamHandle;
 
 use crate::model::{DescriptorClass, ElectrumSec, ElectrumServer, Signer};
-use crate::view::{launch, pay};
+use crate::view::launch;
 use crate::worker::electrum;
 
 #[derive(Msg)]
@@ -36,7 +37,7 @@ pub enum Msg {
     Save,
     Settings,
     Update(Vec<Signer>, BTreeSet<DescriptorClass>, ElectrumServer),
-    PayMsg(pay::Msg),
+    Pay(pay::Msg),
     Receive,
     Refresh,
     Select(usize),

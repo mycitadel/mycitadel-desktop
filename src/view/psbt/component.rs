@@ -9,17 +9,16 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
-use crate::model::PublicNetwork;
-use bitcoin::consensus::Decodable;
+use std::{fs, io};
+
+use bitcoin::consensus::{Decodable, Encodable};
 use bitcoin::psbt::PartiallySignedTransaction;
 use gladis::Gladis;
 use gtk::ApplicationWindow;
 use relm::{Relm, StreamHandle, Update, Widget};
-use std::fs;
-use std::path::PathBuf;
 
-use super::{Msg, ViewModel, Widgets};
-use crate::view::{error_dlg, launch};
+use super::{ModelParam, Msg, ViewModel, Widgets};
+use crate::view::{error_dlg, file_save_dlg, launch};
 
 pub struct Component {
     model: ViewModel,
@@ -29,10 +28,34 @@ pub struct Component {
 
 impl Component {
     pub fn close(&self) {
+        // TODO: Check modified status and ask to save the file
         self.widgets.close();
         self.launcher_stream
             .as_ref()
             .map(|stream| stream.emit(launch::Msg::PsbtClosed));
+    }
+
+    pub fn save(&mut self) -> Result<bool, io::Error> {
+        let psbt = PartiallySignedTransaction::from(self.model.psbt().clone());
+        let path = match self.model.path() {
+            Some(path) => path,
+            None => {
+                let path = match file_save_dlg(
+                    self.widgets.as_root(),
+                    "Save transaction",
+                    "Partially signed bitcoin transaction",
+                    "*.psbt",
+                ) {
+                    None => return Ok(false),
+                    Some(path) => path,
+                };
+                self.model.set_path(path);
+                self.model.path().as_ref().expect("path was just set")
+            }
+        };
+        let file = fs::File::create(path)?;
+        psbt.consensus_encode(file)?;
+        Ok(true)
     }
 }
 
@@ -40,29 +63,35 @@ impl Update for Component {
     // Specify the model used for this widget.
     type Model = ViewModel;
     // Specify the model parameter used to init the model.
-    type ModelParam = (PathBuf, PublicNetwork);
+    type ModelParam = ModelParam;
     // Specify the type of the messages sent to the update function.
     type Msg = Msg;
 
     fn model(relm: &Relm<Self>, param: Self::ModelParam) -> Self::Model {
-        let (path, network) = param;
-        let file = match fs::File::open(&path) {
-            Ok(file) => file,
-            Err(err) => {
-                relm.stream()
-                    .emit(Msg::FileError(path.clone(), err.to_string()));
-                relm.stream().emit(Msg::Close);
-                return ViewModel::default();
+        let path = param.path();
+        let network = param.network();
+        let psbt = match param {
+            ModelParam::Open(ref path, _) => {
+                let file = match fs::File::open(&path) {
+                    Ok(file) => file,
+                    Err(err) => {
+                        relm.stream()
+                            .emit(Msg::FileError(path.clone(), err.to_string()));
+                        relm.stream().emit(Msg::Close);
+                        return ViewModel::default();
+                    }
+                };
+                match PartiallySignedTransaction::consensus_decode(&file) {
+                    Ok(psbt) => psbt.into(),
+                    Err(err) => {
+                        relm.stream()
+                            .emit(Msg::FileError(path.clone(), err.to_string()));
+                        relm.stream().emit(Msg::Close);
+                        return ViewModel::default();
+                    }
+                }
             }
-        };
-        let psbt = match PartiallySignedTransaction::consensus_decode(&file) {
-            Ok(psbt) => psbt,
-            Err(err) => {
-                relm.stream()
-                    .emit(Msg::FileError(path.clone(), err.to_string()));
-                relm.stream().emit(Msg::Close);
-                return ViewModel::default();
-            }
+            ModelParam::Create(psbt, _) => psbt,
         };
         ViewModel::with(psbt.into(), path, network)
     }

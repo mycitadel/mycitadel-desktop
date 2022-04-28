@@ -11,13 +11,10 @@
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;
-use std::{fs, io};
 
-use bitcoin::consensus::Encodable;
 use bitcoin::hashes::Hash;
 use bitcoin::psbt::raw::ProprietaryKey;
 use bitcoin::psbt::serialize::Serialize;
-use bitcoin::psbt::PartiallySignedTransaction;
 use bitcoin::util::bip32::Fingerprint;
 use bitcoin::{secp256k1, XOnlyPublicKey, XpubIdentifier};
 use miniscript::ToPublicKey;
@@ -29,16 +26,40 @@ use crate::view::psbt::sign_row::Signing;
 
 pub const MC_PSBT_GLOBAL_SIGNER_NAME: u8 = 0;
 
+#[derive(Debug)]
+pub enum ModelParam {
+    Open(PathBuf, PublicNetwork),
+    Create(Psbt, PublicNetwork),
+}
+
+impl ModelParam {
+    pub fn network(&self) -> PublicNetwork {
+        match self {
+            ModelParam::Open(_, network) | ModelParam::Create(_, network) => *network,
+        }
+    }
+
+    pub fn path(&self) -> Option<PathBuf> {
+        match self {
+            ModelParam::Open(path, _) => Some(path.clone()),
+            ModelParam::Create(_, _) => None,
+        }
+    }
+}
+
 #[derive(Getters, Default)]
 pub struct ViewModel {
     psbt: Psbt,
-    path: PathBuf,
+    path: Option<PathBuf>,
     signing: SigningModel,
+    #[getter(as_copy)]
     network: PublicNetwork,
+    #[getter(prefix = "is_", as_copy)]
+    modified: bool,
 }
 
 impl ViewModel {
-    pub fn with(psbt: Psbt, path: PathBuf, network: PublicNetwork) -> ViewModel {
+    pub fn with(psbt: Psbt, path: Option<PathBuf>, network: PublicNetwork) -> ViewModel {
         let mut keys = BTreeMap::<Fingerprint, (Fingerprint, u32, u32)>::new();
         let mut bpk = BTreeMap::<secp256k1::PublicKey, Fingerprint>::new();
         let mut xpk = BTreeMap::<XOnlyPublicKey, Fingerprint>::new();
@@ -91,6 +112,7 @@ impl ViewModel {
         }
 
         ViewModel {
+            modified: path.is_none(),
             psbt,
             path,
             signing,
@@ -98,9 +120,7 @@ impl ViewModel {
         }
     }
 
-    pub fn save(&mut self) -> Result<usize, io::Error> {
-        let psbt = PartiallySignedTransaction::from(self.psbt.clone());
-        let file = fs::File::create(&self.path)?;
-        psbt.consensus_encode(file)
+    pub fn set_path(&mut self, path: PathBuf) {
+        self.path = Some(path);
     }
 }

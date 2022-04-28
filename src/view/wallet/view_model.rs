@@ -12,11 +12,11 @@
 use std::collections::BTreeSet;
 use std::path::PathBuf;
 
+use super::pay::beneficiary_row::BeneficiaryModel;
 use crate::model::{
     file, DescriptorClass, DescriptorError, ElectrumServer, FileDocument, Signer, Wallet,
     WalletSettings,
 };
-use crate::view::pay::beneficiary_row::BeneficiaryModel;
 
 #[derive(Getters)]
 pub struct ViewModel {
