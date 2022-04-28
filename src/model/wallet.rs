@@ -793,7 +793,9 @@ impl SpendingCondition {
     }
 }
 
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Display, From)]
+#[derive(
+    Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Display, From
+)]
 #[derive(StrictEncode, StrictDecode)]
 #[display(inner)]
 pub enum DerivationType {
@@ -806,6 +808,15 @@ pub enum DerivationType {
 impl Default for DerivationType {
     fn default() -> Self {
         DerivationType::Bip43(Bip43::Bip48Native)
+    }
+}
+
+impl DerivationType {
+    pub fn bip43(self) -> Option<Bip43> {
+        match self {
+            DerivationType::LnpBp(_) => None,
+            DerivationType::Bip43(bip43) => Some(bip43),
+        }
     }
 }
 

@@ -146,6 +146,7 @@ impl Update for Component {
                 self.widgets.update_signer_details(
                     signer.map(|s| (s, self.model.derivation_for(s))),
                     self.model.network,
+                    self.model.bip43(),
                 );
                 self.model.active_signer = signer.cloned();
                 return;
@@ -288,7 +289,8 @@ impl Update for Component {
                 self.widgets
                     .remove_signer()
                     .map(|index| self.model.signers.remove(index));
-                self.widgets.update_signer_details(None, self.model.network);
+                self.widgets
+                    .update_signer_details(None, self.model.network, self.model.bip43());
             }
             Msg::SignerFingerprintChange => {
                 let fingerprint = match Fingerprint::from_str(&self.widgets.signer_fingerprint()) {

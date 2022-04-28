@@ -23,7 +23,7 @@ use gtk::{
 };
 use miniscript::Descriptor;
 use relm::{Relm, Sender};
-use wallet::hd::{DerivationStandard, HardenedIndex, SegmentIndexes, TrackingAccount};
+use wallet::hd::{Bip43, DerivationStandard, HardenedIndex, SegmentIndexes, TrackingAccount};
 
 use super::{
     spending_row, spending_row::SpendingModel, ElectrumModel, ElectrumPreset, Msg, ViewModel,
@@ -119,7 +119,7 @@ impl Widgets {
         // New wallet
         if let Some(ref template) = model.template {
             self.update_template(template);
-            self.update_signer_details(None, template.network);
+            self.update_signer_details(None, template.network, template.bip43());
             self.pages.set_page(0);
         } else {
             self.signers_tb.set_sensitive(false);
@@ -153,7 +153,7 @@ impl Widgets {
         self.update_network();
 
         self.update_signers(&model.signers);
-        self.update_signer_details(None, model.network);
+        self.update_signer_details(None, model.network, model.bip43());
         self.update_descr_classes(&model.descriptor_classes);
         self.update_descriptor(model.descriptor.as_ref(), model.export_lnpbp);
 
@@ -594,6 +594,7 @@ impl Widgets {
         &self,
         details: Option<(&Signer, TrackingAccount)>,
         network: PublicNetwork,
+        standard: Bip43,
     ) {
         let signer = details.as_ref().map(|d| d.0);
 
@@ -630,7 +631,14 @@ impl Widgets {
 
         if let Some((signer, ref derivation)) = details {
             let origin_format = signer.origin_format(network);
+
+            gtk::prelude::ComboBoxTextExt::remove(&self.path_cmb, 3);
             gtk::prelude::ComboBoxTextExt::remove(&self.path_cmb, 2);
+            self.path_cmb.append(
+                Some("purpose"),
+                &standard.account_template_string(network.into()),
+            );
+
             self.account_stp.set_visible(true);
             self.account_stp.set_sensitive(false);
             self.path_fld.set_sensitive(false);
@@ -638,13 +646,7 @@ impl Widgets {
             let active_id = match origin_format {
                 OriginFormat::Master => Some("master"),
                 OriginFormat::SubMaster(_) => Some("account"),
-                OriginFormat::Standard(ref schema, _, network) => {
-                    self.path_cmb.append(
-                        Some("purpose"),
-                        &schema.account_template_string(network.into()),
-                    );
-                    Some("purpose")
-                }
+                OriginFormat::Standard(..) => Some("purpose"),
                 OriginFormat::Custom(ref path) => {
                     self.account_stp.set_visible(false);
                     self.path_fld.set_sensitive(true);

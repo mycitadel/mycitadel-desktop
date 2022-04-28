@@ -11,7 +11,7 @@
 
 use chrono::prelude::*;
 use std::collections::BTreeSet;
-use wallet::hd::Bip43;
+use wallet::hd::{Bip43, HardenedIndex, SegmentIndexes};
 
 use super::{DerivationType, PublicNetwork, SpendingCondition};
 use crate::model::{DescriptorClass, SigsReq};
@@ -157,5 +157,12 @@ impl WalletTemplate {
             conditions,
             network,
         }
+    }
+
+    pub fn bip43(&self) -> Bip43 {
+        // TODO: Fix this
+        self.default_derivation.bip43().unwrap_or(Bip43::Bip43 {
+            purpose: HardenedIndex::zero(),
+        })
     }
 }
