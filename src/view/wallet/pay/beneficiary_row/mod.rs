@@ -12,5 +12,5 @@
 mod view_model;
 mod widget;
 
-pub use view_model::{AmountError, Beneficiary, BeneficiaryModel};
+pub use view_model::{Beneficiary, BeneficiaryModel};
 pub use widget::RowWidgets;

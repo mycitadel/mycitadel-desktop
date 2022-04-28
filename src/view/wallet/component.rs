@@ -78,7 +78,10 @@ impl Component {
                 .downcast::<Beneficiary>()
                 .expect("BeneficiaryModel is broken");
             let script_pubkey = beneficiary.address()?.script_pubkey();
-            let value = beneficiary.amount_sats()?;
+            let value = beneficiary.amount_sats();
+            if value == 0 {
+                return Err(pay::Error::Amount);
+            }
             output_value += value;
             txouts.push(TxOut {
                 script_pubkey,

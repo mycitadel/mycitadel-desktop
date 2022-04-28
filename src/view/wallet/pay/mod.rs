@@ -18,8 +18,6 @@ use ::wallet::psbt;
 use bitcoin::util::address;
 use gtk::ResponseType;
 
-use self::beneficiary_row::AmountError;
-
 #[derive(Msg)]
 pub enum Msg {
     Show,
@@ -42,8 +40,7 @@ pub enum Error {
     #[from(address::Error)]
     Address,
 
-    /// One or more of payment amounts are invalid (please see exclamation marks next to the addresses).
-    #[from(AmountError)]
+    /// One or more of payment amounts are zeros.
     Amount,
 
     /// Internal error (wallet descriptor inconsistency)
