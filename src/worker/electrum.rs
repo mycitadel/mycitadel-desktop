@@ -16,14 +16,14 @@ use std::time::Duration;
 use std::{io, thread};
 
 use amplify::Wrapper;
-use bitcoin::{Transaction, Txid};
+use bitcoin::{OutPoint, Transaction, Txid};
 use electrum_client::{Client as ElectrumClient, ElectrumApi, HeaderNotification};
 use relm::Sender;
-use wallet::address::address::AddressCompat;
+use wallet::address::AddressCompat;
 use wallet::hd::{SegmentIndexes, UnhardenedIndex};
 use wallet::scripts::PubkeyScript;
 
-use crate::model::{ElectrumServer, WalletSettings};
+use crate::model::{ElectrumServer, Prevout, WalletSettings};
 
 enum Cmd {
     Sync,
@@ -71,12 +71,35 @@ pub struct HistoryTxid {
 pub struct UtxoTxid {
     pub txid: Txid,
     pub height: u32,
-    pub pos: u32,
+    pub vout: u32,
     pub value: u64,
     #[cfg_attr(feature = "serde", serde(with = "serde_with::rust::display_fromstr"))]
     pub address: AddressCompat,
     pub index: UnhardenedIndex,
     pub change: bool,
+}
+
+impl UtxoTxid {
+    pub fn outpoint(&self) -> OutPoint {
+        OutPoint::new(self.txid, self.vout)
+    }
+}
+
+impl From<&UtxoTxid> for Prevout {
+    fn from(utxo: &UtxoTxid) -> Prevout {
+        Prevout {
+            outpoint: utxo.outpoint(),
+            amount: utxo.value,
+            change: utxo.change,
+            index: utxo.index,
+        }
+    }
+}
+
+impl From<UtxoTxid> for Prevout {
+    fn from(utxo: UtxoTxid) -> Prevout {
+        Prevout::from(&utxo)
+    }
 }
 
 pub struct ElectrumWorker {
@@ -249,7 +272,7 @@ pub fn electrum_sync(
                     utxo.into_iter().map(move |res| UtxoTxid {
                         txid: res.tx_hash,
                         height: res.height as u32,
-                        pos: res.tx_pos as u32,
+                        vout: res.tx_pos as u32,
                         value: res.value,
                         address: AddressCompat::from_script(&script.clone().into(), network)
                             .expect("broken descriptor"),

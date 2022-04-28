@@ -17,13 +17,16 @@ pub struct ViewModel {
     wallet: Wallet,
     #[getter(as_mut)]
     beneficiaries: BeneficiaryModel,
+    #[getter(as_copy)]
+    fee_rate: f32,
 }
 
 impl ViewModel {
     pub fn with(wallet: Wallet) -> ViewModel {
         ViewModel {
-            wallet,
+            fee_rate: wallet.ephemerals().fees.0,
             beneficiaries: BeneficiaryModel::new(),
+            wallet,
         }
     }
 

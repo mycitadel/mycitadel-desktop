@@ -12,6 +12,7 @@
 use bitcoin::util::address;
 use bitcoin::Address;
 use std::cell::RefCell;
+use std::num::ParseFloatError;
 use std::str::FromStr;
 
 use glib::subclass::prelude::*;
@@ -19,6 +20,17 @@ use gtk::prelude::*;
 use gtk::subclass::prelude::ListModelImpl;
 use gtk::{gio, glib};
 use wallet::scripts::address::AddressCompat;
+
+#[derive(Debug, Clone, PartialEq, Eq, From, Error, Display)]
+#[display(doc_comments)]
+pub enum AmountError {
+    #[from]
+    #[display(inner)]
+    Float(ParseFloatError),
+
+    /// amount include subsatoshi value, which can't be used in on-chain context
+    Subsatoshi,
+}
 
 // The actual data structure that stores our values. This is not accessible
 // directly from the outside.
@@ -123,6 +135,20 @@ impl Beneficiary {
 
     pub fn address_compat(&self) -> Result<AddressCompat, address::Error> {
         AddressCompat::from_str(&self.property::<String>("address"))
+    }
+
+    pub fn amount(&self) -> Result<f64, ParseFloatError> {
+        self.property::<String>("amount").parse()
+    }
+
+    pub fn amount_sats(&self) -> Result<u64, AmountError> {
+        let btc = self.amount()?;
+        let sats = (btc * 100_000_000.0) as u64;
+        if sats as f64 / 100_000_000.0 != btc {
+            Err(AmountError::Subsatoshi)
+        } else {
+            Ok(sats)
+        }
     }
 }
 

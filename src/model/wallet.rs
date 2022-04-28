@@ -30,6 +30,7 @@ use wallet::hd::{
     SegmentIndexes, TerminalStep, TrackingAccount, UnhardenedIndex,
 };
 use wallet::locks::{LockTime, SeqNo};
+use wallet::onchain::{ResolveTx, TxResolverError};
 use wallet::psbt::Psbt;
 use wallet::scripts::address::AddressCompat;
 use wallet::scripts::PubkeyScript;
@@ -39,7 +40,7 @@ use super::{
     DescriptorClass, PublicNetwork, Signer, SigsReq, TimelockReq, TimelockedSigs, ToTapTree,
     Unsatisfiable, XpubkeyCore,
 };
-use crate::model::{ElectrumSec, ElectrumServer};
+use crate::model::{ElectrumSec, ElectrumServer, Prevout};
 use crate::worker::{HistoryTxid, UtxoTxid};
 
 // TODO: Move to bpro library
@@ -107,6 +108,13 @@ impl Wallet {
             .unwrap_or(&UnhardenedIndex::zero())
     }
 
+    pub fn next_change_index(&self) -> UnhardenedIndex {
+        *self
+            .last_indexes
+            .get(&UnhardenedIndex::one())
+            .unwrap_or(&UnhardenedIndex::zero())
+    }
+
     pub fn next_address(&self) -> Address {
         let (descriptor, _) = self
             .as_settings()
@@ -118,6 +126,25 @@ impl Wallet {
             &[UnhardenedIndex::zero(), self.next_default_index()],
         )
         .expect("unable to derive address for the wallet descriptor")
+    }
+
+    // TODO: Implement multiple coinselect algorithms
+    pub fn coinselect(&self, value: u64) -> Option<(BTreeSet<Prevout>, u64)> {
+        let mut prevouts = self.utxos.iter().map(Prevout::from).collect::<Vec<_>>();
+        prevouts.sort_by_key(|p| p.amount);
+        let mut acc = 0u64;
+        let prevouts = prevouts
+            .into_iter()
+            .take_while(|p| {
+                acc += p.amount;
+                acc < value
+            })
+            .collect();
+        if acc < value {
+            None
+        } else {
+            Some((prevouts, acc))
+        }
     }
 
     pub fn address_info(&self) -> Vec<AddressInfo> {
@@ -193,7 +220,7 @@ impl Wallet {
     }
 
     pub fn update_fees(&mut self, f0: f64, f1: f64, f2: f64) {
-        self.ephemerals.fees = (f0, f1, f2);
+        self.ephemerals.fees = (f0 as f32, f1 as f32, f2 as f32);
     }
 
     pub fn update_history(&mut self, batch: Vec<HistoryTxid>) {
@@ -228,6 +255,15 @@ impl Wallet {
 
     pub fn update_electrum(&mut self, electrum: ElectrumServer) -> bool {
         self.settings.update_electrum(electrum)
+    }
+}
+
+impl ResolveTx for Wallet {
+    fn resolve_tx(&self, txid: &Txid) -> Result<Transaction, TxResolverError> {
+        self.transactions
+            .get(txid)
+            .cloned()
+            .ok_or(TxResolverError::with(*txid))
     }
 }
 
@@ -949,7 +985,7 @@ pub struct Sats(u64);
     serde(crate = "serde_crate")
 )]
 pub struct WalletEphemerals {
-    pub fees: (f64, f64, f64),
+    pub fees: (f32, f32, f32),
     pub fiat: String,
     pub exchange_rate: f64,
 }
@@ -966,9 +1002,9 @@ impl StrictDecode for WalletEphemerals {
     fn strict_decode<D: Read>(mut d: D) -> Result<Self, strict_encoding::Error> {
         Ok(WalletEphemerals {
             fees: (
-                f64::strict_decode(&mut d)?,
-                f64::strict_decode(&mut d)?,
-                f64::strict_decode(&mut d)?,
+                f32::strict_decode(&mut d)?,
+                f32::strict_decode(&mut d)?,
+                f32::strict_decode(&mut d)?,
             ),
             fiat: String::strict_decode(&mut d)?,
             exchange_rate: f64::strict_decode(&mut d)?,

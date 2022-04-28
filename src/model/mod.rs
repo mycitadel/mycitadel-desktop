@@ -28,8 +28,8 @@ pub use file::FileDocument;
 pub use taptree::ToTapTree;
 pub use template::{Requirement, WalletTemplate};
 pub use types::{
-    DescriptorClass, Error, HardwareDevice, HardwareList, OriginFormat, Ownership, PublicNetwork,
-    Signer, SigsReq, TimelockReq, TimelockedSigs,
+    DescriptorClass, Error, HardwareDevice, HardwareList, OriginFormat, Ownership, Prevout,
+    PublicNetwork, Signer, SigsReq, TimelockReq, TimelockedSigs,
 };
 pub use ui::Notification;
 pub use unsatisfiable::Unsatisfiable;

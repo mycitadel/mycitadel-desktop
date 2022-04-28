@@ -17,14 +17,15 @@ use std::hash::{Hash, Hasher};
 use crate::model::XpubkeyCore;
 use bitcoin::secp256k1::PublicKey;
 use bitcoin::util::bip32::{ChainCode, ChildNumber, DerivationPath, ExtendedPubKey, Fingerprint};
-use bitcoin::Network;
+use bitcoin::{Network, OutPoint};
 use chrono::{DateTime, Utc};
 use hwi::error::Error as HwiError;
 use hwi::HWIDevice;
 use miniscript::descriptor::DescriptorType;
 use wallet::hd::standards::DerivationBlockchain;
 use wallet::hd::{
-    AccountStep, Bip43, DerivationStandard, HardenedIndex, TerminalStep, TrackingAccount, XpubRef,
+    AccountStep, Bip43, DerivationStandard, DerivationSubpath, HardenedIndex, SegmentIndexes,
+    TerminalStep, TrackingAccount, UnhardenedIndex, XpubRef,
 };
 
 // TODO: Move to descriptor wallet or BPro
@@ -550,4 +551,27 @@ impl Default for TimelockReq {
 pub struct TimelockedSigs {
     pub sigs: SigsReq,
     pub timelock: TimelockReq,
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub struct Prevout {
+    pub outpoint: OutPoint,
+    pub amount: u64,
+    pub change: bool,
+    pub index: UnhardenedIndex,
+}
+
+impl Prevout {
+    pub fn terminal(&self) -> DerivationSubpath<UnhardenedIndex> {
+        DerivationSubpath::from(
+            &[
+                if self.change {
+                    UnhardenedIndex::one()
+                } else {
+                    UnhardenedIndex::zero()
+                },
+                self.index,
+            ][..],
+        )
+    }
 }

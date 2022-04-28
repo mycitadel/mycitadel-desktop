@@ -22,7 +22,7 @@ use gtk::{
 use miniscript::{Legacy, Miniscript, Segwitv0};
 use relm::Relm;
 use std::ffi::OsStr;
-use wallet::address::address::AddressFormat;
+use wallet::address::AddressFormat;
 use wallet::psbt::Psbt;
 
 use super::{Msg, ViewModel};

@@ -16,7 +16,7 @@ use gtk::prelude::*;
 use gtk::{glib, Entry, ListBoxRow};
 use relm::Relm;
 use std::str::FromStr;
-use wallet::address::address::AddressCompat;
+use wallet::address::AddressCompat;
 
 use super::Beneficiary;
 use crate::view::pay;
@@ -68,7 +68,6 @@ impl RowWidgets {
         self.address_fld
             .bind_property("text", beneficiary, "address")
             .transform_to(move |binding, value| {
-                let item: Beneficiary = binding.target().unwrap().downcast().unwrap();
                 let address_fld: Entry = binding.source().unwrap().downcast().unwrap();
 
                 let addr_str = address_fld.text();

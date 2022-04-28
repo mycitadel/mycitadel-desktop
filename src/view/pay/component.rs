@@ -9,16 +9,49 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
-use ::wallet::psbt::Psbt;
+use ::wallet::descriptors::InputDescriptor;
+use ::wallet::locks::{LockTime, SeqNo};
+use ::wallet::psbt;
+use ::wallet::psbt::{Construct, Psbt};
+use ::wallet::scripts::PubkeyScript;
+use bitcoin::blockdata::constants::WITNESS_SCALE_FACTOR;
+use bitcoin::policy::DUST_RELAY_TX_FEE;
+use bitcoin::secp256k1::SECP256K1;
+use bitcoin::util::address;
+use bitcoin::{EcdsaSighashType, Transaction, TxIn, TxOut};
 use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{Dialog, ResponseType};
+use miniscript::DescriptorTrait;
 use relm::{Relm, StreamHandle, Update, Widget};
 
 use super::{Msg, ViewModel, Widgets};
 use crate::model::Wallet;
-use crate::view::pay::beneficiary_row::Beneficiary;
+use crate::view::pay::beneficiary_row::{AmountError, Beneficiary};
 use crate::view::wallet;
+
+#[derive(Debug, Display, From, Error)]
+#[display(doc_comments)]
+pub enum Error {
+    /// available wallet funds are insufficient to cover the transaction
+    InsufficientFunds,
+
+    /// one or more of beneficiaries has incorrect address (please see exclamation marks next to the addresses).
+    #[from(address::Error)]
+    Address,
+
+    /// one or more of payment amounts are invalid (please see exclamation marks next to the addresses).
+    #[from(AmountError)]
+    Amount,
+
+    /// internal error (wallet descriptor inconsistency)
+    #[from]
+    Miniscript(miniscript::Error),
+
+    /// internal error (PSBT constructor inconsistency)
+    #[from]
+    PsbtConstruct(psbt::construct::Error),
+}
 
 pub struct Component {
     model: ViewModel,
@@ -27,15 +60,95 @@ pub struct Component {
 }
 
 impl Component {
-    pub fn compose_psbt(&self) -> Option<Psbt> {
-        for no in 0..self.model.beneficiaries().n_items() {
-            let item = self
+    pub fn compose_psbt(&mut self) -> Result<Psbt, Error> {
+        let wallet = self.model.as_wallet();
+
+        let output_count = self.model.beneficiaries().n_items();
+        let mut txouts = Vec::with_capacity(output_count as usize);
+        let mut output_value = 0u64;
+        for no in 0..output_count {
+            let beneficiary = self
                 .model
                 .beneficiaries()
                 .item(no)
+                .expect("BeneficiaryModel is broken")
+                .downcast::<Beneficiary>()
                 .expect("BeneficiaryModel is broken");
+            let script_pubkey = beneficiary.address()?.script_pubkey();
+            let value = beneficiary.amount_sats()?;
+            output_value += value;
+            txouts.push(TxOut {
+                script_pubkey,
+                value,
+            });
         }
-        None
+
+        // TODO: Support constructing PSBTs from multiple descriptors (at descriptor-wallet lib)
+        let (descriptor, _) = self.model.as_settings().descriptors_all()?;
+        let lock_time = LockTime::since_now();
+        let change_index = wallet.next_change_index();
+
+        let fee_rate = self.model.fee_rate();
+        let mut fee = DUST_RELAY_TX_FEE;
+        let mut next_fee = fee;
+        let mut prevouts = bset! {};
+        let satisfaciton_weights = descriptor.max_satisfaction_weight()? as f32;
+        // TODO: Test that his fee selection algorithm has deterministic end
+        while fee <= DUST_RELAY_TX_FEE && fee != next_fee {
+            fee = next_fee;
+            prevouts = wallet
+                .coinselect(output_value + fee as u64)
+                .ok_or(Error::InsufficientFunds)?
+                .0;
+            let txins = prevouts
+                .iter()
+                .map(|p| TxIn {
+                    previous_output: p.outpoint,
+                    script_sig: none!(),
+                    sequence: 0, // TODO: Support spending from CSV outputs
+                    witness: none!(),
+                })
+                .collect::<Vec<_>>();
+
+            let tx = Transaction {
+                version: 1,
+                lock_time: lock_time.as_u32(),
+                input: txins,
+                output: txouts.clone(),
+            };
+            let vsize = tx.vsize() as f32 + satisfaciton_weights / WITNESS_SCALE_FACTOR as f32;
+            next_fee = (fee_rate * vsize).ceil() as u32;
+        }
+
+        let inputs = prevouts
+            .into_iter()
+            .map(|prevout| InputDescriptor {
+                outpoint: prevout.outpoint,
+                terminal: prevout.terminal(),
+                seq_no: SeqNo::default(), // TODO: Support spending from CSV outputs
+                tweak: None,
+                sighash_type: EcdsaSighashType::All, // TODO: Support more sighashes in the UI
+            })
+            .collect::<Vec<_>>();
+        let outputs = txouts
+            .into_iter()
+            .map(|txout| (PubkeyScript::from(txout.script_pubkey), txout.value))
+            .collect::<Vec<_>>();
+
+        let psbt = Psbt::construct(
+            &SECP256K1,
+            &descriptor,
+            lock_time,
+            &inputs,
+            &outputs,
+            change_index,
+            fee as u64,
+            wallet,
+        )?;
+
+        // TODO: Update latest change index in wallet settings and save the wallet by sending message to the wallet
+
+        Ok(psbt)
     }
 }
 

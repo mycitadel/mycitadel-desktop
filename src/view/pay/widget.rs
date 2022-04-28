@@ -101,6 +101,8 @@ impl Widgets {
             connect_delete_event(_, _),
             return (None, Inhibit(true))
         );
+
+        // TODO: Connect fee editing
     }
 
     pub(super) fn bind_beneficiary_model(&self, relm: &Relm<super::Component>, model: &ViewModel) {
