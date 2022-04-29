@@ -1099,6 +1099,19 @@
             <property name="tab-fill">False</property>
           </packing>
         </child>
+        <child type="action-end">
+          <object class="GtkButton" id="about_btn">
+            <property name="label" translatable="yes">About</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <property name="valign">center</property>
+            <property name="margin-end">13</property>
+          </object>
+          <packing>
+            <property name="tab-fill">False</property>
+          </packing>
+        </child>
       </object>
     </child>
     <child type="titlebar">
@@ -1114,18 +1127,6 @@
             <property name="can-focus">False</property>
             <property name="pixbuf">res/applogo.png</property>
           </object>
-        </child>
-        <child>
-          <object class="GtkButton" id="about_btn">
-            <property name="label" translatable="yes">About</property>
-            <property name="visible">True</property>
-            <property name="can-focus">True</property>
-            <property name="receives-default">True</property>
-          </object>
-          <packing>
-            <property name="pack-type">end</property>
-            <property name="position">1</property>
-          </packing>
         </child>
       </object>
     </child>

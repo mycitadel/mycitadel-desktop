@@ -1507,7 +1507,6 @@ volume</property>
         <child>
           <object class="GtkButton" id="settings_btn">
             <property name="label" translatable="yes">Settings</property>
-            <property name="visible">True</property>
             <property name="can-focus">True</property>
             <property name="receives-default">True</property>
             <property name="image">settings_img</property>

@@ -101,13 +101,10 @@ impl Update for Component {
             Msg::Sign(_output_no) => {
                 // TODO: Implement signing
             }
-
-            Msg::Close => self.close(),
-            Msg::About => {
-                self.launcher_stream
-                    .as_ref()
-                    .map(|stream| stream.emit(launch::Msg::About));
+            Msg::Launcher(msg) => {
+                self.launcher_stream.as_ref().map(|stream| stream.emit(msg));
             }
+            Msg::Close => self.close(),
             Msg::FileError(path, err) => {
                 self.widgets.hide();
                 error_dlg(

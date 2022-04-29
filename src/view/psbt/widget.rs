@@ -9,23 +9,26 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
-use crate::view::psbt::sign_row;
-use crate::view::psbt::sign_row::SigningModel;
+use std::ffi::OsStr;
+
+use ::wallet::address::AddressFormat;
+use ::wallet::psbt::Psbt;
 use bitcoin::blockdata::constants::WITNESS_SCALE_FACTOR;
 use bitcoin::Address;
 use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{
-    ApplicationWindow, Button, Entry, Expander, HeaderBar, Label, LevelBar, ListBox, ListStore,
-    MenuItem, TextView, TreeView,
+    gdk, ApplicationWindow, Button, Entry, Expander, HeaderBar, Label, LevelBar, ListBox,
+    ListStore, MenuItem, TextView, TreeView,
 };
 use miniscript::{Legacy, Miniscript, Segwitv0};
 use relm::Relm;
-use std::ffi::OsStr;
-use wallet::address::AddressFormat;
-use wallet::psbt::Psbt;
 
 use super::{Msg, ViewModel};
+use crate::view::launch;
+use crate::view::launch::Page;
+use crate::view::psbt::sign_row;
+use crate::view::psbt::sign_row::SigningModel;
 
 // Create the structure that holds the widgets used in the view.
 #[derive(Clone, Gladis)]
@@ -191,7 +194,54 @@ impl Widgets {
     }
 
     pub(super) fn connect(&self, relm: &Relm<super::Component>) {
-        connect!(relm, self.about_mi, connect_activate(_), Msg::About);
+        connect!(
+            relm,
+            self.new_wallet_mi,
+            connect_activate(_),
+            Msg::Launcher(launch::Msg::Template(5))
+        );
+        connect!(
+            relm,
+            self.new_template_mi,
+            connect_activate(_),
+            Msg::Launcher(launch::Msg::Show(Page::Template))
+        );
+        connect!(
+            relm,
+            self.open_wallet_mi,
+            connect_activate(_),
+            Msg::Launcher(launch::Msg::Wallet)
+        );
+        connect!(
+            relm,
+            self.open_psbt_mi,
+            connect_activate(_),
+            Msg::Launcher(launch::Msg::Psbt(None))
+        );
+        connect!(
+            relm,
+            self.import_mi,
+            connect_activate(_),
+            Msg::Launcher(launch::Msg::Show(Page::Import))
+        );
+        connect!(
+            relm,
+            self.launcher_mi,
+            connect_activate(_),
+            Msg::Launcher(launch::Msg::Show(Page::Template))
+        );
+        connect!(
+            relm,
+            self.about_mi,
+            connect_activate(_),
+            Msg::Launcher(launch::Msg::About)
+        );
+
+        self.txid_fld.connect_icon_press(|entry, _, _| {
+            let val = entry.text();
+            gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).set_text(&val);
+        });
+
         connect!(
             relm,
             self.window,
