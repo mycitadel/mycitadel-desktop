@@ -18,6 +18,19 @@ use ::wallet::psbt;
 use bitcoin::util::address;
 use gtk::ResponseType;
 
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
+#[display(doc_comments)]
+pub enum FeeRate {
+    /// In one block
+    OneBlock,
+    /// In two blocks
+    TwoBlocks,
+    /// In three blocks
+    ThreeBlocks,
+    /// Unknown
+    Unknown,
+}
+
 #[derive(Msg)]
 pub enum Msg {
     Show,
@@ -25,8 +38,8 @@ pub enum Msg {
     BeneficiaryRemove,
     BeneficiaryEdit(u32),
     SelectBeneficiary(u32),
-    FeeChange,
-    FeeSetBlocks(u8),
+    FeeSet,
+    FeeSetBlocks(FeeRate),
     Response(ResponseType),
 }
 
@@ -39,6 +52,9 @@ pub enum Error {
     /// One or more of beneficiaries has incorrect address (please see exclamation marks next to the addresses).
     #[from(address::Error)]
     Address,
+
+    /// Please add at least one beneficiary.
+    NoBeneficiaries,
 
     /// One or more of payment amounts are zeros.
     Amount,

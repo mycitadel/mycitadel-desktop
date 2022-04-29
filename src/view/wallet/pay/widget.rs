@@ -12,12 +12,12 @@
 use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{
-    Box, Button, Dialog, HeaderBar, Image, Label, ListBox, ListBoxRow, Menu, RadioMenuItem,
-    ResponseType, Scale, SpinButton, ToolButton,
+    Adjustment, Box, Button, Dialog, HeaderBar, Image, Label, ListBox, ListBoxRow, Menu,
+    PositionType, RadioMenuItem, ResponseType, Scale, SpinButton, ToolButton,
 };
 use relm::Relm;
 
-use super::{beneficiary_row, Msg};
+use super::{beneficiary_row, FeeRate, Msg};
 use crate::view::wallet;
 use crate::view::NotificationBoxExt;
 
@@ -41,24 +41,29 @@ pub struct Widgets {
 
     total_lbl: Label,
     weight_lbl: Label,
+    fee_adj: Adjustment,
     fee_lbl: Label,
     fee_scale: Scale,
     fee_stp: SpinButton,
     fee_menu: Menu,
+    time_lbl: Label,
     block1_mi: RadioMenuItem,
     block2_mi: RadioMenuItem,
     block3_mi: RadioMenuItem,
-    unknown_mi: RadioMenuItem,
 }
 
 impl Widgets {
     pub fn init_ui(&self, model: &wallet::ViewModel) {
-        self.update_info(
-            model.fee_rate(),
-            model.as_wallet().ephemerals().fees,
-            model.vsize(),
-            None,
-        );
+        self.header_bar.set_subtitle(Some(&format!(
+            "{:.08} BTC available",
+            model.as_wallet().state().balance as f64 / 100_000_000.0
+        )));
+
+        let fees = model.as_wallet().ephemerals().fees;
+        self.fee_adj.set_upper(fees.0 as f64 * 2.0);
+        self.fee_adj.set_lower(fees.2 as f64 / 10.0);
+
+        self.update_info(model.fee_rate(), fees, model.vsize(), None);
     }
 
     pub fn show(&self) {
@@ -115,7 +120,36 @@ impl Widgets {
             return (None, Inhibit(true))
         );
 
-        // TODO: Connect fee editing
+        connect!(
+            relm,
+            self.fee_adj,
+            connect_value_changed(_),
+            wallet::Msg::Pay(Msg::FeeSet)
+        );
+        connect!(
+            relm,
+            self.block1_mi,
+            connect_activate(mi),
+            if mi.is_active() {
+                wallet::Msg::Pay(Msg::FeeSetBlocks(FeeRate::OneBlock));
+            }
+        );
+        connect!(
+            relm,
+            self.block2_mi,
+            connect_activate(mi),
+            if mi.is_active() {
+                wallet::Msg::Pay(Msg::FeeSetBlocks(FeeRate::TwoBlocks));
+            }
+        );
+        connect!(
+            relm,
+            self.block3_mi,
+            connect_activate(mi),
+            if mi.is_active() {
+                wallet::Msg::Pay(Msg::FeeSetBlocks(FeeRate::ThreeBlocks));
+            }
+        );
     }
 
     pub fn bind_beneficiary_model(
@@ -135,27 +169,47 @@ impl Widgets {
         self.prepare_btn.set_sensitive(paid.is_some());
 
         if let Some(paid) = paid {
-            self.weight_lbl
-                .set_text(&format!("{:.1} vkbytes", vsize / 1000.0));
+            let total_fee = (vsize * fee_rate) as f64;
+            let total = paid as f64 + total_fee;
+
+            self.weight_lbl.set_text(&format!("{:.0} vbytes", vsize));
             self.fee_lbl
-                .set_text(&format!("{:.08} BTC", vsize * fee_rate / 100_000_000.));
+                .set_text(&format!("{:.08} BTC", total_fee / 100_000_000.));
             self.total_lbl
-                .set_text(&format!("{:.08} BTC", paid as f64 / 100_000_000.));
+                .set_text(&format!("{:.08} BTC", total / 100_000_000.));
         } else {
             self.weight_lbl.set_text("unknown");
             self.fee_lbl.set_text("-");
             self.total_lbl.set_text("unknown");
         }
 
-        /*
-        fee_scale
-        fee_stp
-        fee_menu
-        block1_mi
-        block2_mi
-        block3_mi
-        unknown_mi
-         */
+        if self.fee_adj.value() as f32 != fee_rate {
+            self.fee_adj.set_value(fee_rate as f64);
+        }
+
+        self.fee_scale.clear_marks();
+        self.fee_scale
+            .add_mark(fees.0 as f64, PositionType::Bottom, None);
+        self.fee_scale
+            .add_mark(fees.1 as f64, PositionType::Bottom, None);
+        self.fee_scale
+            .add_mark(fees.2 as f64, PositionType::Bottom, None);
+
+        let ty = match fee_rate {
+            f if f >= fees.0 => FeeRate::OneBlock,
+            f if f >= fees.1 => FeeRate::TwoBlocks,
+            f if f >= fees.2 => FeeRate::ThreeBlocks,
+            _ => FeeRate::Unknown,
+        };
+
+        self.time_lbl.set_text(&ty.to_string());
+        self.block1_mi.set_active(ty == FeeRate::OneBlock);
+        self.block2_mi.set_active(ty == FeeRate::TwoBlocks);
+        self.block3_mi.set_active(ty == FeeRate::ThreeBlocks);
+    }
+
+    pub fn fee_rate(&self) -> f64 {
+        self.fee_adj.value()
     }
 
     pub fn select_beneficiary(&self, index: u32) {

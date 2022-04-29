@@ -233,7 +233,11 @@ impl Wallet {
     }
 
     pub fn update_fees(&mut self, f0: f64, f1: f64, f2: f64) {
-        self.ephemerals.fees = (f0 as f32, f1 as f32, f2 as f32);
+        self.ephemerals.fees = (
+            f0 as f32 * 100_000.0,
+            f1 as f32 * 100_000.0,
+            f2 as f32 * 100_000.0,
+        );
     }
 
     pub fn clear_utxos(&mut self) {

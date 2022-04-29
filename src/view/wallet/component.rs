@@ -29,6 +29,7 @@ use miniscript::DescriptorTrait;
 use wallet::hd::{SegmentIndexes, UnhardenedIndex};
 
 use super::pay::beneficiary_row::Beneficiary;
+use super::pay::FeeRate;
 use super::{pay, ElectrumState, Msg, ViewModel, Widgets};
 use crate::model::{AddressSource, FileDocument, Wallet};
 use crate::view::{error_dlg, launch, settings, NotificationBoxExt};
@@ -93,6 +94,10 @@ impl Component {
                 script_pubkey,
                 value,
             });
+        }
+
+        if output_value == 0 {
+            return Err(pay::Error::NoBeneficiaries);
         }
 
         // TODO: Support constructing PSBTs from multiple descriptors (at descriptor-wallet lib)
@@ -169,14 +174,27 @@ impl Component {
 
     pub fn sync_pay(&mut self) -> Option<(Psbt, UnhardenedIndex)> {
         let res = self.compose_psbt();
+
+        let output_count = self.model.beneficiaries().n_items();
+        let mut total = 0u64;
+        for no in 0..output_count {
+            let beneficiary = self
+                .model
+                .beneficiaries()
+                .item(no)
+                .expect("BeneficiaryModel is broken")
+                .downcast::<Beneficiary>()
+                .expect("BeneficiaryModel is broken");
+            total += beneficiary.amount_sats();
+        }
+
         self.pay_widgets.update_info(
             self.model.fee_rate(),
             self.model.as_wallet().ephemerals().fees,
             self.model.vsize(),
-            res.as_ref()
-                .ok()
-                .map(|(psbt, _)| psbt.outputs.iter().map(|out| out.amount).sum()),
+            res.as_ref().ok().map(|_| total),
         );
+
         match res {
             Ok(data) => {
                 self.pay_widgets.hide_message();
@@ -373,9 +391,10 @@ impl Component {
             pay::Msg::Show => {
                 self.model.beneficiaries_mut().clear();
                 self.model.beneficiaries_mut().append(&Beneficiary::new());
+                self.model
+                    .set_fee_rate(self.model.as_wallet().ephemerals().fees.0);
                 self.pay_widgets.init_ui(&self.model);
                 self.pay_widgets.show();
-                return;
             }
             pay::Msg::Response(ResponseType::Ok) => {
                 let (psbt, change_index) = match self.sync_pay() {
@@ -397,15 +416,11 @@ impl Component {
                 {
                     self.save();
                 }
-                return;
             }
             pay::Msg::Response(ResponseType::Cancel) => {
                 self.pay_widgets.hide();
-                return;
             }
-            pay::Msg::Response(_) => {
-                return;
-            }
+            pay::Msg::Response(_) => {}
             _ => {} // Changes which update wallet tx
         }
 
@@ -423,9 +438,27 @@ impl Component {
                 self.pay_widgets.select_beneficiary(index);
                 /* Check correctness of the model data */
             }
-            pay::Msg::FeeChange => { /* Update fee and total tx amount */ }
-            pay::Msg::FeeSetBlocks(_) => { /* Update fee and total tx amount */ }
-            _ => {} // Changes which do not update wallet tx
+            pay::Msg::FeeSet => {
+                let fee_rate = self.pay_widgets.fee_rate();
+                if fee_rate as f32 == self.model.fee_rate() {
+                    return;
+                }
+                self.model.set_fee_rate(fee_rate as f32);
+            }
+            pay::Msg::FeeSetBlocks(ty) => {
+                let fees = self.model.as_wallet().ephemerals().fees;
+                let fee_rate = match ty {
+                    FeeRate::OneBlock => fees.0,
+                    FeeRate::TwoBlocks => fees.1,
+                    FeeRate::ThreeBlocks => fees.2,
+                    FeeRate::Unknown => unreachable!(),
+                };
+                if fee_rate == self.model.fee_rate() {
+                    return;
+                }
+                self.model.set_fee_rate(fee_rate);
+            }
+            _ => return, // Changes which do not update wallet tx
         }
 
         self.sync_pay();

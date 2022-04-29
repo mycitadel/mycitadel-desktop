@@ -83,6 +83,10 @@ impl ViewModel {
         self.vsize = vsize;
     }
 
+    pub fn set_fee_rate(&mut self, fee_rate: f32) {
+        self.fee_rate = fee_rate;
+    }
+
     pub fn update_descriptor(
         &mut self,
         signers: Vec<Signer>,
