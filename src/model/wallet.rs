@@ -105,17 +105,17 @@ impl Wallet {
     }
 
     pub fn next_default_index(&self) -> UnhardenedIndex {
-        *self
-            .last_indexes
+        self.last_indexes
             .get(&UnhardenedIndex::zero())
-            .unwrap_or(&UnhardenedIndex::zero())
+            .and_then(|index| index.checked_inc())
+            .unwrap_or(UnhardenedIndex::zero())
     }
 
     pub fn next_change_index(&self) -> UnhardenedIndex {
-        *self
-            .last_indexes
+        self.last_indexes
             .get(&UnhardenedIndex::one())
-            .unwrap_or(&UnhardenedIndex::zero())
+            .and_then(|index| index.checked_inc())
+            .unwrap_or(UnhardenedIndex::zero())
     }
 
     pub fn update_next_change_index(&mut self, new_index: UnhardenedIndex) -> bool {
@@ -253,6 +253,19 @@ impl Wallet {
         self.history = bset![];
         self.state.volume = 0;
         self.state.balance = self.utxos.iter().map(|utxo| utxo.value).sum::<u64>();
+
+        // 0. Check last used addresses
+        self.last_indexes = zero!();
+        for (addr_src, set) in addr_buffer {
+            if set.is_empty() {
+                continue;
+            }
+            let idx = self
+                .last_indexes
+                .entry(addr_src.change_index())
+                .or_default();
+            *idx = *idx.deref().max(&addr_src.index);
+        }
 
         // 1. Build reverse index
         let txid2tx = tx_buffer

@@ -17,8 +17,8 @@ use electrum_client::HeaderNotification;
 use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{
-    Adjustment, ApplicationWindow, Button, CheckButton, Entry, HeaderBar, Image, Label, ListStore,
-    MenuItem, Popover, SpinButton, Spinner, Statusbar, TreeView,
+    gdk, Adjustment, ApplicationWindow, Button, CheckButton, Entry, HeaderBar, Image, Label,
+    ListStore, MenuItem, Popover, SpinButton, Spinner, Statusbar, TreeView,
 };
 use relm::Relm;
 use wallet::hd::SegmentIndexes;
@@ -157,6 +157,11 @@ impl Widgets {
             Msg::InvoiceIndex(adj.value() as u32)
         );
 
+        self.address_fld.connect_icon_press(|entry, _, _| {
+            let val = entry.text();
+            gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).set_text(&val);
+        });
+
         connect!(
             relm,
             self.window,
@@ -183,22 +188,29 @@ impl Widgets {
         let wallet = model.as_wallet();
         let next_index = wallet.next_default_index();
         let address = wallet.indexed_address(invoice.index.unwrap_or(next_index));
+        let index_reuse = invoice.index.unwrap_or(next_index) >= next_index;
 
         self.amount_chk.set_active(invoice.amount.is_some());
-        self.index_chk.set_active(invoice.index.is_some());
         self.amount_stp.set_sensitive(invoice.amount.is_some());
-        self.index_chk.set_sensitive(invoice.index.is_some());
+
+        self.index_chk.set_active(invoice.index.is_some());
+        self.index_stp.set_sensitive(invoice.index.is_some());
         self.index_adj
             .set_upper((next_index.first_index() + 19) as f64);
         self.index_adj
             .set_value(invoice.index.unwrap_or(next_index).first_index() as f64);
-        self.index_img.set_visible(
-            invoice
-                .index
-                .map(|index| index <= next_index)
-                .unwrap_or(true),
-        );
-        self.address_fld.set_text(&address.to_string());
+        self.index_img.set_visible(!index_reuse);
+
+        let invoice_str = match invoice.amount {
+            Some(amount) => format!(
+                "bitcoin:{}?amount={}",
+                address,
+                amount as f64 / 100_000_000.0
+            ),
+            None => address.to_string(),
+        };
+
+        self.address_fld.set_text(&invoice_str);
     }
 
     pub fn update_electrum_server(&self, electrum: &ElectrumServer) {

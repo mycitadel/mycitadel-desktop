@@ -1031,7 +1031,7 @@ volume</property>
                     <child>
                       <object class="GtkTreeViewColumn">
                         <property name="resizable">True</property>
-                        <property name="title" translatable="yes"># of times used</property>
+                        <property name="title" translatable="yes"># of uses</property>
                         <property name="clickable">True</property>
                         <property name="reorderable">True</property>
                         <property name="sort-column-id">3</property>
@@ -1048,7 +1048,7 @@ volume</property>
                     <child>
                       <object class="GtkTreeViewColumn">
                         <property name="resizable">True</property>
-                        <property name="title" translatable="yes">Historical volume (BTC)</property>
+                        <property name="title" translatable="yes">Volume (BTC)</property>
                         <property name="clickable">True</property>
                         <property name="reorderable">True</property>
                         <property name="sort-column-id">2</property>
@@ -1065,7 +1065,7 @@ volume</property>
                     <child>
                       <object class="GtkTreeViewColumn">
                         <property name="resizable">True</property>
-                        <property name="title" translatable="yes">Current balance (BTC)</property>
+                        <property name="title" translatable="yes">Balance (BTC)</property>
                         <property name="clickable">True</property>
                         <property name="reorderable">True</property>
                         <property name="sort-column-id">1</property>

@@ -83,8 +83,16 @@ impl AddressSource {
         }
     }
 
+    pub fn change_index(self) -> UnhardenedIndex {
+        if self.change {
+            UnhardenedIndex::one()
+        } else {
+            UnhardenedIndex::zero()
+        }
+    }
+
     pub fn terminal_string(self) -> String {
-        format!("/{}/{}", if self.change { 1 } else { 0 }, self.index)
+        format!("/{}/{}", self.change_index(), self.index)
     }
 }
 
