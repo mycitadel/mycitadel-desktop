@@ -373,6 +373,7 @@
                             <child>
                               <object class="GtkCellRendererText" id="amount">
                                 <property name="alignment">right</property>
+                                <property name="weight">600</property>
                               </object>
                               <attributes>
                                 <attribute name="text">1</attribute>

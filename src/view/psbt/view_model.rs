@@ -16,7 +16,7 @@ use bitcoin::hashes::Hash;
 use bitcoin::psbt::raw::ProprietaryKey;
 use bitcoin::psbt::serialize::Serialize;
 use bitcoin::util::bip32::Fingerprint;
-use bitcoin::{secp256k1, XOnlyPublicKey, XpubIdentifier};
+use bitcoin::{secp256k1, Transaction, XOnlyPublicKey, XpubIdentifier};
 use miniscript::ToPublicKey;
 use wallet::psbt::Psbt;
 
@@ -50,6 +50,7 @@ impl ModelParam {
 #[derive(Getters, Default)]
 pub struct ViewModel {
     psbt: Psbt,
+    finalized_tx: Option<Transaction>,
     path: Option<PathBuf>,
     signing: SigningModel,
     #[getter(as_copy)]
@@ -114,6 +115,7 @@ impl ViewModel {
         ViewModel {
             modified: path.is_none(),
             psbt,
+            finalized_tx: None,
             path,
             signing,
             network,
@@ -122,5 +124,13 @@ impl ViewModel {
 
     pub fn set_path(&mut self, path: PathBuf) {
         self.path = Some(path);
+    }
+
+    pub fn clear_finalized_tx(&mut self) {
+        self.finalized_tx = None;
+    }
+
+    pub fn set_finalized_tx(&mut self, tx: Transaction) {
+        self.finalized_tx = Some(tx);
     }
 }

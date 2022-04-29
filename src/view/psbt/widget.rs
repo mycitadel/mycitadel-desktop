@@ -68,6 +68,8 @@ impl Widgets {
         let psbt: &Psbt = model.psbt();
         let tx = psbt.clone().into_transaction();
 
+        self.publish_btn.set_visible(model.finalized_tx().is_some());
+
         // TODO: Move PSBT-related code to descriptor-wallet
         let mut vsize = tx.vsize() as f32;
 
@@ -96,10 +98,10 @@ impl Widgets {
             .map(|witness_size| vsize += witness_size as f32 / WITNESS_SCALE_FACTOR as f32);
         }
 
-        let sigs_required = psbt.inputs.len() as u32;
         let mut sigs_present = 0u32;
         let signing_model: &SigningModel = model.signing();
-        for no in 0..signing_model.n_items() {
+        let sigs_possible = signing_model.n_items() as u32;
+        for no in 0..sigs_possible {
             if let Some(signing) = signing_model.item(no) {
                 let present: u32 = signing.property("sigs-present");
                 let required: u32 = signing.property("sigs-required");
@@ -134,9 +136,9 @@ impl Widgets {
         // TODO: Extract notes and description from proprietary keys
 
         self.progress_bar.set_value(sigs_present as f64);
-        self.progress_bar.set_max_value(sigs_required as f64);
+        self.progress_bar.set_max_value(sigs_possible as f64);
         self.sigs_lbl
-            .set_label(&format!("{} of {} required", sigs_present, sigs_required));
+            .set_label(&format!("{} of possible {}", sigs_present, sigs_possible));
 
         self.amount_lbl
             .set_label(&format!("{:.8} BTC", spent as f64 / 100_000_000.0));
@@ -194,6 +196,9 @@ impl Widgets {
     }
 
     pub(super) fn connect(&self, relm: &Relm<super::Component>) {
+        connect!(relm, self.save_btn, connect_clicked(_), Msg::Save);
+        connect!(relm, self.publish_btn, connect_activate(_), Msg::Publish);
+
         connect!(
             relm,
             self.new_wallet_mi,

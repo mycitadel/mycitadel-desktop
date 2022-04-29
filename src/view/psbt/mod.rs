@@ -28,6 +28,8 @@ use crate::view::launch;
 #[derive(Msg)]
 pub enum Msg {
     Close,
+    Save,
+    Publish,
     Launcher(launch::Msg),
     FileError(PathBuf, String),
     Sign(u32),

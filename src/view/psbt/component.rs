@@ -13,8 +13,10 @@ use std::{fs, io};
 
 use bitcoin::consensus::{Decodable, Encodable};
 use bitcoin::psbt::PartiallySignedTransaction;
+use bitcoin::secp256k1::SECP256K1;
 use gladis::Gladis;
 use gtk::ApplicationWindow;
+use miniscript::psbt::PsbtExt;
 use relm::{Relm, StreamHandle, Update, Widget};
 
 use super::{ModelParam, Msg, ViewModel, Widgets};
@@ -33,6 +35,25 @@ impl Component {
         self.launcher_stream
             .as_ref()
             .map(|stream| stream.emit(launch::Msg::PsbtClosed));
+    }
+
+    pub fn finalize(&mut self) -> Result<(), Vec<miniscript::psbt::Error>> {
+        let mut psbt = PartiallySignedTransaction::from(self.model.psbt().clone());
+        self.model.clear_finalized_tx();
+        psbt.finalize_mut(&SECP256K1)?;
+        let tx = psbt.extract_tx();
+        self.model.set_finalized_tx(tx);
+        self.widgets.update_ui(&self.model);
+        Ok(())
+    }
+
+    pub fn publish(&mut self) {
+        if self.finalize().is_err() {
+            return;
+        }
+        if let Some(tx) = self.model.finalized_tx() {
+            // TODO: Publish transaction
+        }
     }
 
     pub fn save(&mut self) -> Result<bool, io::Error> {
@@ -98,8 +119,20 @@ impl Update for Component {
 
     fn update(&mut self, event: Msg) {
         match event {
+            Msg::Save => {
+                if let Err(err) = self.save() {
+                    error_dlg(
+                        self.widgets.as_root(),
+                        "Error",
+                        "Unable to save PSBT file",
+                        Some(&err.to_string()),
+                    );
+                }
+            }
+            Msg::Publish => self.publish(),
             Msg::Sign(_output_no) => {
                 // TODO: Implement signing
+                self.finalize();
             }
             Msg::Launcher(msg) => {
                 self.launcher_stream.as_ref().map(|stream| stream.emit(msg));

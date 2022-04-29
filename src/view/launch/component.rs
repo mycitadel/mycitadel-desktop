@@ -52,9 +52,11 @@ impl Component {
     }
 
     fn open_psbt(&mut self, path: PathBuf, network: Option<PublicNetwork>) {
-        let psbt =
-            init::<psbt::Component>(psbt::ModelParam::Open(path, network.unwrap_or_default()))
-                .expect("unable to instantiate wallet settings");
+        let psbt = init::<psbt::Component>(psbt::ModelParam::Open(
+            path,
+            network.unwrap_or(PublicNetwork::Mainnet),
+        ))
+        .expect("unable to instantiate wallet settings");
         self.window_count += 1;
         psbt.emit(psbt::Msg::RegisterLauncher(self.stream.clone()));
         self.psbts.push(psbt);
