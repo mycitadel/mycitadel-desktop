@@ -243,7 +243,12 @@ pub fn electrum_sync(
                     (addr_src, txids)
                 })
                 .collect::<BTreeMap<_, _>>();
-            if batch.is_empty() {
+
+            let new_txids = batch
+                .values()
+                .flat_map(|item| item.iter().map(|meta| meta.onchain.txid))
+                .collect::<Vec<_>>();
+            if new_txids.is_empty() {
                 break upto;
             } else {
                 upto = batch
@@ -252,11 +257,7 @@ pub fn electrum_sync(
                     .max()
                     .unwrap_or_default();
             }
-            txids.extend(
-                batch
-                    .values()
-                    .flat_map(|item| item.iter().map(|meta| meta.onchain.txid)),
-            );
+            txids.extend(new_txids);
             sender
                 .send(Msg::TxidBatch(batch, offset))
                 .expect("electrum watcher channel is broken");

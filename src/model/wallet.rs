@@ -237,7 +237,6 @@ impl Wallet {
     }
 
     pub fn update_utxos(&mut self, batch: BTreeSet<UtxoTxid>) {
-        self.state.balance += batch.iter().map(|utxo| utxo.value).sum::<u64>();
         self.utxos.extend(batch);
     }
 
@@ -249,6 +248,7 @@ impl Wallet {
         // TODO: Remove this call and do a "smart" history update operation
         self.history = bset![];
         self.state.volume = 0;
+        self.state.balance = self.utxos.iter().map(|utxo| utxo.value).sum::<u64>();
 
         // 1. Build reverse index
         let txid2tx = tx_buffer
@@ -298,7 +298,7 @@ impl Wallet {
                 .collect();
 
             let meta = txid2meta[&tx.txid()];
-            self.history.insert(HistoryEntry {
+            let entry = HistoryEntry {
                 onchain: meta.onchain,
                 tx: tx.clone(),
                 credit,
@@ -307,7 +307,9 @@ impl Wallet {
                 beneficiaries: empty!(),
                 fee: meta.fee,
                 comment: None,
-            });
+            };
+            self.state.volume += entry.value_credited();
+            self.history.insert(entry);
         }
     }
 

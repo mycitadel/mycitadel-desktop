@@ -212,17 +212,20 @@ impl Widgets {
 
     pub fn update_history(&mut self, history: &BTreeSet<HistoryEntry>) {
         self.history_store.clear();
+        let mut balance = 0i64;
         for item in history {
+            balance += item.balance();
             let btc = format!("{:+.08}", item.balance() as f64 / 100_000_000.0);
+            let btc_balance = format!("{:.08}", balance as f64 / 100_000_000.0);
             self.history_store.insert_with_values(
                 None,
                 &[
                     (0, &item.icon_name()),
-                    (2, &item.onchain.txid.to_string()),
-                    (3, &btc),
-                    (4, &"?"),
-                    (5, &item.mining_info()),
-                    (6, &item.color()),
+                    (1, &item.onchain.txid.to_string()),
+                    (2, &btc),
+                    (3, &btc_balance),
+                    (4, &item.mining_info()),
+                    (5, &item.color()),
                 ],
             );
         }
