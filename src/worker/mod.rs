@@ -10,5 +10,7 @@
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
 pub mod electrum;
+pub mod exchange;
 
 pub use electrum::ElectrumWorker;
+pub use exchange::ExchangeWorker;

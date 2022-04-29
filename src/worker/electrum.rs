@@ -182,7 +182,7 @@ impl ElectrumWorker {
     }
 }
 
-pub fn electrum_init(electrum: &ElectrumServer, sender: &Sender<Msg>) -> Option<ElectrumClient> {
+fn electrum_init(electrum: &ElectrumServer, sender: &Sender<Msg>) -> Option<ElectrumClient> {
     let config = electrum_client::ConfigBuilder::new()
         .timeout(Some(5))
         .expect("we do not use socks here")
@@ -196,7 +196,7 @@ pub fn electrum_init(electrum: &ElectrumServer, sender: &Sender<Msg>) -> Option<
         .ok()
 }
 
-pub fn electrum_sync(
+fn electrum_sync(
     client: &ElectrumClient,
     wallet_settings: &WalletSettings,
     sender: &Sender<Msg>,
