@@ -68,8 +68,6 @@
     <columns>
       <!-- column-name type -->
       <column type="gchararray"/>
-      <!-- column-name address -->
-      <column type="gchararray"/>
       <!-- column-name txid -->
       <column type="gchararray"/>
       <!-- column-name value -->
@@ -742,6 +740,9 @@ volume</property>
                     <property name="vexpand">True</property>
                     <property name="model">history_store</property>
                     <property name="reorderable">True</property>
+                    <child internal-child="selection">
+                      <object class="GtkTreeSelection"/>
+                    </child>
                     <child>
                       <object class="GtkTreeViewColumn">
                         <property name="clickable">True</property>
@@ -763,7 +764,7 @@ volume</property>
                         <property name="title" translatable="yes">Height</property>
                         <property name="clickable">True</property>
                         <property name="reorderable">True</property>
-                        <property name="sort-column-id">5</property>
+                        <property name="sort-column-id">4</property>
                         <child>
                           <object class="GtkCellRendererText" id="height">
                             <property name="alignment">right</property>
@@ -778,13 +779,13 @@ volume</property>
                       <object class="GtkTreeViewColumn">
                         <property name="resizable">True</property>
                         <property name="sizing">autosize</property>
-                        <property name="title" translatable="yes">Beneficiary</property>
+                        <property name="title" translatable="yes">Txid</property>
                         <property name="expand">True</property>
                         <property name="clickable">True</property>
                         <property name="reorderable">True</property>
                         <property name="sort-column-id">1</property>
                         <child>
-                          <object class="GtkCellRendererText" id="beneficiary">
+                          <object class="GtkCellRendererText" id="txid">
                             <property name="ellipsize">middle</property>
                           </object>
                           <attributes>
@@ -796,37 +797,17 @@ volume</property>
                     <child>
                       <object class="GtkTreeViewColumn">
                         <property name="resizable">True</property>
-                        <property name="sizing">autosize</property>
-                        <property name="title" translatable="yes">Txid</property>
-                        <property name="expand">True</property>
-                        <property name="clickable">True</property>
-                        <property name="reorderable">True</property>
-                        <property name="sort-column-id">2</property>
-                        <child>
-                          <object class="GtkCellRendererText" id="txid">
-                            <property name="ellipsize">middle</property>
-                            <property name="width-chars">20</property>
-                          </object>
-                          <attributes>
-                            <attribute name="text">2</attribute>
-                          </attributes>
-                        </child>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkTreeViewColumn">
-                        <property name="resizable">True</property>
                         <property name="title" translatable="yes">Amount (BTC)</property>
                         <property name="clickable">True</property>
                         <property name="reorderable">True</property>
-                        <property name="sort-column-id">3</property>
+                        <property name="sort-column-id">2</property>
                         <child>
                           <object class="GtkCellRendererText" id="amount">
                             <property name="alignment">right</property>
                             <property name="weight">600</property>
                           </object>
                           <attributes>
-                            <attribute name="text">3</attribute>
+                            <attribute name="text">2</attribute>
                             <attribute name="foreground-rgba">6</attribute>
                           </attributes>
                         </child>
@@ -838,7 +819,7 @@ volume</property>
                         <property name="title" translatable="yes">Balance (BTC)</property>
                         <property name="clickable">True</property>
                         <property name="reorderable">True</property>
-                        <property name="sort-column-id">4</property>
+                        <property name="sort-column-id">3</property>
                         <child>
                           <object class="GtkCellRendererText" id="balance">
                             <property name="alignment">right</property>
@@ -875,6 +856,9 @@ volume</property>
                     <property name="vexpand">True</property>
                     <property name="model">utxo_store</property>
                     <property name="reorderable">True</property>
+                    <child internal-child="selection">
+                      <object class="GtkTreeSelection"/>
+                    </child>
                     <child>
                       <object class="GtkTreeViewColumn">
                         <property name="resizable">True</property>
@@ -978,6 +962,9 @@ volume</property>
                     <property name="vexpand">True</property>
                     <property name="model">address_store</property>
                     <property name="reorderable">True</property>
+                    <child internal-child="selection">
+                      <object class="GtkTreeSelection"/>
+                    </child>
                     <child>
                       <object class="GtkTreeViewColumn">
                         <property name="clickable">True</property>

@@ -9,23 +9,24 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::sync::mpsc;
 use std::thread::JoinHandle;
 use std::time::Duration;
 use std::{io, thread};
 
 use amplify::Wrapper;
-use bitcoin::{OutPoint, Txid};
-use chrono::{DateTime, NaiveDateTime, Utc};
-use electrum_client::{Client as ElectrumClient, ElectrumApi, HeaderNotification};
-use gtk::gdk;
+use bitcoin::Transaction;
+use electrum_client::{
+    Client as ElectrumClient, ElectrumApi, GetHistoryRes, HeaderNotification, ListUnspentRes,
+};
 use relm::Sender;
-use wallet::address::AddressCompat;
 use wallet::hd::{SegmentIndexes, UnhardenedIndex};
 use wallet::scripts::PubkeyScript;
 
-use crate::model::{ElectrumServer, Prevout, TxMeta, WalletSettings};
+use crate::model::{
+    AddressSource, ElectrumServer, OnchainStatus, OnchainTxid, UtxoTxid, WalletSettings,
+};
 
 enum Cmd {
     Sync,
@@ -40,165 +41,58 @@ pub enum Msg {
     LastBlock(HeaderNotification),
     LastBlockUpdate(HeaderNotification),
     FeeEstimate(f64, f64, f64),
-    HistoryBatch(Vec<HistoryTxid>, u16),
-    UtxoBatch(Vec<UtxoTxid>, u16),
-    TxBatch(BTreeMap<Txid, TxMeta>, f32),
+    TxidBatch(BTreeMap<AddressSource, BTreeSet<TxidMeta>>, u16),
+    UtxoBatch(BTreeSet<UtxoTxid>, u16),
+    TxBatch(Vec<Transaction>, f32),
     ChannelDisconnected,
     Error(electrum_client::Error),
 }
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
-#[derive(StrictEncode, StrictDecode)]
-#[strict_encoding(repr = u8)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", rename_all = "lowercase")
-)]
-pub enum HistoryType {
-    Incoming,
-    Outcoming,
-    Change,
-}
-
-impl HistoryType {
-    pub fn icon_name(self) -> &'static str {
-        match self {
-            HistoryType::Incoming => "media-playlist-consecutive-symbolic",
-            HistoryType::Outcoming => "mail-send-symbolic",
-            HistoryType::Change => "view-refresh-symbolic",
-        }
-    }
-
-    pub fn color(self) -> gdk::RGBA {
-        match self {
-            HistoryType::Incoming => {
-                gdk::RGBA::new(38.0 / 256.0, 162.0 / 256.0, 105.0 / 256.0, 1.0)
-            }
-            HistoryType::Outcoming => {
-                gdk::RGBA::new(165.0 / 256.0, 29.0 / 256.0, 45.0 / 256.0, 1.0)
-            }
-            HistoryType::Change => gdk::RGBA::new(119.0 / 256.0, 118.0 / 256.0, 123.0 / 256.0, 1.0),
-        }
-    }
-}
-
-#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
-#[derive(StrictEncode, StrictDecode)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate")
-)]
-pub struct HistoryTxid {
-    pub txid: Txid,
-    pub vout: Option<u32>,
-    pub height: i32,
-    #[cfg_attr(feature = "serde", serde(with = "serde_with::rust::display_fromstr"))]
-    pub address: AddressCompat,
-    pub index: UnhardenedIndex,
-    pub ty: HistoryType,
-    pub amount: Option<i64>,
-}
-
-impl HistoryTxid {
-    pub fn outpoint(self) -> Option<OutPoint> {
-        self.vout.map(|vout| OutPoint::new(self.txid, vout))
-    }
-
-    pub fn date_time_est(self) -> DateTime<chrono::Local> {
-        height_date_time_est(self.height)
-    }
-
-    pub fn mining_info(self) -> String {
-        match self.height {
-            -1 => s!("pending"),
-            _ => format!("{}", self.date_time_est().format("%F %l %P")),
-        }
-    }
-}
-
-#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
-#[derive(StrictEncode, StrictDecode)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate")
-)]
-pub struct UtxoTxid {
-    pub txid: Txid,
-    pub height: u32,
-    pub vout: u32,
-    pub value: u64,
-    #[cfg_attr(feature = "serde", serde(with = "serde_with::rust::display_fromstr"))]
-    pub address: AddressCompat,
-    pub index: UnhardenedIndex,
-    pub change: bool,
-}
-
-impl UtxoTxid {
-    pub fn outpoint(&self) -> OutPoint {
-        OutPoint::new(self.txid, self.vout)
-    }
-
-    pub fn date_time_est(self) -> DateTime<chrono::Local> {
-        height_date_time_est(self.height as i32)
-    }
-
-    pub fn mining_info(self) -> String {
-        match self.height {
-            0 => s!("mempool"),
-            _ => format!("{}", self.date_time_est().format("%F %l %P")),
-        }
-    }
-}
-
-impl From<&UtxoTxid> for Prevout {
-    fn from(utxo: &UtxoTxid) -> Prevout {
-        Prevout {
-            outpoint: utxo.outpoint(),
-            amount: utxo.value,
-            change: utxo.change,
-            index: utxo.index,
-        }
-    }
-}
-
-impl From<UtxoTxid> for Prevout {
-    fn from(utxo: UtxoTxid) -> Prevout {
-        Prevout::from(&utxo)
-    }
-}
-
-#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 pub struct TxidMeta {
-    pub txid: Txid,
-    pub height: i32,
-    pub address: AddressCompat,
-    pub index: UnhardenedIndex,
-    pub change: bool,
-}
-
-impl From<&HistoryTxid> for TxidMeta {
-    fn from(item: &HistoryTxid) -> Self {
-        TxidMeta {
-            txid: item.txid,
-            height: item.height,
-            address: item.address,
-            index: item.index,
-            change: item.ty == HistoryType::Change,
-        }
-    }
+    pub onchain: OnchainTxid,
+    pub fee: Option<u64>,
 }
 
 impl From<&UtxoTxid> for TxidMeta {
-    fn from(item: &UtxoTxid) -> Self {
+    fn from(utxo: &UtxoTxid) -> Self {
         TxidMeta {
-            txid: item.txid,
-            height: item.height as i32,
-            address: item.address,
-            index: item.index,
-            change: item.change,
+            onchain: utxo.onchain,
+            fee: None,
+        }
+    }
+}
+
+impl From<GetHistoryRes> for TxidMeta {
+    fn from(res: GetHistoryRes) -> Self {
+        TxidMeta {
+            onchain: OnchainTxid {
+                txid: res.tx_hash,
+                status: OnchainStatus::from_i32(res.height),
+                date_time: None,
+            },
+            fee: res.fee,
+        }
+    }
+}
+
+impl From<&ListUnspentRes> for OnchainTxid {
+    fn from(res: &ListUnspentRes) -> Self {
+        OnchainTxid {
+            txid: res.tx_hash,
+            status: OnchainStatus::from_u32(res.height as u32),
+            date_time: None,
+        }
+    }
+}
+
+impl UtxoTxid {
+    fn with(res: ListUnspentRes, addr_src: AddressSource) -> Self {
+        UtxoTxid {
+            onchain: OnchainTxid::from(&res),
+            vout: res.tx_pos as u32,
+            value: res.value,
+            addr_src,
         }
     }
 }
@@ -327,7 +221,7 @@ pub fn electrum_sync(
 
     let network = bitcoin::Network::from(wallet_settings.network());
 
-    let mut tx_meta = bmap![];
+    let mut txids = bset![];
     let mut upto_index = map! { true => UnhardenedIndex::zero(), false => UnhardenedIndex::zero() };
     for change in [false, true] {
         let mut offset = 0u16;
@@ -336,63 +230,48 @@ pub fn electrum_sync(
             let spk = wallet_settings
                 .script_pubkeys(change, offset..=(offset + 19))
                 .map_err(|err| electrum_client::Error::Message(err.to_string()))?;
-            let history_batch: Vec<_> = client
+            let batch = client
                 .batch_script_get_history(spk.values().map(PubkeyScript::as_inner))?
                 .into_iter()
                 .zip(&spk)
-                .flat_map(|(history, (index, script))| {
-                    history.into_iter().map(move |res| HistoryTxid {
-                        txid: res.tx_hash,
-                        vout: None,
-                        height: res.height,
-                        address: AddressCompat::from_script(&script.clone().into(), network)
-                            .expect("broken descriptor"),
-                        index: *index,
-                        ty: if change {
-                            HistoryType::Change
-                        } else {
-                            HistoryType::Incoming
-                        },
-                        amount: None,
-                    })
+                .map(|(history, (index, script))| {
+                    let addr_src = AddressSource::with(script, *index, change, network);
+                    let txids = history
+                        .into_iter()
+                        .map(TxidMeta::from)
+                        .collect::<BTreeSet<_>>();
+                    (addr_src, txids)
                 })
-                .collect();
-            if history_batch.is_empty() {
+                .collect::<BTreeMap<_, _>>();
+            if batch.is_empty() {
                 break upto;
             } else {
-                upto = history_batch
-                    .iter()
+                upto = batch
+                    .keys()
                     .map(|item| item.index)
                     .max()
                     .unwrap_or_default();
             }
-            tx_meta.extend(
-                history_batch
-                    .iter()
-                    .map(|item| (item.txid, TxidMeta::from(item))),
+            txids.extend(
+                batch
+                    .values()
+                    .flat_map(|item| item.iter().map(|meta| meta.onchain.txid)),
             );
             sender
-                .send(Msg::HistoryBatch(history_batch, offset))
+                .send(Msg::TxidBatch(batch, offset))
                 .expect("electrum watcher channel is broken");
 
-            let utxos: Vec<_> = client
+            let utxos = client
                 .batch_script_list_unspent(spk.values().map(PubkeyScript::as_inner))?
                 .into_iter()
                 .zip(spk)
                 .flat_map(|(utxo, (index, script))| {
-                    utxo.into_iter().map(move |res| UtxoTxid {
-                        txid: res.tx_hash,
-                        height: res.height as u32,
-                        vout: res.tx_pos as u32,
-                        value: res.value,
-                        address: AddressCompat::from_script(&script.clone().into(), network)
-                            .expect("broken descriptor"),
-                        index,
-                        change,
+                    utxo.into_iter().map(move |res| {
+                        UtxoTxid::with(res, AddressSource::with(&script, index, change, network))
                     })
                 })
-                .collect();
-            tx_meta.extend(utxos.iter().map(|item| (item.txid, TxidMeta::from(item))));
+                .collect::<BTreeSet<_>>();
+            txids.extend(utxos.iter().map(|item| item.onchain.txid));
             sender
                 .send(Msg::UtxoBatch(utxos, offset))
                 .expect("electrum watcher channel is broken");
@@ -401,20 +280,12 @@ pub fn electrum_sync(
         };
     }
 
-    let tx_meta = tx_meta.into_values().collect::<Vec<_>>();
-    for (no, chunk) in tx_meta.chunks(20).enumerate() {
-        let txlist = client.batch_transaction_get(tx_meta.iter().map(|meta| &meta.txid))?;
-        let txmap = chunk
-            .iter()
-            .copied()
-            .zip(txlist)
-            .map(|(meta, tx)| (meta.txid, TxMeta::with(meta, tx)))
-            .collect::<BTreeMap<_, _>>();
+    let txids = txids.into_iter().collect::<Vec<_>>();
+    for (no, chunk) in txids.chunks(20).enumerate() {
+        let tx_list = client.batch_transaction_get(chunk)?;
+        let progress = (no + 1) as f32 / txids.len() as f32 / 20.0;
         sender
-            .send(Msg::TxBatch(
-                txmap,
-                (no + 1) as f32 / tx_meta.len() as f32 / 20.0,
-            ))
+            .send(Msg::TxBatch(tx_list, progress))
             .expect("electrum watcher channel is broken");
     }
 
@@ -423,17 +294,4 @@ pub fn electrum_sync(
         .expect("electrum watcher channel is broken");
 
     Ok(())
-}
-
-// TODO: Do a binary file indexed by height, representing date/time information for each height
-pub fn height_date_time_est(height: i32) -> DateTime<chrono::Local> {
-    if height <= 0 {
-        return chrono::Local::now();
-    }
-    let reference_height = 733961;
-    let reference_time = 1651158666;
-    let height_diff = height - reference_height;
-    let timestamp = reference_time + height_diff * 600;
-    let block_time = NaiveDateTime::from_timestamp(timestamp as i64, 0);
-    DateTime::<chrono::Local>::from(DateTime::<Utc>::from_utc(block_time, Utc))
 }

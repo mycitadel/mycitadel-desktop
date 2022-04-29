@@ -9,6 +9,7 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 
 use gladis::Gladis;
@@ -29,16 +30,21 @@ use wallet::hd::UnhardenedIndex;
 
 use super::pay::beneficiary_row::Beneficiary;
 use super::{pay, ElectrumState, Msg, ViewModel, Widgets};
-use crate::model::{FileDocument, Wallet};
+use crate::model::{AddressSource, FileDocument, Wallet};
 use crate::view::{error_dlg, launch, settings, NotificationBoxExt};
+use crate::worker::electrum::TxidMeta;
 use crate::worker::{electrum, ElectrumWorker};
 
 pub struct Component {
     model: ViewModel,
     widgets: Widgets,
     pay_widgets: pay::Widgets,
+
     electrum_channel: Channel<electrum::Msg>,
     electrum_worker: ElectrumWorker,
+    tx_buffer: Vec<Transaction>,
+    addr_buffer: BTreeMap<AddressSource, BTreeSet<TxidMeta>>,
+
     settings: relm::Component<settings::Component>,
     launcher_stream: Option<StreamHandle<launch::Msg>>,
 }
@@ -173,7 +179,6 @@ impl Component {
     }
 
     fn handle_electrum(&mut self, msg: electrum::Msg) {
-        let wallet = self.model.as_wallet_mut();
         match msg {
             electrum::Msg::Connecting => {
                 self.widgets
@@ -186,27 +191,29 @@ impl Component {
             electrum::Msg::LastBlock(block_info) => {
                 self.widgets
                     .update_electrum_state(ElectrumState::RetrievingFees);
-                wallet.update_last_block(&block_info);
+                self.model.as_wallet_mut().update_last_block(&block_info);
                 self.widgets.update_last_block(&block_info);
             }
             electrum::Msg::LastBlockUpdate(block_info) => {
-                wallet.update_last_block(&block_info);
+                self.model.as_wallet_mut().update_last_block(&block_info);
                 self.widgets.update_last_block(&block_info);
             }
             electrum::Msg::FeeEstimate(f0, f1, f2) => {
                 self.widgets
                     .update_electrum_state(ElectrumState::RetrievingHistory(0));
+                let wallet = self.model.as_wallet_mut();
                 wallet.update_fees(f0, f1, f2);
-                wallet.clear_history();
+                wallet.clear_utxos();
             }
-            electrum::Msg::HistoryBatch(batch, no) => {
+            electrum::Msg::TxidBatch(batch, no) => {
                 self.widgets
                     .update_electrum_state(ElectrumState::RetrievingHistory(no as usize * 2));
-                wallet.update_history(batch);
+                self.addr_buffer.extend(batch);
             }
             electrum::Msg::UtxoBatch(batch, no) => {
                 self.widgets
                     .update_electrum_state(ElectrumState::RetrievingHistory(no as usize * 2 + 1));
+                let wallet = self.model.as_wallet_mut();
                 wallet.update_utxos(batch);
                 self.widgets.update_utxos(&wallet.utxos());
                 self.widgets.update_state(wallet.state(), wallet.tx_count());
@@ -214,18 +221,23 @@ impl Component {
             electrum::Msg::TxBatch(batch, progress) => {
                 self.widgets
                     .update_electrum_state(ElectrumState::RetrievingTransactions(progress));
-                wallet.update_transactions(batch);
-                self.widgets.update_state(wallet.state(), wallet.tx_count());
+                self.tx_buffer.extend(batch);
             }
             electrum::Msg::Complete => {
-                wallet.update_complete();
+                self.model
+                    .as_wallet_mut()
+                    .update_complete(&self.addr_buffer, &self.tx_buffer);
+                self.addr_buffer.clear();
+                self.tx_buffer.clear();
+                self.save();
+
+                let wallet = self.model.as_wallet_mut();
                 self.widgets.update_history(&wallet.history());
                 self.widgets.update_state(wallet.state(), wallet.tx_count());
                 self.widgets.update_addresses(&wallet.address_info());
                 self.widgets.update_electrum_state(ElectrumState::Complete(
                     self.model.as_settings().electrum().sec,
                 ));
-                self.save();
             }
             electrum::Msg::Error(err) => {
                 self.widgets
@@ -416,8 +428,12 @@ impl Widget for Component {
             widgets,
             pay_widgets,
             settings,
+
             electrum_channel,
             electrum_worker,
+            tx_buffer: empty!(),
+            addr_buffer: empty!(),
+
             launcher_stream: None,
         }
     }

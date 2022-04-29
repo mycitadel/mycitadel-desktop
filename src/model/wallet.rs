@@ -14,9 +14,10 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::io::{Read, Write};
 use std::ops::{Deref, RangeInclusive};
 
+use amplify::Wrapper;
 use bitcoin::secp256k1::SECP256K1;
 use bitcoin::util::bip32::{ChildNumber, DerivationPath, Fingerprint};
-use bitcoin::{Address, BlockHash, Network, OutPoint, PublicKey, Transaction, Txid};
+use bitcoin::{Address, BlockHash, Network, PublicKey, Script, Transaction, TxOut, Txid};
 use chrono::{DateTime, Utc};
 use electrum_client::HeaderNotification;
 use miniscript::descriptor::{DescriptorType, Sh, Wsh};
@@ -40,9 +41,10 @@ use super::{
     DescriptorClass, PublicNetwork, Signer, SigsReq, TimelockReq, TimelockedSigs, ToTapTree,
     Unsatisfiable, XpubkeyCore,
 };
-use crate::model::{ElectrumServer, Prevout};
-use crate::worker::electrum::{HistoryType, TxidMeta};
-use crate::worker::{HistoryTxid, UtxoTxid};
+use crate::model::{
+    AddressSource, AddressSummary, AddressValue, ElectrumServer, HistoryEntry, Prevout, UtxoTxid,
+};
+use crate::worker::electrum::TxidMeta;
 
 // TODO: Move to bpro library
 #[derive(Getters, Clone, Debug)]
@@ -57,24 +59,17 @@ pub struct Wallet {
     settings: WalletSettings,
 
     last_indexes: BTreeMap<UnhardenedIndex, UnhardenedIndex>,
-
     #[getter(as_copy)]
     last_block: BlockHash,
 
     #[getter(as_copy)]
     height: u32,
-
     #[getter(as_copy)]
     state: WalletState,
-
     ephemerals: WalletEphemerals,
 
-    utxos: Vec<UtxoTxid>,
-
-    history: Vec<HistoryTxid>,
-
-    transactions: BTreeMap<Txid, TxMeta>,
-
+    utxos: BTreeSet<UtxoTxid>,
+    history: BTreeSet<HistoryEntry>,
     wip: Vec<Psbt>,
 }
 
@@ -87,9 +82,8 @@ impl From<WalletSettings> for Wallet {
             height: 0,
             state: zero!(),
             ephemerals: zero!(),
-            utxos: vec![],
-            history: vec![],
-            transactions: empty!(),
+            utxos: bset![],
+            history: bset![],
             wip: vec![],
         }
     }
@@ -99,17 +93,15 @@ impl Wallet {
     pub fn as_settings(&self) -> &WalletSettings {
         &self.settings
     }
-
     pub fn to_settings(&self) -> WalletSettings {
         self.settings.clone()
     }
-
     pub fn into_settings(self) -> WalletSettings {
         self.settings
     }
 
     pub fn tx_count(&self) -> usize {
-        self.transactions.len()
+        self.history.len()
     }
 
     pub fn next_default_index(&self) -> UnhardenedIndex {
@@ -146,13 +138,6 @@ impl Wallet {
         .expect("unable to derive address for the wallet descriptor")
     }
 
-    pub fn outpoint_value(&self, outpoint: OutPoint) -> Option<u64> {
-        self.transactions
-            .get(&outpoint.txid)
-            .and_then(|meta| meta.tx.output.get(outpoint.vout as usize))
-            .map(|txout| txout.value)
-    }
-
     // TODO: Implement multiple coinselect algorithms
     pub fn coinselect(&self, value: u64) -> Option<(BTreeSet<Prevout>, u64)> {
         let mut prevouts = self.utxos.iter().map(Prevout::from).collect::<Vec<_>>();
@@ -187,61 +172,42 @@ impl Wallet {
         }
     }
 
-    pub fn address_info(&self) -> Vec<AddressInfo> {
-        let addresses = self
-            .utxos
+    pub fn address_info(&self) -> Vec<AddressSummary> {
+        let mut addresses = self
+            .history
             .iter()
-            .map(|utxo| AddressInfo {
-                address: utxo.address,
-                balance: utxo.value,
-                volume: utxo.value,
-                tx_count: 1,
-                index: utxo.index,
-                change: utxo.change,
-            })
+            .flat_map(|item| item.address_summaries())
             .fold(
-                BTreeMap::<AddressCompat, AddressInfo>::new(),
+                BTreeMap::<AddressCompat, AddressSummary>::new(),
                 |mut list, info| {
-                    match list.entry(info.address) {
-                        Entry::Vacant(entry) => entry.insert(info),
+                    match list.entry(info.addr_src.address) {
+                        Entry::Vacant(entry) => {
+                            entry.insert(info);
+                        }
                         Entry::Occupied(entry) => {
-                            let info2 = entry.into_mut();
-                            info2.balance += info.balance;
-                            info2.volume += info.volume;
-                            info2.tx_count += 1;
-                            info2
+                            entry.into_mut().merge(info);
                         }
                     };
                     list
                 },
             );
 
-        let addresses = self
-            .history
-            .iter()
-            .map(|item| AddressInfo {
-                address: item.address,
-                balance: 0,
-                volume: item
-                    .outpoint()
-                    .and_then(|outpoint| self.outpoint_value(outpoint))
-                    .unwrap_or_default(),
-                tx_count: 1,
-                index: item.index,
-                change: item.ty == HistoryType::Change,
-            })
-            .fold(addresses, |mut list, info| {
-                match list.entry(info.address) {
-                    Entry::Vacant(entry) => entry.insert(info),
-                    Entry::Occupied(entry) => {
-                        let info2 = entry.into_mut();
-                        info2.volume += info.volume;
-                        info2.tx_count += 1;
-                        info2
-                    }
-                };
-                list
-            });
+        for utxo in &self.utxos {
+            match addresses.entry(utxo.addr_src.address) {
+                Entry::Vacant(entry) => {
+                    entry.insert(AddressSummary {
+                        addr_src: utxo.addr_src,
+                        balance: utxo.value,
+                        volume: 0,
+                        tx_count: 1,
+                    });
+                }
+                Entry::Occupied(mut entry) => {
+                    let item = entry.get_mut();
+                    item.balance = utxo.value;
+                }
+            }
+        }
 
         addresses.into_values().collect()
     }
@@ -266,73 +232,82 @@ impl Wallet {
         self.ephemerals.fees = (f0 as f32, f1 as f32, f2 as f32);
     }
 
-    // TODO: Consider whether this function is needed
-    pub fn clear_history(&mut self) {
-        self.history = vec![];
+    pub fn clear_utxos(&mut self) {
+        self.utxos = bset![];
     }
 
-    pub fn update_history(&mut self, batch: Vec<HistoryTxid>) {
-        // let txids: BTreeSet<_> = self.history.iter().map(|item| item.txid).collect();
-        for item in batch {
-            // if !txids.contains(&item.txid) {
-            self.history.push(item);
-            // }
-        }
+    pub fn update_utxos(&mut self, batch: BTreeSet<UtxoTxid>) {
+        self.state.balance += batch.iter().map(|utxo| utxo.value).sum::<u64>();
+        self.utxos.extend(batch);
     }
 
-    pub fn update_utxos(&mut self, batch: Vec<UtxoTxid>) {
-        let txids: BTreeSet<_> = self.utxos.iter().map(|item| item.txid).collect();
-        let mut balance = 0u64;
-        for item in batch {
-            if !txids.contains(&item.txid) {
-                balance += item.value;
-                self.utxos.push(item);
-            }
-        }
-        self.state.balance += balance;
-    }
-
-    pub fn update_transactions(&mut self, batch: BTreeMap<Txid, TxMeta>) {
-        self.transactions.extend(batch);
-    }
-
-    pub fn update_complete(&mut self) {
+    pub fn update_complete(
+        &mut self,
+        addr_buffer: &BTreeMap<AddressSource, BTreeSet<TxidMeta>>,
+        tx_buffer: &[Transaction],
+    ) {
+        // TODO: Remove this call and do a "smart" history update operation
+        self.history = bset![];
         self.state.volume = 0;
-        for meta in self.transactions.values() {
-            let tx = &meta.tx;
-            // Improve algorithm by using in-memory index of txid to history items
-            if let Some(hist) = self.history.iter_mut().find(|item| item.txid == tx.txid()) {
-                if let Some(index) = tx
-                    .output
-                    .iter()
-                    .position(|txout| txout.script_pubkey == hist.address.script_pubkey().into())
-                {
-                    let txout = &tx.output[index];
-                    hist.vout = Some(index as u32);
-                    hist.amount = Some(txout.value as i64);
-                    if hist.ty != HistoryType::Change {
-                        self.state.volume += txout.value;
-                    }
-                }
-            }
-            // Detect spending transactions
-            for (meta_spent, vout_spent) in tx.input.iter().filter_map(|txin| {
-                self.transactions
-                    .get(&txin.previous_output.txid)
-                    .map(|tx| (tx, txin.previous_output.vout))
-            }) {
-                let value = meta_spent.tx.output[vout_spent as usize].value;
-                self.history.push(HistoryTxid {
-                    txid: meta_spent.tx.txid(),
-                    vout: Some(vout_spent),
-                    height: meta_spent.height,
-                    address: meta_spent.address,
-                    index: meta_spent.index,
-                    ty: HistoryType::Outcoming,
-                    amount: Some(-(value as i64)),
-                });
-                self.state.volume += value;
-            }
+
+        // 1. Build reverse index
+        let txid2tx = tx_buffer
+            .iter()
+            .map(|tx| (tx.txid(), tx))
+            .collect::<BTreeMap<_, _>>();
+        let txid2meta = addr_buffer
+            .values()
+            .flat_map(BTreeSet::iter)
+            .map(|meta| (meta.onchain.txid, meta))
+            .collect::<BTreeMap<_, _>>();
+        let script2src = addr_buffer
+            .keys()
+            .map(|src| (src.address.script_pubkey().into_inner(), *src))
+            .collect::<BTreeMap<Script, AddressSource>>();
+        let txout2addr = |(no, txout): (usize, &TxOut)| -> Option<(u32, AddressValue)> {
+            script2src
+                .get(&txout.script_pubkey)
+                .map(|src| AddressValue {
+                    addr_src: *src,
+                    value: txout.value,
+                })
+                .map(|addr| (no as u32, addr))
+        };
+
+        // 2. Create one history entry per transaction
+        for tx in tx_buffer {
+            let debit = tx
+                .output
+                .iter()
+                .enumerate()
+                .filter_map(txout2addr)
+                .map(|(no, a)| (no, a.addr_src))
+                .collect();
+
+            let credit = tx
+                .input
+                .iter()
+                .enumerate()
+                .filter_map(|(vin, txin)| {
+                    txid2tx
+                        .get(&txin.previous_output.txid)
+                        .and_then(|tx| tx.output.get(txin.previous_output.vout as usize))
+                        .map(|txout| (vin, txout))
+                })
+                .filter_map(txout2addr)
+                .collect();
+
+            let meta = txid2meta[&tx.txid()];
+            self.history.insert(HistoryEntry {
+                onchain: meta.onchain,
+                tx: tx.clone(),
+                credit,
+                debit,
+                payers: empty!(),
+                beneficiaries: empty!(),
+                fee: meta.fee,
+                comment: None,
+            });
         }
     }
 
@@ -343,8 +318,9 @@ impl Wallet {
 
 impl ResolveTx for Wallet {
     fn resolve_tx(&self, txid: Txid) -> Result<Transaction, TxResolverError> {
-        self.transactions
-            .get(&txid)
+        self.history
+            .iter()
+            .find(|item| item.onchain.txid == txid)
             .map(|meta| meta.tx.clone())
             .ok_or(TxResolverError::with(txid))
     }
@@ -1026,29 +1002,6 @@ impl DerivationStandardExt for Bip43 {
     }
 }
 
-#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
-pub struct AddressInfo {
-    pub address: AddressCompat,
-    pub balance: u64,
-    pub tx_count: u32,
-    pub volume: u64,
-    pub index: UnhardenedIndex,
-    pub change: bool,
-}
-
-impl AddressInfo {
-    pub fn icon_name(self) -> Option<&'static str> {
-        match self.change {
-            true => Some("view-refresh-symbolic"),
-            false => None,
-        }
-    }
-
-    pub fn terminal_string(self) -> String {
-        format!("/{}/{}", if self.change { 1 } else { 0 }, self.index)
-    }
-}
-
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Default)]
 #[derive(StrictEncode, StrictDecode)]
 #[cfg_attr(
@@ -1101,32 +1054,5 @@ impl StrictDecode for WalletEphemerals {
             fiat: String::strict_decode(&mut d)?,
             exchange_rate: f64::strict_decode(&mut d)?,
         })
-    }
-}
-
-#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
-#[derive(StrictEncode, StrictDecode)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate")
-)]
-pub struct TxMeta {
-    pub tx: Transaction,
-    pub height: i32,
-    pub address: AddressCompat,
-    pub change: bool,
-    pub index: UnhardenedIndex,
-}
-
-impl TxMeta {
-    pub fn with(meta: TxidMeta, tx: Transaction) -> TxMeta {
-        TxMeta {
-            tx,
-            height: meta.height,
-            address: meta.address,
-            change: meta.change,
-            index: meta.index,
-        }
     }
 }

@@ -11,6 +11,7 @@
 
 mod electrum;
 pub mod file;
+mod onchain;
 mod taptree;
 mod template;
 mod types;
@@ -20,16 +21,20 @@ mod wallet;
 mod xkey;
 
 pub use self::wallet::{
-    AddressInfo, DerivationStandardExt, DerivationType, DescriptorError, SpendingCondition, TxMeta,
-    Wallet, WalletDescriptor, WalletEphemerals, WalletSettings, WalletState,
+    DerivationStandardExt, DerivationType, DescriptorError, SpendingCondition, Wallet,
+    WalletDescriptor, WalletEphemerals, WalletSettings, WalletState,
 };
 pub use electrum::{ElectrumSec, ElectrumServer};
 pub use file::FileDocument;
+pub use onchain::{
+    AddressSource, AddressSummary, AddressValue, HistoryEntry, OnchainStatus, OnchainTxid, Prevout,
+    UtxoTxid,
+};
 pub use taptree::ToTapTree;
 pub use template::{Requirement, WalletTemplate};
 pub use types::{
-    DescriptorClass, Error, HardwareDevice, HardwareList, OriginFormat, Ownership, Prevout,
-    PublicNetwork, Signer, SigsReq, TimelockReq, TimelockedSigs,
+    DescriptorClass, Error, HardwareDevice, HardwareList, OriginFormat, Ownership, PublicNetwork,
+    Signer, SigsReq, TimelockReq, TimelockedSigs,
 };
 pub use ui::Notification;
 pub use unsatisfiable::Unsatisfiable;

@@ -9,6 +9,7 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
+use std::collections::BTreeSet;
 use std::ffi::OsStr;
 
 use chrono::{DateTime, NaiveDateTime, Utc};
@@ -16,14 +17,15 @@ use electrum_client::HeaderNotification;
 use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{
-    gdk, ApplicationWindow, Button, Entry, HeaderBar, Image, Label, ListStore, MenuItem, Popover,
+    ApplicationWindow, Button, Entry, HeaderBar, Image, Label, ListStore, MenuItem, Popover,
     Spinner, Statusbar, TreeView,
 };
 use relm::Relm;
 
 use super::{pay, ElectrumState, Msg, ViewModel};
-use crate::model::{AddressInfo, ElectrumSec, ElectrumServer, WalletState};
-use crate::worker::{HistoryTxid, UtxoTxid};
+use crate::model::{
+    AddressSummary, ElectrumSec, ElectrumServer, HistoryEntry, UtxoTxid, WalletState,
+};
 
 impl ElectrumSec {
     pub fn icon_name(self) -> &'static str {
@@ -208,45 +210,33 @@ impl Widgets {
         self.height_lbl.set_text(&last_block.height.to_string());
     }
 
-    pub fn update_history(&mut self, history: &[HistoryTxid]) {
+    pub fn update_history(&mut self, history: &BTreeSet<HistoryEntry>) {
         self.history_store.clear();
         for item in history {
-            let (btc, color) = item
-                .amount
-                .map(|amount| {
-                    (
-                        format!("{:+.08}", amount as f64 / 100_000_000.0),
-                        item.ty.color(),
-                    )
-                })
-                .unwrap_or((
-                    s!("?"),
-                    gdk::RGBA::new(119.0 / 256.0, 118.0 / 256.0, 123.0 / 256.0, 1.0),
-                ));
+            let btc = format!("{:+.08}", item.balance() as f64 / 100_000_000.0);
             self.history_store.insert_with_values(
                 None,
                 &[
-                    (0, &item.ty.icon_name()),
-                    (1, &item.address.to_string()),
-                    (2, &item.txid.to_string()),
+                    (0, &item.icon_name()),
+                    (2, &item.onchain.txid.to_string()),
                     (3, &btc),
                     (4, &"?"),
                     (5, &item.mining_info()),
-                    (6, &color),
+                    (6, &item.color()),
                 ],
             );
         }
     }
 
-    pub fn update_utxos(&mut self, utxos: &[UtxoTxid]) {
+    pub fn update_utxos(&mut self, utxos: &BTreeSet<UtxoTxid>) {
         self.utxo_store.clear();
         for item in utxos {
             let btc = format_btc_value(item.value);
             self.utxo_store.insert_with_values(
                 None,
                 &[
-                    (0, &item.address.to_string()),
-                    (1, &item.txid.to_string()),
+                    (0, &item.addr_src.address.to_string()),
+                    (1, &item.onchain.txid.to_string()),
                     (2, &btc),
                     (3, &item.mining_info()),
                 ],
@@ -254,7 +244,7 @@ impl Widgets {
         }
     }
 
-    pub fn update_addresses(&mut self, address_info: &[AddressInfo]) {
+    pub fn update_addresses(&mut self, address_info: &[AddressSummary]) {
         self.address_store.clear();
         for info in address_info {
             let balance = format_btc_value(info.balance);
@@ -263,7 +253,7 @@ impl Widgets {
             self.address_store.insert_with_values(
                 None,
                 &[
-                    (0, &info.address.to_string()),
+                    (0, &info.addr_src.address.to_string()),
                     (1, &balance),
                     (2, &volume),
                     (3, &info.tx_count),

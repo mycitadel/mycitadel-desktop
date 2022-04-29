@@ -11,4 +11,4 @@
 
 pub mod electrum;
 
-pub use electrum::{ElectrumWorker, HistoryTxid, UtxoTxid};
+pub use electrum::ElectrumWorker;
