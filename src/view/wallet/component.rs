@@ -69,7 +69,7 @@ impl Component {
         }
     }
 
-    pub fn compose_psbt(&self) -> Result<(Psbt, UnhardenedIndex), pay::Error> {
+    pub fn compose_psbt(&mut self) -> Result<(Psbt, UnhardenedIndex), pay::Error> {
         let wallet = self.model.as_wallet();
 
         let output_count = self.model.beneficiaries().n_items();
@@ -106,6 +106,7 @@ impl Component {
         let mut prevouts = bset! {};
         let satisfaciton_weights = descriptor.max_satisfaction_weight()? as f32;
         let mut cycle_lim = 0usize;
+        let mut vsize = 0.0f32;
         while fee <= DUST_RELAY_TX_FEE && fee != next_fee {
             fee = next_fee;
             prevouts = wallet
@@ -128,7 +129,7 @@ impl Component {
                 input: txins,
                 output: txouts.clone(),
             };
-            let vsize = tx.vsize() as f32 + satisfaciton_weights / WITNESS_SCALE_FACTOR as f32;
+            vsize = tx.vsize() as f32 + satisfaciton_weights / WITNESS_SCALE_FACTOR as f32;
             next_fee = (fee_rate * vsize).ceil() as u32;
             cycle_lim += 1;
             if cycle_lim > 6 {
@@ -161,15 +162,25 @@ impl Component {
             fee as u64,
             wallet,
         )?;
+        self.model.set_vsize(vsize);
 
         Ok((psbt, change_index))
     }
 
-    pub fn sync_pay(&self) -> Option<(Psbt, UnhardenedIndex)> {
-        match self.compose_psbt() {
-            Ok(psbt) => {
+    pub fn sync_pay(&mut self) -> Option<(Psbt, UnhardenedIndex)> {
+        let res = self.compose_psbt();
+        self.pay_widgets.update_info(
+            self.model.fee_rate(),
+            self.model.as_wallet().ephemerals().fees,
+            self.model.vsize(),
+            res.as_ref()
+                .ok()
+                .map(|(psbt, _)| psbt.outputs.iter().map(|out| out.amount).sum()),
+        );
+        match res {
+            Ok(data) => {
                 self.pay_widgets.hide_message();
-                Some(psbt)
+                Some(data)
             }
             Err(err) => {
                 self.pay_widgets.show_error(&err.to_string());

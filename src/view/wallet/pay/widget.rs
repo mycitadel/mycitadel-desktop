@@ -52,7 +52,14 @@ pub struct Widgets {
 }
 
 impl Widgets {
-    pub fn init_ui(&self, _model: &wallet::ViewModel) {}
+    pub fn init_ui(&self, model: &wallet::ViewModel) {
+        self.update_info(
+            model.fee_rate(),
+            model.as_wallet().ephemerals().fees,
+            model.vsize(),
+            None,
+        );
+    }
 
     pub fn show(&self) {
         self.dialog.show()
@@ -122,6 +129,33 @@ impl Widgets {
             .bind_model(Some(model.beneficiaries()), move |item| {
                 beneficiary_row::RowWidgets::init(relm.clone(), item, network)
             });
+    }
+
+    pub fn update_info(&self, fee_rate: f32, fees: (f32, f32, f32), vsize: f32, paid: Option<u64>) {
+        self.prepare_btn.set_sensitive(paid.is_some());
+
+        if let Some(paid) = paid {
+            self.weight_lbl
+                .set_text(&format!("{:.1} vkbytes", vsize / 1000.0));
+            self.fee_lbl
+                .set_text(&format!("{:.08} BTC", vsize * fee_rate / 100_000_000.));
+            self.total_lbl
+                .set_text(&format!("{:.08} BTC", paid as f64 / 100_000_000.));
+        } else {
+            self.weight_lbl.set_text("unknown");
+            self.fee_lbl.set_text("-");
+            self.total_lbl.set_text("unknown");
+        }
+
+        /*
+        fee_scale
+        fee_stp
+        fee_menu
+        block1_mi
+        block2_mi
+        block3_mi
+        unknown_mi
+         */
     }
 
     pub fn select_beneficiary(&self, index: u32) {
