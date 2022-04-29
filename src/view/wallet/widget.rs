@@ -17,10 +17,11 @@ use electrum_client::HeaderNotification;
 use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{
-    ApplicationWindow, Button, Entry, HeaderBar, Image, Label, ListStore, MenuItem, Popover,
-    Spinner, Statusbar, TreeView,
+    Adjustment, ApplicationWindow, Button, CheckButton, Entry, HeaderBar, Image, Label, ListStore,
+    MenuItem, Popover, SpinButton, Spinner, Statusbar, TreeView,
 };
 use relm::Relm;
+use wallet::hd::SegmentIndexes;
 
 use super::{pay, ElectrumState, Msg, ViewModel};
 use crate::model::{
@@ -89,6 +90,13 @@ pub struct Widgets {
     electrum_spin: Spinner,
 
     invoice_popover: Popover,
+    amount_chk: CheckButton,
+    amount_stp: SpinButton,
+    amount_adj: Adjustment,
+    index_chk: CheckButton,
+    index_stp: SpinButton,
+    index_adj: Adjustment,
+    index_img: Image,
     address_fld: Entry,
 }
 
@@ -110,20 +118,6 @@ impl Widgets {
         &self.window
     }
 
-    pub fn update_ui(&self, model: &ViewModel) {
-        let settings = model.as_settings();
-
-        self.header_bar
-            .set_title(model.path().file_name().and_then(OsStr::to_str));
-        let network = settings.network().to_string();
-        self.network_lbl
-            .set_text(&(network[0..1].to_uppercase() + &network[1..]));
-        self.electrum_lbl.set_text(&settings.electrum().server);
-
-        let address = model.as_wallet().next_address();
-        self.address_fld.set_text(&address.to_string());
-    }
-
     pub(super) fn connect(&self, relm: &Relm<super::Component>) {
         connect!(relm, self.new_btn, connect_clicked(_), Msg::New);
         connect!(relm, self.open_btn, connect_clicked(_), Msg::Open);
@@ -140,10 +134,71 @@ impl Widgets {
 
         connect!(
             relm,
+            self.amount_chk,
+            connect_toggled(chk),
+            Msg::InvoiceAmountToggle(chk.is_active())
+        );
+        connect!(
+            relm,
+            self.index_chk,
+            connect_toggled(chk),
+            Msg::InvoiceIndexToggle(chk.is_active())
+        );
+        connect!(
+            relm,
+            self.amount_adj,
+            connect_value_changed(adj),
+            Msg::InvoiceAmount(adj.value())
+        );
+        connect!(
+            relm,
+            self.index_adj,
+            connect_value_changed(adj),
+            Msg::InvoiceIndex(adj.value() as u32)
+        );
+
+        connect!(
+            relm,
             self.window,
             connect_delete_event(_, _),
             return (Msg::Close, Inhibit(false))
         );
+    }
+
+    pub fn update_ui(&self, model: &ViewModel) {
+        let settings = model.as_settings();
+
+        self.header_bar
+            .set_title(model.path().file_name().and_then(OsStr::to_str));
+        let network = settings.network().to_string();
+        self.network_lbl
+            .set_text(&(network[0..1].to_uppercase() + &network[1..]));
+        self.electrum_lbl.set_text(&settings.electrum().server);
+
+        self.update_invoice(model);
+    }
+
+    pub fn update_invoice(&self, model: &ViewModel) {
+        let invoice = model.as_invoice();
+        let wallet = model.as_wallet();
+        let next_index = wallet.next_default_index();
+        let address = wallet.indexed_address(invoice.index.unwrap_or(next_index));
+
+        self.amount_chk.set_active(invoice.amount.is_some());
+        self.index_chk.set_active(invoice.index.is_some());
+        self.amount_stp.set_sensitive(invoice.amount.is_some());
+        self.index_chk.set_sensitive(invoice.index.is_some());
+        self.index_adj
+            .set_upper((next_index.first_index() + 19) as f64);
+        self.index_adj
+            .set_value(invoice.index.unwrap_or(next_index).first_index() as f64);
+        self.index_img.set_visible(
+            invoice
+                .index
+                .map(|index| index <= next_index)
+                .unwrap_or(true),
+        );
+        self.address_fld.set_text(&address.to_string());
     }
 
     pub fn update_electrum_server(&self, electrum: &ElectrumServer) {

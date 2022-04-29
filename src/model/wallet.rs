@@ -125,7 +125,7 @@ impl Wallet {
         prev_index != new_index
     }
 
-    pub fn next_address(&self) -> Address {
+    pub fn indexed_address(&self, index: UnhardenedIndex) -> Address {
         let (descriptor, _) = self
             .as_settings()
             .descriptors_all()
@@ -133,9 +133,13 @@ impl Wallet {
         DescriptorExt::<PublicKey>::address(
             &descriptor,
             &SECP256K1,
-            &[UnhardenedIndex::zero(), self.next_default_index()],
+            &[UnhardenedIndex::zero(), index],
         )
         .expect("unable to derive address for the wallet descriptor")
+    }
+
+    pub fn next_address(&self) -> Address {
+        self.indexed_address(self.next_default_index())
     }
 
     // TODO: Implement multiple coinselect algorithms

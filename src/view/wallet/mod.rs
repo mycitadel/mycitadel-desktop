@@ -41,6 +41,10 @@ pub enum Msg {
     Refresh,
     Select(usize),
     Create,
+    InvoiceAmountToggle(bool),
+    InvoiceIndexToggle(bool),
+    InvoiceAmount(f64),
+    InvoiceIndex(u32),
     ElectrumWatch(electrum::Msg),
     RegisterLauncher(StreamHandle<launch::Msg>),
 }

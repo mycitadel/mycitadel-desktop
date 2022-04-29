@@ -18,6 +18,11 @@
       <column type="gchararray"/>
     </columns>
   </object>
+  <object class="GtkAdjustment" id="amount_adj">
+    <property name="upper">100</property>
+    <property name="step-increment">0.01</property>
+    <property name="page-increment">0.10</property>
+  </object>
   <object class="GtkMenu" id="fiat_menu">
     <property name="visible">True</property>
     <property name="can-focus">False</property>
@@ -80,6 +85,11 @@
       <column type="GdkRGBA"/>
     </columns>
   </object>
+  <object class="GtkAdjustment" id="index_adj">
+    <property name="upper">100</property>
+    <property name="step-increment">1</property>
+    <property name="page-increment">10</property>
+  </object>
   <object class="GtkPopover" id="invoice_popover">
     <property name="can-focus">False</property>
     <child>
@@ -127,7 +137,8 @@
             <property name="hexpand">True</property>
             <property name="width-chars">12</property>
             <property name="text" translatable="yes">0.000000</property>
-            <property name="digits">6</property>
+            <property name="adjustment">amount_adj</property>
+            <property name="digits">8</property>
           </object>
           <packing>
             <property name="left-attach">1</property>
@@ -140,6 +151,7 @@
             <property name="sensitive">False</property>
             <property name="can-focus">True</property>
             <property name="text" translatable="yes">0</property>
+            <property name="adjustment">index_adj</property>
           </object>
           <packing>
             <property name="left-attach">1</property>

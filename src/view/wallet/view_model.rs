@@ -11,12 +11,19 @@
 
 use std::collections::BTreeSet;
 use std::path::PathBuf;
+use wallet::hd::UnhardenedIndex;
 
 use super::pay::beneficiary_row::BeneficiaryModel;
 use crate::model::{
     file, DescriptorClass, DescriptorError, ElectrumServer, FileDocument, Signer, Wallet,
     WalletSettings,
 };
+
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
+pub struct InvoiceModel {
+    pub amount: Option<u64>,
+    pub index: Option<UnhardenedIndex>,
+}
 
 #[derive(Getters)]
 pub struct ViewModel {
@@ -25,6 +32,8 @@ pub struct ViewModel {
     #[getter(as_mut)]
     beneficiaries: BeneficiaryModel,
     fee_rate: f32, // Used by payment window
+    #[getter(skip)]
+    invoice: InvoiceModel,
 }
 
 impl ViewModel {
@@ -34,6 +43,7 @@ impl ViewModel {
             wallet,
             path,
             beneficiaries: BeneficiaryModel::new(),
+            invoice: none!(),
         }
     }
 
@@ -56,6 +66,13 @@ impl ViewModel {
     }
     pub fn to_settings(&self) -> WalletSettings {
         self.wallet.to_settings()
+    }
+
+    pub fn as_invoice(&self) -> &InvoiceModel {
+        &self.invoice
+    }
+    pub fn as_invoice_mut(&mut self) -> &mut InvoiceModel {
+        &mut self.invoice
     }
 
     pub fn update_descriptor(

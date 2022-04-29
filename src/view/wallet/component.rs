@@ -26,7 +26,7 @@ use bitcoin::policy::DUST_RELAY_TX_FEE;
 use bitcoin::secp256k1::SECP256K1;
 use bitcoin::{EcdsaSighashType, Transaction, TxIn, TxOut};
 use miniscript::DescriptorTrait;
-use wallet::hd::UnhardenedIndex;
+use wallet::hd::{SegmentIndexes, UnhardenedIndex};
 
 use super::pay::beneficiary_row::Beneficiary;
 use super::{pay, ElectrumState, Msg, ViewModel, Widgets};
@@ -313,6 +313,39 @@ impl Update for Component {
                     }
                 }
                 self.save();
+            }
+            Msg::InvoiceAmountToggle(set) => {
+                self.model.as_invoice_mut().amount = match set {
+                    true => Some(0),
+                    false => None,
+                };
+                self.widgets.update_invoice(&self.model);
+            }
+            Msg::InvoiceIndexToggle(set) => {
+                self.model.as_invoice_mut().index = match set {
+                    true => Some(self.model.as_wallet().next_default_index()),
+                    false => None,
+                };
+                self.widgets.update_invoice(&self.model);
+            }
+            Msg::InvoiceAmount(btc) => {
+                let sats = (btc * 100_000_000.0).ceil() as u64;
+                self.model
+                    .as_invoice_mut()
+                    .amount
+                    .as_mut()
+                    .map(|a| *a = sats);
+                self.widgets.update_invoice(&self.model);
+            }
+            Msg::InvoiceIndex(index) => {
+                let index = UnhardenedIndex::from_index(index)
+                    .expect("unhardened index adjustment requirements broken");
+                self.model
+                    .as_invoice_mut()
+                    .index
+                    .as_mut()
+                    .map(|i| *i = index);
+                self.widgets.update_invoice(&self.model);
             }
             Msg::RegisterLauncher(stream) => {
                 self.launcher_stream = Some(stream);
