@@ -29,12 +29,35 @@ provided by the Association.
 
 # Installation
 
-## Mac OS
+## Compiling from sources
 
-Install required components:
+Compilation from sources requires rust language installed. This can be done
+as described on <https://rust-lang.org>. 
+
+First, you need to install prerequisites. This operation should be done only
+once and OS-specific.
+
+- For Debian Linux, please do
+    ```console
+    $ sudo apt update
+    $ sudo apt install -y cargo libssl-dev pkg-config g++ cmake libgtk-3-dev
+    ```
+
+- For Mac OS, please do
+    ```console
+    $ brew install gtk3 libadwaita adwaita-icon-theme libcanberra-gtk-module \
+      libcanberra-gtk3-module
+    ```
+
+Then, you can compile the latest release with this command:
 
 ```console
-$ brew install gtk4 libadwaita adwaita-icon-theme libcanberra-gtk-module libcanberra-gtk3-module
+$ cargo install mycitadel-desktop --locked
+```
+
+Finally, run the wallet by typing in
+```console
+$ mycitadel
 ```
 
 # License

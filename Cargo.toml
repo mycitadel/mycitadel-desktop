@@ -1,6 +1,6 @@
 [package]
 name = "mycitadel-desktop"
-version = "1.0.0"
+version = "1.0.0-beta.1"
 authors = ["Dr Maxim Orlovsky <orlovsky@pandoraprime.ch>"]
 description = "Bitcoin, Lightning and RGB wallet; part of MyCitadel software suite."
 repository = "https://github.com/mycitadel/mycitadel-desktop"
