@@ -21,7 +21,8 @@ use bitcoin::{Address, BlockHash, Network, PublicKey, Script, Transaction, TxOut
 use chrono::{DateTime, Utc};
 use electrum_client::HeaderNotification;
 use miniscript::descriptor::{DescriptorType, Sh, Wsh};
-use miniscript::policy::concrete::Policy;
+use miniscript::policy::compiler::CompilerError;
+use miniscript::policy::concrete::{Policy, PolicyError};
 use miniscript::{Descriptor, Legacy, Segwitv0, Tap};
 use strict_encoding::{StrictDecode, StrictEncode};
 use wallet::descriptors::DescrVariants;
@@ -640,9 +641,7 @@ impl WalletSettings {
 
             return Descriptor::new_tr(
                 TrackingAccount::unsatisfiable((self.network, self.terminal.clone())),
-                Some(tree.to_tap_tree().ok_or(miniscript::Error::Unexpected(s!(
-                    "unable to construct TapTree from the given spending conditions"
-                )))?),
+                Some(tree.to_tap_tree()?),
             );
         }
 
@@ -677,8 +676,17 @@ impl WalletSettings {
             "zero signing accounts must be filtered"
         )))?;
 
+        let err_mapper = |err| match err {
+            CompilerError::PolicyError(PolicyError::DuplicatePubKeys) => {
+                miniscript::Error::Unexpected(s!(
+                    "Multiple spending conditions re-using the same keys require Taproot"
+                ))
+            }
+            err => miniscript::Error::CompilerError(err),
+        };
+
         if class.is_segwit_v0() {
-            let ms_witscript = policy.compile::<Segwitv0>()?;
+            let ms_witscript = policy.compile::<Segwitv0>().map_err(err_mapper)?;
             let wsh = Wsh::new(ms_witscript)?;
             return Ok(match class {
                 DescriptorClass::SegwitV0 => Descriptor::Wsh(wsh),
@@ -687,7 +695,7 @@ impl WalletSettings {
             });
         }
 
-        let ms = policy.compile::<Legacy>()?;
+        let ms = policy.compile::<Legacy>().map_err(err_mapper)?;
         Ok(Descriptor::Sh(Sh::new(ms)?))
     }
 
