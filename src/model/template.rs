@@ -147,8 +147,15 @@ impl WalletTemplate {
                 )
             ],
         };
+        let default_derivation = match descriptor_class {
+            DescriptorClass::PreSegwit => Bip43::multisig_ordered_sh(),
+            DescriptorClass::SegwitV0 => Bip43::multisig_segwit0(),
+            DescriptorClass::NestedV0 => Bip43::multisig_nested0(),
+            DescriptorClass::TaprootC0 => Bip43::multisig_descriptor(),
+        }
+        .into();
         WalletTemplate {
-            default_derivation: Bip43::multisig_descriptor().into(),
+            default_derivation,
             descriptor_class,
             min_signer_count: sigs_required.or(Some(2)),
             max_signer_count: None,
