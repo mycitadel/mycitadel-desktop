@@ -147,7 +147,7 @@ impl ObjectImpl for ConditionInner {
                     flag,
                 ),
                 glib::ParamSpecBoolean::new("sigs-any", "SigsAny", "SigsAny", false, flag),
-                glib::ParamSpecUInt::new("sigs-no", "SigsNo", "SigsNo", 2, 100, 2, flag),
+                glib::ParamSpecUInt::new("sigs-no", "SigsNo", "SigsNo", 1, 100, 2, flag),
                 glib::ParamSpecBoolean::new("lock-none", "LockNone", "LockNone", true, flag),
                 glib::ParamSpecBoolean::new("lock-after", "LockAfter", "LockAfter", false, flag),
                 glib::ParamSpecBoolean::new("lock-older", "LockOlder", "LockOlder", false, flag),

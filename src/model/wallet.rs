@@ -366,8 +366,8 @@ pub enum DescriptorError {
     DuplicateCondition(u8, SpendingCondition),
     /// signer {0} key with fingerprint {1} is already present among signers.
     DuplicateSigner(String, Fingerprint),
-    /// insufficient number of signers {0} to support spending condition {1} requirements.
-    InsufficientSignerCount(u16, SpendingCondition),
+    /// insufficient number of signers ({0}) to support spending condition "{1}" requirement.
+    InsufficientSignerCount(usize, SpendingCondition),
 }
 
 #[derive(Getters, Clone, PartialEq, Eq, Hash, Debug)]
@@ -500,9 +500,9 @@ impl WalletSettings {
         let signer_count = self.signers.len();
         match condition {
             SpendingCondition::Sigs(ts) => match ts.sigs {
-                SigsReq::AtLeast(n) if (n as usize) > signer_count => {
-                    Err(DescriptorError::InsufficientSignerCount(n, condition))
-                }
+                SigsReq::AtLeast(n) if (n as usize) > signer_count => Err(
+                    DescriptorError::InsufficientSignerCount(signer_count, condition),
+                ),
                 SigsReq::Specific(signer_fp)
                     if self
                         .signers

@@ -183,7 +183,7 @@
               <object class="GtkSpinButton" id="sigs_spin">
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
-                <property name="text" translatable="yes">1</property>
+                <property name="text" translatable="yes">2</property>
                 <property name="adjustment">sigs_adj</property>
                 <property name="value">1</property>
               </object>
