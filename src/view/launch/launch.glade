@@ -46,7 +46,7 @@
                   <object class="GtkSwitch" id="taproot_swch">
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
-                    <property name="active">True</property>
+                    <property name="active">False</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -71,7 +71,7 @@
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="margin-start">13</property>
-                    <property name="active">True</property>
+                    <property name="active">False</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
