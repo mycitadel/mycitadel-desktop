@@ -120,7 +120,7 @@ Some rights are reserved; for details please read the license agreement below</p
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="label" translatable="yes">Wallet for bitcoin, digital assets and bitcoin finance (#BiFi) smart contracts. 
-Tool for reliable hodling (with inheritance options), corporate &amp; organization use, current acconts with instant Lightning payments. Works with single- and multisig setups, based on hardware, air-gaped, cold and server-side hot key storage, involving arbitrary complex time-lock scripts (with miniscript) and wide interoperability (because of use of wallet descriptors). Taproot-enabled from day one, including multisig- and script-based taproot</property>
+Tool for reliable hodling (with inheritance options), corporate &amp; organization use, current accounts with instant Lightning payments. Works with single- and multisig setups, based on hardware, air-gaped, cold and server-side hot key storage, involving arbitrary complex time-lock scripts (with miniscript) and wide interoperability (because of use of wallet descriptors). Taproot-enabled from day one, including multisig- and script-based taproot</property>
                 <property name="justify">center</property>
                 <property name="wrap">True</property>
                 <property name="selectable">True</property>
@@ -226,7 +226,7 @@ Tool for reliable hodling (with inheritance options), corporate &amp; organizati
                   <object class="GtkLabel">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
-                    <property name="label" translatable="yes">The application is written with rust programming languague, GTK+ framework and set of bitcoin &amp; lightning rust libraries developed by LNP/BP Standards Association, including client-side-validation, descriptor wallet, BP, LNP and RGB libraries. MyCitadel node also contains embedded LNP &amp; RGB Nodes provided by the Association</property>
+                    <property name="label" translatable="yes">The application is written with rust programming language, GTK+ framework and set of bitcoin &amp; lightning rust libraries developed by LNP/BP Standards Association, including client-side-validation, descriptor wallet, BP, LNP and RGB libraries. MyCitadel node also contains embedded LNP &amp; RGB Nodes provided by the Association</property>
                     <property name="justify">center</property>
                     <property name="wrap">True</property>
                     <property name="selectable">True</property>
@@ -364,8 +364,5 @@ Tool for reliable hodling (with inheritance options), corporate &amp; organizati
         <property name="show-close-button">True</property>
       </object>
     </child>
-  </object>
-  <object class="GtkTextBuffer" id="textbuffer1">
-    <property name="text" translatable="yes">For business, partnership and other enquiries please write to enquiries@mycitadel.io</property>
   </object>
 </interface>
