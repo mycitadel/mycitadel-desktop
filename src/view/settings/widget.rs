@@ -122,22 +122,23 @@ impl Widgets {
             self.update_signer_details(None, template.network, template.bip43());
             self.pages.set_page(0);
         } else {
-            self.signers_tb.set_sensitive(false);
-            self.spending_box.set_sensitive(false);
-            self.derivation_box.set_sensitive(false);
+            let new_wallet = model.is_new_wallet();
+            self.signers_tb.set_sensitive(new_wallet);
+            self.spending_box.set_sensitive(new_wallet);
+            self.derivation_box.set_sensitive(new_wallet);
             self.descriptor_box.set_sensitive(model.support_multiclass);
 
-            self.network_box.set_sensitive(false);
+            self.network_box.set_sensitive(new_wallet);
             self.spending_buf
                 .set_text("Spending conditions can't be edited for an initialized wallet");
 
             // Disable already used classes
             for class in &model.descriptor_classes {
                 match class {
-                    DescriptorClass::PreSegwit => self.descr_legacy_tgl.set_sensitive(false),
-                    DescriptorClass::SegwitV0 => self.descr_segwit_tgl.set_sensitive(false),
-                    DescriptorClass::NestedV0 => self.descr_nested_tgl.set_sensitive(false),
-                    DescriptorClass::TaprootC0 => self.descr_taproot_tgl.set_sensitive(false),
+                    DescriptorClass::PreSegwit => self.descr_legacy_tgl.set_sensitive(new_wallet),
+                    DescriptorClass::SegwitV0 => self.descr_segwit_tgl.set_sensitive(new_wallet),
+                    DescriptorClass::NestedV0 => self.descr_nested_tgl.set_sensitive(new_wallet),
+                    DescriptorClass::TaprootC0 => self.descr_taproot_tgl.set_sensitive(new_wallet),
                 }
             }
         }

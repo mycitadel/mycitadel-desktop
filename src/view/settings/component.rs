@@ -37,7 +37,7 @@ pub struct Component {
 impl Component {
     fn close(&self) {
         self.widgets.hide();
-        if self.model.is_new_wallet() {
+        if self.model.template.is_some() {
             self.launcher_stream
                 .as_ref()
                 .map(|stream| stream.emit(launch::Msg::Show(launch::Page::Template)));
@@ -253,7 +253,7 @@ impl Update for Component {
             Msg::New(template, path) => {
                 if let Err(err) =
                     self.model
-                        .replace_with_template(self.model.stream(), template.clone(), path)
+                        .replace_from_template(self.model.stream(), template.clone(), path)
                 {
                     error_dlg(
                         self.widgets.as_root(),
@@ -268,9 +268,14 @@ impl Update for Component {
                 }
                 self.widgets.reset_ui(&self.model);
             }
-            Msg::View(descriptor, path) => {
+            Msg::Duplicate(settings, path) => {
                 self.model
-                    .replace_with_descriptor(self.model.stream(), descriptor, path);
+                    .replace_from_settings(self.model.stream(), settings, path, true);
+                self.widgets.reset_ui(&self.model);
+            }
+            Msg::View(settings, path) => {
+                self.model
+                    .replace_from_settings(self.model.stream(), settings, path, false);
                 self.widgets.reset_ui(&self.model);
             }
             Msg::SignerAddDevice(fingerprint, device) => {

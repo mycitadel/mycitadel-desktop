@@ -19,7 +19,7 @@ use std::path::PathBuf;
 
 use wallet::psbt::Psbt;
 
-use crate::model::PublicNetwork;
+use crate::model::{PublicNetwork, WalletSettings};
 
 pub struct ViewModel {}
 
@@ -28,6 +28,7 @@ pub enum Msg {
     Show(Page),
     Close,
     Template(i32),
+    Duplicate(WalletSettings, String),
     Import,
     Wallet,
     Psbt(Option<PublicNetwork>),

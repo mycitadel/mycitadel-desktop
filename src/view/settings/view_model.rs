@@ -147,6 +147,7 @@ pub struct ViewModel {
     pub electrum_model: ElectrumModel,
 
     // Data provided by the parent window
+    pub new_wallet: bool,
     pub template: Option<WalletTemplate>,
     pub export_lnpbp: bool,
 
@@ -187,15 +188,17 @@ impl ViewModel {
             descriptor_classes: bset![DescriptorClass::SegwitV0],
             support_multiclass: false,
             export_lnpbp: true,
+            new_wallet: true,
         }
     }
 
-    pub fn replace_with_template(
+    pub fn replace_from_template(
         &mut self,
         stream: StreamHandle<Msg>,
         template: WalletTemplate,
         path: PathBuf,
     ) -> Result<(), file::Error> {
+        self.new_wallet = true;
         self.path = path;
         self.stream = stream;
         self.descriptor_classes = bset![template.descriptor_class];
@@ -215,13 +218,16 @@ impl ViewModel {
         Ok(())
     }
 
-    pub fn replace_with_descriptor(
+    pub fn replace_from_settings(
         &mut self,
         stream: StreamHandle<Msg>,
         settings: WalletSettings,
         path: PathBuf,
+        new_wallet: bool,
     ) {
         let descriptor_classes = settings.descriptor_classes().clone();
+
+        self.new_wallet = new_wallet;
         self.path = path;
         self.stream = stream;
         self.support_multiclass = descriptor_classes.len() > 1;
@@ -266,7 +272,7 @@ impl ViewModel {
     }
 
     pub fn is_new_wallet(&self) -> bool {
-        self.template.is_some()
+        self.new_wallet
     }
 
     pub fn bip43(&self) -> Bip43 {

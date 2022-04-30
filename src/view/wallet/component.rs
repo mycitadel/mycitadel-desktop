@@ -10,6 +10,7 @@
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::ffi::OsStr;
 use std::path::PathBuf;
 
 use gladis::Gladis;
@@ -333,6 +334,17 @@ impl Update for Component {
                 self.launcher_stream
                     .as_ref()
                     .map(|stream| stream.emit(launch::Msg::Wallet));
+            }
+            Msg::Redefine => {
+                let settings = self.model.to_settings();
+                let path: PathBuf = self.model.path().clone();
+                let new_path = format!(
+                    "{}-copy.mcw",
+                    path.file_stem().and_then(OsStr::to_str).unwrap_or_default()
+                );
+                self.launcher_stream
+                    .as_ref()
+                    .map(|stream| stream.emit(launch::Msg::Duplicate(settings, new_path)));
             }
             Msg::Import => {
                 self.launcher_stream

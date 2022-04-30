@@ -33,6 +33,7 @@ pub enum Msg {
     Open,
     Close,
     About,
+    Redefine,
     Import,
     Save,
     Settings,

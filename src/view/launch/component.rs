@@ -122,6 +122,20 @@ impl Update for Component {
                         .emit(settings::Msg::New(template, path));
                 }
             }
+            Msg::Duplicate(settings, path) => {
+                if let Some(path) = file_create_dlg(
+                    self.widgets.as_root(),
+                    "Copy wallet",
+                    "MyCitadel wallet",
+                    "*.mcw",
+                    &path,
+                ) {
+                    self.wallet_count += 1;
+                    self.widgets.hide();
+                    self.wallet_settings
+                        .emit(settings::Msg::Duplicate(settings, path));
+                }
+            }
             Msg::Import => {}
             Msg::Wallet => {
                 if let Some(path) = file_open_dlg(
