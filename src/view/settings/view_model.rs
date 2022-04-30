@@ -351,14 +351,10 @@ impl ViewModel {
         if self.signers.is_empty() {
             return Err(s!("You need to add at least one signer"));
         }
-        let descriptor = WalletSettings::try_from(self as &Self)
-            .ok()
-            .as_ref()
-            .map(WalletSettings::descriptors_all)
-            .transpose()
-            .map_err(|err| err.to_string())?
-            .map(|(d, _)| d);
-        self.descriptor = descriptor;
+        let settings = WalletSettings::try_from(self as &Self).map_err(|err| err.to_string())?;
+        // TODO: Support multiple descriptors
+        let (descriptor, _) = settings.descriptors_all().map_err(|err| err.to_string())?;
+        self.descriptor = Some(descriptor);
         Ok(())
     }
 

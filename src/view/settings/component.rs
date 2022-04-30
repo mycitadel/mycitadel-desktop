@@ -388,7 +388,9 @@ impl Update for Component {
                 };
                 self.model.spending_model.remove(index as u32);
             }
-            Msg::ConditionChange => { /* TODO: Implement */ }
+            Msg::ConditionChange => {
+                // Nothing to do here since the model is automatically updated
+            }
             Msg::ToggleClass(class) => {
                 if self.widgets.should_update_descr_class(class)
                     && self.model.toggle_descr_class(class)

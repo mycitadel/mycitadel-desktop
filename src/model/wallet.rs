@@ -500,7 +500,7 @@ impl WalletSettings {
         let signer_count = self.signers.len();
         match condition {
             SpendingCondition::Sigs(ts) => match ts.sigs {
-                SigsReq::AtLeast(n) if (n as usize) < signer_count => {
+                SigsReq::AtLeast(n) if (n as usize) > signer_count => {
                     Err(DescriptorError::InsufficientSignerCount(n, condition))
                 }
                 SigsReq::Specific(signer_fp)
