@@ -125,19 +125,28 @@ impl Widgets {
             self.signers_tb.set_sensitive(new_wallet);
             self.spending_box.set_sensitive(new_wallet);
             self.derivation_box.set_sensitive(new_wallet);
-            self.descriptor_box.set_sensitive(model.support_multiclass);
+            self.descriptor_box.set_sensitive(new_wallet);
 
             self.network_box.set_sensitive(new_wallet);
             self.spending_buf
                 .set_text("Spending conditions can't be edited for an initialized wallet");
 
             // Disable already used classes
+            let multiclass = model.support_multiclass;
             for class in &model.descriptor_classes {
                 match class {
-                    DescriptorClass::PreSegwit => self.descr_legacy_tgl.set_sensitive(new_wallet),
-                    DescriptorClass::SegwitV0 => self.descr_segwit_tgl.set_sensitive(new_wallet),
-                    DescriptorClass::NestedV0 => self.descr_nested_tgl.set_sensitive(new_wallet),
-                    DescriptorClass::TaprootC0 => self.descr_taproot_tgl.set_sensitive(new_wallet),
+                    DescriptorClass::PreSegwit => self
+                        .descr_legacy_tgl
+                        .set_sensitive(new_wallet || multiclass),
+                    DescriptorClass::SegwitV0 => self
+                        .descr_segwit_tgl
+                        .set_sensitive(new_wallet || multiclass),
+                    DescriptorClass::NestedV0 => self
+                        .descr_nested_tgl
+                        .set_sensitive(new_wallet || multiclass),
+                    DescriptorClass::TaprootC0 => self
+                        .descr_taproot_tgl
+                        .set_sensitive(new_wallet || multiclass),
                 }
             }
         }
