@@ -73,13 +73,28 @@ impl RowWidgets {
 
                 let addr_str = address_fld.text();
                 let addr_str = addr_str.as_str();
-                let (icon, msg) = match (Address::from_str(addr_str), AddressCompat::from_str(addr_str)) {
+                let (icon, msg) = match (
+                    Address::from_str(addr_str),
+                    AddressCompat::from_str(addr_str),
+                ) {
                     (_, _) if addr_str.is_empty() => (None, None),
-                    (Err(err), _) => (Some("dialog-error-symbolic"), Some(format!("Invalid address: {}", err))),
-                    (_, Err(_)) => (Some("dialog-warning-symbolic"), Some(s!("Address belongs to the future witness version and can be spent only if a soft-fork will happen"))),
-                    (Ok(addr), _) if !addr.is_valid_for_network(network.into()) => {
-                        (Some("dialog-error-symbolic"), Some(format!("Address belongs to {} network, which does not match the wallet network", addr.network)))
-                    }
+                    (Err(err), _) => (
+                        Some("dialog-error-symbolic"),
+                        Some(format!("Invalid address: {}", err)),
+                    ),
+                    (_, Err(_)) => (
+                        Some("dialog-warning-symbolic"),
+                        Some(s!("Address belongs to the future witness version and can \
+                                 be spent only if a soft-fork will happen")),
+                    ),
+                    (Ok(addr), _) if !addr.is_valid_for_network(network.into()) => (
+                        Some("dialog-error-symbolic"),
+                        Some(format!(
+                            "Address belongs to {} network, which does not match the wallet \
+                             network",
+                            addr.network
+                        )),
+                    ),
                     (Ok(_), _) => (Some("emblem-ok-symbolic"), Some(s!("Address is valid"))),
                 };
                 address_fld.set_secondary_icon_name(icon);

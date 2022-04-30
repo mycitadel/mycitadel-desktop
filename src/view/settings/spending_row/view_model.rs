@@ -9,11 +9,11 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
-use chrono::{DateTime, Datelike, NaiveDate, Utc};
 use std::borrow::Borrow;
 use std::cell::RefCell;
 use std::collections::BTreeSet;
 
+use chrono::{DateTime, Datelike, NaiveDate, Utc};
 use glib::subclass::prelude::*;
 use gtk::prelude::*;
 use gtk::subclass::prelude::ListModelImpl;
@@ -109,7 +109,9 @@ impl From<&ConditionInner> for TimelockReq {
                     (_, _, true, false) => now.with_day(now.day() + offset * 7),
                     (_, _, _, true) => now.with_day(now.day() + offset),
                     _ => unreachable!(
-                        "ConditionInner internal inconsistency in relative timelock requirements\n{:#?}", inner
+                        "ConditionInner internal inconsistency in relative timelock \
+                         requirements\n{:#?}",
+                        inner
                     ),
                 };
                 TimelockReq::OlderTime(
@@ -346,9 +348,7 @@ glib::wrapper! {
 }
 
 impl Default for Condition {
-    fn default() -> Self {
-        glib::Object::new(&[]).expect("Failed to create row data")
-    }
+    fn default() -> Self { glib::Object::new(&[]).expect("Failed to create row data") }
 }
 
 impl From<&Condition> for SpendingCondition {
@@ -391,12 +391,8 @@ impl ObjectSubclass for SpendingModelInner {
 impl ObjectImpl for SpendingModelInner {}
 
 impl ListModelImpl for SpendingModelInner {
-    fn item_type(&self, _list_model: &Self::Type) -> glib::Type {
-        Condition::static_type()
-    }
-    fn n_items(&self, _list_model: &Self::Type) -> u32 {
-        self.conditions.borrow().len() as u32
-    }
+    fn item_type(&self, _list_model: &Self::Type) -> glib::Type { Condition::static_type() }
+    fn n_items(&self, _list_model: &Self::Type) -> u32 { self.conditions.borrow().len() as u32 }
     fn item(&self, _list_model: &Self::Type, position: u32) -> Option<glib::Object> {
         self.conditions
             .borrow()

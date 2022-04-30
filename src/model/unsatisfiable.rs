@@ -9,11 +9,12 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
-use crate::model::PublicNetwork;
 use bitcoin::hashes::{sha256, Hash};
 use bitcoin::secp256k1::{self, PublicKey, SECP256K1};
 use bitcoin::util::bip32::ExtendedPubKey;
 use wallet::hd::{TerminalStep, TrackingAccount, XpubRef};
+
+use crate::model::PublicNetwork;
 
 pub trait Unsatisfiable {
     type Param;

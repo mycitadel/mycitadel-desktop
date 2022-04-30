@@ -72,9 +72,7 @@ pub struct ElectrumModel {
 }
 
 impl From<ElectrumModel> for ElectrumServer {
-    fn from(model: ElectrumModel) -> Self {
-        ElectrumServer::from(&model)
-    }
+    fn from(model: ElectrumModel) -> Self { ElectrumServer::from(&model) }
 }
 
 impl From<&ElectrumModel> for ElectrumServer {
@@ -245,9 +243,7 @@ impl ViewModel {
         self.descriptor = None;
     }
 
-    pub fn stream(&self) -> StreamHandle<Msg> {
-        self.stream.clone()
-    }
+    pub fn stream(&self) -> StreamHandle<Msg> { self.stream.clone() }
 
     pub fn save(&self) -> Result<Option<WalletSettings>, file::Error> {
         let settings = WalletSettings::try_from(self).ok();
@@ -264,16 +260,10 @@ impl ViewModel {
         }
     }
 
-    pub fn path(&self) -> &Path {
-        &self.path
-    }
-    pub fn filename(&self) -> String {
-        self.path.display().to_string()
-    }
+    pub fn path(&self) -> &Path { &self.path }
+    pub fn filename(&self) -> String { self.path.display().to_string() }
 
-    pub fn is_new_wallet(&self) -> bool {
-        self.new_wallet
-    }
+    pub fn is_new_wallet(&self) -> bool { self.new_wallet }
 
     pub fn bip43(&self) -> Bip43 {
         let class = self

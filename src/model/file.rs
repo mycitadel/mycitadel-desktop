@@ -12,6 +12,7 @@
 use std::io::{Seek, Write};
 use std::path::{Path, PathBuf};
 use std::{fs, io};
+
 use strict_encoding::{StrictDecode, StrictEncode};
 
 use crate::model::{Wallet, WalletSettings};
@@ -47,9 +48,7 @@ impl<T> DocReader<T>
 where
     T: StrictDecode,
 {
-    pub fn magic_u32(&self) -> u32 {
-        u32::from_be_bytes(self.magic)
-    }
+    pub fn magic_u32(&self) -> u32 { u32::from_be_bytes(self.magic) }
 }
 
 #[derive(StrictEncode)]
@@ -97,9 +96,7 @@ where
 
     type FallbackDocType: StrictDecode;
 
-    fn magic_u32() -> u32 {
-        u32::from_be_bytes(Self::DOC_MAGIC)
-    }
+    fn magic_u32() -> u32 { u32::from_be_bytes(Self::DOC_MAGIC) }
 
     fn file_name(base: &str, order_no: usize) -> String {
         let mut path = PathBuf::from(format!("{}-{}", base, order_no));

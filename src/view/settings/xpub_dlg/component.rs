@@ -9,10 +9,11 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
+use std::str::FromStr;
+
 use gladis::Gladis;
 use gtk::{MessageDialog, ResponseType};
 use relm::{Relm, Sender, Update, Widget};
-use std::str::FromStr;
 
 use super::{Msg, ViewModel, Widgets};
 use crate::model::{DerivationType, XpubDescriptor, XpubParseError, XpubRequirementError};
@@ -102,9 +103,7 @@ impl Widget for Component {
     type Root = MessageDialog;
 
     // Return the root widget.
-    fn root(&self) -> Self::Root {
-        self.widgets.to_root()
-    }
+    fn root(&self) -> Self::Root { self.widgets.to_root() }
 
     fn view(relm: &Relm<Self>, model: Self::Model) -> Self {
         let glade_src = include_str!("xpub_dlg.glade");

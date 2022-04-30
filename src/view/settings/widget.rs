@@ -25,9 +25,8 @@ use miniscript::Descriptor;
 use relm::{Relm, Sender};
 use wallet::hd::{Bip43, DerivationStandard, HardenedIndex, SegmentIndexes, TrackingAccount};
 
-use super::{
-    spending_row, spending_row::SpendingModel, ElectrumModel, ElectrumPreset, Msg, ViewModel,
-};
+use super::spending_row::SpendingModel;
+use super::{spending_row, ElectrumModel, ElectrumPreset, Msg, ViewModel};
 use crate::model::{
     DerivationStandardExt, DerivationType, DescriptorClass, ElectrumSec, OriginFormat, Ownership,
     PublicNetwork, Requirement, Signer, WalletTemplate,
@@ -161,19 +160,11 @@ impl Widgets {
         self.dialog.show();
     }
 
-    pub fn hide(&self) {
-        self.dialog.hide()
-    }
-    pub fn close(&self) {
-        self.dialog.close()
-    }
+    pub fn hide(&self) { self.dialog.hide() }
+    pub fn close(&self) { self.dialog.close() }
 
-    pub fn to_root(&self) -> Dialog {
-        self.dialog.clone()
-    }
-    pub fn as_root(&self) -> &Dialog {
-        &self.dialog
-    }
+    pub fn to_root(&self) -> Dialog { self.dialog.clone() }
+    pub fn as_root(&self) -> &Dialog { &self.dialog }
 
     pub(super) fn connect(&self, relm: &Relm<super::Component>) {
         connect!(relm, self.devices_btn, connect_clicked(_), Msg::AddDevices);
@@ -397,13 +388,9 @@ impl Widgets {
         });
     }
 
-    pub fn signer_fingerprint(&self) -> String {
-        self.fingerprint_fld.text().to_string()
-    }
+    pub fn signer_fingerprint(&self) -> String { self.fingerprint_fld.text().to_string() }
 
-    pub fn signer_name(&self) -> String {
-        self.name_fld.text().to_string()
-    }
+    pub fn signer_name(&self) -> String { self.name_fld.text().to_string() }
 
     pub fn signer_origin(&self) -> String {
         self.path_fld
@@ -448,13 +435,9 @@ impl Widgets {
         });
     }
 
-    pub fn electrum_server(&self) -> String {
-        self.electrum_fld.text().to_string()
-    }
+    pub fn electrum_server(&self) -> String { self.electrum_fld.text().to_string() }
 
-    pub fn electrum_port(&self) -> u16 {
-        self.port_adj.value() as u16
-    }
+    pub fn electrum_port(&self) -> u16 { self.port_adj.value() as u16 }
 
     pub fn update_electrum(
         &self,
@@ -559,15 +542,15 @@ impl Widgets {
             .set_visible(template.max_signer_count != Some(1));
         self.spending_buf
             .set_text(if template.max_signer_count == Some(1) {
-            "Single-sig wallets always can be spent with a single signature and does not allow to customize spending conditions."
-        } else {
-            "Each row means alternative spending condition.\nIf all of the requirements at least in a single row are satisfied, than the funds from this wallet may be spent."
-        });
+                "Single-sig wallets always can be spent with a single signature and does not allow \
+                 to customize spending conditions."
+            } else {
+                "Each row means alternative spending condition.\nIf all of the requirements at \
+                 least in a single row are satisfied, than the funds from this wallet may be spent."
+            });
     }
 
-    pub fn set_remove_condition(&self, allow: bool) {
-        self.removecond_btn.set_sensitive(allow)
-    }
+    pub fn set_remove_condition(&self, allow: bool) { self.removecond_btn.set_sensitive(allow) }
 
     pub fn selected_condition_index(&self) -> Option<i32> {
         self.spending_list
@@ -702,31 +685,25 @@ impl Widgets {
         let store = &mut self.signers_store;
         store.clear();
         for signer in signers {
-            store.insert_with_values(
-                None,
-                &[
-                    (0, &signer.name),
-                    (1, &signer.master_fp.to_string()),
-                    (2, &signer.account_string()),
-                    (3, &signer.xpub.to_string()),
-                    (4, &signer.device.clone().unwrap_or_default()),
-                ],
-            );
+            store.insert_with_values(None, &[
+                (0, &signer.name),
+                (1, &signer.master_fp.to_string()),
+                (2, &signer.account_string()),
+                (3, &signer.xpub.to_string()),
+                (4, &signer.device.clone().unwrap_or_default()),
+            ]);
         }
     }
 
     pub fn replace_signer(&mut self, signer: &Signer) -> bool {
         if let Some((_, item)) = self.signers_tree.selection().selected() {
-            self.signers_store.set(
-                &item,
-                &[
-                    (0, &signer.name),
-                    (1, &signer.master_fp.to_string()),
-                    (2, &signer.account_string()),
-                    (3, &signer.xpub.to_string()),
-                    (4, &signer.device.clone().unwrap_or_default()),
-                ],
-            );
+            self.signers_store.set(&item, &[
+                (0, &signer.name),
+                (1, &signer.master_fp.to_string()),
+                (2, &signer.account_string()),
+                (3, &signer.xpub.to_string()),
+                (4, &signer.device.clone().unwrap_or_default()),
+            ]);
             true
         } else {
             false
@@ -792,19 +769,9 @@ impl Widgets {
 }
 
 impl NotificationBoxExt for Widgets {
-    fn notification_box(&self) -> &Box {
-        &self.msg_box
-    }
-    fn main_dialog(&self) -> &Dialog {
-        &self.dialog
-    }
-    fn main_action_button(&self) -> &Button {
-        &self.save_btn
-    }
-    fn notification_image(&self) -> &Image {
-        &self.msg_img
-    }
-    fn notification_label(&self) -> &Label {
-        &self.msg_lbl
-    }
+    fn notification_box(&self) -> &Box { &self.msg_box }
+    fn main_dialog(&self) -> &Dialog { &self.dialog }
+    fn main_action_button(&self) -> &Button { &self.save_btn }
+    fn notification_image(&self) -> &Image { &self.msg_img }
+    fn notification_label(&self) -> &Label { &self.msg_lbl }
 }

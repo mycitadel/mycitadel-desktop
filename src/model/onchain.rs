@@ -36,13 +36,9 @@ impl AddressSummary {
 }
 
 impl AddressSummary {
-    pub fn icon_name(self) -> Option<&'static str> {
-        self.addr_src.icon_name()
-    }
+    pub fn icon_name(self) -> Option<&'static str> { self.addr_src.icon_name() }
 
-    pub fn terminal_string(self) -> String {
-        self.addr_src.terminal_string()
-    }
+    pub fn terminal_string(self) -> String { self.addr_src.terminal_string() }
 }
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
@@ -91,9 +87,7 @@ impl AddressSource {
         }
     }
 
-    pub fn terminal_string(self) -> String {
-        format!("/{}/{}", self.change_index(), self.index)
-    }
+    pub fn terminal_string(self) -> String { format!("/{}/{}", self.change_index(), self.index) }
 }
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
@@ -109,13 +103,9 @@ pub struct AddressValue {
 }
 
 impl AddressValue {
-    pub fn icon_name(self) -> Option<&'static str> {
-        self.addr_src.icon_name()
-    }
+    pub fn icon_name(self) -> Option<&'static str> { self.addr_src.icon_name() }
 
-    pub fn terminal_string(self) -> String {
-        self.addr_src.terminal_string()
-    }
+    pub fn terminal_string(self) -> String { self.addr_src.terminal_string() }
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, PartialOrd, Ord, Hash, Debug)]
@@ -159,13 +149,9 @@ impl OnchainStatus {
         }
     }
 
-    pub fn in_mempool(self) -> bool {
-        self == OnchainStatus::Mempool
-    }
+    pub fn in_mempool(self) -> bool { self == OnchainStatus::Mempool }
 
-    pub fn is_mined(self) -> bool {
-        self != OnchainStatus::Mempool
-    }
+    pub fn is_mined(self) -> bool { self != OnchainStatus::Mempool }
 
     // TODO: Do a binary file indexed by height, representing date/time information for each height
     pub fn date_time_est(self) -> DateTime<chrono::Local> {
@@ -255,9 +241,7 @@ pub struct HistoryEntry {
 }
 
 impl Ord for HistoryEntry {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.onchain.cmp(&other.onchain)
-    }
+    fn cmp(&self, other: &Self) -> Ordering { self.onchain.cmp(&other.onchain) }
 }
 
 impl PartialOrd for HistoryEntry {
@@ -285,21 +269,13 @@ impl HistoryEntry {
         }
     }
 
-    pub fn date_time_est(&self) -> DateTime<chrono::Local> {
-        self.onchain.date_time_est()
-    }
+    pub fn date_time_est(&self) -> DateTime<chrono::Local> { self.onchain.date_time_est() }
 
-    pub fn date_time(&self) -> Option<DateTime<chrono::Local>> {
-        self.onchain.date_time()
-    }
+    pub fn date_time(&self) -> Option<DateTime<chrono::Local>> { self.onchain.date_time() }
 
-    pub fn mining_info(&self) -> String {
-        self.onchain.mining_info()
-    }
+    pub fn mining_info(&self) -> String { self.onchain.mining_info() }
 
-    pub fn value_credited(&self) -> u64 {
-        self.credit.values().map(|addr| addr.value).sum()
-    }
+    pub fn value_credited(&self) -> u64 { self.credit.values().map(|addr| addr.value).sum() }
 
     pub fn value_debited(&self) -> u64 {
         self.debit
@@ -309,9 +285,7 @@ impl HistoryEntry {
             .sum()
     }
 
-    pub fn balance(&self) -> i64 {
-        self.value_debited() as i64 - self.value_credited() as i64
-    }
+    pub fn balance(&self) -> i64 { self.value_debited() as i64 - self.value_credited() as i64 }
 
     pub fn address_summaries(&self) -> Vec<AddressSummary> {
         self.credit
@@ -354,21 +328,13 @@ pub struct UtxoTxid {
 }
 
 impl UtxoTxid {
-    pub fn outpoint(&self) -> OutPoint {
-        OutPoint::new(self.onchain.txid, self.vout)
-    }
+    pub fn outpoint(&self) -> OutPoint { OutPoint::new(self.onchain.txid, self.vout) }
 
-    pub fn date_time_est(self) -> DateTime<chrono::Local> {
-        self.onchain.date_time_est()
-    }
+    pub fn date_time_est(self) -> DateTime<chrono::Local> { self.onchain.date_time_est() }
 
-    pub fn date_time(self) -> Option<DateTime<chrono::Local>> {
-        self.onchain.date_time()
-    }
+    pub fn date_time(self) -> Option<DateTime<chrono::Local>> { self.onchain.date_time() }
 
-    pub fn mining_info(self) -> String {
-        self.onchain.mining_info()
-    }
+    pub fn mining_info(self) -> String { self.onchain.mining_info() }
 }
 
 impl From<&UtxoTxid> for Prevout {
@@ -383,9 +349,7 @@ impl From<&UtxoTxid> for Prevout {
 }
 
 impl From<UtxoTxid> for Prevout {
-    fn from(utxo: UtxoTxid) -> Prevout {
-        Prevout::from(&utxo)
-    }
+    fn from(utxo: UtxoTxid) -> Prevout { Prevout::from(&utxo) }
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]

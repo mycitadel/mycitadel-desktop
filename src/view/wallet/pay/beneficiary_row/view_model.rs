@@ -9,11 +9,11 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
-use bitcoin::util::address;
-use bitcoin::Address;
 use std::cell::RefCell;
 use std::str::FromStr;
 
+use bitcoin::util::address;
+use bitcoin::Address;
 use glib::subclass::prelude::*;
 use gtk::prelude::*;
 use gtk::subclass::prelude::ListModelImpl;
@@ -130,9 +130,7 @@ impl Beneficiary {
         sats as f64 / 100_000_000.0
     }
 
-    pub fn amount_sats(&self) -> u64 {
-        self.property::<u64>("amount")
-    }
+    pub fn amount_sats(&self) -> u64 { self.property::<u64>("amount") }
 }
 
 #[derive(Debug, Default)]
@@ -150,12 +148,8 @@ impl ObjectSubclass for BeneficiaryModelInner {
 impl ObjectImpl for BeneficiaryModelInner {}
 
 impl ListModelImpl for BeneficiaryModelInner {
-    fn item_type(&self, _list_model: &Self::Type) -> glib::Type {
-        Beneficiary::static_type()
-    }
-    fn n_items(&self, _list_model: &Self::Type) -> u32 {
-        self.0.borrow().len() as u32
-    }
+    fn item_type(&self, _list_model: &Self::Type) -> glib::Type { Beneficiary::static_type() }
+    fn n_items(&self, _list_model: &Self::Type) -> u32 { self.0.borrow().len() as u32 }
     fn item(&self, _list_model: &Self::Type, position: u32) -> Option<glib::Object> {
         self.0
             .borrow()

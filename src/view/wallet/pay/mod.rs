@@ -12,11 +12,10 @@
 pub(super) mod beneficiary_row;
 mod widget;
 
-pub(super) use widget::Widgets;
-
 use ::wallet::psbt;
 use bitcoin::util::address;
 use gtk::ResponseType;
+pub(super) use widget::Widgets;
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
 #[display(doc_comments)]
@@ -49,7 +48,8 @@ pub enum Error {
     /// Available wallet funds are insufficient to cover the transaction
     InsufficientFunds,
 
-    /// One or more of beneficiaries has incorrect address (please see exclamation marks next to the addresses).
+    /// One or more of beneficiaries has incorrect address (please see exclamation marks next to
+    /// the addresses).
     #[from(address::Error)]
     Address,
 

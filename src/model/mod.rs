@@ -20,10 +20,6 @@ mod unsatisfiable;
 mod wallet;
 mod xkey;
 
-pub use self::wallet::{
-    DerivationStandardExt, DerivationType, DescriptorError, SpendingCondition, Wallet,
-    WalletDescriptor, WalletEphemerals, WalletSettings, WalletState,
-};
 pub use electrum::{ElectrumSec, ElectrumServer};
 pub use file::FileDocument;
 pub use onchain::{
@@ -41,4 +37,9 @@ pub use unsatisfiable::Unsatisfiable;
 pub use xkey::{
     NonStandardDerivation, XpubDescriptor, XpubOrigin, XpubParseError, XpubRequirementError,
     XpubkeyCore,
+};
+
+pub use self::wallet::{
+    DerivationStandardExt, DerivationType, DescriptorError, SpendingCondition, Wallet,
+    WalletDescriptor, WalletEphemerals, WalletSettings, WalletState,
 };

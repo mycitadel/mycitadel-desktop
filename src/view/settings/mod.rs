@@ -15,15 +15,14 @@ mod view_model;
 mod widget;
 pub(self) mod xpub_dlg;
 
-pub use component::Component;
-pub(self) use view_model::{ElectrumModel, ElectrumPreset, ViewModel};
-pub(self) use widget::Widgets;
-
 use std::path::PathBuf;
 
 use bitcoin::util::bip32::{ExtendedPubKey, Fingerprint};
+pub use component::Component;
 use gtk::ResponseType;
 use relm::StreamHandle;
+pub(self) use view_model::{ElectrumModel, ElectrumPreset, ViewModel};
+pub(self) use widget::Widgets;
 
 use crate::model::{
     DescriptorClass, ElectrumSec, HardwareDevice, PublicNetwork, WalletSettings, WalletTemplate,

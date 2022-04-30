@@ -19,7 +19,6 @@ use std::path::PathBuf;
 
 use clap::Parser;
 use colored::Colorize;
-
 use mycitadel::model::{file, FileDocument, Wallet};
 
 /// Command-line arguments

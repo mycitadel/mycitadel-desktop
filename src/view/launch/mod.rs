@@ -12,12 +12,11 @@
 mod component;
 mod widget;
 
-pub use component::Component;
-pub(self) use widget::Widgets;
-
 use std::path::PathBuf;
 
+pub use component::Component;
 use wallet::psbt::Psbt;
+pub(self) use widget::Widgets;
 
 use crate::model::{PublicNetwork, WalletSettings};
 

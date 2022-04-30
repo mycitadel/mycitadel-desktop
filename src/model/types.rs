@@ -14,7 +14,6 @@ use std::collections::BTreeMap;
 use std::fmt::{self, Display, Formatter};
 use std::hash::{Hash, Hasher};
 
-use crate::model::XpubkeyCore;
 use bitcoin::secp256k1::PublicKey;
 use bitcoin::util::bip32::{ChainCode, ChildNumber, DerivationPath, ExtendedPubKey, Fingerprint};
 use bitcoin::Network;
@@ -27,6 +26,8 @@ use wallet::hd::{
     AccountStep, Bip43, DerivationStandard, HardenedIndex, SegmentIndexes, TerminalStep,
     TrackingAccount, XpubRef,
 };
+
+use crate::model::XpubkeyCore;
 
 // TODO: Move to descriptor wallet or BPro
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Display)]
@@ -48,9 +49,7 @@ pub enum PublicNetwork {
 }
 
 impl From<PublicNetwork> for Network {
-    fn from(network: PublicNetwork) -> Self {
-        Network::from(&network)
-    }
+    fn from(network: PublicNetwork) -> Self { Network::from(&network) }
 }
 
 impl From<&PublicNetwork> for Network {
@@ -76,9 +75,7 @@ impl TryFrom<Network> for PublicNetwork {
 }
 
 impl From<PublicNetwork> for DerivationBlockchain {
-    fn from(network: PublicNetwork) -> Self {
-        DerivationBlockchain::from(&network)
-    }
+    fn from(network: PublicNetwork) -> Self { DerivationBlockchain::from(&network) }
 }
 
 impl From<&PublicNetwork> for DerivationBlockchain {
@@ -92,9 +89,7 @@ impl From<&PublicNetwork> for DerivationBlockchain {
 }
 
 impl Default for PublicNetwork {
-    fn default() -> Self {
-        PublicNetwork::Testnet
-    }
+    fn default() -> Self { PublicNetwork::Testnet }
 }
 
 impl PublicNetwork {
@@ -159,9 +154,7 @@ impl<'a> IntoIterator for &'a HardwareList {
     type Item = (&'a Fingerprint, &'a HardwareDevice);
     type IntoIter = std::collections::btree_map::Iter<'a, Fingerprint, HardwareDevice>;
 
-    fn into_iter(self) -> Self::IntoIter {
-        self.0.iter()
-    }
+    fn into_iter(self) -> Self::IntoIter { self.0.iter() }
 }
 
 impl HardwareList {
@@ -194,16 +187,13 @@ impl HardwareList {
                             .expect("secp lib used by hwi is broken"),
                         chain_code: ChainCode::from(&hwikey.xpub.chain_code[..]),
                     };
-                    devices.insert(
-                        fingerprint,
-                        HardwareDevice {
-                            device_type: device.device_type.clone(),
-                            model: device.model.clone(),
-                            device,
-                            default_account,
-                            default_xpub: xpub,
-                        },
-                    );
+                    devices.insert(fingerprint, HardwareDevice {
+                        device_type: device.device_type.clone(),
+                        model: device.model.clone(),
+                        device,
+                        default_account,
+                        default_xpub: xpub,
+                    });
                 }
                 Err(err) => {
                     log.push(Error::DerivationNotSupported(
@@ -313,29 +303,21 @@ pub struct Signer {
 
 impl PartialEq for Signer {
     // Two signers considered equal when their xpubs are equal
-    fn eq(&self, other: &Self) -> bool {
-        self.xpub_core() == other.xpub_core()
-    }
+    fn eq(&self, other: &Self) -> bool { self.xpub_core() == other.xpub_core() }
 }
 
 impl Eq for Signer {}
 
 impl Hash for Signer {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.xpub.identifier().hash(state)
-    }
+    fn hash<H: Hasher>(&self, state: &mut H) { self.xpub.identifier().hash(state) }
 }
 
 impl PartialOrd for Signer {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> { Some(self.cmp(other)) }
 }
 
 impl Ord for Signer {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.xpub_core().cmp(&other.xpub_core())
-    }
+    fn cmp(&self, other: &Self) -> Ordering { self.xpub_core().cmp(&other.xpub_core()) }
 }
 
 impl Signer {
@@ -402,9 +384,7 @@ impl Signer {
         }
     }
 
-    pub fn is_master_known(&self) -> bool {
-        self.master_fp != zero!()
-    }
+    pub fn is_master_known(&self) -> bool { self.master_fp != zero!() }
 
     pub fn account_string(&self) -> String {
         self.account
@@ -417,13 +397,9 @@ impl Signer {
         OriginFormat::with_account(&self.origin, self.xpub.depth, network)
     }
 
-    pub fn xpub_core(&self) -> XpubkeyCore {
-        XpubkeyCore::from(self.xpub)
-    }
+    pub fn xpub_core(&self) -> XpubkeyCore { XpubkeyCore::from(self.xpub) }
 
-    pub fn fingerprint(&self) -> Fingerprint {
-        self.xpub.fingerprint()
-    }
+    pub fn fingerprint(&self) -> Fingerprint { self.xpub.fingerprint() }
 
     pub fn master_xpub(&self) -> XpubRef {
         if self.is_master_known() {
@@ -482,9 +458,7 @@ impl From<&DescriptorType> for DescriptorClass {
 }
 
 impl From<DescriptorType> for DescriptorClass {
-    fn from(ty: DescriptorType) -> Self {
-        DescriptorClass::from(&ty)
-    }
+    fn from(ty: DescriptorType) -> Self { DescriptorClass::from(&ty) }
 }
 
 impl DescriptorClass {
@@ -529,9 +503,7 @@ pub enum SigsReq {
 }
 
 impl Default for SigsReq {
-    fn default() -> Self {
-        SigsReq::All
-    }
+    fn default() -> Self { SigsReq::All }
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Display)]
@@ -555,9 +527,7 @@ pub enum TimelockReq {
 }
 
 impl Default for TimelockReq {
-    fn default() -> Self {
-        TimelockReq::Anytime
-    }
+    fn default() -> Self { TimelockReq::Anytime }
 }
 
 #[derive(

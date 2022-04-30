@@ -26,9 +26,7 @@ pub struct Widgets {
 }
 
 impl Widgets {
-    pub fn to_root(&self) -> MessageDialog {
-        self.dialog.clone()
-    }
+    pub fn to_root(&self) -> MessageDialog { self.dialog.clone() }
 
     pub fn open(&self) {
         self.xpub_entry.set_text("");
@@ -44,9 +42,7 @@ impl Widgets {
         self.hide_message();
     }
 
-    pub fn show_notification(&self) {
-        self.msg_box.show_all();
-    }
+    pub fn show_notification(&self) { self.msg_box.show_all(); }
 
     pub fn show_error(&self, msg: &str) {
         self.dialog.set_response_sensitive(ResponseType::Ok, false);
@@ -78,9 +74,7 @@ impl Widgets {
         self.msg_box.hide()
     }
 
-    pub fn xpub(&self) -> String {
-        self.xpub_entry.text().to_string()
-    }
+    pub fn xpub(&self) -> String { self.xpub_entry.text().to_string() }
 
     pub(super) fn connect(&self, relm: &Relm<super::Component>) {
         connect!(relm, self.xpub_entry, connect_changed(_), Msg::Edit);

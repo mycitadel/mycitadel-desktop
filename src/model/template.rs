@@ -9,8 +9,9 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
-use chrono::prelude::*;
 use std::collections::BTreeSet;
+
+use chrono::prelude::*;
 use wallet::hd::{Bip43, HardenedIndex, SegmentIndexes};
 
 use super::{DerivationType, PublicNetwork, SpendingCondition};
@@ -24,9 +25,7 @@ pub enum Requirement {
 }
 
 impl Default for Requirement {
-    fn default() -> Self {
-        Requirement::Allow
-    }
+    fn default() -> Self { Requirement::Allow }
 }
 
 /// Wallet template is a way to define constrained version of a wallet descriptor, but unlike

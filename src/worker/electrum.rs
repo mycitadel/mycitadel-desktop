@@ -165,21 +165,13 @@ impl ElectrumWorker {
         })
     }
 
-    pub fn sync(&self) {
-        self.cmd(Cmd::Sync)
-    }
+    pub fn sync(&self) { self.cmd(Cmd::Sync) }
 
-    pub fn pull(&self) {
-        self.cmd(Cmd::Pull)
-    }
+    pub fn pull(&self) { self.cmd(Cmd::Pull) }
 
-    pub fn update(&self, server: ElectrumServer) {
-        self.cmd(Cmd::Update(server))
-    }
+    pub fn update(&self, server: ElectrumServer) { self.cmd(Cmd::Update(server)) }
 
-    fn cmd(&self, cmd: Cmd) {
-        self.tx.send(cmd).expect("Electrum thread is dead")
-    }
+    fn cmd(&self, cmd: Cmd) { self.tx.send(cmd).expect("Electrum thread is dead") }
 }
 
 fn electrum_init(electrum: &ElectrumServer, sender: &Sender<Msg>) -> Option<ElectrumClient> {

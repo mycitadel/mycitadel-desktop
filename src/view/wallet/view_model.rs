@@ -11,6 +11,7 @@
 
 use std::collections::BTreeSet;
 use std::path::PathBuf;
+
 use wallet::hd::UnhardenedIndex;
 
 use super::pay::beneficiary_row::BeneficiaryModel;
@@ -69,41 +70,21 @@ impl ViewModel {
         }
     }
 
-    pub fn save(&mut self) -> Result<usize, file::Error> {
-        self.wallet.write_file(&self.path)
-    }
+    pub fn save(&mut self) -> Result<usize, file::Error> { self.wallet.write_file(&self.path) }
 
-    pub fn as_wallet(&self) -> &Wallet {
-        &self.wallet
-    }
-    pub fn as_wallet_mut(&mut self) -> &mut Wallet {
-        &mut self.wallet
-    }
-    pub fn to_wallet(&self) -> Wallet {
-        self.wallet.clone()
-    }
+    pub fn as_wallet(&self) -> &Wallet { &self.wallet }
+    pub fn as_wallet_mut(&mut self) -> &mut Wallet { &mut self.wallet }
+    pub fn to_wallet(&self) -> Wallet { self.wallet.clone() }
 
-    pub fn as_settings(&self) -> &WalletSettings {
-        self.wallet.as_settings()
-    }
-    pub fn to_settings(&self) -> WalletSettings {
-        self.wallet.to_settings()
-    }
+    pub fn as_settings(&self) -> &WalletSettings { self.wallet.as_settings() }
+    pub fn to_settings(&self) -> WalletSettings { self.wallet.to_settings() }
 
-    pub fn as_invoice(&self) -> &InvoiceModel {
-        &self.invoice
-    }
-    pub fn as_invoice_mut(&mut self) -> &mut InvoiceModel {
-        &mut self.invoice
-    }
+    pub fn as_invoice(&self) -> &InvoiceModel { &self.invoice }
+    pub fn as_invoice_mut(&mut self) -> &mut InvoiceModel { &mut self.invoice }
 
-    pub fn set_vsize(&mut self, vsize: f32) {
-        self.vsize = vsize;
-    }
+    pub fn set_vsize(&mut self, vsize: f32) { self.vsize = vsize; }
 
-    pub fn set_fee_rate(&mut self, fee_rate: f32) {
-        self.fee_rate = fee_rate;
-    }
+    pub fn set_fee_rate(&mut self, fee_rate: f32) { self.fee_rate = fee_rate; }
 
     pub fn update_descriptor(
         &mut self,

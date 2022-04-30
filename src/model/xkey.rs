@@ -86,9 +86,7 @@ pub struct XpubkeyCore {
 }
 
 impl Display for XpubkeyCore {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        Display::fmt(&self.fingerprint(), f)
-    }
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result { Display::fmt(&self.fingerprint(), f) }
 }
 
 impl From<ExtendedPubKey> for XpubkeyCore {
@@ -105,17 +103,13 @@ impl XpubkeyCore {
         XpubIdentifier::hash(&self.public_key.serialize())
     }
 
-    pub fn fingerprint(&self) -> Fingerprint {
-        Fingerprint::from(&self.identifier()[0..4])
-    }
+    pub fn fingerprint(&self) -> Fingerprint { Fingerprint::from(&self.identifier()[0..4]) }
 }
 
 impl MiniscriptKey for XpubkeyCore {
     type Hash = XpubkeyCore;
 
-    fn to_pubkeyhash(&self) -> Self::Hash {
-        *self
-    }
+    fn to_pubkeyhash(&self) -> Self::Hash { *self }
 }
 
 impl XpubkeyCore {
@@ -168,14 +162,11 @@ where
     ///
     /// Compares the following correspondences between xpub and SLIP132-encoded
     /// key version:
-    /// - network (testnet/mainnet only, since SLIP132 does not cover more
-    ///   networks for bitcoin);
-    /// - specific BIP43-based derivation standard matching the possible use
-    ///   of the extended public key as an account-level key or deeper;
-    ///   basing on its depth and child number;
-    /// - if the xpub depth matches account key depth defined by the provided
-    ///   derivation standard information, the child number of the xpub must be
-    ///   a hardened number.
+    /// - network (testnet/mainnet only, since SLIP132 does not cover more networks for bitcoin);
+    /// - specific BIP43-based derivation standard matching the possible use of the extended public
+    ///   key as an account-level key or deeper; basing on its depth and child number;
+    /// - if the xpub depth matches account key depth defined by the provided derivation standard
+    ///   information, the child number of the xpub must be a hardened number.
     ///
     /// Also checks that if there is a provided SLIP132 key version and
     /// derivation standard, they do match.
@@ -421,9 +412,7 @@ impl<Standard> From<XpubDescriptor<Standard>> for ExtendedPubKey
 where
     Standard: DerivationStandard,
 {
-    fn from(xpub: XpubDescriptor<Standard>) -> Self {
-        ExtendedPubKey::from(&xpub)
-    }
+    fn from(xpub: XpubDescriptor<Standard>) -> Self { ExtendedPubKey::from(&xpub) }
 }
 
 impl<Standard> XpubDescriptor<Standard>
@@ -437,14 +426,11 @@ where
     ///
     /// Compares the following correspondences between xpub and SLIP132-encoded
     /// key version:
-    /// - network (testnet/mainnet only, since SLIP132 does not cover more
-    ///   networks for bitcoin);
-    /// - specific BIP43-based derivation standard matching the possible use
-    ///   of the extended public key as an account-level key or deeper;
-    ///   basing on its depth and child number;
-    /// - if the xpub depth matches account key depth defined by the provided
-    ///   derivation standard information, the child number of the xpub must be
-    ///   a hardened number.
+    /// - network (testnet/mainnet only, since SLIP132 does not cover more networks for bitcoin);
+    /// - specific BIP43-based derivation standard matching the possible use of the extended public
+    ///   key as an account-level key or deeper; basing on its depth and child number;
+    /// - if the xpub depth matches account key depth defined by the provided derivation standard
+    ///   information, the child number of the xpub must be a hardened number.
     ///
     /// Also checks that if there is a provided SLIP132 key version and
     /// derivation standard, they do match.
@@ -483,14 +469,11 @@ where
     ///
     /// Compares the following correspondences between xpub and SLIP132-encoded
     /// key version:
-    /// - network (testnet/mainnet only, since SLIP132 does not cover more
-    ///   networks for bitcoin);
-    /// - specific BIP43-based derivation standard matching the possible use
-    ///   of the extended public key as an account-level key or deeper;
-    ///   basing on its depth and child number;
-    /// - if the xpub depth matches account key depth defined by the provided
-    ///   derivation standard information, the child number of the xpub must be
-    ///   a hardened number.
+    /// - network (testnet/mainnet only, since SLIP132 does not cover more networks for bitcoin);
+    /// - specific BIP43-based derivation standard matching the possible use of the extended public
+    ///   key as an account-level key or deeper; basing on its depth and child number;
+    /// - if the xpub depth matches account key depth defined by the provided derivation standard
+    ///   information, the child number of the xpub must be a hardened number.
     ///
     /// Also checks that if there is a provided SLIP132 key version and
     /// derivation standard, they do match.
@@ -527,14 +510,11 @@ where
     ///
     /// Compares the following correspondences between the self and SLIP132-encoded
     /// key version.
-    /// - network (testnet/mainnet only, since SLIP132 does not cover more
-    ///   networks for bitcoin);
-    /// - specific BIP43-based derivation standard matching the possible use
-    ///   of the extended public key as an account-level key or deeper;
-    ///   basing on its depth and child number;
-    /// - if the xpub depth matches account key depth defined by the provided
-    ///   derivation standard information, the child number of the xpub must be
-    ///   a hardened number.
+    /// - network (testnet/mainnet only, since SLIP132 does not cover more networks for bitcoin);
+    /// - specific BIP43-based derivation standard matching the possible use of the extended public
+    ///   key as an account-level key or deeper; basing on its depth and child number;
+    /// - if the xpub depth matches account key depth defined by the provided derivation standard
+    ///   information, the child number of the xpub must be a hardened number.
     ///
     /// Also checks that if there is a provided SLIP132 key version and
     /// derivation standard, they do match.
@@ -610,9 +590,7 @@ where
         XpubIdentifier::from_engine(engine)
     }
 
-    pub fn fingerprint(&self) -> Fingerprint {
-        Fingerprint::from(&self.identifier()[0..4])
-    }
+    pub fn fingerprint(&self) -> Fingerprint { Fingerprint::from(&self.identifier()[0..4]) }
 
     pub fn to_origin(&self) -> XpubOrigin<Standard> {
         XpubOrigin {

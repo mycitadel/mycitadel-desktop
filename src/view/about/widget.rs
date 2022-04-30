@@ -26,19 +26,11 @@ pub struct Widgets {
 impl Widgets {
     pub fn update_ui(&self, _model: &ViewModel) {}
 
-    pub fn show(&self) {
-        self.dialog.show()
-    }
-    pub fn hide(&self) {
-        self.dialog.hide()
-    }
+    pub fn show(&self) { self.dialog.show() }
+    pub fn hide(&self) { self.dialog.hide() }
 
-    pub fn to_root(&self) -> Dialog {
-        self.dialog.clone()
-    }
-    pub fn as_root(&self) -> &Dialog {
-        &self.dialog
-    }
+    pub fn to_root(&self) -> Dialog { self.dialog.clone() }
+    pub fn as_root(&self) -> &Dialog { &self.dialog }
 
     pub(super) fn connect(&self, relm: &Relm<super::Component>) {
         self.pgp_fld.connect_icon_press(|entry, _, _| {

@@ -19,7 +19,8 @@ use gtk::prelude::*;
 use gtk::{Dialog, ResponseType};
 use relm::{init, Channel, Relm, StreamHandle, Update, Widget};
 
-use super::{spending_row::Condition, xpub_dlg, Msg, ViewModel, Widgets};
+use super::spending_row::Condition;
+use super::{xpub_dlg, Msg, ViewModel, Widgets};
 use crate::model::{PublicNetwork, Signer, WalletSettings};
 use crate::view::settings::view_model::ElectrumPreset;
 use crate::view::{devices, error_dlg, launch, wallet, NotificationBoxExt};
@@ -422,9 +423,7 @@ impl Widget for Component {
     type Root = Dialog;
 
     // Return the root widget.
-    fn root(&self) -> Self::Root {
-        self.widgets.to_root()
-    }
+    fn root(&self) -> Self::Root { self.widgets.to_root() }
 
     fn view(relm: &Relm<Self>, model: Self::Model) -> Self {
         let glade_src = include_str!("settings.glade");

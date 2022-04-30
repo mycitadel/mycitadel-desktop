@@ -18,8 +18,7 @@ use gtk::{
 use relm::Relm;
 
 use super::{beneficiary_row, FeeRate, Msg};
-use crate::view::wallet;
-use crate::view::NotificationBoxExt;
+use crate::view::{wallet, NotificationBoxExt};
 
 // Create the structure that holds the widgets used in the view.
 #[derive(Clone, Gladis)]
@@ -66,19 +65,11 @@ impl Widgets {
         self.update_info(model.fee_rate(), fees, model.vsize(), None);
     }
 
-    pub fn show(&self) {
-        self.dialog.show()
-    }
-    pub fn hide(&self) {
-        self.dialog.hide()
-    }
+    pub fn show(&self) { self.dialog.show() }
+    pub fn hide(&self) { self.dialog.hide() }
 
-    pub fn to_root(&self) -> Dialog {
-        self.dialog.clone()
-    }
-    pub fn as_root(&self) -> &Dialog {
-        &self.dialog
-    }
+    pub fn to_root(&self) -> Dialog { self.dialog.clone() }
+    pub fn as_root(&self) -> &Dialog { &self.dialog }
 
     pub fn connect(&self, relm: &Relm<wallet::Component>) {
         connect!(
@@ -208,9 +199,7 @@ impl Widgets {
         self.block3_mi.set_active(ty == FeeRate::ThreeBlocks);
     }
 
-    pub fn fee_rate(&self) -> f64 {
-        self.fee_adj.value()
-    }
+    pub fn fee_rate(&self) -> f64 { self.fee_adj.value() }
 
     pub fn select_beneficiary(&self, index: u32) {
         self.beneficiary_list
@@ -227,19 +216,9 @@ impl Widgets {
 }
 
 impl NotificationBoxExt for Widgets {
-    fn notification_box(&self) -> &Box {
-        &self.msg_box
-    }
-    fn main_dialog(&self) -> &Dialog {
-        &self.dialog
-    }
-    fn main_action_button(&self) -> &Button {
-        &self.prepare_btn
-    }
-    fn notification_image(&self) -> &Image {
-        &self.msg_img
-    }
-    fn notification_label(&self) -> &Label {
-        &self.msg_lbl
-    }
+    fn notification_box(&self) -> &Box { &self.msg_box }
+    fn main_dialog(&self) -> &Dialog { &self.dialog }
+    fn main_action_button(&self) -> &Button { &self.prepare_btn }
+    fn notification_image(&self) -> &Image { &self.msg_img }
+    fn notification_label(&self) -> &Label { &self.msg_lbl }
 }

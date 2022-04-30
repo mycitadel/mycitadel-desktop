@@ -14,14 +14,13 @@ mod pay;
 mod view_model;
 mod widget;
 
-pub use self::component::Component;
-pub(super) use view_model::ViewModel;
-pub(self) use widget::Widgets;
-
 use std::collections::BTreeSet;
 
 use relm::StreamHandle;
+pub(super) use view_model::ViewModel;
+pub(self) use widget::Widgets;
 
+pub use self::component::Component;
 use crate::model::{DescriptorClass, ElectrumSec, ElectrumServer, Signer};
 use crate::view::launch;
 use crate::worker::exchange::Fiat;

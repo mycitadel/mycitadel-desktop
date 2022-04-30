@@ -13,11 +13,6 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::ffi::OsStr;
 use std::path::PathBuf;
 
-use gladis::Gladis;
-use gtk::prelude::*;
-use gtk::{ApplicationWindow, ResponseType};
-use relm::{init, Channel, Relm, StreamHandle, Update, Widget};
-
 use ::wallet::descriptors::InputDescriptor;
 use ::wallet::locks::{LockTime, SeqNo};
 use ::wallet::psbt::{Construct, Psbt};
@@ -26,7 +21,11 @@ use bitcoin::blockdata::constants::WITNESS_SCALE_FACTOR;
 use bitcoin::policy::DUST_RELAY_TX_FEE;
 use bitcoin::secp256k1::SECP256K1;
 use bitcoin::{EcdsaSighashType, Transaction, TxIn, TxOut};
+use gladis::Gladis;
+use gtk::prelude::*;
+use gtk::{ApplicationWindow, ResponseType};
 use miniscript::DescriptorTrait;
+use relm::{init, Channel, Relm, StreamHandle, Update, Widget};
 use wallet::hd::{SegmentIndexes, UnhardenedIndex};
 
 use super::pay::beneficiary_row::Beneficiary;
@@ -457,7 +456,8 @@ impl Component {
                         self.model.as_settings().network(),
                     ))
                 });
-                // Update latest change index in wallet settings by sending message to the wallet component
+                // Update latest change index in wallet settings by sending message to the wallet
+                // component
                 if self
                     .model
                     .as_wallet_mut()
@@ -519,9 +519,7 @@ impl Widget for Component {
     type Root = ApplicationWindow;
 
     // Return the root widget.
-    fn root(&self) -> Self::Root {
-        self.widgets.to_root()
-    }
+    fn root(&self) -> Self::Root { self.widgets.to_root() }
 
     fn view(relm: &Relm<Self>, model: Self::Model) -> Self {
         let glade_src = include_str!("wallet.glade");

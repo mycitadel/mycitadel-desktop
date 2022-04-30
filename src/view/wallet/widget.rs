@@ -112,22 +112,12 @@ pub struct Widgets {
 }
 
 impl Widgets {
-    pub fn show(&self) {
-        self.window.show()
-    }
-    pub fn hide(&self) {
-        self.window.hide()
-    }
-    pub fn close(&self) {
-        self.window.close()
-    }
+    pub fn show(&self) { self.window.show() }
+    pub fn hide(&self) { self.window.hide() }
+    pub fn close(&self) { self.window.close() }
 
-    pub fn to_root(&self) -> ApplicationWindow {
-        self.window.clone()
-    }
-    pub fn as_root(&self) -> &ApplicationWindow {
-        &self.window
-    }
+    pub fn to_root(&self) -> ApplicationWindow { self.window.clone() }
+    pub fn as_root(&self) -> &ApplicationWindow { &self.window }
 
     pub(super) fn connect(&self, relm: &Relm<super::Component>) {
         connect!(relm, self.new_btn, connect_clicked(_), Msg::New);
@@ -320,17 +310,14 @@ impl Widgets {
             balance += item.balance();
             let btc = format!("{:+.08}", item.balance() as f64 / 100_000_000.0);
             let btc_balance = format!("{:.08}", balance as f64 / 100_000_000.0);
-            self.history_store.insert_with_values(
-                None,
-                &[
-                    (0, &item.icon_name()),
-                    (1, &item.onchain.txid.to_string()),
-                    (2, &btc),
-                    (3, &btc_balance),
-                    (4, &item.mining_info()),
-                    (5, &item.color()),
-                ],
-            );
+            self.history_store.insert_with_values(None, &[
+                (0, &item.icon_name()),
+                (1, &item.onchain.txid.to_string()),
+                (2, &btc),
+                (3, &btc_balance),
+                (4, &item.mining_info()),
+                (5, &item.color()),
+            ]);
         }
     }
 
@@ -338,15 +325,12 @@ impl Widgets {
         self.utxo_store.clear();
         for item in utxos {
             let btc = format_btc_value(item.value);
-            self.utxo_store.insert_with_values(
-                None,
-                &[
-                    (0, &item.addr_src.address.to_string()),
-                    (1, &item.onchain.txid.to_string()),
-                    (2, &btc),
-                    (3, &item.mining_info()),
-                ],
-            );
+            self.utxo_store.insert_with_values(None, &[
+                (0, &item.addr_src.address.to_string()),
+                (1, &item.onchain.txid.to_string()),
+                (2, &btc),
+                (3, &item.mining_info()),
+            ]);
         }
     }
 
@@ -356,17 +340,14 @@ impl Widgets {
             let balance = format_btc_value(info.balance);
             let volume = format_btc_value(info.volume);
             let terminal = info.terminal_string();
-            self.address_store.insert_with_values(
-                None,
-                &[
-                    (0, &info.addr_src.address.to_string()),
-                    (1, &balance),
-                    (2, &volume),
-                    (3, &info.tx_count),
-                    (4, &info.icon_name()),
-                    (5, &terminal),
-                ],
-            );
+            self.address_store.insert_with_values(None, &[
+                (0, &info.addr_src.address.to_string()),
+                (1, &balance),
+                (2, &volume),
+                (3, &info.tx_count),
+                (4, &info.icon_name()),
+                (5, &terminal),
+            ]);
         }
     }
 

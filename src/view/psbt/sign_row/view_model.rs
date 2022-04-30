@@ -9,9 +9,9 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
-use bitcoin::util::bip32::Fingerprint;
 use std::cell::RefCell;
 
+use bitcoin::util::bip32::Fingerprint;
 use glib::subclass::prelude::*;
 use gtk::prelude::*;
 use gtk::subclass::prelude::ListModelImpl;
@@ -206,12 +206,8 @@ impl ObjectSubclass for SigningModelInner {
 impl ObjectImpl for SigningModelInner {}
 
 impl ListModelImpl for SigningModelInner {
-    fn item_type(&self, _list_model: &Self::Type) -> glib::Type {
-        Signing::static_type()
-    }
-    fn n_items(&self, _list_model: &Self::Type) -> u32 {
-        self.0.borrow().len() as u32
-    }
+    fn item_type(&self, _list_model: &Self::Type) -> glib::Type { Signing::static_type() }
+    fn n_items(&self, _list_model: &Self::Type) -> u32 { self.0.borrow().len() as u32 }
     fn item(&self, _list_model: &Self::Type, position: u32) -> Option<glib::Object> {
         self.0
             .borrow()
@@ -226,15 +222,11 @@ glib::wrapper! {
 }
 
 impl Default for SigningModel {
-    fn default() -> Self {
-        SigningModel::new()
-    }
+    fn default() -> Self { SigningModel::new() }
 }
 
 impl SigningModel {
-    pub fn new() -> SigningModel {
-        glib::Object::new(&[]).expect("Failed to create SigningModel")
-    }
+    pub fn new() -> SigningModel { glib::Object::new(&[]).expect("Failed to create SigningModel") }
 
     pub fn append(&self, obj: &Signing) {
         let imp = self.imp();

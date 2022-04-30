@@ -163,37 +163,24 @@ impl Widgets {
                 .as_ref()
                 .map(AddressFormat::to_string)
                 .unwrap_or(s!("custom"));
-            self.address_store.insert_with_values(
-                None,
-                &[
-                    (0, &address_str),
-                    (1, &format!("{:.08}", output.amount as f64 / 100_000_000.0)),
-                    (
-                        2,
-                        &!(output.bip32_derivation.is_empty() && output.tap_key_origins.is_empty()),
-                    ),
-                    (3, &address_type),
-                ],
-            );
+            self.address_store.insert_with_values(None, &[
+                (0, &address_str),
+                (1, &format!("{:.08}", output.amount as f64 / 100_000_000.0)),
+                (
+                    2,
+                    &!(output.bip32_derivation.is_empty() && output.tap_key_origins.is_empty()),
+                ),
+                (3, &address_type),
+            ]);
         }
     }
 
-    pub fn show(&self) {
-        self.window.show()
-    }
-    pub fn hide(&self) {
-        self.window.hide()
-    }
-    pub fn close(&self) {
-        self.window.close()
-    }
+    pub fn show(&self) { self.window.show() }
+    pub fn hide(&self) { self.window.hide() }
+    pub fn close(&self) { self.window.close() }
 
-    pub fn to_root(&self) -> ApplicationWindow {
-        self.window.clone()
-    }
-    pub fn as_root(&self) -> &ApplicationWindow {
-        &self.window
-    }
+    pub fn to_root(&self) -> ApplicationWindow { self.window.clone() }
+    pub fn as_root(&self) -> &ApplicationWindow { &self.window }
 
     pub(super) fn connect(&self, relm: &Relm<super::Component>) {
         connect!(relm, self.save_btn, connect_clicked(_), Msg::Save);

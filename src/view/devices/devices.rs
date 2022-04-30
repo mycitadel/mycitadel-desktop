@@ -172,9 +172,7 @@ impl Widget for Component {
     type Root = Dialog;
 
     // Return the root widget.
-    fn root(&self) -> Self::Root {
-        self.widgets.dialog.clone()
-    }
+    fn root(&self) -> Self::Root { self.widgets.dialog.clone() }
 
     fn view(relm: &Relm<Self>, model: Self::Model) -> Self {
         let glade_src = include_str!("devices.glade");

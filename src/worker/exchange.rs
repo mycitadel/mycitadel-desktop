@@ -9,11 +9,12 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
-use relm::Sender;
 use std::sync::mpsc;
 use std::thread::JoinHandle;
 use std::time::Duration;
 use std::{io, thread};
+
+use relm::Sender;
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
 pub enum Exchange {
@@ -122,21 +123,13 @@ impl ExchangeWorker {
         })
     }
 
-    pub fn refresh(&self) {
-        self.cmd(Cmd::Refresh)
-    }
+    pub fn refresh(&self) { self.cmd(Cmd::Refresh) }
 
-    pub fn set_exchange(&self, exchange: Exchange) {
-        self.cmd(Cmd::SetExchange(exchange))
-    }
+    pub fn set_exchange(&self, exchange: Exchange) { self.cmd(Cmd::SetExchange(exchange)) }
 
-    pub fn set_fiat(&self, fiat: Fiat) {
-        self.cmd(Cmd::SetFiat(fiat))
-    }
+    pub fn set_fiat(&self, fiat: Fiat) { self.cmd(Cmd::SetFiat(fiat)) }
 
-    fn cmd(&self, cmd: Cmd) {
-        self.tx.send(cmd).expect("Exchange thread is dead")
-    }
+    fn cmd(&self, cmd: Cmd) { self.tx.send(cmd).expect("Exchange thread is dead") }
 }
 
 fn exchange_refresh(exchange: Exchange, fiat: Fiat, sender: &Sender<Msg>) -> Result<(), String> {

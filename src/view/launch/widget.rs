@@ -17,9 +17,8 @@ use gtk::prelude::*;
 use gtk::{Adjustment, ApplicationWindow, Button, ListBox, Notebook, RecentChooserWidget, Switch};
 use relm::Relm;
 
-use crate::model::{DescriptorClass, PublicNetwork, Requirement, WalletTemplate};
-
 use super::{Msg, Page};
+use crate::model::{DescriptorClass, PublicNetwork, Requirement, WalletTemplate};
 
 #[derive(Clone, Gladis)]
 pub struct Widgets {
@@ -44,20 +43,12 @@ impl Widgets {
         }
     }
 
-    pub fn hide(&self) {
-        self.window.hide()
-    }
+    pub fn hide(&self) { self.window.hide() }
 
-    pub fn to_root(&self) -> ApplicationWindow {
-        self.window.clone()
-    }
-    pub fn as_root(&self) -> &ApplicationWindow {
-        &self.window
-    }
+    pub fn to_root(&self) -> ApplicationWindow { self.window.clone() }
+    pub fn as_root(&self) -> &ApplicationWindow { &self.window }
 
-    fn is_taproot(&self) -> bool {
-        self.taproot_swch.is_active()
-    }
+    fn is_taproot(&self) -> bool { self.taproot_swch.is_active() }
 
     fn network(&self) -> PublicNetwork {
         match self.testnet_swch.is_active() {

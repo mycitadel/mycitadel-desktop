@@ -13,11 +13,11 @@ mod component;
 mod view_model;
 mod widget;
 
-pub use self::component::Component;
+use gtk::ResponseType;
 pub(self) use view_model::ViewModel;
 pub(self) use widget::Widgets;
 
-use gtk::ResponseType;
+pub use self::component::Component;
 
 #[derive(Msg)]
 pub enum Msg {

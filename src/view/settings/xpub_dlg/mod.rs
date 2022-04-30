@@ -14,11 +14,10 @@ mod view_model;
 mod widget;
 
 pub use component::Component;
-pub(self) use view_model::ViewModel;
-pub(self) use widget::Widgets;
-
 use gtk::ResponseType;
+pub(self) use view_model::ViewModel;
 use wallet::slip132::KeyApplication;
+pub(self) use widget::Widgets;
 
 #[derive(Clone, Msg)]
 pub enum Msg {

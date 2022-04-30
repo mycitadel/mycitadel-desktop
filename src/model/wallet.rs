@@ -91,19 +91,11 @@ impl From<WalletSettings> for Wallet {
 }
 
 impl Wallet {
-    pub fn as_settings(&self) -> &WalletSettings {
-        &self.settings
-    }
-    pub fn to_settings(&self) -> WalletSettings {
-        self.settings.clone()
-    }
-    pub fn into_settings(self) -> WalletSettings {
-        self.settings
-    }
+    pub fn as_settings(&self) -> &WalletSettings { &self.settings }
+    pub fn to_settings(&self) -> WalletSettings { self.settings.clone() }
+    pub fn into_settings(self) -> WalletSettings { self.settings }
 
-    pub fn tx_count(&self) -> usize {
-        self.history.len()
-    }
+    pub fn tx_count(&self) -> usize { self.history.len() }
 
     pub fn next_default_index(&self) -> UnhardenedIndex {
         self.last_indexes
@@ -131,17 +123,14 @@ impl Wallet {
             .as_settings()
             .descriptors_all()
             .expect("invalid wallet descriptor");
-        DescriptorExt::<PublicKey>::address(
-            &descriptor,
-            &SECP256K1,
-            &[UnhardenedIndex::zero(), index],
-        )
+        DescriptorExt::<PublicKey>::address(&descriptor, &SECP256K1, &[
+            UnhardenedIndex::zero(),
+            index,
+        ])
         .expect("unable to derive address for the wallet descriptor")
     }
 
-    pub fn next_address(&self) -> Address {
-        self.indexed_address(self.next_default_index())
-    }
+    pub fn next_address(&self) -> Address { self.indexed_address(self.next_default_index()) }
 
     // TODO: Implement multiple coinselect algorithms
     pub fn coinselect(&self, value: u64) -> Option<(BTreeSet<Prevout>, u64)> {
@@ -241,13 +230,9 @@ impl Wallet {
         );
     }
 
-    pub fn clear_utxos(&mut self) {
-        self.utxos = bset![];
-    }
+    pub fn clear_utxos(&mut self) { self.utxos = bset![]; }
 
-    pub fn update_utxos(&mut self, batch: BTreeSet<UtxoTxid>) {
-        self.utxos.extend(batch);
-    }
+    pub fn update_utxos(&mut self, batch: BTreeSet<UtxoTxid>) { self.utxos.extend(batch); }
 
     pub fn update_complete(
         &mut self,
@@ -389,9 +374,7 @@ pub struct WalletSettings {
 impl Deref for WalletSettings {
     type Target = WalletDescriptor;
 
-    fn deref(&self) -> &Self::Target {
-        &self.core
-    }
+    fn deref(&self) -> &Self::Target { &self.core }
 }
 
 /// Wallet descriptor defines a deterministic part of the wallet. It fully controls how different
@@ -410,8 +393,9 @@ impl Deref for WalletSettings {
 pub struct WalletDescriptor {
     /// We commit to the information whether
     pub(self) testnet: bool,
-    /// We operate set of descriptor types, such that each wallet can produce addresses of different
-    /// kind, depending on the co-signer software and supported addresses by the payee.
+    /// We operate set of descriptor types, such that each wallet can produce addresses of
+    /// different kind, depending on the co-signer software and supported addresses by the
+    /// payee.
     ///
     /// Each descriptor type defines a deterministic way of transforming DFS-ordered tree of
     /// spending conditions into a scriptPubkey. In case of taproot, this means that the descriptor
@@ -672,9 +656,12 @@ impl WalletSettings {
                 _ => unreachable!(),
             },
         );
-        let policy = policy.or(remnant).ok_or(miniscript::Error::Unexpected(s!(
-            "zero signing accounts must be filtered"
-        )))?;
+        let policy =
+            policy
+                .or(remnant)
+                .ok_or(miniscript::Error::Unexpected(s!(
+                    "zero signing accounts must be filtered"
+                )))?;
 
         let err_mapper = |err| match err {
             CompilerError::PolicyError(PolicyError::DuplicatePubKeys) => {
@@ -788,9 +775,7 @@ pub enum SpendingCondition {
 }
 
 impl Default for SpendingCondition {
-    fn default() -> Self {
-        SpendingCondition::Sigs(default!())
-    }
+    fn default() -> Self { SpendingCondition::Sigs(default!()) }
 }
 
 impl SpendingCondition {
@@ -903,9 +888,7 @@ pub enum DerivationType {
 }
 
 impl Default for DerivationType {
-    fn default() -> Self {
-        DerivationType::Bip43(Bip43::Bip48Native)
-    }
+    fn default() -> Self { DerivationType::Bip43(Bip43::Bip48Native) }
 }
 
 impl DerivationType {

@@ -14,13 +14,12 @@ pub(self) mod sign_row;
 mod view_model;
 mod widget;
 
-pub use self::component::Component;
+use relm::StreamHandle;
 pub(super) use view_model::ModelParam;
 pub(self) use view_model::ViewModel;
 pub(self) use widget::Widgets;
 
-use relm::StreamHandle;
-
+pub use self::component::Component;
 use crate::view::launch;
 
 #[derive(Msg)]
