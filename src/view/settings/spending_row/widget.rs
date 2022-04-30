@@ -75,39 +75,48 @@ impl RowWidgets {
 
         // We use hack re-utilizing `can-default` property, since updates to `active` property are
         // not working in GTK3
-        let toggle = move |mi: &RadioMenuItem| {
-            mi.set_property("can-default", mi.is_active());
-        };
-
-        row_widgets.sigs_all_item.connect_toggled(toggle.clone());
-        row_widgets.sigs_any_item.connect_toggled(toggle.clone());
+        let c = condition.clone();
+        row_widgets
+            .sigs_all_item
+            .connect_toggled(move |mi| c.set_property("sigs-all", mi.is_active()));
+        let c = condition.clone();
         row_widgets
             .sigs_atleast_item
-            .connect_toggled(toggle.clone());
-        row_widgets.sigs_all_item.set_property("can-default", true);
+            .connect_toggled(move |mi| c.set_property("sigs-at-least", mi.is_active()));
+        let c = condition.clone();
+        row_widgets
+            .sigs_any_item
+            .connect_toggled(move |mi| c.set_property("sigs-any", mi.is_active()));
 
+        let c = condition.clone();
         row_widgets
             .lock_anytime_item
-            .connect_toggled(toggle.clone());
-        row_widgets.lock_after_item.connect_toggled(toggle.clone());
-        row_widgets.lock_older_item.connect_toggled(toggle.clone());
+            .connect_toggled(move |mi| c.set_property("lock-none", mi.is_active()));
+        let c = condition.clone();
         row_widgets
-            .lock_anytime_item
-            .set_property("can-default", true);
+            .lock_after_item
+            .connect_toggled(move |mi| c.set_property("lock-after", mi.is_active()));
+        let c = condition.clone();
+        row_widgets
+            .lock_older_item
+            .connect_toggled(move |mi| c.set_property("lock-older", mi.is_active()));
 
+        let c = condition.clone();
         row_widgets
             .period_years_item
-            .connect_toggled(toggle.clone());
+            .connect_toggled(move |mi| c.set_property("period-years", mi.is_active()));
+        let c = condition.clone();
         row_widgets
             .period_months_item
-            .connect_toggled(toggle.clone());
+            .connect_toggled(move |mi| c.set_property("period-months", mi.is_active()));
+        let c = condition.clone();
         row_widgets
             .period_weeks_item
-            .connect_toggled(toggle.clone());
-        row_widgets.period_days_item.connect_toggled(toggle);
+            .connect_toggled(move |mi| c.set_property("period-weeks", mi.is_active()));
+        let c = condition.clone();
         row_widgets
-            .period_years_item
-            .set_property("can-default", true);
+            .period_days_item
+            .connect_toggled(move |mi| c.set_property("period-days", mi.is_active()));
 
         let c = condition.clone();
         row_widgets
@@ -133,24 +142,24 @@ impl RowWidgets {
 
     fn bind_model(&self, condition: &Condition) {
         let flags_ro = glib::BindingFlags::DEFAULT | glib::BindingFlags::SYNC_CREATE;
-        let flags_all = glib::BindingFlags::DEFAULT
+        let flags_rw = glib::BindingFlags::DEFAULT
             | glib::BindingFlags::SYNC_CREATE
             | glib::BindingFlags::BIDIRECTIONAL;
-        self.sigs_all_item
-            .bind_property("can-default", condition, "sigs-all")
+        condition
+            .bind_property("sigs-all", &self.sigs_all_item, "active")
             .flags(flags_ro)
             .build();
-        self.sigs_any_item
-            .bind_property("can-default", condition, "sigs-any")
+        condition
+            .bind_property("sigs-any", &self.sigs_any_item, "active")
             .flags(flags_ro)
             .build();
-        self.sigs_atleast_item
-            .bind_property("can-default", condition, "sigs-at-least")
+        condition
+            .bind_property("sigs-at-least", &self.sigs_atleast_item, "active")
             .flags(flags_ro)
             .build();
         condition
             .bind_property("sigs-no", &self.sigs_adj, "value")
-            .flags(flags_all)
+            .flags(flags_rw)
             .build();
         condition
             .bind_property("sigs-at-least", &self.sigs_spin, "visible")
@@ -194,16 +203,16 @@ impl RowWidgets {
             })
             .build();
 
-        self.lock_anytime_item
-            .bind_property("can-default", condition, "lock-none")
+        condition
+            .bind_property("lock-none", &self.lock_anytime_item, "active")
             .flags(flags_ro)
             .build();
-        self.lock_after_item
-            .bind_property("can-default", condition, "lock-after")
+        condition
+            .bind_property("lock-after", &self.lock_after_item, "active")
             .flags(flags_ro)
             .build();
-        self.lock_older_item
-            .bind_property("can-default", condition, "lock-older")
+        condition
+            .bind_property("lock-older", &self.lock_older_item, "active")
             .flags(flags_ro)
             .build();
         condition
@@ -252,25 +261,25 @@ impl RowWidgets {
             })
             .build();
 
-        self.period_years_item
-            .bind_property("can-default", condition, "period-years")
+        condition
+            .bind_property("period-years", &self.period_years_item, "active")
             .flags(flags_ro)
             .build();
-        self.period_months_item
-            .bind_property("can-default", condition, "period-months")
+        condition
+            .bind_property("period-months", &self.period_months_item, "active")
             .flags(flags_ro)
             .build();
-        self.period_weeks_item
-            .bind_property("can-default", condition, "period-weeks")
+        condition
+            .bind_property("period-weeks", &self.period_weeks_item, "active")
             .flags(flags_ro)
             .build();
-        self.period_days_item
-            .bind_property("can-default", condition, "period-days")
+        condition
+            .bind_property("period-days", &self.period_days_item, "active")
             .flags(flags_ro)
             .build();
         condition
             .bind_property("period-span", &self.date_adj, "value")
-            .flags(flags_ro)
+            .flags(flags_rw)
             .build();
         condition
             .bind_property("period-years", &self.period_lbl, "label")
@@ -319,15 +328,15 @@ impl RowWidgets {
 
         self.calendar
             .bind_property("day", condition, "after-day")
-            .flags(flags_ro)
+            .flags(flags_rw)
             .build();
         self.calendar
             .bind_property("month", condition, "after-month")
-            .flags(flags_ro)
+            .flags(flags_rw)
             .build();
         self.calendar
             .bind_property("year", condition, "after-year")
-            .flags(flags_ro)
+            .flags(flags_rw)
             .build();
 
         let fmtdate = |binding: &Binding, _: &glib::Value| -> Option<glib::Value> {

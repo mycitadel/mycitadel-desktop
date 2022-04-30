@@ -23,6 +23,7 @@ use crate::model::{Signer, SigsReq, SpendingCondition, TimelockReq, TimelockedSi
 
 // The actual data structure that stores our values. This is not accessible
 // directly from the outside.
+#[derive(Debug)]
 pub struct ConditionInner {
     sigs_all: RefCell<bool>,
     sigs_at_least: RefCell<bool>,
@@ -108,12 +109,17 @@ impl From<&ConditionInner> for TimelockReq {
                     (_, _, true, false) => now.with_day(now.day() + offset * 7),
                     (_, _, _, true) => now.with_day(now.day() + offset),
                     _ => unreachable!(
-                        "ConditionInner internal inconsistency in relative timelock requirements"
+                        "ConditionInner internal inconsistency in relative timelock requirements\n{:#?}", inner
                     ),
                 };
-                TimelockReq::OlderTime(datetime.expect("datetime exceeds bounds"))
+                TimelockReq::OlderTime(
+                    datetime.expect(&format!("datetime exceeds bounds\n{:#?}", inner)),
+                )
             }
-            _ => unreachable!("ConditionInner internal inconsistency in timelock requirements"),
+            _ => unreachable!(
+                "ConditionInner internal inconsistency in timelock requirements\n{:#?}",
+                inner
+            ),
         }
     }
 }
