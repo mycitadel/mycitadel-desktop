@@ -140,7 +140,7 @@ impl Widgets {
             Msg::Pay(pay::Msg::Show)
         );
         connect!(relm, self.refresh_btn, connect_clicked(_), Msg::Refresh);
-        connect!(relm, self.redefine_mi, connect_activate(_), Msg::Redefine);
+        connect!(relm, self.redefine_mi, connect_activate(_), Msg::Duplicate);
         connect!(relm, self.import_mi, connect_activate(_), Msg::Import);
         connect!(relm, self.settings_mi, connect_activate(_), Msg::Settings);
         connect!(relm, self.about_mi, connect_activate(_), Msg::About);

@@ -32,7 +32,7 @@ use wallet::hd::{SegmentIndexes, UnhardenedIndex};
 use super::pay::beneficiary_row::Beneficiary;
 use super::pay::FeeRate;
 use super::{pay, ElectrumState, Msg, ViewModel, Widgets};
-use crate::model::{AddressSource, FileDocument, Wallet};
+use crate::model::{AddressSource, Wallet};
 use crate::view::{error_dlg, launch, settings, NotificationBoxExt};
 use crate::worker::electrum::TxidMeta;
 use crate::worker::{electrum, exchange, ElectrumWorker, ExchangeWorker};
@@ -314,13 +314,12 @@ impl Update for Component {
     // Specify the model used for this widget.
     type Model = ViewModel;
     // Specify the model parameter used to init the model.
-    type ModelParam = PathBuf;
+    type ModelParam = (Wallet, PathBuf);
     // Specify the type of the messages sent to the update function.
     type Msg = Msg;
 
-    fn model(_relm: &Relm<Self>, path: Self::ModelParam) -> Self::Model {
-        let wallet = Wallet::read_file(&path).expect("fatal wallet file error");
-        ViewModel::with(wallet, path)
+    fn model(_relm: &Relm<Self>, param: Self::ModelParam) -> Self::Model {
+        ViewModel::with(param.0, param.1)
     }
 
     fn update(&mut self, event: Msg) {
@@ -335,7 +334,7 @@ impl Update for Component {
                     .as_ref()
                     .map(|stream| stream.emit(launch::Msg::Wallet));
             }
-            Msg::Redefine => {
+            Msg::Duplicate => {
                 let settings = self.model.to_settings();
                 let path: PathBuf = self.model.path().clone();
                 let new_path = format!(

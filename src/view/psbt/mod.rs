@@ -19,8 +19,6 @@ pub(super) use view_model::ModelParam;
 pub(self) use view_model::ViewModel;
 pub(self) use widget::Widgets;
 
-use std::path::PathBuf;
-
 use relm::StreamHandle;
 
 use crate::view::launch;
@@ -31,7 +29,6 @@ pub enum Msg {
     Save,
     Publish,
     Launcher(launch::Msg),
-    FileError(PathBuf, String),
     Sign(u32),
     RegisterLauncher(StreamHandle<launch::Msg>),
 }

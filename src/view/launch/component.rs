@@ -10,9 +10,12 @@
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
 use std::ffi::OsStr;
+use std::fs;
 use std::path::PathBuf;
 
 use ::wallet::psbt::Psbt;
+use bitcoin::consensus::Decodable;
+use bitcoin::psbt::PartiallySignedTransaction;
 use gladis::Gladis;
 use gtk::{ApplicationWindow, ResponseType};
 use relm::{init, Relm, StreamHandle, Update, Widget};
@@ -20,7 +23,7 @@ use relm::{init, Relm, StreamHandle, Update, Widget};
 use super::{Msg, ViewModel, Widgets};
 use crate::model::{FileDocument, PublicNetwork, Wallet};
 use crate::view::launch::Page;
-use crate::view::{about, file_create_dlg, file_open_dlg, psbt, settings, wallet};
+use crate::view::{about, error_dlg, file_create_dlg, file_open_dlg, psbt, settings, wallet};
 
 pub struct Component {
     model: ViewModel,
@@ -36,30 +39,71 @@ pub struct Component {
 }
 
 impl Component {
-    fn open_file(&mut self, path: PathBuf) {
+    fn open_file(&mut self, path: PathBuf) -> bool {
         match path.extension().and_then(OsStr::to_str) {
             Some("mcw") => self.open_wallet(path),
             _ => self.open_psbt(path, default!()),
         }
     }
 
-    fn open_wallet(&mut self, path: PathBuf) {
-        let wallet =
-            init::<wallet::Component>(path).expect("unable to instantiate wallet settings");
-        self.window_count += 1;
-        wallet.emit(wallet::Msg::RegisterLauncher(self.stream.clone()));
-        self.wallets.push(wallet);
+    fn open_wallet(&mut self, path: PathBuf) -> bool {
+        match Wallet::read_file(&path) {
+            Err(err) => {
+                error_dlg(
+                    self.widgets.as_root(),
+                    "Error opening wallet",
+                    &format!("Unable to open wallet file {}", path.display()),
+                    Some(&err.to_string()),
+                );
+                false
+            }
+            Ok(wallet) => {
+                let wallet = init::<wallet::Component>((wallet, path))
+                    .expect("unable to instantiate wallet settings");
+                self.window_count += 1;
+                wallet.emit(wallet::Msg::RegisterLauncher(self.stream.clone()));
+                self.wallets.push(wallet);
+                true
+            }
+        }
     }
 
-    fn open_psbt(&mut self, path: PathBuf, network: Option<PublicNetwork>) {
-        let psbt = init::<psbt::Component>(psbt::ModelParam::Open(
+    fn open_psbt(&mut self, path: PathBuf, network: Option<PublicNetwork>) -> bool {
+        let file = match fs::File::open(&path) {
+            Ok(file) => file,
+            Err(err) => {
+                error_dlg(
+                    self.widgets.as_root(),
+                    "Error opening PSBT",
+                    &path.display().to_string(),
+                    Some(&err.to_string()),
+                );
+                return false;
+            }
+        };
+        let psbt = match PartiallySignedTransaction::consensus_decode(&file) {
+            Ok(psbt) => psbt.into(),
+            Err(err) => {
+                error_dlg(
+                    self.widgets.as_root(),
+                    "Invalid PSBT file",
+                    &path.display().to_string(),
+                    Some(&err.to_string()),
+                );
+                return false;
+            }
+        };
+
+        let comppnent = init::<psbt::Component>(psbt::ModelParam::Open(
             path,
+            psbt,
             network.unwrap_or(PublicNetwork::Mainnet),
         ))
         .expect("unable to instantiate wallet settings");
         self.window_count += 1;
-        psbt.emit(psbt::Msg::RegisterLauncher(self.stream.clone()));
-        self.psbts.push(psbt);
+        comppnent.emit(psbt::Msg::RegisterLauncher(self.stream.clone()));
+        self.psbts.push(comppnent);
+        true
     }
 
     fn create_psbt(&mut self, psbt: Psbt, network: PublicNetwork) {
@@ -85,7 +129,7 @@ impl Update for Component {
 
     fn update(&mut self, event: Msg) {
         match event {
-            Msg::Show(page) => self.widgets.show(page),
+            Msg::Show(page) => self.widgets.show(Some(page)),
             Msg::Close => {
                 if self.window_count == 0 {
                     gtk::main_quit();
@@ -96,14 +140,14 @@ impl Update for Component {
             Msg::WalletClosed => {
                 self.window_count -= 1;
                 if self.window_count == 0 {
-                    self.widgets.show(Page::Template);
+                    self.widgets.show(None);
                 }
                 // TODO: Remove wallet window from the list of windows
             }
             Msg::PsbtClosed => {
                 self.window_count -= 1;
                 if self.window_count == 0 {
-                    self.widgets.show(Page::Template);
+                    self.widgets.show(None);
                 }
                 // TODO: Remove PSBT window from the list of windows
             }
@@ -145,7 +189,9 @@ impl Update for Component {
                     "*.mcw",
                 ) {
                     self.widgets.hide();
-                    self.open_wallet(path)
+                    if !self.open_wallet(path) {
+                        self.widgets.show(None);
+                    }
                 }
             }
             Msg::Psbt(network) => {
@@ -156,19 +202,25 @@ impl Update for Component {
                     "*.psbt",
                 ) {
                     self.widgets.hide();
-                    self.open_psbt(path, network)
+                    if !self.open_psbt(path, network) {
+                        self.widgets.show(None);
+                    }
                 }
             }
             Msg::Recent => {
                 if let Some(path) = self.widgets.selected_recent() {
                     self.widgets.hide();
-                    self.open_file(path)
+                    if !self.open_file(path) {
+                        self.widgets.show(None);
+                    }
                 }
             }
             Msg::About => self.about.emit(about::Msg::Show),
-            Msg::WalletCreated(path) => self.open_wallet(path),
-            Msg::OpenWallet(path) => self.open_wallet(path),
-            Msg::OpenPsbt(path) => self.open_psbt(path, default!()),
+            Msg::WalletCreated(path) => {
+                if !self.open_wallet(path) {
+                    self.widgets.show(None);
+                }
+            }
             Msg::CreatePsbt(psbt, network) => self.create_psbt(psbt, network),
         }
     }
@@ -194,7 +246,7 @@ impl Widget for Component {
         about.emit(about::Msg::Response(ResponseType::Close));
 
         widgets.connect(relm);
-        widgets.show(Page::Template);
+        widgets.show(Some(Page::Template));
 
         Component {
             widgets,

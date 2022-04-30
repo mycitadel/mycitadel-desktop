@@ -36,8 +36,6 @@ pub enum Msg {
     About,
     WalletCreated(PathBuf),
     WalletClosed,
-    OpenWallet(PathBuf),
-    OpenPsbt(PathBuf),
     CreatePsbt(Psbt, PublicNetwork),
     PsbtClosed,
 }

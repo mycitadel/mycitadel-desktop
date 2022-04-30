@@ -28,20 +28,26 @@ pub const MC_PSBT_GLOBAL_SIGNER_NAME: u8 = 0;
 
 #[derive(Debug)]
 pub enum ModelParam {
-    Open(PathBuf, PublicNetwork),
+    Open(PathBuf, Psbt, PublicNetwork),
     Create(Psbt, PublicNetwork),
 }
 
 impl ModelParam {
+    pub fn into_psbt(self) -> Psbt {
+        match self {
+            ModelParam::Open(_, psbt, _) | ModelParam::Create(psbt, _) => psbt,
+        }
+    }
+
     pub fn network(&self) -> PublicNetwork {
         match self {
-            ModelParam::Open(_, network) | ModelParam::Create(_, network) => *network,
+            ModelParam::Open(_, _, network) | ModelParam::Create(_, network) => *network,
         }
     }
 
     pub fn path(&self) -> Option<PathBuf> {
         match self {
-            ModelParam::Open(path, _) => Some(path.clone()),
+            ModelParam::Open(path, _, _) => Some(path.clone()),
             ModelParam::Create(_, _) => None,
         }
     }

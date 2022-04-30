@@ -11,7 +11,7 @@
 
 use std::{fs, io};
 
-use bitcoin::consensus::{Decodable, Encodable};
+use bitcoin::consensus::Encodable;
 use bitcoin::psbt::PartiallySignedTransaction;
 use bitcoin::secp256k1::SECP256K1;
 use gladis::Gladis;
@@ -88,33 +88,11 @@ impl Update for Component {
     // Specify the type of the messages sent to the update function.
     type Msg = Msg;
 
-    fn model(relm: &Relm<Self>, param: Self::ModelParam) -> Self::Model {
+    fn model(_relm: &Relm<Self>, param: Self::ModelParam) -> Self::Model {
         let path = param.path();
         let network = param.network();
-        let psbt = match param {
-            ModelParam::Open(ref path, _) => {
-                let file = match fs::File::open(&path) {
-                    Ok(file) => file,
-                    Err(err) => {
-                        relm.stream()
-                            .emit(Msg::FileError(path.clone(), err.to_string()));
-                        relm.stream().emit(Msg::Close);
-                        return ViewModel::default();
-                    }
-                };
-                match PartiallySignedTransaction::consensus_decode(&file) {
-                    Ok(psbt) => psbt.into(),
-                    Err(err) => {
-                        relm.stream()
-                            .emit(Msg::FileError(path.clone(), err.to_string()));
-                        relm.stream().emit(Msg::Close);
-                        return ViewModel::default();
-                    }
-                }
-            }
-            ModelParam::Create(psbt, _) => psbt,
-        };
-        ViewModel::with(psbt.into(), path, network)
+        let psbt = param.into_psbt();
+        ViewModel::with(psbt, path, network)
     }
 
     fn update(&mut self, event: Msg) {
@@ -138,16 +116,6 @@ impl Update for Component {
                 self.launcher_stream.as_ref().map(|stream| stream.emit(msg));
             }
             Msg::Close => self.close(),
-            Msg::FileError(path, err) => {
-                self.widgets.hide();
-                error_dlg(
-                    self.widgets.as_root(),
-                    "Error opening PSBT",
-                    &path.display().to_string(),
-                    Some(&err.to_string()),
-                );
-                self.close();
-            }
             Msg::RegisterLauncher(stream) => {
                 self.launcher_stream = Some(stream);
             }

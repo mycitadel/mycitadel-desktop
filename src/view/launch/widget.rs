@@ -37,9 +37,11 @@ pub struct Widgets {
 }
 
 impl Widgets {
-    pub fn show(&self, page: Page) {
+    pub fn show(&self, page: Option<Page>) {
         self.window.show();
-        self.pages.set_current_page(Some(page as u32));
+        if let Some(page) = page {
+            self.pages.set_current_page(Some(page as u32));
+        }
     }
 
     pub fn hide(&self) {
