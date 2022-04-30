@@ -347,8 +347,8 @@ impl ViewModel {
     }
 
     pub fn update_descriptor(&mut self) -> Result<(), String> {
+        self.descriptor = None;
         if self.signers.is_empty() {
-            self.descriptor = None;
             return Err(s!("You need to add at least one signer"));
         }
         let descriptor = WalletSettings::try_from(self as &Self)

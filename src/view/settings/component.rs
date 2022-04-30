@@ -66,11 +66,12 @@ impl Component {
     }
 
     fn sync(&mut self) {
-        if let Err(err) = self.model.update_descriptor() {
-            return self.widgets.show_error(&err.to_string());
-        }
+        let res = self.model.update_descriptor();
         self.widgets
             .update_descriptor(self.model.descriptor.as_ref(), self.model.export_lnpbp);
+        if let Err(err) = res {
+            return self.widgets.show_error(&err.to_string());
+        }
 
         for signer in &self.model.signers {
             let network =

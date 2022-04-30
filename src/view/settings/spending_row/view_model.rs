@@ -519,9 +519,7 @@ impl From<&BTreeSet<(u8, SpendingCondition)>> for SpendingModel {
 impl SpendingModel {
     #[allow(clippy::new_without_default)]
     pub fn new() -> SpendingModel {
-        let model: SpendingModel = glib::Object::new(&[]).expect("Failed to create SpendingModel");
-        model.append(&Condition::default());
-        model
+        glib::Object::new(&[]).expect("Failed to create SpendingModel")
     }
 
     pub fn refresh(&self, signers: BTreeSet<Signer>) {
@@ -562,8 +560,8 @@ impl SpendingModel {
     }
 
     pub fn spending_conditions(&self) -> Vec<(u8, SpendingCondition)> {
-        self.imp()
-            .conditions
+        let imp = self.imp();
+        imp.conditions
             .borrow()
             .iter()
             .map(SpendingCondition::from)

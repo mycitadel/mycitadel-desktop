@@ -682,7 +682,8 @@ impl Widgets {
                 self.seed_mine_tgl.set_sensitive(true);
                 self.seed_extern_tgl.set_sensitive(true);
                 self.name_fld.set_editable(true);
-                self.fingerprint_fld.set_editable(signer.xpub.depth > 1);
+                self.fingerprint_fld
+                    .set_editable(signer.xpub.depth > 1 || signer.master_fp == zero!());
                 self.device_lbl.set_visible(true);
             }
         } else {
