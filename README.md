@@ -50,6 +50,10 @@ once and OS-specific.
       libcanberra-gtk3-module libusb
     ```
 
+- For Windows, you need to install Visual Studio C tools and MSYSY2-based GTK.
+  To do so please follow instructions at 
+  <https://www.gtk.org/docs/installations/windows/#using-gtk-from-msys2-packages>.
+
 If you plan to work with hardware wallets it is required to get `hwi` 
 application installed and working (this is an interface to hardware wallets):
 ```console
