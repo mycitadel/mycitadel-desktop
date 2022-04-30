@@ -121,19 +121,10 @@ impl RowWidgets {
         let c = condition.clone();
         row_widgets
             .calendar
-            .connect_month_changed(move |cal| c.set_property("after-month", cal.date().1));
-        let c = condition.clone();
-        row_widgets
-            .calendar
-            .connect_next_year(move |cal| c.set_property("after-year", cal.date().0));
-        let c = condition.clone();
-        row_widgets
-            .calendar
-            .connect_prev_year(move |cal| c.set_property("after-year", cal.date().0));
-
-        row_widgets
-            .calendar
-            .connect_day_selected_double_click(move |_| {
+            .connect_day_selected_double_click(move |cal| {
+                c.set_property("after-day", cal.day() as u32);
+                c.set_property("after-month", cal.month() as u32);
+                c.set_property("after-year", cal.year() as u32);
                 row_widgets.calendar_popover.hide();
             });
 
@@ -326,17 +317,17 @@ impl RowWidgets {
             })
             .build();
 
-        self.calendar
-            .bind_property("day", condition, "after-day")
-            .flags(flags_rw)
+        condition
+            .bind_property("after-day", &self.calendar, "day")
+            .flags(flags_ro)
             .build();
-        self.calendar
-            .bind_property("month", condition, "after-month")
-            .flags(flags_rw)
+        condition
+            .bind_property("after-month", &self.calendar, "month")
+            .flags(flags_ro)
             .build();
-        self.calendar
-            .bind_property("year", condition, "after-year")
-            .flags(flags_rw)
+        condition
+            .bind_property("after-year", &self.calendar, "year")
+            .flags(flags_ro)
             .build();
 
         let fmtdate = |binding: &Binding, _: &glib::Value| -> Option<glib::Value> {
