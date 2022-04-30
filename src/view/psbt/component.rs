@@ -15,10 +15,13 @@ use bitcoin::consensus::Encodable;
 use bitcoin::psbt::PartiallySignedTransaction;
 use bitcoin::secp256k1::SECP256K1;
 use gladis::Gladis;
+use gtk::prelude::ListModelExt;
 use gtk::ApplicationWindow;
+use hwi::HWIDevice;
 use miniscript::psbt::PsbtExt;
-use relm::{Relm, StreamHandle, Update, Widget};
+use relm::{Cast, Relm, StreamHandle, Update, Widget};
 
+use super::sign_row::Signing;
 use super::{ModelParam, Msg, ViewModel, Widgets};
 use crate::view::{error_dlg, file_save_dlg, launch};
 
@@ -35,6 +38,43 @@ impl Component {
         self.launcher_stream
             .as_ref()
             .map(|stream| stream.emit(launch::Msg::PsbtClosed));
+    }
+
+    pub fn sign(&mut self, signer_index: u32) {
+        let signer: Signing = self
+            .model
+            .signing()
+            .item(signer_index)
+            .expect("wrong signer no")
+            .downcast()
+            .expect("wrong signer");
+        let name = signer.name();
+        let fp = signer.fingerprint();
+        self.widgets
+            .show_sign(&format!("Signing with device {} [{}]", name, fp));
+        let device = HWIDevice {
+            device_type: s!(""),
+            model: s!(""),
+            path: s!(""),
+            needs_pin_sent: false,
+            needs_passphrase_sent: false,
+            fingerprint: signer.fingerprint().to_string().parse().unwrap(),
+        };
+        match device.sign_tx(&self.model.psbt().clone().into(), false) {
+            Err(err) => {
+                self.widgets.hide_sign();
+                error_dlg(
+                    self.widgets.as_root(),
+                    "Error",
+                    &format!("Unable to sign with {} [{}]", name, fp),
+                    Some(&format!("{:?}", err)),
+                );
+            }
+            Ok(signed) => {
+                self.widgets.hide_sign();
+                self.finalize();
+            }
+        }
     }
 
     pub fn finalize(&mut self) -> Result<(), Vec<miniscript::psbt::Error>> {
@@ -108,10 +148,7 @@ impl Update for Component {
                 }
             }
             Msg::Publish => self.publish(),
-            Msg::Sign(_output_no) => {
-                // TODO: Implement signing
-                self.finalize();
-            }
+            Msg::Sign(signer_index) => self.sign(signer_index),
             Msg::Launcher(msg) => {
                 self.launcher_stream.as_ref().map(|stream| stream.emit(msg));
             }
@@ -128,9 +165,7 @@ impl Widget for Component {
     type Root = ApplicationWindow;
 
     // Return the root widget.
-    fn root(&self) -> Self::Root {
-        self.widgets.to_root()
-    }
+    fn root(&self) -> Self::Root { self.widgets.to_root() }
 
     fn view(relm: &Relm<Self>, model: Self::Model) -> Self {
         let glade_src = include_str!("psbt.glade");

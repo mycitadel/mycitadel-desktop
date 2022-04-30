@@ -10,6 +10,7 @@
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
 use std::cell::RefCell;
+use std::str::FromStr;
 
 use bitcoin::util::bip32::Fingerprint;
 use glib::subclass::prelude::*;
@@ -189,6 +190,14 @@ impl Signing {
         ])
         .expect("Failed to create row data")
     }
+
+    pub fn fingerprint(&self) -> Fingerprint {
+        let fingerprint: String = self.property("fingerprint");
+        let fingerprint = fingerprint.trim_start_matches('[').trim_end_matches(']');
+        Fingerprint::from_str(fingerprint).expect("broken fingerprint")
+    }
+
+    pub fn name(&self) -> String { self.property("name") }
 }
 
 #[derive(Debug, Default)]

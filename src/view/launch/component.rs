@@ -123,9 +123,7 @@ impl Update for Component {
     // Specify the type of the messages sent to the update function.
     type Msg = Msg;
 
-    fn model(_relm: &Relm<Self>, _model: Self::ModelParam) -> Self::Model {
-        ViewModel {}
-    }
+    fn model(_relm: &Relm<Self>, _model: Self::ModelParam) -> Self::Model { ViewModel {} }
 
     fn update(&mut self, event: Msg) {
         match event {
@@ -231,9 +229,7 @@ impl Widget for Component {
     type Root = ApplicationWindow;
 
     // Return the root widget.
-    fn root(&self) -> Self::Root {
-        self.widgets.to_root()
-    }
+    fn root(&self) -> Self::Root { self.widgets.to_root() }
 
     fn view(relm: &Relm<Self>, model: Self::Model) -> Self {
         let glade_src = include_str!("launch.glade");

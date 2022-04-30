@@ -48,16 +48,10 @@ impl Widgets {
         }
     }
 
-    pub fn hide(&self) {
-        self.window.hide()
-    }
+    pub fn hide(&self) { self.window.hide() }
 
-    pub fn to_root(&self) -> ApplicationWindow {
-        self.window.clone()
-    }
-    pub fn as_root(&self) -> &ApplicationWindow {
-        &self.window
-    }
+    pub fn to_root(&self) -> ApplicationWindow { self.window.clone() }
+    pub fn as_root(&self) -> &ApplicationWindow { &self.window }
 
     pub fn init_ui(&self) {
         let icon = Pixbuf::from_read(APP_ICON).expect("app icon is missed");
@@ -67,9 +61,7 @@ impl Widgets {
         self.logo_img.set_pixbuf(Some(&img));
     }
 
-    fn is_taproot(&self) -> bool {
-        self.taproot_swch.is_active()
-    }
+    fn is_taproot(&self) -> bool { self.taproot_swch.is_active() }
 
     fn network(&self) -> PublicNetwork {
         match self.testnet_swch.is_active() {

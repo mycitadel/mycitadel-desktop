@@ -14,8 +14,7 @@ use std::collections::BTreeMap;
 use std::fmt::{self, Display, Formatter};
 use std::hash::{Hash, Hasher};
 
-use bitcoin::secp256k1::PublicKey;
-use bitcoin::util::bip32::{ChainCode, ChildNumber, DerivationPath, ExtendedPubKey, Fingerprint};
+use bitcoin::util::bip32::{ChildNumber, DerivationPath, ExtendedPubKey, Fingerprint};
 use bitcoin::Network;
 use chrono::{DateTime, Utc};
 use hwi::error::Error as HwiError;
@@ -181,11 +180,10 @@ impl HardwareList {
                     let xpub = ExtendedPubKey {
                         network: network.into(),
                         depth: hwikey.xpub.depth,
-                        parent_fingerprint: Fingerprint::from(&hwikey.xpub.parent_fingerprint[..]),
-                        child_number: u32::from(hwikey.xpub.child_number).into(),
-                        public_key: PublicKey::from_slice(&hwikey.xpub.public_key.key.serialize())
-                            .expect("secp lib used by hwi is broken"),
-                        chain_code: ChainCode::from(&hwikey.xpub.chain_code[..]),
+                        parent_fingerprint: hwikey.xpub.parent_fingerprint,
+                        child_number: hwikey.xpub.child_number,
+                        public_key: hwikey.xpub.public_key,
+                        chain_code: hwikey.xpub.chain_code,
                     };
                     devices.insert(fingerprint, HardwareDevice {
                         device_type: device.device_type.clone(),

@@ -24,6 +24,7 @@ extern crate serde_crate as serde;
 #[cfg(feature = "serde")]
 #[macro_use]
 extern crate serde_with;
+extern crate bitcoin_hwi as hwi;
 
 pub mod model;
 #[cfg(feature = "ui")]

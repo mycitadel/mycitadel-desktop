@@ -40,16 +40,23 @@ once and OS-specific.
 - For Debian Linux, please do
     ```console
     $ sudo apt update
-    $ sudo apt install -y cargo libssl-dev pkg-config g++ cmake libgtk-3-dev
+    $ sudo apt install -y cargo libssl-dev pkg-config g++ cmake libgtk-3-dev \
+      libusb-1.0-0-dev libudev-dev python3-dev
     ```
 
 - For Mac OS, please do
     ```console
     $ brew install gtk3 libadwaita adwaita-icon-theme libcanberra-gtk-module \
-      libcanberra-gtk3-module
+      libcanberra-gtk3-module libusb
     ```
 
-Then, you can compile the latest release with this command:
+If you plan to work with hardware wallets it is required to get `hwi` 
+application installed and working (this is an interface to hardware wallets):
+```console
+$ pip3 install hwi ecdsa hidapi libusb1 mnemonic pbkdf2 pyaes typing-extensions
+```
+
+After that you can compile the latest release with this command:
 
 ```console
 $ cargo install mycitadel-desktop --locked
