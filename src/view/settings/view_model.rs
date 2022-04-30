@@ -190,53 +190,53 @@ impl ViewModel {
         }
     }
 
-    pub fn with_template(
+    pub fn replace_with_template(
+        &mut self,
         stream: StreamHandle<Msg>,
         template: WalletTemplate,
         path: PathBuf,
-    ) -> Result<ViewModel, file::Error> {
-        let model = ViewModel {
-            path,
-            stream,
-            descriptor_classes: bset![template.descriptor_class],
-            support_multiclass: false,
-            network: template.network,
-            signers: empty!(),
-            spending_model: template.conditions.clone().into(),
-            electrum_model: ElectrumModel::new(template.network),
-            template: Some(template),
+    ) -> Result<(), file::Error> {
+        self.path = path;
+        self.stream = stream;
+        self.descriptor_classes = bset![template.descriptor_class];
+        self.support_multiclass = false;
+        self.network = template.network;
+        self.signers = empty!();
+        self.spending_model.reset_conditions(&template.conditions);
+        self.electrum_model = ElectrumModel::new(template.network);
+        self.template = Some(template);
 
-            export_lnpbp: false,
-            active_signer: None,
-            devices: empty!(),
-            descriptor: None,
-        };
-        model.save()?;
-        Ok(model)
+        self.export_lnpbp = false;
+        self.active_signer = None;
+        self.devices = empty!();
+        self.descriptor = None;
+
+        self.save()?;
+        Ok(())
     }
 
-    pub fn with_descriptor(
+    pub fn replace_with_descriptor(
+        &mut self,
         stream: StreamHandle<Msg>,
         settings: WalletSettings,
         path: PathBuf,
-    ) -> ViewModel {
+    ) {
         let descriptor_classes = settings.descriptor_classes().clone();
-        ViewModel {
-            path,
-            stream,
-            support_multiclass: descriptor_classes.len() > 1,
-            descriptor_classes,
-            network: settings.network(),
-            signers: settings.signers().clone(),
-            spending_model: SpendingModel::from(settings.spending_conditions()),
-            electrum_model: settings.electrum().clone().into(),
+        self.path = path;
+        self.stream = stream;
+        self.support_multiclass = descriptor_classes.len() > 1;
+        self.descriptor_classes = descriptor_classes;
+        self.network = settings.network();
+        self.signers = settings.signers().clone();
+        self.spending_model
+            .reset_conditions(settings.spending_conditions());
+        self.electrum_model = settings.electrum().clone().into();
 
-            export_lnpbp: true,
-            template: None,
-            active_signer: None,
-            devices: empty!(),
-            descriptor: None,
-        }
+        self.export_lnpbp = true;
+        self.template = None;
+        self.active_signer = None;
+        self.devices = empty!();
+        self.descriptor = None;
     }
 
     pub fn stream(&self) -> StreamHandle<Msg> {

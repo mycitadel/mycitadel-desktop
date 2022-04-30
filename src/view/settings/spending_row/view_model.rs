@@ -404,118 +404,6 @@ glib::wrapper! {
     pub struct SpendingModel(ObjectSubclass<SpendingModelInner>) @implements gio::ListModel;
 }
 
-impl From<BTreeSet<(u8, SpendingCondition)>> for SpendingModel {
-    fn from(conditions: BTreeSet<(u8, SpendingCondition)>) -> Self {
-        SpendingModel::from(&conditions)
-    }
-}
-
-impl From<&BTreeSet<(u8, SpendingCondition)>> for SpendingModel {
-    fn from(conditions: &BTreeSet<(u8, SpendingCondition)>) -> Self {
-        let model = SpendingModel::new();
-        let mut conditions = conditions.iter().collect::<Vec<_>>();
-        conditions.sort_by_key(|(depth, _)| *depth);
-        for (_, sc) in conditions {
-            let cond = Condition::default();
-
-            cond.set_property(
-                "sigs-all",
-                matches!(
-                    sc,
-                    SpendingCondition::Sigs(TimelockedSigs {
-                        sigs: SigsReq::All,
-                        ..
-                    })
-                ),
-            );
-            cond.set_property(
-                "sigs-at-least",
-                matches!(
-                    sc,
-                    SpendingCondition::Sigs(TimelockedSigs {
-                        sigs: SigsReq::AtLeast(_),
-                        ..
-                    })
-                ),
-            );
-            cond.set_property(
-                "sigs-any",
-                matches!(
-                    sc,
-                    SpendingCondition::Sigs(TimelockedSigs {
-                        sigs: SigsReq::Any,
-                        ..
-                    })
-                ),
-            );
-            match sc {
-                SpendingCondition::Sigs(TimelockedSigs {
-                    sigs: SigsReq::AtLeast(no),
-                    ..
-                }) => Some(no),
-                _ => None,
-            }
-            .map(|no| cond.set_property("sigs-no", *no as u32));
-
-            cond.set_property(
-                "lock-none",
-                matches!(
-                    sc,
-                    SpendingCondition::Sigs(TimelockedSigs {
-                        timelock: TimelockReq::Anytime,
-                        ..
-                    })
-                ),
-            );
-            cond.set_property(
-                "lock-older",
-                matches!(
-                    sc,
-                    SpendingCondition::Sigs(TimelockedSigs {
-                        timelock: TimelockReq::OlderTime(_),
-                        ..
-                    })
-                ),
-            );
-            cond.set_property(
-                "lock-after",
-                matches!(
-                    sc,
-                    SpendingCondition::Sigs(TimelockedSigs {
-                        timelock: TimelockReq::AfterTime(_),
-                        ..
-                    })
-                ),
-            );
-            match sc {
-                SpendingCondition::Sigs(TimelockedSigs {
-                    timelock: TimelockReq::OlderTime(datetime),
-                    ..
-                }) => Some(datetime),
-                _ => None,
-            }
-            .map(|datetime| {
-                // TODO: Process periods
-            });
-            match sc {
-                SpendingCondition::Sigs(TimelockedSigs {
-                    timelock: TimelockReq::AfterTime(datetime),
-                    ..
-                }) => Some(datetime),
-                _ => None,
-            }
-            .map(|datetime| {
-                cond.set_property("after-day", datetime.day());
-                cond.set_property("after-month", datetime.month());
-                cond.set_property("after-year", datetime.year() as u32);
-            });
-
-            model.append(&cond);
-        }
-        model
-    }
-}
-
 impl SpendingModel {
     #[allow(clippy::new_without_default)]
     pub fn new() -> SpendingModel {
@@ -568,5 +456,111 @@ impl SpendingModel {
             .enumerate()
             .map(|(d, c)| (d as u8 + 1, c))
             .collect()
+    }
+
+    pub fn push_condition(&self, sc: &SpendingCondition) {
+        let cond = Condition::default();
+
+        cond.set_property(
+            "sigs-all",
+            matches!(
+                sc,
+                SpendingCondition::Sigs(TimelockedSigs {
+                    sigs: SigsReq::All,
+                    ..
+                })
+            ),
+        );
+        cond.set_property(
+            "sigs-at-least",
+            matches!(
+                sc,
+                SpendingCondition::Sigs(TimelockedSigs {
+                    sigs: SigsReq::AtLeast(_),
+                    ..
+                })
+            ),
+        );
+        cond.set_property(
+            "sigs-any",
+            matches!(
+                sc,
+                SpendingCondition::Sigs(TimelockedSigs {
+                    sigs: SigsReq::Any,
+                    ..
+                })
+            ),
+        );
+        match sc {
+            SpendingCondition::Sigs(TimelockedSigs {
+                sigs: SigsReq::AtLeast(no),
+                ..
+            }) => Some(no),
+            _ => None,
+        }
+        .map(|no| cond.set_property("sigs-no", *no as u32));
+
+        cond.set_property(
+            "lock-none",
+            matches!(
+                sc,
+                SpendingCondition::Sigs(TimelockedSigs {
+                    timelock: TimelockReq::Anytime,
+                    ..
+                })
+            ),
+        );
+        cond.set_property(
+            "lock-older",
+            matches!(
+                sc,
+                SpendingCondition::Sigs(TimelockedSigs {
+                    timelock: TimelockReq::OlderTime(_),
+                    ..
+                })
+            ),
+        );
+        cond.set_property(
+            "lock-after",
+            matches!(
+                sc,
+                SpendingCondition::Sigs(TimelockedSigs {
+                    timelock: TimelockReq::AfterTime(_),
+                    ..
+                })
+            ),
+        );
+        match sc {
+            SpendingCondition::Sigs(TimelockedSigs {
+                timelock: TimelockReq::OlderTime(datetime),
+                ..
+            }) => Some(datetime),
+            _ => None,
+        }
+        .map(|datetime| {
+            // TODO: Process periods
+        });
+        match sc {
+            SpendingCondition::Sigs(TimelockedSigs {
+                timelock: TimelockReq::AfterTime(datetime),
+                ..
+            }) => Some(datetime),
+            _ => None,
+        }
+        .map(|datetime| {
+            cond.set_property("after-day", datetime.day());
+            cond.set_property("after-month", datetime.month());
+            cond.set_property("after-year", datetime.year() as u32);
+        });
+
+        self.append(&cond);
+    }
+
+    pub fn reset_conditions(&self, conditions: &BTreeSet<(u8, SpendingCondition)>) {
+        self.clear();
+        // TODO: Support script prioritisation
+        for (_, condition) in conditions {
+            self.push_condition(condition);
+        }
     }
 }

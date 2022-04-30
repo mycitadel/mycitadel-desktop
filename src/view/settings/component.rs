@@ -251,26 +251,26 @@ impl Update for Component {
         // Than, events which update the state and require saving or descriptor change
         match event {
             Msg::New(template, path) => {
-                self.model =
-                    match ViewModel::with_template(self.model.stream(), template.clone(), path) {
-                        Err(err) => {
-                            error_dlg(
-                                self.widgets.as_root(),
-                                "Error saving wallet",
-                                &self.model.filename(),
-                                Some(&err.to_string()),
-                            );
-                            // We need this, otherwise self.close() would not work
-                            self.model.template = Some(template);
-                            self.close();
-                            return;
-                        }
-                        Ok(model) => model,
-                    };
+                if let Err(err) =
+                    self.model
+                        .replace_with_template(self.model.stream(), template.clone(), path)
+                {
+                    error_dlg(
+                        self.widgets.as_root(),
+                        "Error saving wallet",
+                        &self.model.filename(),
+                        Some(&err.to_string()),
+                    );
+                    // We need this, otherwise self.close() would not work
+                    self.model.template = Some(template);
+                    self.close();
+                    return;
+                }
                 self.widgets.reset_ui(&self.model);
             }
             Msg::View(descriptor, path) => {
-                self.model = ViewModel::with_descriptor(self.model.stream(), descriptor, path);
+                self.model
+                    .replace_with_descriptor(self.model.stream(), descriptor, path);
                 self.widgets.reset_ui(&self.model);
             }
             Msg::SignerAddDevice(fingerprint, device) => {
