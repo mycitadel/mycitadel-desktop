@@ -262,11 +262,13 @@ If all of the requirements at least in a single row are satisfied, than the fund
                         <property name="resizable">True</property>
                         <property name="sizing">fixed</property>
                         <property name="min-width">300</property>
-                        <property name="max-width">600</property>
                         <property name="title" translatable="yes">Extended key</property>
+                        <property name="expand">True</property>
                         <property name="sort-column-id">3</property>
                         <child>
-                          <object class="GtkCellRendererText" id="xpub_cell"/>
+                          <object class="GtkCellRendererText" id="xpub_cell">
+                            <property name="ellipsize">middle</property>
+                          </object>
                           <attributes>
                             <attribute name="text">3</attribute>
                           </attributes>
@@ -1331,6 +1333,7 @@ However, they are not supported by other wallets. Wallets of this type can be us
                             <property name="sensitive">False</property>
                             <property name="can-focus">True</property>
                             <property name="receives-default">False</property>
+                            <property name="tooltip-text" translatable="yes">Support will be added in future versions</property>
                             <property name="image">tor_img</property>
                             <property name="always-show-image">True</property>
                             <property name="draw-indicator">False</property>
