@@ -24,7 +24,8 @@ use relm::StreamHandle;
 
 use crate::model::{DescriptorClass, ElectrumSec, ElectrumServer, Signer};
 use crate::view::launch;
-use crate::worker::electrum;
+use crate::worker::exchange::Fiat;
+use crate::worker::{electrum, exchange};
 
 #[derive(Msg)]
 pub enum Msg {
@@ -38,6 +39,7 @@ pub enum Msg {
     Update(Vec<Signer>, BTreeSet<DescriptorClass>, ElectrumServer),
     Pay(pay::Msg),
     Receive,
+    Fiat(Fiat),
     Refresh,
     Select(usize),
     Create,
@@ -46,6 +48,7 @@ pub enum Msg {
     InvoiceAmount(f64),
     InvoiceIndex(u32),
     ElectrumWatch(electrum::Msg),
+    ExchangeRefresh(exchange::Msg),
     RegisterLauncher(StreamHandle<launch::Msg>),
 }
 

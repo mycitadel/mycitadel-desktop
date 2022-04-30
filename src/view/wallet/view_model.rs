@@ -18,6 +18,7 @@ use crate::model::{
     file, DescriptorClass, DescriptorError, ElectrumServer, FileDocument, Signer, Wallet,
     WalletSettings,
 };
+use crate::worker::exchange::{Exchange, Fiat};
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
 pub struct InvoiceModel {
@@ -28,15 +29,29 @@ pub struct InvoiceModel {
 #[derive(Getters)]
 pub struct ViewModel {
     wallet: Wallet,
+
     path: PathBuf,
+
     #[getter(as_mut)]
     beneficiaries: BeneficiaryModel,
+
     #[getter(as_copy)]
     fee_rate: f32, // Used by payment window
+
     #[getter(as_copy)]
     vsize: f32,
+
     #[getter(skip)]
     invoice: InvoiceModel,
+
+    #[getter(as_copy)]
+    pub exchange: Exchange,
+
+    #[getter(as_copy)]
+    pub fiat: Fiat,
+
+    #[getter(as_copy)]
+    pub exchange_rate: f64,
 }
 
 impl ViewModel {
@@ -48,6 +63,9 @@ impl ViewModel {
             path,
             beneficiaries: BeneficiaryModel::new(),
             invoice: none!(),
+            exchange: Exchange::Kraken,
+            fiat: Fiat::CHF,
+            exchange_rate: 0.0,
         }
     }
 

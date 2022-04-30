@@ -34,13 +34,15 @@ use super::{pay, ElectrumState, Msg, ViewModel, Widgets};
 use crate::model::{AddressSource, FileDocument, Wallet};
 use crate::view::{error_dlg, launch, settings, NotificationBoxExt};
 use crate::worker::electrum::TxidMeta;
-use crate::worker::{electrum, ElectrumWorker};
+use crate::worker::{electrum, exchange, ElectrumWorker, ExchangeWorker};
 
 pub struct Component {
     model: ViewModel,
     widgets: Widgets,
     pay_widgets: pay::Widgets,
 
+    exchange_channel: Channel<exchange::Msg>,
+    exchange_worker: ExchangeWorker,
     electrum_channel: Channel<electrum::Msg>,
     electrum_worker: ElectrumWorker,
     tx_buffer: Vec<Transaction>,
@@ -207,6 +209,28 @@ impl Component {
         }
     }
 
+    fn handle_exchange(&mut self, msg: exchange::Msg) {
+        match msg {
+            exchange::Msg::Rate(fiat, exchange, rate) => {
+                self.model.fiat = fiat;
+                self.model.exchange = exchange;
+                self.model.exchange_rate = rate;
+                self.widgets.update_exchange_rate(
+                    fiat,
+                    exchange,
+                    rate,
+                    self.model.as_wallet().state(),
+                );
+            }
+            exchange::Msg::Error(err) => {
+                self.widgets.update_exchange_error(err);
+            }
+            exchange::Msg::ChannelDisconnected => {
+                panic!("Broken exchange thread")
+            }
+        }
+    }
+
     fn handle_electrum(&mut self, msg: electrum::Msg) {
         match msg {
             electrum::Msg::Connecting => {
@@ -245,7 +269,11 @@ impl Component {
                 let wallet = self.model.as_wallet_mut();
                 wallet.update_utxos(batch);
                 self.widgets.update_utxos(&wallet.utxos());
-                self.widgets.update_state(wallet.state(), wallet.tx_count());
+                self.widgets.update_state(
+                    wallet.state(),
+                    wallet.tx_count(),
+                    self.model.exchange_rate,
+                );
             }
             electrum::Msg::TxBatch(batch, progress) => {
                 self.widgets
@@ -260,9 +288,11 @@ impl Component {
                 self.tx_buffer.clear();
                 self.save();
 
+                let exchange_rate = self.model.exchange_rate;
                 let wallet = self.model.as_wallet_mut();
                 self.widgets.update_history(&wallet.history());
-                self.widgets.update_state(wallet.state(), wallet.tx_count());
+                self.widgets
+                    .update_state(wallet.state(), wallet.tx_count(), exchange_rate);
                 self.widgets.update_addresses(&wallet.address_info());
                 self.widgets.update_electrum_state(ElectrumState::Complete(
                     self.model.as_settings().electrum().sec,
@@ -320,6 +350,14 @@ impl Update for Component {
                 self.model.to_settings(),
                 self.model.path().clone(),
             )),
+            Msg::Fiat(fiat) => {
+                self.model.fiat = fiat;
+                self.widgets.update_fiat(fiat);
+                self.exchange_worker.set_fiat(fiat);
+            }
+            Msg::ExchangeRefresh(msg) => {
+                self.handle_exchange(msg);
+            }
             Msg::Refresh => {
                 self.electrum_worker.sync();
             }
@@ -485,7 +523,13 @@ impl Widget for Component {
         let (electrum_channel, sender) =
             Channel::new(move |msg| stream.emit(Msg::ElectrumWatch(msg)));
         let electrum_worker = ElectrumWorker::with(sender, model.as_wallet().to_settings(), 60)
-            .expect("unable to instantiate watcher thread");
+            .expect("unable to instantiate electrum thread");
+
+        let stream = relm.stream().clone();
+        let (exchange_channel, sender) =
+            Channel::new(move |msg| stream.emit(Msg::ExchangeRefresh(msg)));
+        let exchange_worker = ExchangeWorker::with(sender, model.exchange(), model.fiat(), 600)
+            .expect("unable to instantiate exchange thread");
 
         widgets.connect(relm);
         widgets.update_ui(&model);
@@ -506,6 +550,8 @@ impl Widget for Component {
             pay_widgets,
             settings,
 
+            exchange_channel,
+            exchange_worker,
             electrum_channel,
             electrum_worker,
             tx_buffer: empty!(),

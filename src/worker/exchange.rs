@@ -17,20 +17,38 @@ use std::{io, thread};
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
 pub enum Exchange {
-    #[display("api.kraken.com")]
+    #[display("https://api.kraken.com/0/public/Ticker?pair=")]
     Kraken,
 }
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
 pub enum Fiat {
-    #[display("USDBTC")]
+    #[display("BTCUSD", alt = "XXBTZUSD")]
     USD,
 
-    #[display("EURBTC")]
+    #[display("BTCEUR", alt = "XXBTZEUR")]
     EUR,
 
-    #[display("CHFBTC")]
+    #[display("BTCCHF", alt = "XBTCHF")]
     CHF,
+}
+
+impl Fiat {
+    pub fn fiat(self) -> &'static str {
+        match self {
+            Fiat::USD => "USD",
+            Fiat::EUR => "EUR",
+            Fiat::CHF => "CHF",
+        }
+    }
+
+    pub fn pair(self) -> &'static str {
+        match self {
+            Fiat::USD => "USD/BTC",
+            Fiat::EUR => "EUR/BTC",
+            Fiat::CHF => "CHF/BTC",
+        }
+    }
 }
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
@@ -122,5 +140,25 @@ impl ExchangeWorker {
 }
 
 fn exchange_refresh(exchange: Exchange, fiat: Fiat, sender: &Sender<Msg>) -> Result<(), String> {
-    unimplemented!()
+    let url = format!("{}{}", exchange, fiat);
+    let data: serde_json::Value = ureq::get(&url)
+        .call()
+        .map_err(|err| err.to_string())?
+        .into_json()
+        .map_err(|err| err.to_string())?;
+    let rate = data
+        .get("result")
+        .and_then(|d| d.as_object())
+        .and_then(|d| d.get(&format!("{:#}", fiat)))
+        .and_then(|d| d.as_object())
+        .and_then(|d| d.get("c"))
+        .and_then(|d| d.as_array())
+        .and_then(|d| d.get(0))
+        .and_then(|d| d.as_str())
+        .ok_or("unrecognized exchange response API")?
+        .parse()
+        .map_err(|_| "unrecognized exchange response API")?;
+    sender
+        .send(Msg::Rate(fiat, exchange, rate))
+        .map_err(|err| err.to_string())
 }

@@ -18,7 +18,7 @@ use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{
     gdk, Adjustment, ApplicationWindow, Button, CheckButton, Entry, HeaderBar, Image, Label,
-    ListStore, MenuItem, Popover, SpinButton, Spinner, Statusbar, TreeView,
+    ListStore, MenuItem, Popover, RadioMenuItem, SpinButton, Spinner, Statusbar, TreeView,
 };
 use relm::Relm;
 use wallet::hd::SegmentIndexes;
@@ -27,6 +27,7 @@ use super::{pay, ElectrumState, Msg, ViewModel};
 use crate::model::{
     AddressSummary, ElectrumSec, ElectrumServer, HistoryEntry, UtxoTxid, WalletState,
 };
+use crate::worker::exchange::{Exchange, Fiat};
 
 impl ElectrumSec {
     pub fn icon_name(self) -> &'static str {
@@ -66,6 +67,14 @@ pub struct Widgets {
     volume_sat_lbl: Label,
     volume_fiat_lbl: Label,
     txcount_lbl: Label,
+
+    exchange_lbl: Label,
+    fiat_usd: RadioMenuItem,
+    fiat_eur: RadioMenuItem,
+    fiat_chf: RadioMenuItem,
+    fiat_pair_lbl: Label,
+    fiat_name1_lbl: Label,
+    fiat_name2_lbl: Label,
 
     refresh_btn: Button,
     refresh_spin: Spinner,
@@ -134,6 +143,25 @@ impl Widgets {
 
         connect!(
             relm,
+            self.fiat_usd,
+            connect_activate(_),
+            Msg::Fiat(Fiat::USD)
+        );
+        connect!(
+            relm,
+            self.fiat_eur,
+            connect_activate(_),
+            Msg::Fiat(Fiat::EUR)
+        );
+        connect!(
+            relm,
+            self.fiat_chf,
+            connect_activate(_),
+            Msg::Fiat(Fiat::CHF)
+        );
+
+        connect!(
+            relm,
             self.amount_chk,
             connect_toggled(chk),
             Msg::InvoiceAmountToggle(chk.is_active())
@@ -179,6 +207,10 @@ impl Widgets {
         self.network_lbl
             .set_text(&(network[0..1].to_uppercase() + &network[1..]));
         self.electrum_lbl.set_text(&settings.electrum().server);
+
+        self.fiat_usd.set_active(model.fiat == Fiat::USD);
+        self.fiat_eur.set_active(model.fiat == Fiat::EUR);
+        self.fiat_chf.set_active(model.fiat == Fiat::CHF);
 
         self.update_invoice(model);
     }
@@ -334,7 +366,7 @@ impl Widgets {
         }
     }
 
-    pub fn update_state(&mut self, state: WalletState, tx_count: usize) {
+    pub fn update_state(&self, state: WalletState, tx_count: usize, exchange_rate: f64) {
         self.balance_lbl
             .set_text(&format!("{} sat", state.balance.to_string()));
         self.balance_btc_lbl
@@ -344,6 +376,45 @@ impl Widgets {
             .set_text(&format!("{:.2}", state.volume as f64 / 100_000_000.0));
         self.volume_sat_lbl.set_text(&state.volume.to_string());
         self.txcount_lbl.set_text(&tx_count.to_string());
+
+        self.balance_fiat_lbl
+            .set_text(&format!("{:.2}", state.balance as f64 * exchange_rate));
+        self.volume_fiat_lbl
+            .set_text(&format!("{:.2}", state.balance as f64 * exchange_rate));
+    }
+
+    pub fn update_fiat(&self, fiat: Fiat) {
+        self.fiat_pair_lbl.set_text(fiat.pair());
+        self.fiat_name1_lbl.set_text(fiat.fiat());
+        self.fiat_name2_lbl.set_text(fiat.fiat());
+
+        self.exchange_lbl.set_text(&"...");
+        self.balance_fiat_lbl.set_text("?");
+        self.volume_fiat_lbl.set_text("?");
+    }
+
+    pub fn update_exchange_rate(
+        &self,
+        fiat: Fiat,
+        _exchange: Exchange,
+        exchange_rate: f64,
+        state: WalletState,
+    ) {
+        self.update_fiat(fiat);
+
+        if exchange_rate > 0.0 {
+            self.exchange_lbl.set_text(&format!("{:.0}", exchange_rate));
+            self.balance_fiat_lbl
+                .set_text(&format!("{:.2}", state.balance as f64 * exchange_rate));
+            self.volume_fiat_lbl
+                .set_text(&format!("{:.2}", state.balance as f64 * exchange_rate));
+        }
+    }
+
+    pub fn update_exchange_error(&self, _err: String) {
+        self.exchange_lbl.set_text(&"n/a");
+        self.balance_fiat_lbl.set_text("n/a");
+        self.volume_fiat_lbl.set_text("n/a");
     }
 }
 
