@@ -67,7 +67,7 @@ pub struct ViewModel {
 
 impl ViewModel {
     pub fn with(psbt: Psbt, path: Option<PathBuf>, network: PublicNetwork) -> ViewModel {
-        let odel = ViewModel {
+        let model = ViewModel {
             modified: path.is_none(),
             psbt,
             finalized_tx: None,

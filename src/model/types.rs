@@ -511,17 +511,53 @@ impl Default for SigsReq {
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate")
 )]
+pub enum TimelockDuration {
+    #[display("{0} days")]
+    Days(u8),
+
+    #[display("{0} weeks")]
+    Weeks(u8),
+
+    #[display("{0} months")]
+    Months(u8),
+
+    #[display("{0} years")]
+    Years(u8),
+}
+
+impl TimelockDuration {
+    pub fn intervals(self) -> u16 {
+        const DAY: u32 = 24 * 60 * 60;
+        const WEEK: u32 = DAY * 7;
+        const MONTH: u32 = DAY * 30;
+        const YEAR: u32 = DAY * 365;
+        (match self {
+            TimelockDuration::Days(days) => days as u32 * DAY,
+            TimelockDuration::Weeks(weeks) => weeks as u32 * WEEK,
+            TimelockDuration::Months(months) => months as u32 * MONTH,
+            TimelockDuration::Years(years) => years as u32 * YEAR,
+        } / 512) as u16
+    }
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Display)]
+#[derive(StrictEncode, StrictDecode)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate")
+)]
 pub enum TimelockReq {
     #[display("anytime")]
     Anytime,
     #[display("after {0}")]
-    OlderTime(DateTime<Utc>),
+    AfterPeriod(TimelockDuration),
     #[display("after {0} blocks")]
-    OlderBlock(u16),
-    #[display("after date {0}")]
-    AfterTime(DateTime<Utc>),
+    AfterBlock(u16),
+    #[display("after {0}")]
+    AfterDate(DateTime<Utc>),
     #[display("after block {0}")]
-    AfterBlock(u32),
+    AfterHeight(u32),
 }
 
 impl Default for TimelockReq {

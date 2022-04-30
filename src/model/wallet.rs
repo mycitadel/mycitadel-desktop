@@ -796,14 +796,14 @@ impl SpendingCondition {
     pub fn anybody_after_date(date: DateTime<Utc>) -> SpendingCondition {
         SpendingCondition::Sigs(TimelockedSigs {
             sigs: SigsReq::Any,
-            timelock: TimelockReq::AfterTime(date),
+            timelock: TimelockReq::AfterDate(date),
         })
     }
 
     pub fn after_date(sigs: SigsReq, date: DateTime<Utc>) -> SpendingCondition {
         SpendingCondition::Sigs(TimelockedSigs {
             sigs,
-            timelock: TimelockReq::AfterTime(date),
+            timelock: TimelockReq::AfterDate(date),
         })
     }
 
@@ -841,7 +841,7 @@ impl SpendingCondition {
             }) => None,
             // TODO: Check that this is correct
             SpendingCondition::Sigs(TimelockedSigs {
-                timelock: TimelockReq::AfterTime(datetime),
+                timelock: TimelockReq::AfterDate(datetime),
                 ..
             }) => Some(Policy::After(
                 LockTime::with_unix_timestamp(datetime.timestamp() as u32)
@@ -850,21 +850,21 @@ impl SpendingCondition {
             )),
             // TODO: Check that this is correct
             SpendingCondition::Sigs(TimelockedSigs {
-                timelock: TimelockReq::AfterBlock(block),
+                timelock: TimelockReq::AfterHeight(block),
                 ..
             }) => Some(Policy::After(
                 LockTime::with_height(*block).unwrap().as_u32(),
             )),
             // TODO: Check that this is correct
             SpendingCondition::Sigs(TimelockedSigs {
-                timelock: TimelockReq::OlderTime(datetime),
+                timelock: TimelockReq::AfterPeriod(duration),
                 ..
             }) => Some(Policy::Older(
-                SeqNo::with_time((datetime.timestamp() as u32 / 512) as u16).as_u32(),
+                SeqNo::with_time(duration.intervals()).as_u32(),
             )),
             // TODO: Check that this is correct
             SpendingCondition::Sigs(TimelockedSigs {
-                timelock: TimelockReq::OlderBlock(block),
+                timelock: TimelockReq::AfterBlock(block),
                 ..
             }) => Some(Policy::Older(SeqNo::with_height(*block).as_u32())),
         };

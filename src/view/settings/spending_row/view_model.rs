@@ -19,7 +19,9 @@ use gtk::prelude::*;
 use gtk::subclass::prelude::ListModelImpl;
 use gtk::{gio, glib};
 
-use crate::model::{Signer, SigsReq, SpendingCondition, TimelockReq, TimelockedSigs};
+use crate::model::{
+    Signer, SigsReq, SpendingCondition, TimelockDuration, TimelockReq, TimelockedSigs,
+};
 
 // The actual data structure that stores our values. This is not accessible
 // directly from the outside.
@@ -93,30 +95,27 @@ impl From<&ConditionInner> for TimelockReq {
                     *inner.after_month.borrow(),
                     *inner.after_day.borrow(),
                 );
-                TimelockReq::AfterTime(DateTime::from_utc(date.and_hms(0, 0, 0), Utc))
+                TimelockReq::AfterDate(DateTime::from_utc(date.and_hms(0, 0, 0), Utc))
             }
             (_, _, true) => {
-                let now = Utc::now();
                 let offset = *inner.period_span.borrow();
-                let datetime = match (
+                let duration = match (
                     *inner.period_years.borrow(),
                     *inner.period_months.borrow(),
                     *inner.period_weeks.borrow(),
                     *inner.period_days.borrow(),
                 ) {
-                    (true, false, false, false) => now.with_year(now.year() + offset as i32),
-                    (_, true, false, false) => now.with_month(now.month() + offset),
-                    (_, _, true, false) => now.with_day(now.day() + offset * 7),
-                    (_, _, _, true) => now.with_day(now.day() + offset),
+                    (true, false, false, false) => TimelockDuration::Years(offset as u8),
+                    (_, true, false, false) => TimelockDuration::Months(offset as u8),
+                    (_, _, true, false) => TimelockDuration::Weeks(offset as u8),
+                    (_, _, _, true) => TimelockDuration::Days(offset as u8),
                     _ => unreachable!(
                         "ConditionInner internal inconsistency in relative timelock \
                          requirements\n{:#?}",
                         inner
                     ),
                 };
-                TimelockReq::OlderTime(
-                    datetime.expect(&format!("datetime exceeds bounds\n{:#?}", inner)),
-                )
+                TimelockReq::AfterPeriod(duration)
             }
             _ => unreachable!(
                 "ConditionInner internal inconsistency in timelock requirements\n{:#?}",
@@ -517,7 +516,7 @@ impl SpendingModel {
             matches!(
                 sc,
                 SpendingCondition::Sigs(TimelockedSigs {
-                    timelock: TimelockReq::OlderTime(_),
+                    timelock: TimelockReq::AfterPeriod(_),
                     ..
                 })
             ),
@@ -527,24 +526,43 @@ impl SpendingModel {
             matches!(
                 sc,
                 SpendingCondition::Sigs(TimelockedSigs {
-                    timelock: TimelockReq::AfterTime(_),
+                    timelock: TimelockReq::AfterDate(_),
                     ..
                 })
             ),
         );
         match sc {
             SpendingCondition::Sigs(TimelockedSigs {
-                timelock: TimelockReq::OlderTime(datetime),
+                timelock: TimelockReq::AfterPeriod(datetime),
                 ..
             }) => Some(datetime),
             _ => None,
         }
-        .map(|datetime| {
-            // TODO: Process periods
+        .map(|duration| {
+            let span = match duration {
+                TimelockDuration::Days(span)
+                | TimelockDuration::Weeks(span)
+                | TimelockDuration::Months(span)
+                | TimelockDuration::Years(span) => *span,
+            };
+            cond.set_property("period-span", span as u32);
+            cond.set_property(
+                "period-years",
+                matches!(duration, TimelockDuration::Years(_)),
+            );
+            cond.set_property(
+                "period-months",
+                matches!(duration, TimelockDuration::Months(_)),
+            );
+            cond.set_property(
+                "period-weeks",
+                matches!(duration, TimelockDuration::Weeks(_)),
+            );
+            cond.set_property("period-days", matches!(duration, TimelockDuration::Days(_)));
         });
         match sc {
             SpendingCondition::Sigs(TimelockedSigs {
-                timelock: TimelockReq::AfterTime(datetime),
+                timelock: TimelockReq::AfterDate(datetime),
                 ..
             }) => Some(datetime),
             _ => None,
