@@ -9,9 +9,11 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
+use crate::view::APP_ICON;
 use gladis::Gladis;
+use gtk::gdk_pixbuf::Pixbuf;
 use gtk::prelude::*;
-use gtk::{gdk, Dialog, Entry};
+use gtk::{gdk, Dialog, Entry, Image};
 use relm::Relm;
 
 use super::{Msg, ViewModel};
@@ -20,17 +22,29 @@ use super::{Msg, ViewModel};
 #[derive(Clone, Gladis)]
 pub struct Widgets {
     dialog: Dialog,
+    logo_img: Image,
     pgp_fld: Entry,
 }
 
 impl Widgets {
-    pub fn update_ui(&self, _model: &ViewModel) {}
+    pub fn init_ui(&self, _model: &ViewModel) {
+        let icon = Pixbuf::from_read(APP_ICON).expect("small app icon is missed");
+        self.logo_img.set_pixbuf(Some(&icon));
+    }
 
-    pub fn show(&self) { self.dialog.show() }
-    pub fn hide(&self) { self.dialog.hide() }
+    pub fn show(&self) {
+        self.dialog.show()
+    }
+    pub fn hide(&self) {
+        self.dialog.hide()
+    }
 
-    pub fn to_root(&self) -> Dialog { self.dialog.clone() }
-    pub fn as_root(&self) -> &Dialog { &self.dialog }
+    pub fn to_root(&self) -> Dialog {
+        self.dialog.clone()
+    }
+    pub fn as_root(&self) -> &Dialog {
+        &self.dialog
+    }
 
     pub(super) fn connect(&self, relm: &Relm<super::Component>) {
         self.pgp_fld.connect_icon_press(|entry, _, _| {

@@ -101,7 +101,7 @@
     <property name="window-position">center</property>
     <property name="default-width">1024</property>
     <property name="default-height">480</property>
-    <property name="icon">res/applogo-big.png</property>
+    <property name="icon"></property>
     <property name="show-menubar">False</property>
     <child>
       <object class="GtkBox">
@@ -741,10 +741,9 @@
         <property name="subtitle" translatable="yes">New partially signed transaction</property>
         <property name="show-close-button">True</property>
         <child>
-          <object class="GtkImage">
+          <object class="GtkImage" id="logo_img">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
-            <property name="pixbuf">res/applogo.png</property>
           </object>
         </child>
         <child>

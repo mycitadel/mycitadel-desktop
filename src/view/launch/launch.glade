@@ -21,7 +21,7 @@
     <property name="can-focus">False</property>
     <property name="window-position">center</property>
     <property name="default-height">250</property>
-    <property name="icon">res/applogo-big.png</property>
+    <property name="icon"></property>
     <child>
       <object class="GtkNotebook" id="pages">
         <property name="height-request">250</property>
@@ -1122,10 +1122,9 @@
         <property name="subtitle" translatable="yes">Bitcoin, Lightning &amp; RGB wallets</property>
         <property name="show-close-button">True</property>
         <child>
-          <object class="GtkImage">
+          <object class="GtkImage" id="logo_img">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
-            <property name="pixbuf">res/applogo.png</property>
           </object>
         </child>
       </object>

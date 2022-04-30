@@ -73,8 +73,6 @@ impl RowWidgets {
             })
         };
 
-        // We use hack re-utilizing `can-default` property, since updates to `active` property are
-        // not working in GTK3
         let c = condition.clone();
         row_widgets
             .sigs_all_item

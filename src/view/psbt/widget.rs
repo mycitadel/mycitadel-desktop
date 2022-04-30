@@ -16,25 +16,28 @@ use ::wallet::psbt::Psbt;
 use bitcoin::blockdata::constants::WITNESS_SCALE_FACTOR;
 use bitcoin::Address;
 use gladis::Gladis;
+use gtk::gdk_pixbuf::Pixbuf;
 use gtk::prelude::*;
 use gtk::{
-    gdk, ApplicationWindow, Button, Entry, Expander, HeaderBar, Label, LevelBar, ListBox,
+    gdk, ApplicationWindow, Button, Entry, Expander, HeaderBar, Image, Label, LevelBar, ListBox,
     ListStore, MenuItem, TextView, TreeView,
 };
 use miniscript::{Legacy, Miniscript, Segwitv0};
 use relm::Relm;
 
 use super::{Msg, ViewModel};
-use crate::view::launch;
 use crate::view::launch::Page;
 use crate::view::psbt::sign_row;
 use crate::view::psbt::sign_row::SigningModel;
+use crate::view::{launch, APP_ICON, APP_ICON_TOOL};
 
 // Create the structure that holds the widgets used in the view.
 #[derive(Clone, Gladis)]
 pub struct Widgets {
     window: ApplicationWindow,
+
     header_bar: HeaderBar,
+    logo_img: Image,
     save_btn: Button,
     publish_btn: Button,
 
@@ -64,6 +67,14 @@ pub struct Widgets {
 }
 
 impl Widgets {
+    pub fn init_ui(&self) {
+        let icon = Pixbuf::from_read(APP_ICON).expect("app icon is missed");
+        self.window.set_icon(Some(&icon));
+
+        let img = Pixbuf::from_read(APP_ICON_TOOL).expect("small app icon is missed");
+        self.logo_img.set_pixbuf(Some(&img));
+    }
+
     pub fn update_ui(&self, model: &ViewModel) {
         let psbt: &Psbt = model.psbt();
         let tx = psbt.clone().into_transaction();
@@ -163,24 +174,37 @@ impl Widgets {
                 .as_ref()
                 .map(AddressFormat::to_string)
                 .unwrap_or(s!("custom"));
-            self.address_store.insert_with_values(None, &[
-                (0, &address_str),
-                (1, &format!("{:.08}", output.amount as f64 / 100_000_000.0)),
-                (
-                    2,
-                    &!(output.bip32_derivation.is_empty() && output.tap_key_origins.is_empty()),
-                ),
-                (3, &address_type),
-            ]);
+            self.address_store.insert_with_values(
+                None,
+                &[
+                    (0, &address_str),
+                    (1, &format!("{:.08}", output.amount as f64 / 100_000_000.0)),
+                    (
+                        2,
+                        &!(output.bip32_derivation.is_empty() && output.tap_key_origins.is_empty()),
+                    ),
+                    (3, &address_type),
+                ],
+            );
         }
     }
 
-    pub fn show(&self) { self.window.show() }
-    pub fn hide(&self) { self.window.hide() }
-    pub fn close(&self) { self.window.close() }
+    pub fn show(&self) {
+        self.window.show()
+    }
+    pub fn hide(&self) {
+        self.window.hide()
+    }
+    pub fn close(&self) {
+        self.window.close()
+    }
 
-    pub fn to_root(&self) -> ApplicationWindow { self.window.clone() }
-    pub fn as_root(&self) -> &ApplicationWindow { &self.window }
+    pub fn to_root(&self) -> ApplicationWindow {
+        self.window.clone()
+    }
+    pub fn as_root(&self) -> &ApplicationWindow {
+        &self.window
+    }
 
     pub(super) fn connect(&self, relm: &Relm<super::Component>) {
         connect!(relm, self.save_btn, connect_clicked(_), Msg::Save);

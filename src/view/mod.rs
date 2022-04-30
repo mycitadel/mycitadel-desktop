@@ -16,6 +16,9 @@ pub mod psbt;
 pub mod settings;
 pub mod wallet;
 
+pub const APP_ICON: &[u8] = include_bytes!("../../res/applogo-big.png");
+pub const APP_ICON_TOOL: &[u8] = include_bytes!("../../res/applogo.png");
+
 use std::path::PathBuf;
 
 use gtk::prelude::*;
@@ -31,7 +34,9 @@ pub trait NotificationBoxExt {
     fn notification_image(&self) -> &gtk::Image;
     fn notification_label(&self) -> &gtk::Label;
 
-    fn show_notification(&self) { self.notification_box().show_all(); }
+    fn show_notification(&self) {
+        self.notification_box().show_all();
+    }
     fn show_error(&self, msg: &str) {
         self.main_dialog()
             .set_response_sensitive(ResponseType::Ok, false);
@@ -102,10 +107,12 @@ pub fn file_dlg(
         _ => unimplemented!(),
     };
 
-    let file_dlg = FileChooserDialog::with_buttons(Some(title), Some(parent), action, &[(
-        button,
-        ResponseType::Ok,
-    )]);
+    let file_dlg = FileChooserDialog::with_buttons(
+        Some(title),
+        Some(parent),
+        action,
+        &[(button, ResponseType::Ok)],
+    );
     file_dlg.set_default_response(ResponseType::Ok);
     file_dlg.set_do_overwrite_confirmation(action == FileChooserAction::Save);
     if let Some(name) = default_name {

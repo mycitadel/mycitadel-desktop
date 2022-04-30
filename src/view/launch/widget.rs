@@ -13,16 +13,21 @@ use std::borrow::Cow;
 use std::path::PathBuf;
 
 use gladis::Gladis;
+use gtk::gdk_pixbuf::Pixbuf;
 use gtk::prelude::*;
-use gtk::{Adjustment, ApplicationWindow, Button, ListBox, Notebook, RecentChooserWidget, Switch};
+use gtk::{
+    Adjustment, ApplicationWindow, Button, Image, ListBox, Notebook, RecentChooserWidget, Switch,
+};
 use relm::Relm;
 
 use super::{Msg, Page};
 use crate::model::{DescriptorClass, PublicNetwork, Requirement, WalletTemplate};
+use crate::view::{APP_ICON, APP_ICON_TOOL};
 
 #[derive(Clone, Gladis)]
 pub struct Widgets {
     window: ApplicationWindow,
+    logo_img: Image,
     about_btn: Button,
     pages: Notebook,
     hwcount_adj: Adjustment,
@@ -43,12 +48,28 @@ impl Widgets {
         }
     }
 
-    pub fn hide(&self) { self.window.hide() }
+    pub fn hide(&self) {
+        self.window.hide()
+    }
 
-    pub fn to_root(&self) -> ApplicationWindow { self.window.clone() }
-    pub fn as_root(&self) -> &ApplicationWindow { &self.window }
+    pub fn to_root(&self) -> ApplicationWindow {
+        self.window.clone()
+    }
+    pub fn as_root(&self) -> &ApplicationWindow {
+        &self.window
+    }
 
-    fn is_taproot(&self) -> bool { self.taproot_swch.is_active() }
+    pub fn init_ui(&self) {
+        let icon = Pixbuf::from_read(APP_ICON).expect("app icon is missed");
+        self.window.set_icon(Some(&icon));
+
+        let img = Pixbuf::from_read(APP_ICON_TOOL).expect("small app icon is missed");
+        self.logo_img.set_pixbuf(Some(&img));
+    }
+
+    fn is_taproot(&self) -> bool {
+        self.taproot_swch.is_active()
+    }
 
     fn network(&self) -> PublicNetwork {
         match self.testnet_swch.is_active() {

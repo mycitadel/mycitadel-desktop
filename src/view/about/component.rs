@@ -30,12 +30,14 @@ impl Update for Component {
     // Specify the type of the messages sent to the update function.
     type Msg = Msg;
 
-    fn model(_relm: &Relm<Self>, _param: Self::ModelParam) -> Self::Model { ViewModel::default() }
+    fn model(_relm: &Relm<Self>, _param: Self::ModelParam) -> Self::Model {
+        ViewModel::default()
+    }
 
     fn update(&mut self, event: Msg) {
         match event {
             Msg::Show => {
-                self.widgets.update_ui(&self.model);
+                self.widgets.init_ui(&self.model);
                 self.widgets.show();
             }
             Msg::Response(_) => {
@@ -50,14 +52,16 @@ impl Widget for Component {
     type Root = Dialog;
 
     // Return the root widget.
-    fn root(&self) -> Self::Root { self.widgets.to_root() }
+    fn root(&self) -> Self::Root {
+        self.widgets.to_root()
+    }
 
     fn view(relm: &Relm<Self>, model: Self::Model) -> Self {
         let glade_src = include_str!("about.glade");
         let widgets = Widgets::from_string(glade_src).expect("glade file broken");
 
         widgets.connect(relm);
-        widgets.update_ui(&model);
+        widgets.init_ui(&model);
         widgets.show();
 
         Component { model, widgets }
