@@ -14,9 +14,11 @@ pub(self) mod sign_row;
 mod view_model;
 mod widget;
 
+use bitcoin::util::bip32::Fingerprint;
 use relm::StreamHandle;
 pub(super) use view_model::ModelParam;
 pub(self) use view_model::ViewModel;
+use wallet::psbt::Psbt;
 pub(self) use widget::Widgets;
 
 pub use self::component::Component;
@@ -29,5 +31,13 @@ pub enum Msg {
     Publish,
     Launcher(launch::Msg),
     Sign(u32),
+    Signed(Psbt),
+    Failed(String, Fingerprint, String),
     RegisterLauncher(StreamHandle<launch::Msg>),
+}
+
+#[derive(Clone, Debug)]
+pub enum SignMsg {
+    Signed(Psbt),
+    Failed(String, Fingerprint, String),
 }

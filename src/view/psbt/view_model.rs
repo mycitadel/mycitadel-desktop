@@ -67,10 +67,23 @@ pub struct ViewModel {
 
 impl ViewModel {
     pub fn with(psbt: Psbt, path: Option<PathBuf>, network: PublicNetwork) -> ViewModel {
+        let odel = ViewModel {
+            modified: path.is_none(),
+            psbt,
+            finalized_tx: None,
+            path,
+            signing: SigningModel::new(),
+            network,
+        };
+        model.parse_psbt();
+        model
+    }
+
+    pub fn parse_psbt(&self) {
         let mut keys = BTreeMap::<Fingerprint, (Fingerprint, u32, u32)>::new();
         let mut bpk = BTreeMap::<secp256k1::PublicKey, Fingerprint>::new();
         let mut xpk = BTreeMap::<XOnlyPublicKey, Fingerprint>::new();
-        for input in &psbt.inputs {
+        for input in &self.psbt.inputs {
             for (pk, (_, (fingerprint, _))) in &input.tap_key_origins {
                 let (fp, present, required) = keys.entry(*fingerprint).or_insert((zero!(), 0, 0));
                 *fp = Fingerprint::from(
@@ -103,9 +116,9 @@ impl ViewModel {
             subtype: MC_PSBT_GLOBAL_SIGNER_NAME,
             key: vec![],
         };
-        let signing = SigningModel::new();
         for (fingerprint, (fp, present, required)) in keys {
-            let name = psbt
+            let name = self
+                .psbt
                 .proprietary
                 .get(&signer_name_key)
                 .cloned()
@@ -115,17 +128,13 @@ impl ViewModel {
                 .flatten()
                 .unwrap_or(format!("{}", fp));
             let info = Signing::with(&name, fingerprint, present, required);
-            signing.append(&info);
+            self.signing.append(&info);
         }
+    }
 
-        ViewModel {
-            modified: path.is_none(),
-            psbt,
-            finalized_tx: None,
-            path,
-            signing,
-            network,
-        }
+    pub fn replace_psbt(&mut self, psbt: Psbt) {
+        self.psbt = psbt;
+        self.parse_psbt();
     }
 
     pub fn set_path(&mut self, path: PathBuf) { self.path = Some(path); }

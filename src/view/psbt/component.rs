@@ -9,7 +9,8 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
-use std::{fs, io};
+use std::str::FromStr;
+use std::{fs, io, thread};
 
 use bitcoin::consensus::Encodable;
 use bitcoin::psbt::PartiallySignedTransaction;
@@ -19,15 +20,16 @@ use gtk::prelude::ListModelExt;
 use gtk::ApplicationWindow;
 use hwi::HWIDevice;
 use miniscript::psbt::PsbtExt;
-use relm::{Cast, Relm, StreamHandle, Update, Widget};
+use relm::{Cast, Channel, Relm, Sender, StreamHandle, Update, Widget};
 
 use super::sign_row::Signing;
-use super::{ModelParam, Msg, ViewModel, Widgets};
+use super::{ModelParam, Msg, SignMsg, ViewModel, Widgets};
 use crate::view::{error_dlg, file_save_dlg, launch};
 
 pub struct Component {
     model: ViewModel,
     widgets: Widgets,
+    sender: Sender<SignMsg>,
     launcher_stream: Option<StreamHandle<launch::Msg>>,
 }
 
@@ -50,8 +52,6 @@ impl Component {
             .expect("wrong signer");
         let name = signer.name();
         let fp = signer.fingerprint();
-        self.widgets
-            .show_sign(&format!("Signing with device {} [{}]", name, fp));
         let device = HWIDevice {
             device_type: s!(""),
             model: s!(""),
@@ -60,21 +60,24 @@ impl Component {
             needs_passphrase_sent: false,
             fingerprint: signer.fingerprint().to_string().parse().unwrap(),
         };
-        match device.sign_tx(&self.model.psbt().clone().into(), false) {
-            Err(err) => {
-                self.widgets.hide_sign();
-                error_dlg(
-                    self.widgets.as_root(),
-                    "Error",
-                    &format!("Unable to sign with {} [{}]", name, fp),
-                    Some(&format!("{:?}", err)),
-                );
+
+        self.widgets
+            .show_sign(&format!("Signing with device {} [{}]", name, fp));
+
+        let psbt = self.model.psbt().clone().into();
+        let sender = self.sender.clone();
+        thread::spawn(move || {
+            match device
+                .sign_tx(&psbt, false)
+                .map_err(|e| e.to_string())
+                .and_then(|resp| {
+                    PartiallySignedTransaction::from_str(&resp.psbt).map_err(|e| e.to_string())
+                }) {
+                Err(err) => sender.send(SignMsg::Failed(name, fp, err.to_string())),
+                Ok(psbt) => sender.send(SignMsg::Signed(psbt.into())),
             }
-            Ok(signed) => {
-                self.widgets.hide_sign();
-                self.finalize();
-            }
-        }
+            .expect("channel broken");
+        });
     }
 
     pub fn finalize(&mut self) -> Result<(), Vec<miniscript::psbt::Error>> {
@@ -149,6 +152,21 @@ impl Update for Component {
             }
             Msg::Publish => self.publish(),
             Msg::Sign(signer_index) => self.sign(signer_index),
+            Msg::Signed(psbt) => {
+                self.widgets.hide_sign();
+                self.model.replace_psbt(psbt);
+                self.widgets.update_ui(&self.model);
+                let _ = self.finalize();
+            }
+            Msg::Failed(name, fp, err) => {
+                self.widgets.hide_sign();
+                error_dlg(
+                    self.widgets.as_root(),
+                    "Error",
+                    &format!("Unable to sign with {} [{}]", name, fp),
+                    Some(&err),
+                );
+            }
             Msg::Launcher(msg) => {
                 self.launcher_stream.as_ref().map(|stream| stream.emit(msg));
             }
@@ -171,6 +189,12 @@ impl Widget for Component {
         let glade_src = include_str!("psbt.glade");
         let widgets = Widgets::from_string(glade_src).expect("glade file broken");
 
+        let stream = relm.stream().clone();
+        let (_channel, sender) = Channel::new(move |msg| match msg {
+            SignMsg::Signed(psbt) => stream.emit(Msg::Signed(psbt)),
+            SignMsg::Failed(name, fp, err) => stream.emit(Msg::Failed(name, fp, err)),
+        });
+
         widgets.init_ui();
         widgets.connect(relm);
         widgets.bind_signing_model(relm, model.signing());
@@ -180,6 +204,7 @@ impl Widget for Component {
         let mut component = Component {
             model,
             widgets,
+            sender,
             launcher_stream: None,
         };
         let _ = component.finalize();

@@ -108,14 +108,10 @@ impl Update for Component {
                     ChildNumber::from_hardened_idx(account).expect("wrong account number"),
                     self.model.network.into(),
                 );
-                let derivation_string = derivation.to_string();
                 let testnet = self.model.network.is_testnet();
                 let sender = self.sender.clone();
                 let hwi = self.model.hwi[&fingerprint].device.clone();
                 std::thread::spawn(move || {
-                    let derivation = derivation_string.parse().expect(
-                        "ancient bitcoin version with different derivation path implementation",
-                    );
                     let msg = match hwi.get_xpub(&derivation, testnet) {
                         Ok(xpub) => Msg::Xpub(fingerprint, xpub.xpub.to_string()),
                         Err(err) => Msg::XpubErr(fingerprint, err),

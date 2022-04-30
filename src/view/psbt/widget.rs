@@ -255,6 +255,10 @@ impl Widgets {
             gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).set_text(&val);
         });
 
+        // We prohibit manual closing of the signing dialog
+        self.sign_dlg.connect_response(|_, _| {});
+        self.sign_dlg.connect_delete_event(|_, _| Inhibit(true));
+
         connect!(
             relm,
             self.window,
