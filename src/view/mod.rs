@@ -70,8 +70,9 @@ pub trait NotificationBoxExt {
     }
 }
 
-pub fn error_dlg(
+pub fn msg_dlg(
     parent: &impl IsA<gtk::Window>,
+    ty: MessageType,
     title: &str,
     message: &str,
     details: Option<&str>,
@@ -84,9 +85,19 @@ pub fn error_dlg(
         message,
     );
     err_dlg.set_title(title);
+    err_dlg.set_message_type(ty);
     err_dlg.set_secondary_text(details);
     err_dlg.run();
     err_dlg.close();
+}
+
+pub fn error_dlg(
+    parent: &impl IsA<gtk::Window>,
+    title: &str,
+    message: &str,
+    details: Option<&str>,
+) {
+    msg_dlg(parent, MessageType::Error, title, message, details);
 }
 
 pub fn file_dlg(

@@ -174,12 +174,16 @@ impl ElectrumWorker {
     fn cmd(&self, cmd: Cmd) { self.tx.send(cmd).expect("Electrum thread is dead") }
 }
 
-fn electrum_init(electrum: &ElectrumServer, sender: &Sender<Msg>) -> Option<ElectrumClient> {
+pub fn electrum_connect(url: &str) -> Result<ElectrumClient, electrum_client::Error> {
     let config = electrum_client::ConfigBuilder::new()
         .timeout(Some(5))
         .expect("we do not use socks here")
         .build();
-    ElectrumClient::from_config(&electrum.to_string(), config)
+    ElectrumClient::from_config(url, config)
+}
+
+fn electrum_init(electrum: &ElectrumServer, sender: &Sender<Msg>) -> Option<ElectrumClient> {
+    electrum_connect(&electrum.to_string())
         .map_err(|err| {
             sender
                 .send(Msg::Error(err))

@@ -205,49 +205,49 @@ impl Widgets {
 
     pub(super) fn connect(&self, relm: &Relm<super::Component>) {
         connect!(relm, self.save_btn, connect_clicked(_), Msg::Save);
-        connect!(relm, self.publish_btn, connect_activate(_), Msg::Publish);
+        connect!(relm, self.publish_btn, connect_clicked(_), Msg::Publish);
 
         connect!(
             relm,
             self.new_wallet_mi,
             connect_activate(_),
-            Msg::Launcher(launch::Msg::Template(5))
+            Msg::Launch(launch::Msg::Template(5))
         );
         connect!(
             relm,
             self.new_template_mi,
             connect_activate(_),
-            Msg::Launcher(launch::Msg::Show(Page::Template))
+            Msg::Launch(launch::Msg::Show(Page::Template))
         );
         connect!(
             relm,
             self.open_wallet_mi,
             connect_activate(_),
-            Msg::Launcher(launch::Msg::Wallet)
+            Msg::Launch(launch::Msg::Wallet)
         );
         connect!(
             relm,
             self.open_psbt_mi,
             connect_activate(_),
-            Msg::Launcher(launch::Msg::Psbt(None))
+            Msg::Launch(launch::Msg::Psbt(None))
         );
         connect!(
             relm,
             self.import_mi,
             connect_activate(_),
-            Msg::Launcher(launch::Msg::Show(Page::Import))
+            Msg::Launch(launch::Msg::Show(Page::Import))
         );
         connect!(
             relm,
             self.launcher_mi,
             connect_activate(_),
-            Msg::Launcher(launch::Msg::Show(Page::Template))
+            Msg::Launch(launch::Msg::Show(Page::Template))
         );
         connect!(
             relm,
             self.about_mi,
             connect_activate(_),
-            Msg::Launcher(launch::Msg::About)
+            Msg::Launch(launch::Msg::About)
         );
 
         self.txid_fld.connect_icon_press(|entry, _, _| {
@@ -272,5 +272,17 @@ impl Widgets {
         self.signatures_list.bind_model(Some(model), move |item| {
             sign_row::RowWidgets::init(relm.clone(), item)
         });
+    }
+
+    pub fn publish_pending(&self) {
+        self.publish_btn.set_always_show_image(false);
+        self.publish_btn.set_label("Sending...");
+        self.publish_btn.set_sensitive(false);
+    }
+
+    pub fn publish_restore(&self) {
+        self.publish_btn.set_always_show_image(true);
+        self.publish_btn.set_label("Broadcast");
+        self.publish_btn.set_sensitive(true);
     }
 }

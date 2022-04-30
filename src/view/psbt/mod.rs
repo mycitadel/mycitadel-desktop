@@ -28,11 +28,16 @@ use crate::view::launch;
 pub enum Msg {
     Close,
     Save,
-    Publish,
-    Launcher(launch::Msg),
+    Launch(launch::Msg),
+
     Sign(u32),
     Signed(Psbt),
     Failed(String, Fingerprint, String),
+
+    Publish,
+    Published,
+    Declined(String),
+
     RegisterLauncher(StreamHandle<launch::Msg>),
 }
 
@@ -40,4 +45,10 @@ pub enum Msg {
 pub enum SignMsg {
     Signed(Psbt),
     Failed(String, Fingerprint, String),
+}
+
+#[derive(Clone, Debug)]
+pub enum PublishMsg {
+    Published,
+    Declined(String),
 }

@@ -15,21 +15,25 @@ use std::{fs, io, thread};
 use bitcoin::consensus::Encodable;
 use bitcoin::psbt::PartiallySignedTransaction;
 use bitcoin::secp256k1::SECP256K1;
+use electrum_client::ElectrumApi;
 use gladis::Gladis;
 use gtk::prelude::ListModelExt;
-use gtk::ApplicationWindow;
+use gtk::{ApplicationWindow, MessageType};
 use hwi::HWIDevice;
 use miniscript::psbt::PsbtExt;
 use relm::{Cast, Channel, Relm, Sender, StreamHandle, Update, Widget};
 
 use super::sign_row::Signing;
 use super::{ModelParam, Msg, SignMsg, ViewModel, Widgets};
-use crate::view::{error_dlg, file_save_dlg, launch};
+use crate::view::psbt::PublishMsg;
+use crate::view::{error_dlg, file_save_dlg, launch, msg_dlg};
+use crate::worker::electrum::electrum_connect;
 
 pub struct Component {
     model: ViewModel,
     widgets: Widgets,
-    sender: Sender<SignMsg>,
+    signer_sender: Sender<SignMsg>,
+    publisher_sender: Sender<PublishMsg>,
     launcher_stream: Option<StreamHandle<launch::Msg>>,
 }
 
@@ -65,7 +69,7 @@ impl Component {
             .show_sign(&format!("Signing with device {} [{}]", name, fp));
 
         let psbt = self.model.psbt().clone().into();
-        let sender = self.sender.clone();
+        let sender = self.signer_sender.clone();
         thread::spawn(move || {
             match device
                 .sign_tx(&psbt, false)
@@ -95,7 +99,18 @@ impl Component {
             return;
         }
         if let Some(tx) = self.model.finalized_tx() {
-            // TODO: Publish transaction
+            self.widgets.publish_pending();
+
+            let tx = tx.clone();
+            let sender = self.publisher_sender.clone();
+            thread::spawn(move || {
+                let _ = match electrum_connect(&"ssl://blockstream.info:700")
+                    .and_then(|client| client.transaction_broadcast(&tx))
+                {
+                    Err(err) => sender.send(PublishMsg::Declined(err.to_string())),
+                    Ok(_txid) => sender.send(PublishMsg::Published),
+                };
+            });
         }
     }
 
@@ -150,7 +165,8 @@ impl Update for Component {
                     );
                 }
             }
-            Msg::Publish => self.publish(),
+            Msg::Close => self.close(),
+
             Msg::Sign(signer_index) => self.sign(signer_index),
             Msg::Signed(psbt) => {
                 self.widgets.hide_sign();
@@ -167,10 +183,31 @@ impl Update for Component {
                     Some(&err),
                 );
             }
-            Msg::Launcher(msg) => {
+
+            Msg::Publish => self.publish(),
+            Msg::Published => {
+                msg_dlg(
+                    self.widgets.as_root(),
+                    MessageType::Info,
+                    "Success",
+                    "Transaction was successfully published",
+                    None,
+                );
+                self.widgets.publish_restore();
+            }
+            Msg::Declined(err) => {
+                error_dlg(
+                    self.widgets.as_root(),
+                    "Not published",
+                    "Transaction was declined by the network",
+                    Some(&err),
+                );
+                self.widgets.publish_restore();
+            }
+
+            Msg::Launch(msg) => {
                 self.launcher_stream.as_ref().map(|stream| stream.emit(msg));
             }
-            Msg::Close => self.close(),
             Msg::RegisterLauncher(stream) => {
                 self.launcher_stream = Some(stream);
             }
@@ -190,9 +227,15 @@ impl Widget for Component {
         let widgets = Widgets::from_string(glade_src).expect("glade file broken");
 
         let stream = relm.stream().clone();
-        let (_channel, sender) = Channel::new(move |msg| match msg {
+        let (_channel, signer_sender) = Channel::new(move |msg| match msg {
             SignMsg::Signed(psbt) => stream.emit(Msg::Signed(psbt)),
             SignMsg::Failed(name, fp, err) => stream.emit(Msg::Failed(name, fp, err)),
+        });
+
+        let stream = relm.stream().clone();
+        let (_channel, publisher_sender) = Channel::new(move |msg| match msg {
+            PublishMsg::Published => stream.emit(Msg::Published),
+            PublishMsg::Declined(err) => stream.emit(Msg::Declined(err)),
         });
 
         widgets.init_ui();
@@ -204,7 +247,8 @@ impl Widget for Component {
         let mut component = Component {
             model,
             widgets,
-            sender,
+            signer_sender,
+            publisher_sender,
             launcher_stream: None,
         };
         let _ = component.finalize();
