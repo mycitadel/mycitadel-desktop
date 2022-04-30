@@ -245,7 +245,7 @@ impl Display for OriginFormat {
 }
 
 impl OriginFormat {
-    pub fn with_account(path: &DerivationPath, network: PublicNetwork) -> OriginFormat {
+    pub fn with_account(path: &DerivationPath, depth: u8, network: PublicNetwork) -> OriginFormat {
         let bip43 = Bip43::deduce(&path);
         if let Some(bip43) = bip43 {
             let account = bip43
@@ -253,9 +253,9 @@ impl OriginFormat {
                 .transpose()
                 .expect("BIP43 parser is broken");
             OriginFormat::Standard(bip43, account, network)
-        } else if path.is_empty() {
+        } else if depth == 0 {
             OriginFormat::Master
-        } else if path.len() == 1 {
+        } else if depth == 1 {
             OriginFormat::SubMaster(path[0])
         } else {
             let path = path.as_ref().to_vec();
@@ -278,6 +278,7 @@ impl OriginFormat {
         }
     }
 
+    /* This is probably wrong
     pub fn master_fingerprint_editable(&self) -> bool {
         match self {
             OriginFormat::Master => false,
@@ -290,6 +291,7 @@ impl OriginFormat {
             }
         }
     }
+     */
 }
 
 #[derive(Clone, Debug)]
@@ -412,7 +414,7 @@ impl Signer {
     }
 
     pub fn origin_format(&self, network: PublicNetwork) -> OriginFormat {
-        OriginFormat::with_account(&self.origin, network)
+        OriginFormat::with_account(&self.origin, self.xpub.depth, network)
     }
 
     pub fn xpub_core(&self) -> XpubkeyCore {
