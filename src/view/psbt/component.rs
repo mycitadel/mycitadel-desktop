@@ -177,10 +177,13 @@ impl Widget for Component {
         widgets.update_ui(&model);
         widgets.show();
 
-        Component {
+        let mut component = Component {
             model,
             widgets,
             launcher_stream: None,
-        }
+        };
+        let _ = component.finalize();
+
+        component
     }
 }
