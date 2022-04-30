@@ -57,7 +57,9 @@ pub struct Widgets {
     open_btn: Button,
     settings_btn: Button,
     pay_btn: Button,
+    redefine_mi: MenuItem,
     import_mi: MenuItem,
+    settings_mi: MenuItem,
     about_mi: MenuItem,
 
     balance_btc_lbl: Label,
@@ -139,6 +141,7 @@ impl Widgets {
         );
         connect!(relm, self.refresh_btn, connect_clicked(_), Msg::Refresh);
         connect!(relm, self.import_mi, connect_activate(_), Msg::Import);
+        connect!(relm, self.settings_mi, connect_activate(_), Msg::Settings);
         connect!(relm, self.about_mi, connect_activate(_), Msg::About);
 
         connect!(
