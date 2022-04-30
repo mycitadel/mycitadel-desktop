@@ -4,14 +4,18 @@
 
 ![Banner](assets/banner.jpg)
 
-Wallet for bitcoin, digital assets and bitcoin finance (#BiFi) smart contracts.
+MyCitadel is a wallet for **bitcoin, digital assets and bitcoin finance (#BiFi) 
+smart contracts**. It is blazingly fast, secure, cross-platform and technically 
+most advanced wallet on the market, being the first wallet allowing taproot
+multisig and locktime-based spending conditions.
 
-Tool for reliable hodling (with inheritance options), corporate & organization 
-use, current accounts with instant Lightning payments. Works with single- and 
+Do a reliable hodling (with inheritance options), corporate/organization, &
+current accounts - or instant Lightning payments. Work with single- and 
 multisig setups, based on hardware, air-gaped, cold and server-side hot key 
 storage, involving arbitrary complex time-lock scripts (with miniscript) and 
-wide interoperability (because of use of wallet descriptors). Taproot-enabled 
-from day one, including multisig- and script-based taproot.
+wide interoperability (because of use of wallet descriptors). 
+
+![](assets/screenshots/linux/history.png)
 
 MyCitadel™ is a suite of software, hardware and Internet services focused on 
 digital individual sovereignty and privacy. It includes mobile &amp; desktop 
@@ -25,6 +29,34 @@ set of bitcoin &amp; lightning rust libraries developed by LNP/BP Standards
 Association, including client-side-validation, descriptor wallet, BP, LNP and 
 RGB libraries. MyCitadel node also contains embedded LNP &amp; RGB Nodes 
 provided by the Association.
+
+# Key features
+
+## Support of Taproot multisigs
+
+![](assets/screenshots/linux/launcher.png)
+
+Taproot-enabled from day one, including multisig- and script-based taproot.
+
+## Airgaped, hardware and watch-only wallets
+
+![](assets/screenshots/linux/signers.png)
+
+## Arbitrary complex spending conditions
+
+![](assets/screenshots/linux/conditions.png)
+
+## Wallet descriptors
+
+![](assets/screenshots/linux/descriptor.png)
+
+## Batched payments
+
+![](assets/screenshots/linux/pay.png)
+
+## Wallet-independent PSBT signer
+
+![](assets/screenshots/linux/psbt.png)
 
 
 # Installation
