@@ -18,37 +18,45 @@ pub trait ToTapTree<Pk>
 where
     Pk: MiniscriptKey,
 {
-    fn to_tap_tree(self) -> Option<TapTree<Pk>>;
+    fn to_tap_tree(self) -> Result<TapTree<Pk>, miniscript::Error>;
 }
 
 impl<Pk> ToTapTree<Pk> for Vec<(u8, Miniscript<Pk, Tap>)>
 where
     Pk: MiniscriptKey,
 {
-    fn to_tap_tree(self) -> Option<TapTree<Pk>> {
-        let (tap_tree, remnant) = self.into_iter().rfold(
+    fn to_tap_tree(self) -> Result<TapTree<Pk>, miniscript::Error> {
+        let ms_err = || {
+            miniscript::Error::Unexpected(s!(
+                "unable to construct TapTree from the given spending conditions"
+            ))
+        };
+
+        let (tap_tree, remnant) = self.into_iter().try_rfold(
             (None, None) as (Option<TapTree<Pk>>, Option<Miniscript<Pk, Tap>>),
             |(tree, prev), (depth, ms)| match (tree, prev) {
-                (None, None) if depth % 2 == 1 => (None, Some(ms)),
-                (None, None) if depth % 2 == 1 => (Some(TapTree::Leaf(Arc::new(ms))), None),
-                (None, Some(ms2)) => (
+                (None, None) if depth % 2 == 1 => Ok((None, Some(ms))),
+                (None, None) if depth % 2 == 0 => Ok((Some(TapTree::Leaf(Arc::new(ms))), None)),
+                (None, Some(ms2)) => Ok((
                     Some(TapTree::Tree(
                         Arc::new(TapTree::Leaf(Arc::new(ms))),
                         Arc::new(TapTree::Leaf(Arc::new(ms2))),
                     )),
                     None,
-                ),
-                (Some(tree), None) => (
+                )),
+                (Some(tree), None) => Ok((
                     Some(TapTree::Tree(
                         Arc::new(TapTree::Leaf(Arc::new(ms))),
                         Arc::new(tree),
                     )),
                     None,
-                ),
-                _ => unreachable!(),
+                )),
+                _ => Err(ms_err()),
             },
-        );
+        )?;
 
-        tap_tree.or_else(|| remnant.map(|ms| TapTree::Leaf(Arc::new(ms))))
+        tap_tree
+            .or_else(|| remnant.map(|ms| TapTree::Leaf(Arc::new(ms))))
+            .ok_or(ms_err())
     }
 }
