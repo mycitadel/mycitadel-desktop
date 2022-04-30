@@ -686,11 +686,33 @@ impl WalletSettings {
         };
 
         if class.is_segwit_v0() {
-            let ms_witscript = policy.compile::<Segwitv0>().map_err(err_mapper)?;
-            let wsh = Wsh::new(ms_witscript)?;
+            let mut min_sigs = 0usize;
+            let mut sorted_multi = vec![];
+            if let Policy::Threshold(k, ref thresh) = policy {
+                min_sigs = k;
+                let sigs = thresh
+                    .iter()
+                    .filter_map(|pol| {
+                        if let Policy::Key(key) = pol {
+                            Some(key.clone())
+                        } else {
+                            None
+                        }
+                    })
+                    .collect::<Vec<_>>();
+                if sigs.len() == thresh.len() {
+                    sorted_multi = sigs
+                }
+            };
+            let descr = if !sorted_multi.is_empty() {
+                Wsh::new_sortedmulti(min_sigs, sorted_multi)?
+            } else {
+                let ms_witscript = policy.compile::<Segwitv0>().map_err(err_mapper)?;
+                Wsh::new(ms_witscript)?
+            };
             return Ok(match class {
-                DescriptorClass::SegwitV0 => Descriptor::Wsh(wsh),
-                DescriptorClass::NestedV0 => Descriptor::Sh(Sh::new_with_wsh(wsh)),
+                DescriptorClass::SegwitV0 => Descriptor::Wsh(descr),
+                DescriptorClass::NestedV0 => Descriptor::Sh(Sh::new_with_wsh(descr)),
                 _ => unreachable!(),
             });
         }
