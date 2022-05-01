@@ -274,7 +274,6 @@
     <property name="can-focus">False</property>
     <property name="window-position">center</property>
     <property name="default-height">500</property>
-    <property name="icon"></property>
     <property name="show-menubar">False</property>
     <child>
       <object class="GtkBox">
@@ -1528,6 +1527,7 @@ volume</property>
         <child>
           <object class="GtkButton" id="settings_btn">
             <property name="label" translatable="yes">Settings</property>
+            <property name="visible">True</property>
             <property name="can-focus">True</property>
             <property name="receives-default">True</property>
             <property name="image">settings_img</property>
