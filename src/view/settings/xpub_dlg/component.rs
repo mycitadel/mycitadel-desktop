@@ -14,6 +14,7 @@ use std::str::FromStr;
 use gladis::Gladis;
 use gtk::{MessageDialog, ResponseType};
 use relm::{Relm, Sender, Update, Widget};
+use wallet::hd::DerivationStandard;
 
 use super::{Msg, ViewModel, Widgets};
 use crate::model::{DerivationType, XpubDescriptor, XpubParseError, XpubRequirementError};
@@ -68,9 +69,10 @@ impl Update for Component {
 
     fn update(&mut self, event: Msg) {
         match event {
-            Msg::Open(testnet, format) => {
+            Msg::Open(testnet, bip43) => {
                 self.model.testnet = testnet;
-                self.model.slip_format = format;
+                self.model.standard = DerivationType::Bip43(bip43);
+                self.model.slip_format = bip43.slip_application();
                 self.widgets.open();
             }
             Msg::Edit => {

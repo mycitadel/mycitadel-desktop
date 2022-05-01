@@ -12,7 +12,6 @@
 use std::path::Path;
 use std::str::FromStr;
 
-use ::wallet::hd::DerivationStandard;
 use bitcoin::util::bip32::{DerivationPath, Fingerprint};
 use gladis::Gladis;
 use gtk::prelude::*;
@@ -136,8 +135,8 @@ impl Update for Component {
             }
             Msg::AddReadOnly => {
                 let testnet = self.model.network.is_testnet();
-                let format = self.model.bip43().slip_application();
-                self.xpub_dlg.emit(xpub_dlg::Msg::Open(testnet, format));
+                self.xpub_dlg
+                    .emit(xpub_dlg::Msg::Open(testnet, self.model.bip43()));
                 return;
             }
             Msg::SignerSelect => {

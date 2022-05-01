@@ -16,12 +16,12 @@ mod widget;
 pub use component::Component;
 use gtk::ResponseType;
 pub(self) use view_model::ViewModel;
-use wallet::slip132::KeyApplication;
+use wallet::hd::Bip43;
 pub(self) use widget::Widgets;
 
 #[derive(Clone, Msg)]
 pub enum Msg {
-    Open(bool, Option<KeyApplication>),
+    Open(bool, Bip43),
     Edit,
     Error(String),
     Warning(String),
