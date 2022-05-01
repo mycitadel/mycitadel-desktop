@@ -55,18 +55,18 @@ impl Component {
             .downcast()
             .expect("wrong signer");
         let name = signer.name();
-        let fp = signer.fingerprint();
+        let master_fp = signer.master_fp();
         let device = HWIDevice {
             device_type: s!(""),
             model: s!(""),
             path: s!(""),
             needs_pin_sent: false,
             needs_passphrase_sent: false,
-            fingerprint: signer.fingerprint().to_string().parse().unwrap(),
+            fingerprint: master_fp,
         };
 
         self.widgets
-            .show_sign(&format!("Signing with device {} [{}]", name, fp));
+            .show_sign(&format!("Signing with device {} [{}]", name, master_fp));
 
         let psbt = self.model.psbt().clone().into();
         let sender = self.signer_sender.clone();
@@ -77,7 +77,7 @@ impl Component {
                 .and_then(|resp| {
                     PartiallySignedTransaction::from_str(&resp.psbt).map_err(|e| e.to_string())
                 }) {
-                Err(err) => sender.send(SignMsg::Failed(name, fp, err.to_string())),
+                Err(err) => sender.send(SignMsg::Failed(name, master_fp, err.to_string())),
                 Ok(psbt) => sender.send(SignMsg::Signed(psbt.into())),
             }
             .expect("channel broken");
@@ -220,7 +220,9 @@ impl Widget for Component {
     type Root = ApplicationWindow;
 
     // Return the root widget.
-    fn root(&self) -> Self::Root { self.widgets.to_root() }
+    fn root(&self) -> Self::Root {
+        self.widgets.to_root()
+    }
 
     fn view(relm: &Relm<Self>, model: Self::Model) -> Self {
         let glade_src = include_str!("psbt.glade");

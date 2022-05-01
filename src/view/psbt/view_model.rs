@@ -12,11 +12,9 @@
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
-use bitcoin::hashes::Hash;
 use bitcoin::psbt::raw::ProprietaryKey;
-use bitcoin::psbt::serialize::Serialize;
 use bitcoin::util::bip32::Fingerprint;
-use bitcoin::{secp256k1, Transaction, XOnlyPublicKey, XpubIdentifier};
+use bitcoin::Transaction;
 use miniscript::ToPublicKey;
 use wallet::psbt::Psbt;
 
@@ -80,15 +78,15 @@ impl ViewModel {
     }
 
     pub fn parse_psbt(&self) {
-        let mut keys = BTreeMap::<Fingerprint, (Fingerprint, u32, u32)>::new();
-        let mut bpk = BTreeMap::<secp256k1::PublicKey, Fingerprint>::new();
-        let mut xpk = BTreeMap::<XOnlyPublicKey, Fingerprint>::new();
+        // Information on required signatures, indexed by terminal keys
+        let mut signing_keys =
+            BTreeMap::<bitcoin::PublicKey, (Fingerprint, Fingerprint, u32, u32)>::new();
         for input in &self.psbt.inputs {
-            for (pk, (_, (fingerprint, _))) in &input.tap_key_origins {
-                let (fp, present, required) = keys.entry(*fingerprint).or_insert((zero!(), 0, 0));
-                *fp = Fingerprint::from(
-                    &XpubIdentifier::hash(&pk.to_public_key().serialize()[..])[0..4],
-                );
+            for (pk, (_, (master_fp, _))) in &input.tap_key_origins {
+                let key = pk.to_public_key();
+                let (fp, _, present, required) =
+                    signing_keys.entry(key).or_insert((zero!(), zero!(), 0, 0));
+                *fp = *master_fp;
                 *required += 1;
                 *present += input.tap_key_sig.map(|_| 1u32).unwrap_or_default()
                     + input
@@ -96,18 +94,29 @@ impl ViewModel {
                         .keys()
                         .filter(|(xpk, _)| xpk == pk)
                         .count() as u32;
-                xpk.entry(*pk).or_insert(*fingerprint);
             }
-            for (pk, (fingerprint, _)) in &input.bip32_derivation {
-                let (fp, present, required) = keys.entry(*fingerprint).or_insert((zero!(), 0, 0));
-                *fp = Fingerprint::from(&XpubIdentifier::hash(&pk.serialize()[..])[0..4]);
+            for (pk, (master_fp, _)) in &input.bip32_derivation {
+                let key = bitcoin::PublicKey::new(*pk);
+                let (fp, _, present, required) =
+                    signing_keys.entry(key).or_insert((zero!(), zero!(), 0, 0));
+                *fp = *master_fp;
                 *required += 1;
                 *present += input
                     .partial_sigs
                     .get(&bitcoin::PublicKey::new(*pk))
                     .map(|_| 1u32)
                     .unwrap_or_default();
-                bpk.entry(*pk).or_insert(*fingerprint);
+            }
+        }
+
+        for (account_xpub, (master_fp, _)) in &self.psbt.xpub {
+            for (fp, account_fp, ..) in signing_keys.values_mut() {
+                if fp == master_fp {
+                    *account_fp = account_xpub.fingerprint();
+                } else if *fp == account_xpub.fingerprint() {
+                    *account_fp = *fp;
+                    *fp = *master_fp;
+                }
             }
         }
 
@@ -116,7 +125,9 @@ impl ViewModel {
             subtype: MC_PSBT_GLOBAL_SIGNER_NAME,
             key: vec![],
         };
-        for (fingerprint, (fp, present, required)) in keys {
+        for (signer_no, (master_fp, account_fp, present, required)) in
+            signing_keys.values().enumerate()
+        {
             let name = self
                 .psbt
                 .proprietary
@@ -125,21 +136,34 @@ impl ViewModel {
                 .map(String::from_utf8)
                 .transpose()
                 .ok()
-                .flatten()
-                .unwrap_or(format!("{}", fp));
-            let info = Signing::with(&name, fingerprint, present, required);
+                .flatten();
+            let name = name.unwrap_or_else(|| {
+                if *account_fp == zero!() {
+                    format!("Signer #{}", signer_no)
+                } else {
+                    format!("Signer [{}]", account_fp)
+                }
+            });
+            let info = Signing::with(&name, *master_fp, *account_fp, *present, *required);
             self.signing.append(&info);
         }
     }
 
     pub fn replace_psbt(&mut self, psbt: Psbt) {
         self.psbt = psbt;
+        self.signing.clear();
         self.parse_psbt();
     }
 
-    pub fn set_path(&mut self, path: PathBuf) { self.path = Some(path); }
+    pub fn set_path(&mut self, path: PathBuf) {
+        self.path = Some(path);
+    }
 
-    pub fn clear_finalized_tx(&mut self) { self.finalized_tx = None; }
+    pub fn clear_finalized_tx(&mut self) {
+        self.finalized_tx = None;
+    }
 
-    pub fn set_finalized_tx(&mut self, tx: Transaction) { self.finalized_tx = Some(tx); }
+    pub fn set_finalized_tx(&mut self, tx: Transaction) {
+        self.finalized_tx = Some(tx);
+    }
 }
