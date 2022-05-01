@@ -270,8 +270,13 @@ impl ViewModel {
             .descriptor_classes
             .iter()
             .next()
-            .expect("dscriptor must always have at least a single class");
-        class.bip43(self.signers.len())
+            .expect("descriptor must always have at least a single class");
+        let min_sigs_required = self
+            .template
+            .as_ref()
+            .map(|t| t.min_signer_count)
+            .unwrap_or(self.signers.len() as u16) as usize;
+        class.bip43(min_sigs_required)
     }
 
     pub fn terminal_derivation(&self) -> Vec<TerminalStep> {

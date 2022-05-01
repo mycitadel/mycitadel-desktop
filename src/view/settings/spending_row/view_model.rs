@@ -435,10 +435,7 @@ impl SpendingModel {
         let imp = self.imp();
         let n = self.n_items();
         imp.conditions.borrow_mut().clear();
-        // Emits a signal that 1 item was removed, 0 added at the position index
-        for index in 0..n {
-            self.items_changed(index, 1, 0);
-        }
+        self.items_changed(0, n, 0);
     }
 
     pub fn remove(&self, index: u32) {

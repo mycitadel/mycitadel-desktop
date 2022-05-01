@@ -70,6 +70,7 @@ impl Update for Component {
     fn update(&mut self, event: Msg) {
         match event {
             Msg::Show => {
+                self.model.devices.clear();
                 self.widgets.dialog.show();
                 self.widgets.refresh_btn.emit_clicked();
             }

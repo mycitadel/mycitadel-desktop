@@ -35,7 +35,7 @@ impl Default for Requirement {
 pub struct WalletTemplate {
     pub default_derivation: DerivationType,
     pub descriptor_class: DescriptorClass,
-    pub min_signer_count: Option<u16>,
+    pub min_signer_count: u16,
     pub max_signer_count: Option<u16>,
     pub hardware_req: Requirement,
     pub watch_only_req: Requirement,
@@ -61,7 +61,7 @@ impl WalletTemplate {
         WalletTemplate {
             default_derivation: format.into(),
             descriptor_class,
-            min_signer_count: Some(1),
+            min_signer_count: 1,
             max_signer_count: Some(1),
             hardware_req,
             watch_only_req,
@@ -94,7 +94,7 @@ impl WalletTemplate {
         WalletTemplate {
             default_derivation: Bip43::multisig_descriptor().into(),
             descriptor_class,
-            min_signer_count: Some(sigs_required),
+            min_signer_count: sigs_required,
             max_signer_count: None,
             hardware_req,
             watch_only_req,
@@ -156,7 +156,7 @@ impl WalletTemplate {
         WalletTemplate {
             default_derivation,
             descriptor_class,
-            min_signer_count: sigs_required.or(Some(2)),
+            min_signer_count: sigs_required.unwrap_or(2),
             max_signer_count: None,
             hardware_req,
             watch_only_req,

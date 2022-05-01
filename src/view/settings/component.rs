@@ -92,7 +92,7 @@ impl Component {
 
         if let Some(ref template) = self.model.template {
             let signer_count = self.model.signers.len() as u16;
-            let min_count = template.min_signer_count.unwrap_or_default();
+            let min_count = template.min_signer_count;
             let max_count = template.max_signer_count.unwrap_or(signer_count + 1);
             if signer_count < min_count {
                 return self
