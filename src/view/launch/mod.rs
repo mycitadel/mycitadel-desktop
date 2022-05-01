@@ -24,7 +24,8 @@ pub struct ViewModel {}
 
 #[derive(Msg)]
 pub enum Msg {
-    Show(Page),
+    Show,
+    ShowPage(Page),
     Close,
     Template(i32),
     Duplicate(WalletSettings, String),

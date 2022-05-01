@@ -117,7 +117,7 @@ impl Component {
     pub fn save(&mut self) -> Result<bool, io::Error> {
         let psbt = PartiallySignedTransaction::from(self.model.psbt().clone());
         let path = match file_save_dlg(
-            self.widgets.as_root(),
+            Some(self.widgets.as_root()),
             "Save transaction",
             "Partially signed bitcoin transaction",
             "*.psbt",
@@ -220,9 +220,7 @@ impl Widget for Component {
     type Root = ApplicationWindow;
 
     // Return the root widget.
-    fn root(&self) -> Self::Root {
-        self.widgets.to_root()
-    }
+    fn root(&self) -> Self::Root { self.widgets.to_root() }
 
     fn view(relm: &Relm<Self>, model: Self::Model) -> Self {
         let glade_src = include_str!("psbt.glade");

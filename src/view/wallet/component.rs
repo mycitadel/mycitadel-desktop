@@ -326,7 +326,7 @@ impl Update for Component {
             Msg::New => {
                 self.launcher_stream
                     .as_ref()
-                    .map(|stream| stream.emit(launch::Msg::Show(launch::Page::Template)));
+                    .map(|stream| stream.emit(launch::Msg::ShowPage(launch::Page::Template)));
             }
             Msg::Open => {
                 self.launcher_stream
@@ -347,7 +347,7 @@ impl Update for Component {
             Msg::Import => {
                 self.launcher_stream
                     .as_ref()
-                    .map(|stream| stream.emit(launch::Msg::Show(launch::Page::Import)));
+                    .map(|stream| stream.emit(launch::Msg::ShowPage(launch::Page::Import)));
             }
             Msg::Close => self.close(),
             Msg::About => {
@@ -424,11 +424,13 @@ impl Update for Component {
                     .map(|i| *i = index);
                 self.widgets.update_invoice(&self.model);
             }
+            Msg::Launch(msg) => {
+                self.launcher_stream.as_ref().map(|stream| stream.emit(msg));
+            }
             Msg::RegisterLauncher(stream) => {
                 self.launcher_stream = Some(stream);
             }
             Msg::ElectrumWatch(msg) => self.handle_electrum(msg),
-            _ => { /* TODO: Implement main window event handling */ }
         }
     }
 }

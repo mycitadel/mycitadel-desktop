@@ -155,15 +155,9 @@ impl ViewModel {
         self.parse_psbt();
     }
 
-    pub fn set_path(&mut self, path: PathBuf) {
-        self.path = Some(path);
-    }
+    pub fn set_path(&mut self, path: PathBuf) { self.path = Some(path); }
 
-    pub fn clear_finalized_tx(&mut self) {
-        self.finalized_tx = None;
-    }
+    pub fn clear_finalized_tx(&mut self) { self.finalized_tx = None; }
 
-    pub fn set_finalized_tx(&mut self, tx: Transaction) {
-        self.finalized_tx = Some(tx);
-    }
+    pub fn set_finalized_tx(&mut self, tx: Transaction) { self.finalized_tx = Some(tx); }
 }

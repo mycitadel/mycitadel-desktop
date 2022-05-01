@@ -180,46 +180,31 @@ impl Widgets {
                 .as_ref()
                 .map(AddressFormat::to_string)
                 .unwrap_or(s!("custom"));
-            self.address_store.insert_with_values(
-                None,
-                &[
-                    (0, &address_str),
-                    (1, &format!("{:.08}", output.amount as f64 / 100_000_000.0)),
-                    (
-                        2,
-                        &!(output.bip32_derivation.is_empty() && output.tap_key_origins.is_empty()),
-                    ),
-                    (3, &address_type),
-                ],
-            );
+            self.address_store.insert_with_values(None, &[
+                (0, &address_str),
+                (1, &format!("{:.08}", output.amount as f64 / 100_000_000.0)),
+                (
+                    2,
+                    &!(output.bip32_derivation.is_empty() && output.tap_key_origins.is_empty()),
+                ),
+                (3, &address_type),
+            ]);
         }
     }
 
-    pub fn show(&self) {
-        self.window.show()
-    }
-    pub fn hide(&self) {
-        self.window.hide()
-    }
-    pub fn close(&self) {
-        self.window.close()
-    }
+    pub fn show(&self) { self.window.show() }
+    pub fn hide(&self) { self.window.hide() }
+    pub fn close(&self) { self.window.close() }
 
     pub fn show_sign(&self, msg: &str) {
         self.sign_msg_lbl.set_text(msg);
         self.sign_dlg.show();
     }
 
-    pub fn hide_sign(&self) {
-        self.sign_dlg.hide();
-    }
+    pub fn hide_sign(&self) { self.sign_dlg.hide(); }
 
-    pub fn to_root(&self) -> ApplicationWindow {
-        self.window.clone()
-    }
-    pub fn as_root(&self) -> &ApplicationWindow {
-        &self.window
-    }
+    pub fn to_root(&self) -> ApplicationWindow { self.window.clone() }
+    pub fn as_root(&self) -> &ApplicationWindow { &self.window }
 
     pub(super) fn connect(&self, relm: &Relm<super::Component>) {
         connect!(relm, self.save_btn, connect_clicked(_), Msg::Save);
@@ -235,7 +220,7 @@ impl Widgets {
             relm,
             self.new_template_mi,
             connect_activate(_),
-            Msg::Launch(launch::Msg::Show(Page::Template))
+            Msg::Launch(launch::Msg::ShowPage(Page::Template))
         );
         connect!(
             relm,
@@ -253,13 +238,13 @@ impl Widgets {
             relm,
             self.import_mi,
             connect_activate(_),
-            Msg::Launch(launch::Msg::Show(Page::Import))
+            Msg::Launch(launch::Msg::ShowPage(Page::Import))
         );
         connect!(
             relm,
             self.launcher_mi,
             connect_activate(_),
-            Msg::Launch(launch::Msg::Show(Page::Template))
+            Msg::Launch(launch::Msg::Show)
         );
         connect!(
             relm,
@@ -302,9 +287,7 @@ impl Widgets {
         self.save_btn.set_sensitive(path.is_none());
     }
 
-    pub fn set_unsaved(&self) {
-        self.save_btn.set_sensitive(true);
-    }
+    pub fn set_unsaved(&self) { self.save_btn.set_sensitive(true); }
 
     pub fn publish_pending(&self) {
         self.publish_btn.set_always_show_image(false);

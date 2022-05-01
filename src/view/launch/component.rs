@@ -127,7 +127,8 @@ impl Update for Component {
 
     fn update(&mut self, event: Msg) {
         match event {
-            Msg::Show(page) => self.widgets.show(Some(page)),
+            Msg::Show => self.widgets.show(None),
+            Msg::ShowPage(page) => self.widgets.show(Some(page)),
             Msg::Close => {
                 if self.window_count == 0 {
                     gtk::main_quit();
@@ -180,12 +181,8 @@ impl Update for Component {
             }
             Msg::Import => {}
             Msg::Wallet => {
-                if let Some(path) = file_open_dlg(
-                    self.widgets.as_root(),
-                    "Open wallet",
-                    "MyCitadel wallet",
-                    "*.mcw",
-                ) {
+                if let Some(path) = file_open_dlg(None, "Open wallet", "MyCitadel wallet", "*.mcw")
+                {
                     self.widgets.hide();
                     if !self.open_wallet(path) {
                         self.widgets.show(None);
@@ -194,7 +191,7 @@ impl Update for Component {
             }
             Msg::Psbt(network) => {
                 if let Some(path) = file_open_dlg(
-                    self.widgets.as_root(),
+                    None,
                     "Open PSBT",
                     "Partially signed bitcoin transaction",
                     "*.psbt",

@@ -41,7 +41,7 @@ impl Component {
         if self.model.template.is_some() {
             self.launcher_stream
                 .as_ref()
-                .map(|stream| stream.emit(launch::Msg::Show(launch::Page::Template)));
+                .map(|stream| stream.emit(launch::Msg::ShowPage(launch::Page::Template)));
         }
     }
 

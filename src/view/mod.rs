@@ -101,7 +101,7 @@ pub fn error_dlg(
 }
 
 pub fn file_dlg(
-    parent: &impl IsA<gtk::Window>,
+    parent: Option<&impl IsA<gtk::Window>>,
     title: &str,
     action: FileChooserAction,
     type_name: &str,
@@ -116,10 +116,8 @@ pub fn file_dlg(
         _ => unimplemented!(),
     };
 
-    let file_dlg = FileChooserDialog::with_buttons(Some(title), Some(parent), action, &[(
-        button,
-        ResponseType::Ok,
-    )]);
+    let file_dlg =
+        FileChooserDialog::with_buttons(Some(title), parent, action, &[(button, ResponseType::Ok)]);
     file_dlg.set_default_response(ResponseType::Ok);
     file_dlg.set_do_overwrite_confirmation(action == FileChooserAction::Save);
     if let Some(name) = default_name {
@@ -143,7 +141,7 @@ pub fn file_dlg(
 }
 
 pub fn file_open_dlg(
-    parent: &impl IsA<gtk::Window>,
+    parent: Option<&gtk::ApplicationWindow>,
     title: &str,
     type_name: &str,
     mask: &str,
@@ -159,7 +157,7 @@ pub fn file_open_dlg(
 }
 
 pub fn file_save_dlg(
-    parent: &impl IsA<gtk::Window>,
+    parent: Option<&gtk::ApplicationWindow>,
     title: &str,
     type_name: &str,
     mask: &str,
@@ -182,7 +180,7 @@ pub fn file_create_dlg(
     default_name: &str,
 ) -> Option<PathBuf> {
     file_dlg(
-        parent,
+        Some(parent),
         title,
         FileChooserAction::Save,
         type_name,
