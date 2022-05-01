@@ -116,24 +116,23 @@ impl Component {
 
     pub fn save(&mut self) -> Result<bool, io::Error> {
         let psbt = PartiallySignedTransaction::from(self.model.psbt().clone());
-        let path = match self.model.path() {
-            Some(path) => path,
-            None => {
-                let path = match file_save_dlg(
-                    self.widgets.as_root(),
-                    "Save transaction",
-                    "Partially signed bitcoin transaction",
-                    "*.psbt",
-                ) {
-                    None => return Ok(false),
-                    Some(path) => path,
-                };
-                self.model.set_path(path);
-                self.model.path().as_ref().expect("path was just set")
+        let path = match file_save_dlg(
+            self.widgets.as_root(),
+            "Save transaction",
+            "Partially signed bitcoin transaction",
+            "*.psbt",
+        ) {
+            None => return Ok(false),
+            Some(path) if path.extension().is_some() => path,
+            Some(mut path) => {
+                path.set_extension("psbt");
+                path
             }
         };
-        let file = fs::File::create(path)?;
+        let file = fs::File::create(&path)?;
         psbt.consensus_encode(file)?;
+        self.model.set_path(path);
+        self.widgets.update_path(self.model.path().as_deref());
         Ok(true)
     }
 }
@@ -172,6 +171,7 @@ impl Update for Component {
                 self.widgets.hide_sign();
                 self.model.replace_psbt(psbt);
                 self.widgets.update_ui(&self.model);
+                self.widgets.set_unsaved();
                 let _ = self.finalize();
             }
             Msg::Failed(name, fp, err) => {
@@ -193,7 +193,7 @@ impl Update for Component {
                     "Transaction was successfully published",
                     None,
                 );
-                self.widgets.publish_restore();
+                self.widgets.publish_restore(true);
             }
             Msg::Declined(err) => {
                 error_dlg(
@@ -202,7 +202,7 @@ impl Update for Component {
                     "Transaction was declined by the network",
                     Some(&err),
                 );
-                self.widgets.publish_restore();
+                self.widgets.publish_restore(false);
             }
 
             Msg::Launch(msg) => {

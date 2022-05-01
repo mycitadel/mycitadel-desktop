@@ -139,7 +139,7 @@ impl ViewModel {
                 .flatten();
             let name = name.unwrap_or_else(|| {
                 if *account_fp == zero!() {
-                    format!("Signer #{}", signer_no)
+                    format!("Signer #{}", signer_no + 1)
                 } else {
                     format!("Signer [{}]", account_fp)
                 }

@@ -94,7 +94,7 @@
   <object class="GtkImage" id="save_img">
     <property name="visible">True</property>
     <property name="can-focus">False</property>
-    <property name="icon-name">document-save-symbolic</property>
+    <property name="icon-name">document-save-as-symbolic</property>
   </object>
   <object class="GtkApplicationWindow" id="window">
     <property name="can-focus">False</property>
@@ -785,7 +785,7 @@
         </child>
         <child>
           <object class="GtkButton" id="save_btn">
-            <property name="label" translatable="yes">Save</property>
+            <property name="label" translatable="yes">Save As</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
             <property name="receives-default">True</property>
