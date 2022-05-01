@@ -72,7 +72,7 @@ impl Component {
         }
     }
 
-    pub fn compose_psbt(&mut self) -> Result<(Psbt, UnhardenedIndex), pay::Error> {
+    pub fn compose_psbt(&mut self) -> Result<(Psbt, UnhardenedIndex, u32), pay::Error> {
         let wallet = self.model.as_wallet();
 
         let output_count = self.model.beneficiaries().n_items();
@@ -171,10 +171,10 @@ impl Component {
         )?;
         self.model.set_vsize(vsize);
 
-        Ok((psbt, change_index))
+        Ok((psbt, change_index, fee))
     }
 
-    pub fn sync_pay(&mut self) -> Option<(Psbt, UnhardenedIndex)> {
+    pub fn sync_pay(&mut self) -> Option<(Psbt, UnhardenedIndex, u32)> {
         let res = self.compose_psbt();
 
         let output_count = self.model.beneficiaries().n_items();
@@ -194,7 +194,7 @@ impl Component {
             self.model.fee_rate(),
             self.model.as_wallet().ephemerals().fees,
             self.model.vsize(),
-            res.as_ref().ok().map(|_| total),
+            res.as_ref().ok().map(|(_, _, fee)| (total, *fee)),
         );
 
         match res {
@@ -447,7 +447,7 @@ impl Component {
                 self.pay_widgets.show();
             }
             pay::Msg::Response(ResponseType::Ok) => {
-                let (psbt, change_index) = match self.sync_pay() {
+                let (psbt, change_index, _) = match self.sync_pay() {
                     Some(data) => data,
                     None => return,
                 };

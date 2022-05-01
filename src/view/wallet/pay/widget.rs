@@ -150,11 +150,17 @@ impl Widgets {
             });
     }
 
-    pub fn update_info(&self, fee_rate: f32, fees: (f32, f32, f32), vsize: f32, paid: Option<u64>) {
+    pub fn update_info(
+        &self,
+        fee_rate: f32,
+        fees: (f32, f32, f32),
+        vsize: f32,
+        paid: Option<(u64, u32)>,
+    ) {
         self.prepare_btn.set_sensitive(paid.is_some());
 
-        if let Some(paid) = paid {
-            let total_fee = (vsize * fee_rate) as f64;
+        if let Some((paid, fee)) = paid {
+            let total_fee = fee as f64;
             let total = paid as f64 + total_fee;
 
             self.weight_lbl.set_text(&format!("{:.0} vbytes", vsize));
