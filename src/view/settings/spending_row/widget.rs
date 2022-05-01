@@ -121,7 +121,7 @@ impl RowWidgets {
             .calendar
             .connect_day_selected_double_click(move |cal| {
                 c.set_property("after-day", cal.day() as u32);
-                c.set_property("after-month", cal.month() as u32);
+                c.set_property("after-month", cal.month() as u32 + 1);
                 c.set_property("after-year", cal.year() as u32);
                 row_widgets.calendar_popover.hide();
             });
@@ -332,7 +332,7 @@ impl RowWidgets {
             let year: u32 = binding.source().unwrap().property("after-year");
             let month: u32 = binding.source().unwrap().property("after-month");
             let day: u32 = binding.source().unwrap().property("after-day");
-            Some(format!("{}/{}/{}", year, month + 1, day).to_value())
+            Some(format!("{}/{}/{}", year, month, day).to_value())
         };
 
         condition
