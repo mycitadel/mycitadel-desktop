@@ -104,7 +104,7 @@ impl Component {
 
         // TODO: Support constructing PSBTs from multiple descriptors (at descriptor-wallet lib)
         let (descriptor, _) = self.model.as_settings().descriptors_all()?;
-        let lock_time = LockTime::since_now();
+        let lock_time = LockTime::with_height(734438).expect("hardcoded height");
         let change_index = wallet.next_change_index();
 
         let fee_rate = self.model.fee_rate();
@@ -149,7 +149,7 @@ impl Component {
             .map(|prevout| InputDescriptor {
                 outpoint: prevout.outpoint,
                 terminal: prevout.terminal(),
-                seq_no: SeqNo::default(), // TODO: Support spending from CSV outputs
+                seq_no: SeqNo::new_rbf(), // TODO: Support spending from CSV outputs
                 tweak: None,
                 sighash_type: EcdsaSighashType::All, // TODO: Support more sighashes in the UI
             })
