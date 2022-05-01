@@ -78,6 +78,8 @@ impl ViewModel {
     }
 
     pub fn parse_psbt(&self) {
+        self.signing.clear();
+
         // Information on required signatures, indexed by terminal keys
         let mut signing_keys =
             BTreeMap::<bitcoin::PublicKey, (Fingerprint, Fingerprint, u32, u32)>::new();
@@ -120,14 +122,22 @@ impl ViewModel {
             }
         }
 
+        let signers = signing_keys.into_iter().fold(
+            BTreeMap::<Fingerprint, (u32, u32)>::new(),
+            |mut signers, (_, (master_fp, _, p, r))| {
+                let (present, required) = signers.entry(master_fp).or_default();
+                *present += p;
+                *required += r;
+                signers
+            },
+        );
+
         let signer_name_key = ProprietaryKey {
             prefix: b"MyCitadel".to_vec(),
             subtype: MC_PSBT_GLOBAL_SIGNER_NAME,
             key: vec![],
         };
-        for (signer_no, (master_fp, account_fp, present, required)) in
-            signing_keys.values().enumerate()
-        {
+        for (signer_no, (master_fp, (present, required))) in signers.into_iter().enumerate() {
             let name = self
                 .psbt
                 .proprietary
@@ -137,21 +147,14 @@ impl ViewModel {
                 .transpose()
                 .ok()
                 .flatten();
-            let name = name.unwrap_or_else(|| {
-                if *account_fp == zero!() {
-                    format!("Signer #{}", signer_no + 1)
-                } else {
-                    format!("Signer [{}]", account_fp)
-                }
-            });
-            let info = Signing::with(&name, *master_fp, *account_fp, *present, *required);
+            let name = name.unwrap_or_else(|| format!("Signer #{}", signer_no + 1));
+            let info = Signing::with(&name, master_fp, present, required);
             self.signing.append(&info);
         }
     }
 
     pub fn replace_psbt(&mut self, psbt: Psbt) {
         self.psbt = psbt;
-        self.signing.clear();
         self.parse_psbt();
     }
 

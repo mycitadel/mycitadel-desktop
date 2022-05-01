@@ -24,7 +24,6 @@ use gtk::{gio, glib};
 pub struct SigningInner {
     name: RefCell<String>,
     master_fp: RefCell<String>,
-    fingerprint: RefCell<String>,
     status: RefCell<String>,
     sigs_present: RefCell<u32>,
     sigs_required: RefCell<u32>,
@@ -61,13 +60,6 @@ impl ObjectImpl for SigningInner {
                     "master-fp",
                     "MasterFingerprint",
                     "Fingerprint of the extended master pubkey",
-                    None, // Default value
-                    glib::ParamFlags::READWRITE,
-                ),
-                glib::ParamSpecString::new(
-                    "fingerprint",
-                    "Fingerprint",
-                    "Fingerprint",
                     None, // Default value
                     glib::ParamFlags::READWRITE,
                 ),
@@ -129,12 +121,6 @@ impl ObjectImpl for SigningInner {
                     .expect("type conformity checked by `Object::set_property`");
                 self.master_fp.replace(value);
             }
-            "fingerprint" => {
-                let value = value
-                    .get()
-                    .expect("type conformity checked by `Object::set_property`");
-                self.fingerprint.replace(value);
-            }
             "status" => {
                 let value = value
                     .get()
@@ -167,7 +153,6 @@ impl ObjectImpl for SigningInner {
         match pspec.name() {
             "name" => self.name.borrow().to_value(),
             "master-fp" => self.master_fp.borrow().to_value(),
-            "fingerprint" => self.fingerprint.borrow().to_value(),
             "status" => self.status.borrow().to_value(),
             "sigs-present" => self.sigs_present.borrow().to_value(),
             "sigs-required" => self.sigs_required.borrow().to_value(),
@@ -185,7 +170,6 @@ impl Signing {
     pub fn with(
         name: &str,
         master_fp: Fingerprint,
-        fingerprint: Fingerprint,
         sigs_present: u32,
         sigs_required: u32,
     ) -> Signing {
@@ -199,7 +183,6 @@ impl Signing {
         glib::Object::new(&[
             ("name", &name),
             ("master-fp", &format!("{}", master_fp)),
-            ("fingerprint", &format!("{}", fingerprint)),
             ("status", &status),
             ("sigs-present", &sigs_present),
             ("sigs-required", &sigs_required),
@@ -210,11 +193,6 @@ impl Signing {
 
     pub fn master_fp(&self) -> Fingerprint {
         let fingerprint: String = self.property("master-fp");
-        Fingerprint::from_str(&fingerprint).expect("broken fingerprint")
-    }
-
-    pub fn fingerprint(&self) -> Fingerprint {
-        let fingerprint: String = self.property("fingerprint");
         Fingerprint::from_str(&fingerprint).expect("broken fingerprint")
     }
 
