@@ -12,8 +12,8 @@
 use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{
-    Adjustment, Box, Button, Dialog, HeaderBar, Image, Label, ListBox, ListBoxRow, Menu,
-    PositionType, RadioMenuItem, ResponseType, Scale, SpinButton, ToolButton,
+    Adjustment, Box, Button, Dialog, HeaderBar, Image, Label, ListBox, ListBoxRow, Menu, MenuItem,
+    PositionType, ResponseType, Scale, SpinButton, ToolButton,
 };
 use relm::Relm;
 
@@ -46,9 +46,9 @@ pub struct Widgets {
     fee_stp: SpinButton,
     fee_menu: Menu,
     time_lbl: Label,
-    block1_mi: RadioMenuItem,
-    block2_mi: RadioMenuItem,
-    block3_mi: RadioMenuItem,
+    block1_mi: MenuItem,
+    block2_mi: MenuItem,
+    block3_mi: MenuItem,
 }
 
 impl Widgets {
@@ -120,26 +120,20 @@ impl Widgets {
         connect!(
             relm,
             self.block1_mi,
-            connect_activate(mi),
-            if mi.is_active() {
-                wallet::Msg::Pay(Msg::FeeSetBlocks(FeeRate::OneBlock));
-            }
+            connect_activate(_),
+            wallet::Msg::Pay(Msg::FeeSetBlocks(FeeRate::OneBlock))
         );
         connect!(
             relm,
             self.block2_mi,
-            connect_activate(mi),
-            if mi.is_active() {
-                wallet::Msg::Pay(Msg::FeeSetBlocks(FeeRate::TwoBlocks));
-            }
+            connect_activate(_),
+            wallet::Msg::Pay(Msg::FeeSetBlocks(FeeRate::TwoBlocks))
         );
         connect!(
             relm,
             self.block3_mi,
-            connect_activate(mi),
-            if mi.is_active() {
-                wallet::Msg::Pay(Msg::FeeSetBlocks(FeeRate::ThreeBlocks));
-            }
+            connect_activate(_),
+            wallet::Msg::Pay(Msg::FeeSetBlocks(FeeRate::ThreeBlocks))
         );
     }
 
@@ -194,9 +188,6 @@ impl Widgets {
         };
 
         self.time_lbl.set_text(&ty.to_string());
-        self.block1_mi.set_active(ty == FeeRate::OneBlock);
-        self.block2_mi.set_active(ty == FeeRate::TwoBlocks);
-        self.block3_mi.set_active(ty == FeeRate::ThreeBlocks);
     }
 
     pub fn fee_rate(&self) -> f64 { self.fee_adj.value() }

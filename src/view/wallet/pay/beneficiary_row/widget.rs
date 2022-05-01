@@ -126,18 +126,19 @@ impl RowWidgets {
                         (amount * 100_000_000.0) as u64,
                     ),
                     Ok(amount) => {
-                        let sats = (amount * 100_000_000.0) as u64;
-                        if sats as f64 / 100_000_000.0 != amount {
+                        let s = format!("{}", amount);
+                        let s = s.split_once('.');
+                        if s.map(|(_, r)| r.len()).unwrap_or(0) > 8 {
                             (
                                 Some("dialog-warning-symbolic"),
-                                Some(s!("Subsatoshi amount")),
-                                sats,
+                                Some(s!("Sub-satoshi amount")),
+                                (amount * 100_000_000.0) as u64,
                             )
                         } else {
                             (
                                 Some("emblem-ok-symbolic"),
                                 Some(s!("Amount is valid")),
-                                sats,
+                                (amount * 100_000_000.0) as u64,
                             )
                         }
                     }

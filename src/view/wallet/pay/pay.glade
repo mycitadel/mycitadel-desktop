@@ -13,30 +13,27 @@
     <property name="visible">True</property>
     <property name="can-focus">False</property>
     <child>
-      <object class="GtkRadioMenuItem" id="block1_mi">
+      <object class="GtkMenuItem" id="block1_mi">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
         <property name="label" translatable="yes">In ~one block / 10 mins</property>
         <property name="use-underline">True</property>
-        <property name="active">True</property>
       </object>
     </child>
     <child>
-      <object class="GtkRadioMenuItem" id="block2_mi">
+      <object class="GtkMenuItem" id="block2_mi">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
         <property name="label" translatable="yes">In ~two blocks / 20 mins</property>
         <property name="use-underline">True</property>
-        <property name="group">block1_mi</property>
       </object>
     </child>
     <child>
-      <object class="GtkRadioMenuItem" id="block3_mi">
+      <object class="GtkMenuItem" id="block3_mi">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
         <property name="label" translatable="yes">In ~three blocks / half an hour</property>
         <property name="use-underline">True</property>
-        <property name="group">block1_mi</property>
       </object>
     </child>
   </object>
