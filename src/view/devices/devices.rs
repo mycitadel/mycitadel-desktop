@@ -23,7 +23,7 @@ pub struct ViewModel {
 
 #[derive(Msg)]
 pub enum Msg {
-    Show,
+    Show(Bip43),
     Refresh,
     Devices(Result<(HardwareList, Vec<Error>), Error>),
     AccountChange(Fingerprint, u32),
@@ -69,7 +69,8 @@ impl Update for Component {
 
     fn update(&mut self, event: Msg) {
         match event {
-            Msg::Show => {
+            Msg::Show(bip43) => {
+                self.model.scheme = bip43;
                 self.model.devices.clear();
                 self.widgets.dialog.show();
                 self.widgets.refresh_btn.emit_clicked();

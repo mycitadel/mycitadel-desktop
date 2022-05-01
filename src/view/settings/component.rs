@@ -131,7 +131,7 @@ impl Update for Component {
         // First, we process events which does not update the state
         let event = match event {
             Msg::AddDevices => {
-                self.devices.emit(devices::Msg::Show);
+                self.devices.emit(devices::Msg::Show(self.model.bip43()));
                 return;
             }
             Msg::AddReadOnly => {
