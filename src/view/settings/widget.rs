@@ -594,6 +594,7 @@ impl Widgets {
         self.removesign_btn.set_sensitive(details.is_some());
         self.signer_grid.set_sensitive(details.is_some());
 
+        self.name_fld.set_editable(true);
         self.name_fld
             .set_text(&signer.map(|s| s.name.clone()).unwrap_or_default());
         self.fingerprint_fld
@@ -609,10 +610,10 @@ impl Widgets {
         if let Some((signer, device)) = signer.and_then(|s| s.device.as_ref().map(|d| (s, d))) {
             self.seed_mine_tgl.set_sensitive(false);
             self.seed_extern_tgl.set_sensitive(false);
-            self.name_fld.set_editable(false);
             self.fingerprint_fld.set_editable(false);
             self.device_img.set_visible(true);
             self.device_status_img.set_visible(true);
+            self.device_lbl.set_visible(true);
             self.device_lbl
                 .set_text(&format!("{} ({})", device, signer.name));
         } else {
@@ -674,7 +675,6 @@ impl Widgets {
             if signer.device.is_none() {
                 self.seed_mine_tgl.set_sensitive(true);
                 self.seed_extern_tgl.set_sensitive(true);
-                self.name_fld.set_editable(true);
                 self.fingerprint_fld
                     .set_editable(signer.xpub.depth > 1 || signer.master_fp == zero!());
                 self.device_lbl.set_visible(true);
