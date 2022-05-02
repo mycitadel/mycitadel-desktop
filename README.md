@@ -61,11 +61,6 @@ Taproot-enabled from day one, including multisig- and script-based taproot.
 
 # Installation
 
-## Compiling from sources
-
-Compilation from sources requires rust language installed. This can be done
-as described on <https://rust-lang.org>. 
-
 First, you need to install prerequisites. This operation should be done only
 once and OS-specific.
 
@@ -83,14 +78,19 @@ once and OS-specific.
     ```
 
 - For Windows, you need to install Visual Studio C tools and MSYSY2-based GTK.
-  To do so please follow instructions at 
+  To do so please follow instructions at
   <https://www.gtk.org/docs/installations/windows/#using-gtk-from-msys2-packages>.
 
-If you plan to work with hardware wallets it is required to get `hwi` 
+If you plan to work with hardware wallets it is required to get `hwi`
 application installed and working (this is an interface to hardware wallets):
 ```console
 $ pip3 install hwi ecdsa hidapi libusb1 mnemonic pbkdf2 pyaes typing-extensions
 ```
+
+## Compiling from sources
+
+Compilation from sources requires rust language installed. This can be done
+as described on <https://rust-lang.org>. 
 
 After that you can compile the latest release with this command:
 
