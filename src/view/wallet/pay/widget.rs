@@ -159,6 +159,9 @@ impl Widgets {
     ) {
         self.prepare_btn.set_sensitive(paid.is_some());
 
+        self.fee_adj.set_upper(fees.0 as f64 * 5.0);
+        self.fee_adj.set_lower(fees.2 as f64 / 10.0);
+
         if let Some((paid, fee)) = paid {
             let total_fee = fee as f64;
             let total = paid as f64 + total_fee;
