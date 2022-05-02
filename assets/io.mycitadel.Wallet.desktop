@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=MyCitadel Wallet
+GenericName=Wallet
+Exec=mycitadel
+Type=Application
+Icon=io.mycitadel.Wallet
+Categories=GNOME;GTK;Finance;Office;
+Keywords=wallet;bitcoin;lightning;RGB;smart contracts
+Comment=Bitcoin, Lightning and RGB wallet

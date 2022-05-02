@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+    <id>io.mycitadel.Wallet</id>
+    <metadata_license>CC0-1.0</metadata_license>
+    <project_license>AGPL-3.0-only</project_license>
+    <developer_name>Pandora Prime Sarl</developer_name>
+    <name>MyCitadel Wallet</name>
+    <summary>Bitcoin, Lightning and RGB wallet</summary>
+    <description>
+        <p>
+            MyCitadel is a wallet for **bitcoin, digital assets and bitcoin finance (#BiFi)
+            smart contracts**. It is blazingly fast, secure, cross-platform and technically
+            most advanced wallet on the market, being the first wallet allowing taproot
+            multisig and locktime-based spending conditions.
+        </p>
+        <p>
+            Do a reliable hodling (with inheritance options), corporate/organization, &
+            current accounts - or instant Lightning payments. Work with single- and
+            multisig setups, based on hardware, air-gaped, cold and server-side hot key
+            storage, involving arbitrary complex time-lock scripts (with miniscript) and
+            wide interoperability (because of use of wallet descriptors).
+        </p>
+    </description>
+    <categories>
+        <category>GNOME</category>
+        <category>GTK</category>
+        <category>Finance</category>
+        <category>Office</category>
+    </categories>
+    <keywords>
+        <keyword translate="no">IDE</keyword>
+        <keyword>wallet</keyword>
+        <keyword>bitcoin</keyword>
+        <keyword>lightning</keyword>
+        <keyword>RGB</keyword>
+        <keyword>smart contracts</keyword>
+    </keywords>
+    <screenshots>
+        <screenshot type="default">
+            <caption>Main wallet interface.</caption>
+            <image type="source">https://raw.githubusercontent.com/mycitadel/mycitadel-desktop/master/assets/screenshots/linux/history.png</image>
+        </screenshot>
+        <screenshot>
+            <caption>Pre-build wallet templates.</caption>
+            <image type="source">https://raw.githubusercontent.com/mycitadel/mycitadel-desktop/master/assets/screenshots/linux/launcher.png</image>
+        </screenshot>
+        <screenshot>
+            <caption>Keys and signer devices.</caption>
+            <image type="source">https://raw.githubusercontent.com/mycitadel/mycitadel-desktop/master/assets/screenshots/linux/signers.png</image>
+        </screenshot>
+        <screenshot>
+            <caption>Assets spending conditions.</caption>
+            <image type="source">https://raw.githubusercontent.com/mycitadel/mycitadel-desktop/master/assets/screenshots/linux/conditions.png</image>
+        </screenshot>
+        <screenshot>
+            <caption>Create transaction.</caption>
+            <image type="source">https://raw.githubusercontent.com/mycitadel/mycitadel-desktop/master/assets/screenshots/linux/pay.png</image>
+        </screenshot>
+        <screenshot>
+            <caption>Sign transaction.</caption>
+            <image type="source">https://raw.githubusercontent.com/mycitadel/mycitadel-desktop/master/assets/screenshots/linux/psbt.png</image>
+        </screenshot>
+    </screenshots>
+    <releases>
+        <release version="1" type="development" date="2022-05-01">
+            <description>
+                <p>Initial release of the wallet.</p>
+                <p>This release supports:</p>
+                <ul>
+                    <li>Hardware signing devices (tested with Ledger Nano X, Ledger Nano S, BitBox2)</li>
+                    <li>Multisigs and single-sig wallets</li>
+                    <li>Taproot, segwit, nested segwit and legacy addresses</li>
+                    <li>Taproot script spendings</li>
+                    <li>Complex timelock spending conditions with variable multisigs</li>
+                    <li>SIgning arbitrary PSBTs with hardware signers</li>
+                </ul>
+            </description>
+            <url>https://github.com/mycitadel/mycitadel-desktop/releases/tag/v1.0.0</url>
+        </release>
+    </releases>
+    <launchable type="desktop-id">io.mycitadel.Wallet.desktop</launchable>
+    <supports>
+        <control>pointing</control>
+        <control>keyboard</control>
+        <control>touch</control>
+    </supports>
+    <recommends>
+        <display_length compare="ge">large</display_length>
+    </recommends>
+    <update_contact>orlovsky@mycitadel.io</update_contact>
+    <url type="homepage">https://mycitadel.io</url>
+    <url type="bugtracker">https://github.com/mycitadel/mycitadel-desktop/issues</url>
+    <url type="donation">https://github.com/sponsors/dr-orlovsky</url>
+    <content_rating type="oars-1.1" />
+    <project_group>GNOME</project_group>
+    <custom>
+        <value key="Purism::form_factor">workstation</value>
+        <value key="Purism::form_factor">mobile</value>
+    </custom>
+</component>
