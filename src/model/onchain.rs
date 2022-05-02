@@ -113,7 +113,7 @@ impl AddressValue {
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", serde(rename_all = "lowercase"))
+    serde(crate = "serde_crate", rename_all = "lowercase")
 )]
 pub enum OnchainStatus {
     Blockchain(u32),
