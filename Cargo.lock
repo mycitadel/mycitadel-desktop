@@ -159,7 +159,7 @@ dependencies = [
 [[package]]
 name = "bitcoin_hd"
 version = "0.7.0-rc.1"
-source = "git+https://github.com/LNP-BP/descriptor-wallet#e8c52a58b55c944d016b6e9939211ec99897175b"
+source = "git+https://github.com/LNP-BP/descriptor-wallet#eb201995b7d598490917cb87ee3c44692966e2d6"
 dependencies = [
  "amplify",
  "bitcoin",
@@ -186,7 +186,7 @@ dependencies = [
 [[package]]
 name = "bitcoin_onchain"
 version = "0.7.0-rc.1"
-source = "git+https://github.com/LNP-BP/descriptor-wallet#e8c52a58b55c944d016b6e9939211ec99897175b"
+source = "git+https://github.com/LNP-BP/descriptor-wallet#eb201995b7d598490917cb87ee3c44692966e2d6"
 dependencies = [
  "amplify",
  "bitcoin",
@@ -200,7 +200,7 @@ dependencies = [
 [[package]]
 name = "bitcoin_scripts"
 version = "0.7.0-rc.1"
-source = "git+https://github.com/LNP-BP/descriptor-wallet#e8c52a58b55c944d016b6e9939211ec99897175b"
+source = "git+https://github.com/LNP-BP/descriptor-wallet#eb201995b7d598490917cb87ee3c44692966e2d6"
 dependencies = [
  "amplify",
  "bitcoin",
@@ -413,7 +413,7 @@ dependencies = [
 [[package]]
 name = "descriptor-wallet"
 version = "0.7.0-rc.1"
-source = "git+https://github.com/LNP-BP/descriptor-wallet#e8c52a58b55c944d016b6e9939211ec99897175b"
+source = "git+https://github.com/LNP-BP/descriptor-wallet#eb201995b7d598490917cb87ee3c44692966e2d6"
 dependencies = [
  "amplify",
  "bitcoin",
@@ -434,7 +434,7 @@ dependencies = [
 [[package]]
 name = "descriptors"
 version = "0.7.0-rc.1"
-source = "git+https://github.com/LNP-BP/descriptor-wallet#e8c52a58b55c944d016b6e9939211ec99897175b"
+source = "git+https://github.com/LNP-BP/descriptor-wallet#eb201995b7d598490917cb87ee3c44692966e2d6"
 dependencies = [
  "amplify",
  "bitcoin",
@@ -1109,7 +1109,7 @@ dependencies = [
 [[package]]
 name = "psbt"
 version = "0.7.0-rc.1"
-source = "git+https://github.com/LNP-BP/descriptor-wallet#e8c52a58b55c944d016b6e9939211ec99897175b"
+source = "git+https://github.com/LNP-BP/descriptor-wallet#eb201995b7d598490917cb87ee3c44692966e2d6"
 dependencies = [
  "amplify",
  "bitcoin",
@@ -1487,7 +1487,7 @@ checksum = "eb703cfe953bccee95685111adeedb76fabe4e97549a58d16f03ea7b9367bb32"
 [[package]]
 name = "slip132"
 version = "0.7.0-rc.1"
-source = "git+https://github.com/LNP-BP/descriptor-wallet#e8c52a58b55c944d016b6e9939211ec99897175b"
+source = "git+https://github.com/LNP-BP/descriptor-wallet#eb201995b7d598490917cb87ee3c44692966e2d6"
 dependencies = [
  "amplify",
  "bitcoin",

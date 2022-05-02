@@ -27,6 +27,7 @@ use gtk::{ApplicationWindow, ResponseType};
 use miniscript::DescriptorTrait;
 use relm::{init, Channel, Relm, StreamHandle, Update, Widget};
 use wallet::hd::{SegmentIndexes, UnhardenedIndex};
+use wallet::lex_order::lex_order::LexOrder;
 
 use super::pay::beneficiary_row::Beneficiary;
 use super::pay::FeeRate;
@@ -170,9 +171,12 @@ impl Component {
             fee as u64,
             wallet,
         )?;
+        psbt.lex_order();
+
         for signer in self.model.as_settings().signers() {
             psbt.set_signer_name(signer.master_fp, &signer.name);
         }
+
         self.model.set_vsize(vsize);
 
         Ok((psbt, change_index, fee))
