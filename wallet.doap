@@ -1,0 +1,22 @@
+<Project xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+         xmlns:foaf="http://xmlns.com/foaf/0.1/"
+         xmlns="http://usefulinc.com/ns/doap#">
+
+  <name xml:lang="en">MyCitadel Wallet</name>
+  <shortdesc xml:lang="en">Bitcoin, Lightning and RGB wallet</shortdesc>
+  <description>
+    Wallet for **bitcoin, digital assets and bitcoin finance (#BiFi)
+    smart contracts**. It is blazingly fast, secure, cross-platform and technically
+    most advanced wallet on the market, being the first wallet allowing taproot
+    multisig and locktime-based spending conditions.
+  </description>
+  <programming-language>Rust</programming-language>
+
+  <maintainer>
+    <foaf:Person>
+      <foaf:name>Maxim Orlovsky</foaf:name>
+      <foaf:homepage rdf:resource="http://github.org/dr-orlovsky/" />
+    </foaf:Person>
+  </maintainer>
+</Project>
