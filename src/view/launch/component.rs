@@ -152,7 +152,7 @@ impl Update for Component {
             }
             Msg::Template(index) => {
                 if let Some(path) = file_create_dlg(
-                    self.widgets.as_root(),
+                    Some(self.widgets.as_root()),
                     "Create wallet",
                     "MyCitadel wallet",
                     "*.mcw",
@@ -166,13 +166,9 @@ impl Update for Component {
                 }
             }
             Msg::Duplicate(settings, path) => {
-                if let Some(path) = file_create_dlg(
-                    self.widgets.as_root(),
-                    "Copy wallet",
-                    "MyCitadel wallet",
-                    "*.mcw",
-                    &path,
-                ) {
+                if let Some(path) =
+                    file_create_dlg(None, "Copy wallet", "MyCitadel wallet", "*.mcw", &path)
+                {
                     self.wallet_count += 1;
                     self.widgets.hide();
                     self.wallet_settings

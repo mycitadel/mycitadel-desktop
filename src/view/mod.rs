@@ -173,14 +173,14 @@ pub fn file_save_dlg(
 }
 
 pub fn file_create_dlg(
-    parent: &impl IsA<gtk::Window>,
+    parent: Option<&gtk::ApplicationWindow>,
     title: &str,
     type_name: &str,
     mask: &str,
     default_name: &str,
 ) -> Option<PathBuf> {
     file_dlg(
-        Some(parent),
+        parent,
         title,
         FileChooserAction::Save,
         type_name,
