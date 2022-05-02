@@ -12,17 +12,15 @@
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
-use bitcoin::psbt::raw::ProprietaryKey;
 use bitcoin::util::bip32::Fingerprint;
 use bitcoin::Transaction;
 use miniscript::ToPublicKey;
 use wallet::psbt::Psbt;
 
 use super::sign_row::SigningModel;
+use crate::model::psbt::McKeys;
 use crate::model::PublicNetwork;
 use crate::view::psbt::sign_row::Signing;
-
-pub const MC_PSBT_GLOBAL_SIGNER_NAME: u8 = 0;
 
 #[derive(Debug)]
 pub enum ModelParam {
@@ -132,22 +130,11 @@ impl ViewModel {
             },
         );
 
-        let signer_name_key = ProprietaryKey {
-            prefix: b"MyCitadel".to_vec(),
-            subtype: MC_PSBT_GLOBAL_SIGNER_NAME,
-            key: vec![],
-        };
         for (signer_no, (master_fp, (present, required))) in signers.into_iter().enumerate() {
             let name = self
                 .psbt
-                .proprietary
-                .get(&signer_name_key)
-                .cloned()
-                .map(String::from_utf8)
-                .transpose()
-                .ok()
-                .flatten();
-            let name = name.unwrap_or_else(|| format!("Signer #{}", signer_no + 1));
+                .signer_name(master_fp)
+                .unwrap_or_else(|| format!("Signer #{}", signer_no + 1));
             let info = Signing::with(&name, master_fp, present, required);
             self.signing.append(&info);
         }

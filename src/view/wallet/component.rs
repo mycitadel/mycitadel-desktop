@@ -31,6 +31,7 @@ use wallet::hd::{SegmentIndexes, UnhardenedIndex};
 use super::pay::beneficiary_row::Beneficiary;
 use super::pay::FeeRate;
 use super::{pay, ElectrumState, Msg, ViewModel, Widgets};
+use crate::model::psbt::McKeys;
 use crate::model::{AddressSource, Wallet};
 use crate::view::{error_dlg, launch, settings, NotificationBoxExt};
 use crate::worker::electrum::TxidMeta;
@@ -159,7 +160,7 @@ impl Component {
             .map(|txout| (PubkeyScript::from(txout.script_pubkey), txout.value))
             .collect::<Vec<_>>();
 
-        let psbt = Psbt::construct(
+        let mut psbt = Psbt::construct(
             &SECP256K1,
             &descriptor,
             lock_time,
@@ -169,6 +170,9 @@ impl Component {
             fee as u64,
             wallet,
         )?;
+        for signer in self.model.as_settings().signers() {
+            psbt.set_signer_name(signer.master_fp, &signer.name);
+        }
         self.model.set_vsize(vsize);
 
         Ok((psbt, change_index, fee))

@@ -12,6 +12,7 @@
 mod electrum;
 pub mod file;
 mod onchain;
+pub mod psbt;
 mod taptree;
 mod template;
 mod types;
