@@ -1,6 +1,6 @@
 [package]
 name = "mycitadel-desktop"
-version = "1.0.0"
+version = "1.1.0"
 authors = ["Dr Maxim Orlovsky <orlovsky@pandoraprime.ch>"]
 description = "Bitcoin, Lightning and RGB wallet; part of MyCitadel software suite."
 repository = "https://github.com/mycitadel/mycitadel-desktop"
@@ -42,7 +42,7 @@ miniscript = "7.0.0"
 bitcoin_hwi = "0.2.0"
 electrum-client = "0.10.0"
 descriptor-wallet = { version = "0.7.0", features = ["miniscript", "keygen"] }
-strict_encoding = "1.8.0-rc.11"
+strict_encoding = "1.8.0"
 
 clap = { version = "3.1", features = ["derive"], optional = true }
 serde_crate = { package = "serde", version = "1" }
