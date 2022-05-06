@@ -159,9 +159,9 @@ impl OnchainStatus {
             OnchainStatus::Mempool => return chrono::Local::now(),
             OnchainStatus::Blockchain(height) => {
                 let reference_height = 733961;
-                let reference_time = 1651158666;
+                let reference_time = 1651158666_i32;
                 let height_diff = height as i32 - reference_height;
-                let timestamp = reference_time + height_diff * 600;
+                let timestamp = reference_time.saturating_add(height_diff * 600);
                 let block_time = NaiveDateTime::from_timestamp(timestamp as i64, 0);
                 DateTime::<chrono::Local>::from(DateTime::<Utc>::from_utc(block_time, Utc))
             }
