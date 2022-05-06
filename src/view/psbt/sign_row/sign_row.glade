@@ -116,8 +116,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkButtonBox">
-                    <property name="name">sign_box</property>
+                  <object class="GtkButtonBox" id="sign_box">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <property name="layout-style">expand</property>

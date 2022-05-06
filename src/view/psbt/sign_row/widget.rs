@@ -11,7 +11,7 @@
 
 use gladis::Gladis;
 use gtk::prelude::*;
-use gtk::{glib, Button, Label, ListBoxRow};
+use gtk::{glib, Box, Button, Label, ListBoxRow, MenuItem};
 use relm::Relm;
 
 use super::Signing;
@@ -24,6 +24,9 @@ pub struct RowWidgets {
     status_lbl: Label,
     fingerprint_lbl: Label,
     sign_btn: Button,
+    sign_box: Box,
+    device_sign_mi: MenuItem,
+    xpriv_sign_mi: MenuItem,
 }
 
 impl RowWidgets {
@@ -41,7 +44,14 @@ impl RowWidgets {
             relm,
             row_widgets.sign_btn,
             connect_clicked(_),
-            psbt::Msg::Sign(row.index() as u32)
+            psbt::Msg::DeviceSign(row.index() as u32)
+        );
+        let row = row_widgets.signing_row.clone();
+        connect!(
+            relm,
+            row_widgets.device_sign_mi,
+            connect_activate(_),
+            psbt::Msg::DeviceSign(row.index() as u32)
         );
 
         row_widgets.signing_row.upcast::<gtk::Widget>()
@@ -63,7 +73,7 @@ impl RowWidgets {
             .flags(flags_ro)
             .build();
         signing
-            .bind_property("signable", &self.sign_btn, "visible")
+            .bind_property("signable", &self.sign_box, "visible")
             .flags(flags_ro)
             .build();
         signing

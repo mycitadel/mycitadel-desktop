@@ -31,7 +31,7 @@ pub enum Msg {
     Save,
     Launch(launch::Msg),
 
-    Sign(u32),
+    DeviceSign(u32),
     Signed(Psbt),
     Failed(String, Fingerprint, String),
 
