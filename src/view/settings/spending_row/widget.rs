@@ -321,6 +321,11 @@ impl RowWidgets {
             .build();
         condition
             .bind_property("after-month", &self.calendar, "month")
+            .transform_to(|_, value| {
+                let month: u32 = value.get().unwrap();
+                let month = month as i32 - 1;
+                Some(month.to_value())
+            })
             .flags(flags_ro)
             .build();
         condition
