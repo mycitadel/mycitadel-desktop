@@ -9,13 +9,15 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
+use bitcoin::secp256k1::Secp256k1;
 use std::str::FromStr;
 
-use crate::model::PublicNetwork;
+use crate::model::{PublicNetwork, XprivSigner};
 use bitcoin::util::bip32::ExtendedPrivKey;
 use gladis::Gladis;
 use gtk::{MessageDialog, ResponseType};
 use relm::{Relm, Sender, Update, Widget};
+use wallet::psbt::sign::SignAll;
 use wallet::psbt::Psbt;
 
 use super::{Msg, ViewModel, Widgets};
@@ -50,6 +52,25 @@ impl Component {
                 "network used by the PSBT and network of the provided private key does not match",
             );
             return;
+        }
+
+        let signer = XprivSigner {
+            xpriv,
+            secp: Secp256k1::new(),
+        };
+
+        match self.model.psbt.sign_all(&signer) {
+            Ok(0) => {
+                self.widgets
+                    .show_error("The provided key can't sign any of the transaction inputs");
+            }
+            Ok(_count) => {
+                self.widgets.hide_message();
+            }
+            Err(err) => {
+                self.widgets
+                    .show_error(&format!("Unable to sign with the provided key: {}", err));
+            }
         }
     }
 }

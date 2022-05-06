@@ -9,7 +9,7 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
-use bitcoin::secp256k1::{PublicKey, Secp256k1, SecretKey, SignOnly, SECP256K1};
+use bitcoin::secp256k1::{PublicKey, Secp256k1, SecretKey, SECP256K1};
 use bitcoin::util::bip32::{DerivationPath, ExtendedPrivKey, Fingerprint};
 use bitcoin::{secp256k1, KeyPair, XOnlyPublicKey};
 use miniscript::ToPublicKey;
@@ -18,7 +18,7 @@ use wallet::psbt::sign::{SecretProvider, SecretProviderError};
 #[derive(Debug)]
 pub struct XprivSigner {
     pub xpriv: ExtendedPrivKey,
-    pub secp: Secp256k1<SignOnly>,
+    pub secp: Secp256k1<secp256k1::All>,
 }
 
 impl XprivSigner {
@@ -41,8 +41,8 @@ impl XprivSigner {
     }
 }
 
-impl SecretProvider<secp256k1::SignOnly> for XprivSigner {
-    fn secp_context(&self) -> &Secp256k1<secp256k1::SignOnly> {
+impl SecretProvider<secp256k1::All> for XprivSigner {
+    fn secp_context(&self) -> &Secp256k1<secp256k1::All> {
         &self.secp
     }
 
