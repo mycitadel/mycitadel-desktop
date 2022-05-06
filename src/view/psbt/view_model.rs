@@ -12,7 +12,7 @@
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
-use bitcoin::util::bip32::Fingerprint;
+use bitcoin::util::bip32::{ChildNumber, Fingerprint};
 use bitcoin::Transaction;
 use miniscript::ToPublicKey;
 use wallet::psbt::Psbt;
@@ -63,7 +63,7 @@ pub struct ViewModel {
 
 impl ViewModel {
     pub fn with(psbt: Psbt, path: Option<PathBuf>, network: PublicNetwork) -> ViewModel {
-        let model = ViewModel {
+        let mut model = ViewModel {
             modified: path.is_none(),
             psbt,
             finalized_tx: None,
@@ -75,14 +75,17 @@ impl ViewModel {
         model
     }
 
-    pub fn parse_psbt(&self) {
+    pub fn parse_psbt(&mut self) {
         self.signing.clear();
 
         // Information on required signatures, indexed by terminal keys
         let mut signing_keys =
             BTreeMap::<bitcoin::PublicKey, (Fingerprint, Fingerprint, u32, u32)>::new();
         for input in &self.psbt.inputs {
-            for (pk, (_, (master_fp, _))) in &input.tap_key_origins {
+            for (pk, (_, (master_fp, derivation))) in &input.tap_key_origins {
+                if derivation.len() > 1 && derivation[1] == (ChildNumber::Hardened { index: 1 }) {
+                    self.network = PublicNetwork::Testnet;
+                }
                 let key = pk.to_public_key();
                 let (fp, _, present, required) =
                     signing_keys.entry(key).or_insert((zero!(), zero!(), 0, 0));
@@ -96,6 +99,9 @@ impl ViewModel {
                         .count() as u32;
             }
             for (pk, (master_fp, _)) in &input.bip32_derivation {
+                if derivation.len() > 1 && derivation[1] == (ChildNumber::Hardened { index: 1 }) {
+                    self.network = PublicNetwork::Testnet;
+                }
                 let key = bitcoin::PublicKey::new(*pk);
                 let (fp, _, present, required) =
                     signing_keys.entry(key).or_insert((zero!(), zero!(), 0, 0));
@@ -146,6 +152,8 @@ impl ViewModel {
     }
 
     pub fn set_path(&mut self, path: PathBuf) { self.path = Some(path); }
+
+    pub fn set_network(&mut self, network: PublicNetwork) { self.network = network; }
 
     pub fn clear_finalized_tx(&mut self) { self.finalized_tx = None; }
 

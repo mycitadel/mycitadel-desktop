@@ -222,12 +222,22 @@ impl Update for Component {
                 self.widgets.publish_restore(false);
             }
 
+            Msg::Network(network) => {
+                if self.model.network() == network {
+                    return;
+                }
+                self.model.set_network(network);
+                self.widgets.update_network(network);
+            }
+
             Msg::Launch(msg) => {
                 self.launcher_stream.as_ref().map(|stream| stream.emit(msg));
             }
             Msg::RegisterLauncher(stream) => {
                 self.launcher_stream = Some(stream);
             }
+
+            Msg::NoOp => {}
         }
     }
 }

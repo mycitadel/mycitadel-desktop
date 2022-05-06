@@ -21,12 +21,13 @@ use gtk::gdk_pixbuf::Pixbuf;
 use gtk::prelude::*;
 use gtk::{
     gdk, ApplicationWindow, Button, Dialog, Entry, Expander, HeaderBar, Image, Label, LevelBar,
-    ListBox, ListStore, MenuItem, TextView, TreeView,
+    ListBox, ListStore, MenuItem, RadioMenuItem, TextView, TreeView,
 };
 use miniscript::{Legacy, Miniscript, Segwitv0};
 use relm::Relm;
 
 use super::{Msg, ViewModel};
+use crate::model::PublicNetwork;
 use crate::view::launch::Page;
 use crate::view::psbt::sign_row;
 use crate::view::psbt::sign_row::SigningModel;
@@ -41,6 +42,11 @@ pub struct Widgets {
     logo_img: Image,
     save_btn: Button,
     publish_btn: Button,
+
+    network_lbl: Label,
+    mainnet_mi: RadioMenuItem,
+    testnet_mi: RadioMenuItem,
+    signet_mi: RadioMenuItem,
 
     new_wallet_mi: MenuItem,
     new_template_mi: MenuItem,
@@ -86,6 +92,8 @@ impl Widgets {
         self.update_path(model.path().as_deref());
 
         self.publish_btn.set_visible(model.finalized_tx().is_some());
+
+        self.update_network(model.network());
 
         // TODO: Move PSBT-related code to descriptor-wallet
         let mut vsize = tx.vsize() as f32;
@@ -253,6 +261,37 @@ impl Widgets {
             Msg::Launch(launch::Msg::About)
         );
 
+        connect!(
+            relm,
+            self.mainnet_mi,
+            connect_toggled(mi),
+            if mi.is_active() {
+                Msg::Network(PublicNetwork::Mainnet)
+            } else {
+                Msg::NoOp
+            }
+        );
+        connect!(
+            relm,
+            self.testnet_mi,
+            connect_toggled(mi),
+            if mi.is_active() {
+                Msg::Network(PublicNetwork::Testnet)
+            } else {
+                Msg::NoOp
+            }
+        );
+        connect!(
+            relm,
+            self.signet_mi,
+            connect_toggled(mi),
+            if mi.is_active() {
+                Msg::Network(PublicNetwork::Signet)
+            } else {
+                Msg::NoOp
+            }
+        );
+
         self.txid_fld.connect_icon_press(|entry, _, _| {
             let val = entry.text();
             gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).set_text(&val);
@@ -288,6 +327,18 @@ impl Widgets {
     }
 
     pub fn set_unsaved(&self) { self.save_btn.set_sensitive(true); }
+
+    pub fn update_network(&self, network: PublicNetwork) {
+        let network_name = network.to_string();
+        let network_name = network_name[0..1].to_uppercase() + &network_name[1..];
+        self.network_lbl.set_text(&network_name);
+
+        self.mainnet_mi
+            .set_active(network == PublicNetwork::Mainnet);
+        self.testnet_mi
+            .set_active(network == PublicNetwork::Testnet);
+        self.signet_mi.set_active(network == PublicNetwork::Signet);
+    }
 
     pub fn publish_pending(&self) {
         self.publish_btn.set_always_show_image(false);

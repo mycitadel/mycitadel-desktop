@@ -86,6 +86,46 @@
       </object>
     </child>
   </object>
+  <object class="GtkMenu" id="network_menu">
+    <property name="visible">True</property>
+    <property name="can-focus">False</property>
+    <child>
+      <object class="GtkRadioMenuItem" id="mainnet_mi">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+        <property name="label" translatable="yes">_Mainnet</property>
+        <property name="use-underline">True</property>
+        <property name="active">True</property>
+        <property name="draw-as-radio">True</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkSeparatorMenuItem">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkRadioMenuItem" id="testnet_mi">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+        <property name="label" translatable="yes">_Testnet</property>
+        <property name="use-underline">True</property>
+        <property name="draw-as-radio">True</property>
+        <property name="group">mainnet_mi</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkRadioMenuItem" id="signet_mi">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+        <property name="label" translatable="yes">_Signet</property>
+        <property name="use-underline">True</property>
+        <property name="draw-as-radio">True</property>
+        <property name="group">mainnet_mi</property>
+      </object>
+    </child>
+  </object>
   <object class="GtkImage" id="publish_img">
     <property name="visible">True</property>
     <property name="can-focus">False</property>
@@ -146,21 +186,6 @@
               </packing>
             </child>
             <child>
-              <object class="GtkEntry" id="txid_fld">
-                <property name="visible">True</property>
-                <property name="can-focus">True</property>
-                <property name="hexpand">True</property>
-                <property name="editable">False</property>
-                <property name="secondary-icon-name">edit-copy-symbolic</property>
-                <property name="secondary-icon-tooltip-text" translatable="yes">Copy to clipboard</property>
-                <property name="secondary-icon-tooltip-markup" translatable="yes">Copy to clipboard</property>
-              </object>
-              <packing>
-                <property name="left-attach">1</property>
-                <property name="top-attach">0</property>
-              </packing>
-            </child>
-            <child>
               <object class="GtkEntry" id="description_fld">
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
@@ -212,6 +237,79 @@
                 <property name="left-attach">0</property>
                 <property name="top-attach">2</property>
                 <property name="width">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkBox">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="spacing">6</property>
+                <child>
+                  <object class="GtkEntry" id="txid_fld">
+                    <property name="visible">True</property>
+                    <property name="can-focus">True</property>
+                    <property name="hexpand">True</property>
+                    <property name="editable">False</property>
+                    <property name="secondary-icon-name">edit-copy-symbolic</property>
+                    <property name="secondary-icon-tooltip-text" translatable="yes">Copy to clipboard</property>
+                    <property name="secondary-icon-tooltip-markup" translatable="yes">Copy to clipboard</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkMenuButton">
+                    <property name="visible">True</property>
+                    <property name="can-focus">True</property>
+                    <property name="focus-on-click">False</property>
+                    <property name="receives-default">True</property>
+                    <property name="popup">network_menu</property>
+                    <property name="use-popover">False</property>
+                    <child>
+                      <object class="GtkBox">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="spacing">6</property>
+                        <child>
+                          <object class="GtkLabel" id="network_lbl">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="label" translatable="yes">Mainnet</property>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkImage">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="icon-name">pan-down-symbolic</property>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="left-attach">1</property>
+                <property name="top-attach">0</property>
               </packing>
             </child>
           </object>

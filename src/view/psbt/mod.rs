@@ -15,6 +15,7 @@ mod view_model;
 mod widget;
 pub(self) mod xpriv_dlg;
 
+use crate::model::PublicNetwork;
 use bitcoin::util::bip32::Fingerprint;
 use relm::StreamHandle;
 pub(super) use view_model::ModelParam;
@@ -36,11 +37,15 @@ pub enum Msg {
     Signed(Psbt),
     Failed(String, Fingerprint, String),
 
+    Network(PublicNetwork),
+
     Publish,
     Published,
     Declined(String),
 
     RegisterLauncher(StreamHandle<launch::Msg>),
+
+    NoOp,
 }
 
 #[derive(Clone, Debug)]
