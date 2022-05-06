@@ -21,10 +21,10 @@ use gtk::prelude::ListModelExt;
 use gtk::{ApplicationWindow, MessageType};
 use hwi::HWIDevice;
 use miniscript::psbt::PsbtExt;
-use relm::{Cast, Channel, Relm, Sender, StreamHandle, Update, Widget};
+use relm::{init, Cast, Channel, Relm, Sender, StreamHandle, Update, Widget};
 
 use super::sign_row::Signing;
-use super::{ModelParam, Msg, SignMsg, ViewModel, Widgets};
+use super::{xpriv_dlg, ModelParam, Msg, SignMsg, ViewModel, Widgets};
 use crate::view::psbt::PublishMsg;
 use crate::view::{error_dlg, file_save_dlg, launch, msg_dlg};
 use crate::worker::electrum::electrum_connect;
@@ -32,6 +32,7 @@ use crate::worker::electrum::electrum_connect;
 pub struct Component {
     model: ViewModel,
     widgets: Widgets,
+    xpriv_dlg: relm::Component<xpriv_dlg::Component>,
     signer_sender: Sender<SignMsg>,
     publisher_sender: Sender<PublishMsg>,
     launcher_stream: Option<StreamHandle<launch::Msg>>,
@@ -46,7 +47,7 @@ impl Component {
             .map(|stream| stream.emit(launch::Msg::PsbtClosed));
     }
 
-    pub fn sign(&mut self, signer_index: u32) {
+    pub fn device_sign(&mut self, signer_index: u32) {
         let signer: Signing = self
             .model
             .signing()
@@ -166,7 +167,13 @@ impl Update for Component {
             }
             Msg::Close => self.close(),
 
-            Msg::DeviceSign(signer_index) => self.sign(signer_index),
+            Msg::DeviceSign(signer_index) => self.device_sign(signer_index),
+            Msg::XprivSign => {
+                self.xpriv_dlg.emit(xpriv_dlg::Msg::Open(
+                    self.model.network().is_testnet(),
+                    self.model.psbt().clone(),
+                ));
+            }
             Msg::Signed(psbt) => {
                 self.widgets.hide_sign();
                 self.model.replace_psbt(psbt);
@@ -240,6 +247,17 @@ impl Widget for Component {
             PublishMsg::Declined(err) => stream.emit(Msg::Declined(err)),
         });
 
+        let stream = relm.stream().clone();
+        let (_channel, sender) = Channel::new(move |msg| {
+            stream.emit(msg);
+        });
+        let xpriv_dlg = init::<xpriv_dlg::Component>((
+            model.network().is_testnet(),
+            model.psbt().clone(),
+            sender,
+        ))
+        .expect("error in xpub dialog component");
+
         widgets.init_ui();
         widgets.connect(relm);
         widgets.bind_signing_model(relm, model.signing());
@@ -249,6 +267,7 @@ impl Widget for Component {
         let mut component = Component {
             model,
             widgets,
+            xpriv_dlg,
             signer_sender,
             publisher_sender,
             launcher_stream: None,

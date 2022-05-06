@@ -53,6 +53,12 @@ impl RowWidgets {
             connect_activate(_),
             psbt::Msg::DeviceSign(row.index() as u32)
         );
+        connect!(
+            relm,
+            row_widgets.xpriv_sign_mi,
+            connect_activate(_),
+            psbt::Msg::XprivSign
+        );
 
         row_widgets.signing_row.upcast::<gtk::Widget>()
     }
