@@ -11,6 +11,7 @@
 
 use std::str::FromStr;
 
+use crate::model::PublicNetwork;
 use bitcoin::util::bip32::ExtendedPrivKey;
 use gladis::Gladis;
 use gtk::{MessageDialog, ResponseType};
@@ -28,15 +29,27 @@ pub struct Component {
 impl Component {
     fn process_xpriv(&mut self) {
         let xpriv = self.widgets.xpriv();
-        match ExtendedPrivKey::from_str(&xpriv) {
+
+        let xpriv = match ExtendedPrivKey::from_str(&xpriv) {
             Ok(xpriv) => {
                 self.widgets.hide_message();
-                self.model.xpriv = Some(xpriv)
+                self.model.xpriv = Some(xpriv);
+                xpriv
             }
             Err(err) => {
                 self.model.xpriv = None;
-                self.widgets.show_error(&err.to_string())
+                self.widgets.show_error(&err.to_string());
+                return;
             }
+        };
+
+        let network = PublicNetwork::try_from(xpriv.network)
+            .expect("xpriv network always either mainnet or testnet");
+        if network.is_testnet() != self.model.testnet {
+            self.widgets.show_error(
+                "network used by the PSBT and network of the provided private key does not match",
+            );
+            return;
         }
     }
 }

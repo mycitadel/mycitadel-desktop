@@ -13,6 +13,7 @@ mod electrum;
 pub mod file;
 mod onchain;
 pub mod psbt;
+mod sign;
 mod taptree;
 mod template;
 mod types;
@@ -27,6 +28,7 @@ pub use onchain::{
     AddressSource, AddressSummary, AddressValue, HistoryEntry, OnchainStatus, OnchainTxid, Prevout,
     UtxoTxid,
 };
+pub use sign::XprivSigner;
 pub use taptree::ToTapTree;
 pub use template::{Requirement, WalletTemplate};
 pub use types::{
