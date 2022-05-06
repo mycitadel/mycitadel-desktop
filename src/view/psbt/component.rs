@@ -107,8 +107,13 @@ impl Component {
 
             let tx = tx.clone();
             let sender = self.publisher_sender.clone();
+            // TODO: Use normal URLs
+            let electrum_url = match self.model.network().is_testnet() {
+                false => "ssl://blockstream.info:700",
+                true => "tcp://electrum.blockstream.info:60001",
+            };
             thread::spawn(move || {
-                let _ = match electrum_connect(&"ssl://blockstream.info:700")
+                let _ = match electrum_connect(electrum_url)
                     .and_then(|client| client.transaction_broadcast(&tx))
                 {
                     Err(err) => sender.send(PublishMsg::Declined(err.to_string())),

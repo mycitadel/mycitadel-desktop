@@ -32,14 +32,10 @@ impl XprivSigner {
         let derivation = if self.xpriv.fingerprint(SECP256K1) == fingerprint {
             derivation.clone()
         } else if self.master_fp == fingerprint {
-            let mut iter = derivation.into_iter();
             let remaining_derivation = derivation
                 .into_iter()
-                .skip_while(|child| Some(*child) == iter.next());
+                .skip_while(|child| child.is_hardened());
             let remaining_derivation = remaining_derivation.copied().collect();
-            if iter.count() > 0 {
-                return Err(SecretProviderError::AccountUnknown(fingerprint, pubkey));
-            }
             remaining_derivation
         } else {
             return Err(SecretProviderError::AccountUnknown(fingerprint, pubkey));
