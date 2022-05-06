@@ -226,6 +226,7 @@ impl Update for Component {
                 }
                 self.model.set_network(network);
                 self.widgets.update_network(network);
+                self.widgets.update_addresses(&self.model.psbt(), network);
             }
 
             Msg::Launch(msg) => {

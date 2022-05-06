@@ -176,28 +176,7 @@ impl Widgets {
         ));
         self.inputs_lbl.set_label(&format!("{}", psbt.inputs.len()));
 
-        self.address_store.clear();
-        for output in &psbt.outputs {
-            let address = Address::from_script(&output.script, model.network().into());
-            let address_str = address
-                .as_ref()
-                .map(Address::to_string)
-                .unwrap_or_else(|| output.script.to_string());
-            let address_type = address
-                .map(AddressFormat::from)
-                .as_ref()
-                .map(AddressFormat::to_string)
-                .unwrap_or(s!("custom"));
-            self.address_store.insert_with_values(None, &[
-                (0, &address_str),
-                (1, &format!("{:.08}", output.amount as f64 / 100_000_000.0)),
-                (
-                    2,
-                    &!(output.bip32_derivation.is_empty() && output.tap_key_origins.is_empty()),
-                ),
-                (3, &address_type),
-            ]);
-        }
+        self.update_addresses(psbt, model.network());
     }
 
     pub fn show(&self) { self.window.show() }
@@ -338,6 +317,31 @@ impl Widgets {
         self.testnet_mi
             .set_active(network == PublicNetwork::Testnet);
         self.signet_mi.set_active(network == PublicNetwork::Signet);
+    }
+
+    pub fn update_addresses(&self, psbt: &Psbt, network: PublicNetwork) {
+        self.address_store.clear();
+        for output in &psbt.outputs {
+            let address = Address::from_script(&output.script, network.into());
+            let address_str = address
+                .as_ref()
+                .map(Address::to_string)
+                .unwrap_or_else(|| output.script.to_string());
+            let address_type = address
+                .map(AddressFormat::from)
+                .as_ref()
+                .map(AddressFormat::to_string)
+                .unwrap_or(s!("custom"));
+            self.address_store.insert_with_values(None, &[
+                (0, &address_str),
+                (1, &format!("{:.08}", output.amount as f64 / 100_000_000.0)),
+                (
+                    2,
+                    &!(output.bip32_derivation.is_empty() && output.tap_key_origins.is_empty()),
+                ),
+                (3, &address_type),
+            ]);
+        }
     }
 
     pub fn publish_pending(&self) {
