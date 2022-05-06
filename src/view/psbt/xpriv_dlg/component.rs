@@ -9,11 +9,10 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
-use bitcoin::secp256k1::Secp256k1;
 use std::str::FromStr;
 
-use crate::model::{PublicNetwork, XprivSigner};
-use bitcoin::util::bip32::ExtendedPrivKey;
+use bitcoin::secp256k1::Secp256k1;
+use bitcoin::util::bip32::{ExtendedPrivKey, Fingerprint};
 use gladis::Gladis;
 use gtk::{MessageDialog, ResponseType};
 use relm::{Relm, Sender, Update, Widget};
@@ -21,6 +20,7 @@ use wallet::psbt::sign::SignAll;
 use wallet::psbt::Psbt;
 
 use super::{Msg, ViewModel, Widgets};
+use crate::model::{PublicNetwork, XprivSigner};
 use crate::view::psbt;
 
 pub struct Component {
@@ -56,6 +56,7 @@ impl Component {
 
         let signer = XprivSigner {
             xpriv,
+            master_fp: self.model.master_fp,
             secp: Secp256k1::new(),
         };
 
@@ -79,19 +80,20 @@ impl Update for Component {
     // Specify the model used for this widget.
     type Model = ViewModel;
     // Specify the model parameter used to init the model.
-    type ModelParam = (bool, Psbt, Sender<psbt::Msg>);
+    type ModelParam = (bool, Psbt, Fingerprint, Sender<psbt::Msg>);
     // Specify the type of the messages sent to the update function.
     type Msg = Msg;
 
     fn model(_relm: &Relm<Self>, model: Self::ModelParam) -> Self::Model {
-        ViewModel::with(model.0, model.1, model.2)
+        ViewModel::with(model.0, model.1, model.2, model.3)
     }
 
     fn update(&mut self, event: Msg) {
         match event {
-            Msg::Open(testnet, psbt) => {
+            Msg::Open(testnet, psbt, master_fp) => {
                 self.model.testnet = testnet;
                 self.model.psbt = psbt;
+                self.model.master_fp = master_fp;
                 self.widgets.open();
             }
             Msg::Edit => {
@@ -120,9 +122,7 @@ impl Widget for Component {
     type Root = MessageDialog;
 
     // Return the root widget.
-    fn root(&self) -> Self::Root {
-        self.widgets.to_root()
-    }
+    fn root(&self) -> Self::Root { self.widgets.to_root() }
 
     fn view(relm: &Relm<Self>, model: Self::Model) -> Self {
         let glade_src = include_str!("xpriv_dlg.glade");

@@ -53,11 +53,12 @@ impl RowWidgets {
             connect_activate(_),
             psbt::Msg::DeviceSign(row.index() as u32)
         );
+        let row = row_widgets.signing_row.clone();
         connect!(
             relm,
             row_widgets.xpriv_sign_mi,
             connect_activate(_),
-            psbt::Msg::XprivSign
+            psbt::Msg::XprivSign(row.index() as u32)
         );
 
         row_widgets.signing_row.upcast::<gtk::Widget>()

@@ -13,16 +13,16 @@ mod component;
 mod view_model;
 mod widget;
 
+use bitcoin::util::bip32::Fingerprint;
 pub use component::Component;
-pub(self) use view_model::ViewModel;
-pub(self) use widget::Widgets;
-
 use gtk::ResponseType;
+pub(self) use view_model::ViewModel;
 use wallet::psbt::Psbt;
+pub(self) use widget::Widgets;
 
 #[derive(Clone, Msg)]
 pub enum Msg {
-    Open(bool, Psbt),
+    Open(bool, Psbt, Fingerprint),
     Edit,
     Error(String),
     Warning(String),

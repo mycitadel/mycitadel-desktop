@@ -18,6 +18,7 @@ use wallet::psbt::sign::{SecretProvider, SecretProviderError};
 #[derive(Debug)]
 pub struct XprivSigner {
     pub xpriv: ExtendedPrivKey,
+    pub master_fp: Fingerprint,
     pub secp: Secp256k1<secp256k1::All>,
 }
 
@@ -28,13 +29,25 @@ impl XprivSigner {
         derivation: &DerivationPath,
         pubkey: PublicKey,
     ) -> Result<ExtendedPrivKey, SecretProviderError> {
-        if fingerprint != self.xpriv.fingerprint(SECP256K1) {
+        let derivation = if self.xpriv.fingerprint(SECP256K1) == fingerprint {
+            derivation.clone()
+        } else if self.master_fp == fingerprint {
+            let mut iter = derivation.into_iter();
+            let remaining_derivation = derivation
+                .into_iter()
+                .skip_while(|child| Some(*child) == iter.next());
+            let remaining_derivation = remaining_derivation.copied().collect();
+            if iter.count() > 0 {
+                return Err(SecretProviderError::AccountUnknown(fingerprint, pubkey));
+            }
+            remaining_derivation
+        } else {
             return Err(SecretProviderError::AccountUnknown(fingerprint, pubkey));
-        }
+        };
 
         let sk = self
             .xpriv
-            .derive_priv(SECP256K1, derivation)
+            .derive_priv(SECP256K1, &derivation)
             .expect("xpriv derivation does not fail");
 
         Ok(sk)
@@ -42,9 +55,7 @@ impl XprivSigner {
 }
 
 impl SecretProvider<secp256k1::All> for XprivSigner {
-    fn secp_context(&self) -> &Secp256k1<secp256k1::All> {
-        &self.secp
-    }
+    fn secp_context(&self) -> &Secp256k1<secp256k1::All> { &self.secp }
 
     fn secret_key(
         &self,
@@ -67,7 +78,5 @@ impl SecretProvider<secp256k1::All> for XprivSigner {
         Ok(sk)
     }
 
-    fn use_musig(&self) -> bool {
-        false
-    }
+    fn use_musig(&self) -> bool { false }
 }

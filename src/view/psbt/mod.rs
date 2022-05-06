@@ -32,7 +32,7 @@ pub enum Msg {
     Launch(launch::Msg),
 
     DeviceSign(u32),
-    XprivSign,
+    XprivSign(u32),
     Signed(Psbt),
     Failed(String, Fingerprint, String),
 

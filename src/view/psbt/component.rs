@@ -47,14 +47,17 @@ impl Component {
             .map(|stream| stream.emit(launch::Msg::PsbtClosed));
     }
 
-    pub fn device_sign(&mut self, signer_index: u32) {
-        let signer: Signing = self
-            .model
+    pub fn signer_for_index(&self, signer_index: u32) -> Signing {
+        self.model
             .signing()
             .item(signer_index)
             .expect("wrong signer no")
             .downcast()
-            .expect("wrong signer");
+            .expect("wrong signer")
+    }
+
+    pub fn device_sign(&mut self, signer_index: u32) {
+        let signer = self.signer_for_index(signer_index);
         let name = signer.name();
         let master_fp = signer.master_fp();
         let device = HWIDevice {
@@ -168,10 +171,12 @@ impl Update for Component {
             Msg::Close => self.close(),
 
             Msg::DeviceSign(signer_index) => self.device_sign(signer_index),
-            Msg::XprivSign => {
+            Msg::XprivSign(signer_index) => {
+                let signer = self.signer_for_index(signer_index);
                 self.xpriv_dlg.emit(xpriv_dlg::Msg::Open(
                     self.model.network().is_testnet(),
                     self.model.psbt().clone(),
+                    signer.master_fp(),
                 ));
             }
             Msg::Signed(psbt) => {
@@ -227,9 +232,7 @@ impl Widget for Component {
     type Root = ApplicationWindow;
 
     // Return the root widget.
-    fn root(&self) -> Self::Root {
-        self.widgets.to_root()
-    }
+    fn root(&self) -> Self::Root { self.widgets.to_root() }
 
     fn view(relm: &Relm<Self>, model: Self::Model) -> Self {
         let glade_src = include_str!("psbt.glade");
@@ -254,6 +257,7 @@ impl Widget for Component {
         let xpriv_dlg = init::<xpriv_dlg::Component>((
             model.network().is_testnet(),
             model.psbt().clone(),
+            zero!(),
             sender,
         ))
         .expect("error in xpub dialog component");
