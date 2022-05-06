@@ -25,6 +25,7 @@ use relm::{init, Cast, Channel, Relm, Sender, StreamHandle, Update, Widget};
 
 use super::sign_row::Signing;
 use super::{xpriv_dlg, ModelParam, Msg, SignMsg, ViewModel, Widgets};
+use crate::model::{ElectrumPreset, ElectrumServer};
 use crate::view::psbt::PublishMsg;
 use crate::view::{error_dlg, file_save_dlg, launch, msg_dlg};
 use crate::worker::electrum::electrum_connect;
@@ -107,13 +108,10 @@ impl Component {
 
             let tx = tx.clone();
             let sender = self.publisher_sender.clone();
-            // TODO: Use normal URLs
-            let electrum_url = match self.model.network().is_testnet() {
-                false => "ssl://blockstream.info:700",
-                true => "tcp://electrum.blockstream.info:60001",
-            };
+            // TODO: Allow selecting Electrum server
+            let electrum = ElectrumServer::tls(ElectrumPreset::Blockstream, self.model.network());
             thread::spawn(move || {
-                let _ = match electrum_connect(electrum_url)
+                let _ = match electrum_connect(&electrum.to_string())
                     .and_then(|client| client.transaction_broadcast(&tx))
                 {
                     Err(err) => sender.send(PublishMsg::Declined(err.to_string())),

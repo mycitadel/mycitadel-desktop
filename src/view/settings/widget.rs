@@ -26,10 +26,10 @@ use relm::{Relm, Sender};
 use wallet::hd::{Bip43, DerivationStandard, HardenedIndex, SegmentIndexes, TrackingAccount};
 
 use super::spending_row::SpendingModel;
-use super::{spending_row, ElectrumModel, ElectrumPreset, Msg, ViewModel};
+use super::{spending_row, ElectrumModel, Msg, ViewModel};
 use crate::model::{
-    DerivationStandardExt, DerivationType, DescriptorClass, ElectrumSec, OriginFormat, Ownership,
-    PublicNetwork, Requirement, Signer, WalletTemplate,
+    DerivationStandardExt, DerivationType, DescriptorClass, ElectrumPreset, ElectrumSec,
+    OriginFormat, Ownership, PublicNetwork, Requirement, Signer, WalletTemplate,
 };
 use crate::view::NotificationBoxExt;
 

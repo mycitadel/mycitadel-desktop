@@ -21,11 +21,12 @@ use bitcoin::util::bip32::{ExtendedPubKey, Fingerprint};
 pub use component::Component;
 use gtk::ResponseType;
 use relm::StreamHandle;
-pub(self) use view_model::{ElectrumModel, ElectrumPreset, ViewModel};
+pub(self) use view_model::{ElectrumModel, ViewModel};
 pub(self) use widget::Widgets;
 
 use crate::model::{
-    DescriptorClass, ElectrumSec, HardwareDevice, PublicNetwork, WalletSettings, WalletTemplate,
+    DescriptorClass, ElectrumPreset, ElectrumSec, HardwareDevice, PublicNetwork, WalletSettings,
+    WalletTemplate,
 };
 use crate::view::{launch, wallet};
 

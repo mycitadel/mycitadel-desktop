@@ -20,8 +20,7 @@ use relm::{init, Channel, Relm, StreamHandle, Update, Widget};
 
 use super::spending_row::Condition;
 use super::{xpub_dlg, Msg, ViewModel, Widgets};
-use crate::model::{PublicNetwork, Signer, WalletSettings};
-use crate::view::settings::view_model::ElectrumPreset;
+use crate::model::{ElectrumPreset, PublicNetwork, Signer, WalletSettings};
 use crate::view::{devices, error_dlg, launch, wallet, NotificationBoxExt};
 
 pub struct Component {

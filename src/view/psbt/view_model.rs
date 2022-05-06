@@ -98,7 +98,7 @@ impl ViewModel {
                         .filter(|(xpk, _)| xpk == pk)
                         .count() as u32;
             }
-            for (pk, (master_fp, _)) in &input.bip32_derivation {
+            for (pk, (master_fp, derivation)) in &input.bip32_derivation {
                 if derivation.len() > 1 && derivation[1] == (ChildNumber::Hardened { index: 1 }) {
                     self.network = PublicNetwork::Testnet;
                 }

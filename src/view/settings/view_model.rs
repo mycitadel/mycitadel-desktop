@@ -22,46 +22,9 @@ use wallet::hd::{Bip43, TerminalStep, TrackingAccount};
 use super::spending_row::SpendingModel;
 use super::Msg;
 use crate::model::{
-    file, DescriptorClass, DescriptorError, ElectrumSec, ElectrumServer, FileDocument,
-    HardwareList, PublicNetwork, Signer, Wallet, WalletSettings, WalletTemplate,
+    file, DescriptorClass, DescriptorError, ElectrumPreset, ElectrumSec, ElectrumServer,
+    FileDocument, HardwareList, PublicNetwork, Signer, Wallet, WalletSettings, WalletTemplate,
 };
-
-#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
-pub enum ElectrumPreset {
-    #[display("pandora.network")]
-    MyCitadel,
-
-    #[display("blockstream.info")]
-    Blockstream,
-
-    #[display("")]
-    Custom,
-}
-
-impl ElectrumPreset {
-    pub fn all() -> &'static [ElectrumPreset] {
-        &[
-            ElectrumPreset::MyCitadel,
-            ElectrumPreset::Blockstream,
-            ElectrumPreset::Custom,
-        ]
-    }
-
-    pub fn presets() -> &'static [ElectrumPreset] {
-        &[ElectrumPreset::MyCitadel, ElectrumPreset::Blockstream]
-    }
-
-    pub fn electrum_port(self, sec: ElectrumSec, network: PublicNetwork) -> u16 {
-        match (self, sec, network) {
-            (ElectrumPreset::MyCitadel, _, network) => network.electrum_port(),
-            (ElectrumPreset::Blockstream, ElectrumSec::None, PublicNetwork::Mainnet) => 110,
-            (ElectrumPreset::Blockstream, ElectrumSec::None, PublicNetwork::Testnet) => 143,
-            (ElectrumPreset::Blockstream, ElectrumSec::Tls, PublicNetwork::Mainnet) => 700,
-            (ElectrumPreset::Blockstream, ElectrumSec::Tls, PublicNetwork::Testnet) => 993,
-            (_, _, network) => network.electrum_port(),
-        }
-    }
-}
 
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 pub struct ElectrumModel {

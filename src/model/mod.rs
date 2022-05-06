@@ -22,7 +22,7 @@ mod unsatisfiable;
 mod wallet;
 mod xkey;
 
-pub use electrum::{ElectrumSec, ElectrumServer};
+pub use electrum::{ElectrumPreset, ElectrumSec, ElectrumServer};
 pub use file::FileDocument;
 pub use onchain::{
     AddressSource, AddressSummary, AddressValue, HistoryEntry, OnchainStatus, OnchainTxid, Prevout,
