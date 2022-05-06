@@ -13,6 +13,7 @@ mod component;
 pub(self) mod sign_row;
 mod view_model;
 mod widget;
+pub(self) mod xpriv_dlg;
 
 use bitcoin::util::bip32::Fingerprint;
 use relm::StreamHandle;
