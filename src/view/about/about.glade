@@ -76,7 +76,7 @@
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <property name="halign">start</property>
-                    <property name="label" translatable="yes">Walpurgisnacht version (1.0.0, beta 1)</property>
+                    <property name="label" translatable="yes">Walpurgisnacht version (1.1.0)</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -89,7 +89,7 @@
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <property name="halign">start</property>
-                    <property name="label" translatable="yes">© 2022 Pandora Prime Sarl, Neuchatel, Switzerland
+                    <property name="label" translatable="yes">© 2022 Pandora Prime SA, Neuchatel, Switzerland
 Some rights are reserved; for details please read the license agreement below</property>
                     <property name="wrap">True</property>
                     <attributes>
