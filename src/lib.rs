@@ -9,6 +9,9 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
+//! Main library module. For a good starting point see main application
+//! component: [`crate::view::launch::Component`].
+
 #![allow(dead_code)]
 
 #[macro_use]

@@ -25,6 +25,10 @@ use crate::model::{FileDocument, PublicNetwork, Wallet};
 use crate::view::launch::Page;
 use crate::view::{about, error_dlg, file_create_dlg, file_open_dlg, psbt, settings, wallet};
 
+/// Main [`relm`] component of the application
+///
+/// Most importantly implements [`relm::Widget`] as an UI application.
+/// See [`Component::view`] for initialization code.
 pub struct Component {
     model: ViewModel,
     widgets: Widgets,
