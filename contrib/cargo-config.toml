@@ -1,0 +1,7 @@
+# Move this file to `<project-root>/.cargo/config.toml`, then
+# uncomment the section below to make cargo use lld for linking.
+# This will make building somewhat faster, which makes
+# biggest difference for debug builds (from 8s to 3s).
+# Note: you need to have `lld` installed.
+# [build]
+# rustflags = ["-C", "link-arg=-fuse-ld=lld"]
