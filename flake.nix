@@ -47,6 +47,7 @@
         nativeBuildInputs = [
           pkgs.pkgconfig
           fenix-channel.rustc
+          pkgs.lld
         ];
       };
 
