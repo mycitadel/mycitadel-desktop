@@ -36,15 +36,15 @@ chrono = "0.4.19"
 urlencoding = "2.1.0"
 ureq = { version = "2.4.0", features = ["json"] }
 
-amplify = "3.12.0"
-bitcoin = "0.28.0"
+amplify = "3.12.1"
+bitcoin = "0.28.1"
 miniscript = "7.0.0"
 bitcoin_hwi = "0.2.0"
-electrum-client = "0.10.0"
-descriptor-wallet = { version = "0.7.0", features = ["miniscript", "keygen"] }
-strict_encoding = "1.8.0"
+electrum-client = "0.10.1"
+descriptor-wallet = { version = "0.7.1", features = ["miniscript", "keygen"] }
+strict_encoding = "1.8.11"
 
-clap = { version = "3.1", features = ["derive"], optional = true }
+clap = { version = "~3.1.18", features = ["derive"], optional = true }
 serde_crate = { package = "serde", version = "1" }
 serde_with = { version = "1.13", optional = true }
 serde_json = { version = "1.0.79" }
