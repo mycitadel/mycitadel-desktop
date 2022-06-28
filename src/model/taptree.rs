@@ -14,6 +14,7 @@ use std::sync::Arc;
 use miniscript::descriptor::TapTree;
 use miniscript::{Miniscript, MiniscriptKey, Tap};
 
+// TODO: Move to descriptor wallet library
 pub trait ToTapTree<Pk>
 where
     Pk: MiniscriptKey,

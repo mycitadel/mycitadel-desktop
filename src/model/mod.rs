@@ -18,9 +18,7 @@ mod taptree;
 mod template;
 mod types;
 mod ui;
-mod unsatisfiable;
 mod wallet;
-mod xkey;
 
 pub use electrum::{ElectrumPreset, ElectrumSec, ElectrumServer};
 pub use file::FileDocument;
@@ -32,15 +30,10 @@ pub use sign::XprivSigner;
 pub use taptree::ToTapTree;
 pub use template::{Requirement, WalletTemplate};
 pub use types::{
-    DescriptorClass, Error, HardwareDevice, HardwareList, OriginFormat, Ownership, PublicNetwork,
-    Signer, SigsReq, TimelockDuration, TimelockReq, TimelockedSigs,
+    Error, HardwareDevice, HardwareList, OriginFormat, Ownership, Signer, SigsReq,
+    TimelockDuration, TimelockReq, TimelockedSigs,
 };
 pub use ui::Notification;
-pub use unsatisfiable::Unsatisfiable;
-pub use xkey::{
-    NonStandardDerivation, XpubDescriptor, XpubOrigin, XpubParseError, XpubRequirementError,
-    XpubkeyCore,
-};
 
 pub use self::wallet::{
     DerivationStandardExt, DerivationType, DescriptorError, SpendingCondition, Wallet,
