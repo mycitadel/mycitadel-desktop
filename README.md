@@ -73,7 +73,7 @@ once and OS-specific.
 
 - For Mac OS, please do
     ```console
-    $ brew install gtk3 libadwaita adwaita-icon-theme libcanberra-gtk-module \
+    $ brew install gtk+3 libadwaita adwaita-icon-theme libcanberra-gtk-module \
       libcanberra-gtk3-module libusb
     ```
 

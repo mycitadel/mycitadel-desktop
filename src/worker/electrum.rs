@@ -131,7 +131,7 @@ impl ElectrumWorker {
                         }
                     }),
                     (None, Ok(_)) => {
-                        /* Can't handle since no client avaliable */
+                        /* Can't handle since no client available */
                         Ok(())
                     }
                     (_, Err(_)) => {
