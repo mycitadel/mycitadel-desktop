@@ -108,7 +108,7 @@ $ mycitadel
 This application is free software and distributed without any warranty under 
 AGPL-3.0 License.
 
-(C) 2022 Pandora Prime Sarl, Neuchatel, Switzerland.<br>
+(C) 2022 Pandora Prime SA, Neuchatel, Switzerland.<br>
 Some rights are reserved; for details please read the license agreement.
 
 For business, partnership and other enquiries please write to 
