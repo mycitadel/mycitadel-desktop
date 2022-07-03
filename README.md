@@ -73,8 +73,7 @@ once and OS-specific.
 
 - For Mac OS, please do
     ```console
-    $ brew install gtk+3 libadwaita adwaita-icon-theme libcanberra-gtk-module \
-      libcanberra-gtk3-module libusb
+    $ brew install gtk+3 libadwaita adwaita-icon-theme libusb
     ```
 
 - For Windows, you need to install Visual Studio C tools and MSYSY2-based GTK.
