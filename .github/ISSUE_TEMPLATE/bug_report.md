@@ -22,7 +22,7 @@ Put `x` in the boxes below:
 A clear and concise description of what the bug is, including what was expected
 to happen and what went wrong.
 
-## Attackments
+## Attachments
 
 Please attach related files (wallets, PSBTs) and provide details on the involved
 addresses and txid, when appropriate.

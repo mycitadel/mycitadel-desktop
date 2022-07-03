@@ -73,8 +73,7 @@ once and OS-specific.
 
 - For Mac OS, please do
     ```console
-    $ brew install gtk3 libadwaita adwaita-icon-theme libcanberra-gtk-module \
-      libcanberra-gtk3-module libusb
+    $ brew install gtk+3 libadwaita adwaita-icon-theme libusb
     ```
 
 - For Windows, you need to install Visual Studio C tools and MSYSY2-based GTK.
@@ -108,7 +107,7 @@ $ mycitadel
 This application is free software and distributed without any warranty under 
 AGPL-3.0 License.
 
-(C) 2022 Pandora Prime Sarl, Neuchatel, Switzerland.<br>
+(C) 2022 Pandora Prime SA, Neuchatel, Switzerland.<br>
 Some rights are reserved; for details please read the license agreement.
 
 For business, partnership and other enquiries please write to 
