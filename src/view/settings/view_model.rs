@@ -14,17 +14,19 @@ use std::fmt::{self, Display, Formatter};
 use std::path::{Path, PathBuf};
 
 use bitcoin::util::bip32::ExtendedPubKey;
+use bpro::{
+    file, DescriptorError, ElectrumPreset, ElectrumSec, ElectrumServer, FileDocument, HardwareList,
+    Signer, Wallet, WalletSettings, WalletTemplate,
+};
 use electrum_client::{Client as ElectrumClient, ElectrumApi};
 use miniscript::Descriptor;
 use relm::{Channel, StreamHandle};
-use wallet::hd::{Bip43, TerminalStep, TrackingAccount};
+use wallet::descriptors::DescriptorClass;
+use wallet::hd::{Bip43, DerivationAccount, DerivationSubpath, TerminalStep};
+use wallet::onchain::PublicNetwork;
 
 use super::spending_row::SpendingModel;
 use super::Msg;
-use crate::model::{
-    file, DescriptorClass, DescriptorError, ElectrumPreset, ElectrumSec, ElectrumServer,
-    FileDocument, HardwareList, PublicNetwork, Signer, Wallet, WalletSettings, WalletTemplate,
-};
 
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 pub struct ElectrumModel {
@@ -115,7 +117,7 @@ pub struct ViewModel {
     // Non-persisting / dynamic data for this window
     pub active_signer: Option<Signer>,
     pub devices: HardwareList,
-    pub descriptor: Option<Descriptor<TrackingAccount>>,
+    pub descriptor: Option<Descriptor<DerivationAccount>>,
 }
 
 impl TryFrom<&ViewModel> for WalletSettings {
@@ -242,7 +244,7 @@ impl ViewModel {
         class.bip43(min_sigs_required)
     }
 
-    pub fn terminal_derivation(&self) -> Vec<TerminalStep> {
+    pub fn terminal_derivation(&self) -> DerivationSubpath<TerminalStep> {
         match self.support_multiclass {
             false => vec![TerminalStep::range(0u8, 1u8), TerminalStep::Wildcard],
             true => vec![
@@ -252,13 +254,14 @@ impl ViewModel {
                 TerminalStep::Wildcard,
             ],
         }
+        .into()
     }
 
     pub fn signer_by(&self, xpub: ExtendedPubKey) -> Option<&Signer> {
         self.signers.iter().find(|signer| signer.xpub == xpub)
     }
 
-    pub fn derivation_for(&self, signer: &Signer) -> TrackingAccount {
+    pub fn derivation_for(&self, signer: &Signer) -> DerivationAccount {
         signer.to_tracking_account(self.terminal_derivation())
     }
 

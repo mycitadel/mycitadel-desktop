@@ -19,11 +19,11 @@ use bitcoin::util::bip32::Fingerprint;
 use relm::StreamHandle;
 pub(super) use view_model::ModelParam;
 pub(self) use view_model::ViewModel;
+use wallet::onchain::PublicNetwork;
 use wallet::psbt::Psbt;
 pub(self) use widget::Widgets;
 
 pub use self::component::Component;
-use crate::model::PublicNetwork;
 use crate::view::launch;
 
 #[derive(Msg)]

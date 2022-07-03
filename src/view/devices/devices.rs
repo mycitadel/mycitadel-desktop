@@ -1,15 +1,17 @@
 use std::str::FromStr;
 
 use bitcoin::util::bip32::{ChildNumber, ExtendedPubKey, Fingerprint};
+use bpro::{Error, HardwareList};
 use gladis::Gladis;
 use glib::subclass::prelude::*;
 use gtk::prelude::*;
 use gtk::{glib, Button, Dialog, ListBox, MessageDialog};
 use relm::{Channel, Relm, Sender, Update, Widget};
 use wallet::hd::{Bip43, DerivationStandard, HardenedIndex, SegmentIndexes};
+use wallet::hwi;
+use wallet::onchain::PublicNetwork;
 
 use super::device_row::{DeviceModel, RowWidgets};
-use crate::model::{Error, HardwareList, PublicNetwork};
 use crate::view::settings;
 
 #[derive(Clone)]

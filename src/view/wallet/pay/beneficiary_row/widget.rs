@@ -12,6 +12,7 @@
 use std::str::FromStr;
 
 use ::wallet::address::AddressCompat;
+use ::wallet::onchain::PublicNetwork;
 use bitcoin::Address;
 use gladis::Gladis;
 use gtk::prelude::*;
@@ -19,7 +20,6 @@ use gtk::{glib, Entry, ListBoxRow};
 use relm::Relm;
 
 use super::Beneficiary;
-use crate::model::PublicNetwork;
 use crate::view::wallet::{self, pay};
 
 #[derive(Clone, Gladis)]

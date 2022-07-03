@@ -13,15 +13,16 @@ use std::ffi::OsStr;
 use std::fs;
 use std::path::PathBuf;
 
+use ::wallet::onchain::PublicNetwork;
 use ::wallet::psbt::Psbt;
 use bitcoin::consensus::Decodable;
 use bitcoin::psbt::PartiallySignedTransaction;
+use bpro::{FileDocument, Wallet};
 use gladis::Gladis;
 use gtk::{ApplicationWindow, ResponseType};
 use relm::{init, Relm, StreamHandle, Update, Widget};
 
 use super::{Msg, ViewModel, Widgets};
-use crate::model::{FileDocument, PublicNetwork, Wallet};
 use crate::view::launch::Page;
 use crate::view::{about, error_dlg, file_create_dlg, file_open_dlg, psbt, settings, wallet};
 

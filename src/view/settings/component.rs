@@ -12,7 +12,9 @@
 use std::path::Path;
 use std::str::FromStr;
 
+use ::wallet::onchain::PublicNetwork;
 use bitcoin::util::bip32::{DerivationPath, Fingerprint};
+use bpro::{ElectrumPreset, Signer, WalletSettings};
 use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{Dialog, ResponseType};
@@ -20,7 +22,6 @@ use relm::{init, Channel, Relm, StreamHandle, Update, Widget};
 
 use super::spending_row::Condition;
 use super::{xpub_dlg, Msg, ViewModel, Widgets};
-use crate::model::{ElectrumPreset, PublicNetwork, Signer, WalletSettings};
 use crate::view::{devices, error_dlg, launch, wallet, NotificationBoxExt};
 
 pub struct Component {

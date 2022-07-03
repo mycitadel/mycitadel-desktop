@@ -25,9 +25,9 @@ use gtk::{
 };
 use miniscript::{Legacy, Miniscript, Segwitv0};
 use relm::Relm;
+use wallet::onchain::PublicNetwork;
 
 use super::{Msg, ViewModel};
-use crate::model::PublicNetwork;
 use crate::view::launch::Page;
 use crate::view::psbt::sign_row;
 use crate::view::psbt::sign_row::SigningModel;
@@ -87,7 +87,7 @@ impl Widgets {
 
     pub fn update_ui(&self, model: &ViewModel) {
         let psbt: &Psbt = model.psbt();
-        let tx = psbt.clone().into_transaction();
+        let tx = psbt.to_unsigned_tx();
 
         self.update_path(model.path().as_deref());
 

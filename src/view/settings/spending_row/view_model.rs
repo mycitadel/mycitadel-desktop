@@ -13,15 +13,12 @@ use std::borrow::Borrow;
 use std::cell::RefCell;
 use std::collections::BTreeSet;
 
+use bpro::{Signer, SigsReq, SpendingCondition, TimelockDuration, TimelockReq, TimelockedSigs};
 use chrono::{DateTime, Datelike, NaiveDate, Utc};
 use glib::subclass::prelude::*;
 use gtk::prelude::*;
 use gtk::subclass::prelude::ListModelImpl;
 use gtk::{gio, glib};
-
-use crate::model::{
-    Signer, SigsReq, SpendingCondition, TimelockDuration, TimelockReq, TimelockedSigs,
-};
 
 // The actual data structure that stores our values. This is not accessible
 // directly from the outside.

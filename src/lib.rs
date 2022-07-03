@@ -17,8 +17,6 @@
 #[macro_use]
 extern crate amplify;
 #[macro_use]
-extern crate strict_encoding;
-#[macro_use]
 extern crate relm;
 #[macro_use]
 extern crate relm_derive;
@@ -27,7 +25,6 @@ extern crate serde_crate as serde;
 #[cfg(feature = "serde")]
 #[macro_use]
 extern crate serde_with;
-extern crate bitcoin_hwi as hwi;
 
 pub mod model;
 #[cfg(feature = "ui")]

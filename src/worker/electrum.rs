@@ -17,16 +17,11 @@ use std::{io, thread};
 
 use amplify::Wrapper;
 use bitcoin::Transaction;
-use electrum_client::{
-    Client as ElectrumClient, ElectrumApi, GetHistoryRes, HeaderNotification, ListUnspentRes,
-};
+use bpro::{AddressSource, ElectrumServer, TxidMeta, UtxoTxid, WalletSettings};
+use electrum_client::{Client as ElectrumClient, ElectrumApi, HeaderNotification};
 use relm::Sender;
 use wallet::hd::{SegmentIndexes, UnhardenedIndex};
 use wallet::scripts::PubkeyScript;
-
-use crate::model::{
-    AddressSource, ElectrumServer, OnchainStatus, OnchainTxid, UtxoTxid, WalletSettings,
-};
 
 enum Cmd {
     Sync,
@@ -46,55 +41,6 @@ pub enum Msg {
     TxBatch(Vec<Transaction>, f32),
     ChannelDisconnected,
     Error(electrum_client::Error),
-}
-
-#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
-pub struct TxidMeta {
-    pub onchain: OnchainTxid,
-    pub fee: Option<u64>,
-}
-
-impl From<&UtxoTxid> for TxidMeta {
-    fn from(utxo: &UtxoTxid) -> Self {
-        TxidMeta {
-            onchain: utxo.onchain,
-            fee: None,
-        }
-    }
-}
-
-impl From<GetHistoryRes> for TxidMeta {
-    fn from(res: GetHistoryRes) -> Self {
-        TxidMeta {
-            onchain: OnchainTxid {
-                txid: res.tx_hash,
-                status: OnchainStatus::from_i32(res.height),
-                date_time: None,
-            },
-            fee: res.fee,
-        }
-    }
-}
-
-impl From<&ListUnspentRes> for OnchainTxid {
-    fn from(res: &ListUnspentRes) -> Self {
-        OnchainTxid {
-            txid: res.tx_hash,
-            status: OnchainStatus::from_u32(res.height as u32),
-            date_time: None,
-        }
-    }
-}
-
-impl UtxoTxid {
-    fn with(res: ListUnspentRes, addr_src: AddressSource) -> Self {
-        UtxoTxid {
-            onchain: OnchainTxid::from(&res),
-            vout: res.tx_pos as u32,
-            value: res.value,
-            addr_src,
-        }
-    }
 }
 
 pub struct ElectrumWorker {
