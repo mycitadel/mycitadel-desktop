@@ -25,6 +25,7 @@ use gtk::{
 use relm::Relm;
 use wallet::hd::SegmentIndexes;
 
+use super::asset_row::{self, AssetModel};
 use super::{pay, ElectrumState, Msg, ViewModel};
 use crate::model::UI as UIColorTrait;
 use crate::view::{launch, APP_ICON, APP_ICON_TOOL};
@@ -228,7 +229,14 @@ impl Widgets {
         self.fiat_eur.set_active(model.fiat == Fiat::EUR);
         self.fiat_chf.set_active(model.fiat == Fiat::CHF);
 
+        self.bind_spending_model(model.asset_model());
+
         self.update_invoice(model);
+    }
+
+    fn bind_spending_model(&self, model: &AssetModel) {
+        self.asset_list
+            .bind_model(Some(model), move |item| asset_row::RowWidgets::init(item));
     }
 
     pub fn update_invoice(&self, model: &ViewModel) {

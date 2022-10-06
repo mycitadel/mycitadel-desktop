@@ -16,6 +16,7 @@ use bpro::{file, DescriptorError, ElectrumServer, FileDocument, Signer, Wallet, 
 use wallet::descriptors::DescriptorClass;
 use wallet::hd::UnhardenedIndex;
 
+use super::asset_row::{AssetInfo, AssetModel};
 use super::pay::beneficiary_row::BeneficiaryModel;
 use crate::worker::exchange::{Exchange, Fiat};
 
@@ -33,6 +34,9 @@ pub struct ViewModel {
 
     #[getter(as_mut)]
     beneficiaries: BeneficiaryModel,
+
+    #[getter(as_mut)]
+    asset_model: AssetModel,
 
     #[getter(as_copy)]
     fee_rate: f32, // Used by payment window
@@ -55,6 +59,15 @@ pub struct ViewModel {
 
 impl ViewModel {
     pub fn with(wallet: Wallet, path: PathBuf) -> ViewModel {
+        let (btc, bitcoin) = match wallet.as_settings().network().is_testnet() {
+            true => ("tBTC", "Test bitcoin"),
+            false => ("BTC", "Bitcoin"),
+        };
+        let btc_asset = AssetInfo::with(btc, bitcoin, wallet.state().balance, "-");
+        let asset_model = AssetModel::new();
+        asset_model.append(&btc_asset);
+        // TODO: Take assets from wallet
+
         ViewModel {
             fee_rate: wallet.ephemerals().fees.0 * 100_000_000.0, // TODO: Update on window opening
             vsize: 0.0,
@@ -65,6 +78,7 @@ impl ViewModel {
             exchange: Exchange::Kraken,
             fiat: Fiat::CHF,
             exchange_rate: 0.0,
+            asset_model,
         }
     }
 

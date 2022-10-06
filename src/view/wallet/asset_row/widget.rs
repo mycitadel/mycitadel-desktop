@@ -12,10 +12,8 @@
 use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{glib, Label, ListBoxRow};
-use relm::Relm;
 
 use super::AssetInfo;
-use crate::view::wallet;
 
 #[derive(Clone, Gladis)]
 pub struct RowWidgets {
@@ -27,7 +25,7 @@ pub struct RowWidgets {
 }
 
 impl RowWidgets {
-    pub fn init(_relm: Relm<wallet::Component>, item: &glib::Object) -> gtk::Widget {
+    pub fn init(item: &glib::Object) -> gtk::Widget {
         let glade_src = include_str!("asset_row.glade");
         let row_widgets = RowWidgets::from_string(glade_src).expect("glade file broken");
 
@@ -43,22 +41,22 @@ impl RowWidgets {
         let flags = glib::BindingFlags::DEFAULT | glib::BindingFlags::SYNC_CREATE;
 
         self.name_lbl
-            .bind_property("text", asset, "name")
+            .bind_property("name", asset, "name")
             .flags(flags)
             .build();
 
         self.ticker_lbl
-            .bind_property("text", asset, "ticker")
+            .bind_property("name", asset, "ticker")
             .flags(flags)
             .build();
 
         self.contract_lbl
-            .bind_property("text", asset, "contract")
+            .bind_property("name", asset, "contract")
             .flags(flags)
             .build();
 
         self.amount_lbl
-            .bind_property("text", asset, "amount")
+            .bind_property("name", asset, "amount")
             .flags(flags)
             .build();
     }
