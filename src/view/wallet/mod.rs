@@ -9,6 +9,7 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
+mod asset_row;
 mod component;
 mod pay;
 mod view_model;

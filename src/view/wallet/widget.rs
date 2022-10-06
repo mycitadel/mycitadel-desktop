@@ -20,7 +20,7 @@ use gtk::gdk_pixbuf::Pixbuf;
 use gtk::prelude::*;
 use gtk::{
     gdk, Adjustment, ApplicationWindow, Button, CheckButton, Entry, HeaderBar, Image, Label,
-    ListStore, MenuItem, Popover, RadioMenuItem, SpinButton, Spinner, Statusbar, TreeView,
+    ListBox, ListStore, MenuItem, Popover, RadioMenuItem, SpinButton, Spinner, Statusbar, TreeView,
 };
 use relm::Relm;
 use wallet::hd::SegmentIndexes;
@@ -69,6 +69,8 @@ pub struct Widgets {
     settings_mi: MenuItem,
     launcher_mi: MenuItem,
     about_mi: MenuItem,
+
+    asset_list: ListBox,
 
     balance_btc_lbl: Label,
     balance_sat_lbl: Label,
