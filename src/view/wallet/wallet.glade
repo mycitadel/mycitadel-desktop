@@ -292,6 +292,7 @@
         <property name="wide-handle">True</property>
         <child>
           <object class="GtkListBox" id="asset_list">
+            <property name="width-request">200</property>
             <property name="visible">True</property>
             <property name="can-focus">False</property>
           </object>
