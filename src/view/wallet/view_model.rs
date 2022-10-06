@@ -63,7 +63,7 @@ impl ViewModel {
             true => ("tBTC", "Test bitcoin"),
             false => ("BTC", "Bitcoin"),
         };
-        let btc_asset = AssetInfo::with(bitcoin, btc, wallet.state().balance, "-");
+        let btc_asset = AssetInfo::with(bitcoin, btc, wallet.state().balance, 8, "-");
         let asset_model = AssetModel::new();
         asset_model.append(&btc_asset);
         // TODO: Take assets from wallet

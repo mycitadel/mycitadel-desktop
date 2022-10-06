@@ -21,7 +21,7 @@ use gtk::{gio, glib};
 #[derive(Default)]
 pub struct AssetInner {
     name: RefCell<String>,
-    amount: RefCell<u64>,
+    amount: RefCell<String>,
     ticker: RefCell<String>,
     contract: RefCell<String>,
 }
@@ -52,13 +52,11 @@ impl ObjectImpl for AssetInner {
                     None, // Default value
                     glib::ParamFlags::READWRITE,
                 ),
-                glib::ParamSpecUInt64::new(
+                glib::ParamSpecString::new(
                     "amount",
                     "Amount",
                     "Amount",
-                    0,
-                    u64::MAX,
-                    0, // Allowed range and default value
+                    None,
                     glib::ParamFlags::READWRITE,
                 ),
                 glib::ParamSpecString::new(
@@ -133,10 +131,18 @@ glib::wrapper! {
 }
 
 impl AssetInfo {
-    pub fn with(name: &str, ticker: &str, amount: u64, contract_name: &str) -> AssetInfo {
+    pub fn with(
+        name: &str,
+        ticker: &str,
+        amount: u64,
+        precision: u8,
+        contract_name: &str,
+    ) -> AssetInfo {
+        let precision = precision as u32;
+        let amount = amount as f64 / 10_i32.pow(precision) as f64;
         glib::Object::new(&[
             ("name", &name),
-            ("amount", &amount),
+            ("amount", &format!("{}", amount)),
             ("ticker", &ticker),
             ("contract", &contract_name),
         ])
@@ -149,7 +155,7 @@ impl AssetInfo {
 
     pub fn contract_name(&self) -> String { self.property::<String>("contract") }
 
-    pub fn amount(&self) -> u64 { self.property::<u64>("amount") }
+    pub fn amount(&self) -> String { self.property::<String>("amount") }
 }
 
 #[derive(Debug, Default)]
