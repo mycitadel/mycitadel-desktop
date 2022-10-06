@@ -40,23 +40,23 @@ impl RowWidgets {
     fn bind_model(&self, asset: &AssetInfo) {
         let flags = glib::BindingFlags::DEFAULT | glib::BindingFlags::SYNC_CREATE;
 
-        self.name_lbl
-            .bind_property("name", asset, "name")
+        asset
+            .bind_property("name", &self.name_lbl, "label")
             .flags(flags)
             .build();
 
-        self.ticker_lbl
-            .bind_property("name", asset, "ticker")
+        asset
+            .bind_property("ticker", &self.ticker_lbl, "label")
             .flags(flags)
             .build();
 
-        self.contract_lbl
-            .bind_property("name", asset, "contract")
+        asset
+            .bind_property("contract", &self.contract_lbl, "label")
             .flags(flags)
             .build();
 
-        self.amount_lbl
-            .bind_property("name", asset, "amount")
+        asset
+            .bind_property("amount", &self.amount_lbl, "label")
             .flags(flags)
             .build();
     }

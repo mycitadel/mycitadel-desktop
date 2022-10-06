@@ -229,12 +229,12 @@ impl Widgets {
         self.fiat_eur.set_active(model.fiat == Fiat::EUR);
         self.fiat_chf.set_active(model.fiat == Fiat::CHF);
 
-        self.bind_spending_model(model.asset_model());
+        self.bind_asset_model(model.asset_model());
 
         self.update_invoice(model);
     }
 
-    fn bind_spending_model(&self, model: &AssetModel) {
+    fn bind_asset_model(&self, model: &AssetModel) {
         self.asset_list
             .bind_model(Some(model), move |item| asset_row::RowWidgets::init(item));
     }
