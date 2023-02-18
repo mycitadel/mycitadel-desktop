@@ -2588,6 +2588,7 @@ If all of the requirements at least in a single row are satisfied, than the fund
           <object class="GtkImage" id="logo_img">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
+            <property name="pixbuf">../../../res/applogo.png</property>
           </object>
         </child>
         <child>
