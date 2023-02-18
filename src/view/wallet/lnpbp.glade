@@ -328,12 +328,12 @@ If all of the requirements at least in a single row are satisfied, than the fund
           <object class="GtkNotebook">
             <property name="visible">True</property>
             <property name="can-focus">True</property>
+            <property name="tab-pos">left</property>
             <property name="show-border">False</property>
             <child>
               <object class="GtkNotebook">
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
-                <property name="tab-pos">left</property>
                 <property name="show-border">False</property>
                 <child>
                   <object class="GtkScrolledWindow">
@@ -444,7 +444,6 @@ If all of the requirements at least in a single row are satisfied, than the fund
                   <object class="GtkLabel">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
-                    <property name="halign">end</property>
                     <property name="label" translatable="yes">History</property>
                   </object>
                   <packing>
@@ -580,7 +579,6 @@ If all of the requirements at least in a single row are satisfied, than the fund
                   <object class="GtkLabel">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
-                    <property name="halign">end</property>
                     <property name="label" translatable="yes">Addresses</property>
                   </object>
                   <packing>
@@ -686,7 +684,6 @@ If all of the requirements at least in a single row are satisfied, than the fund
                   <object class="GtkLabel">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
-                    <property name="halign">end</property>
                     <property name="label" translatable="yes">Coins</property>
                   </object>
                   <packing>
@@ -703,19 +700,12 @@ If all of the requirements at least in a single row are satisfied, than the fund
                     <property name="margin-end">6</property>
                     <property name="margin-top">6</property>
                     <property name="margin-bottom">6</property>
-                    <property name="orientation">vertical</property>
                     <property name="spacing">6</property>
                     <child>
                       <object class="GtkBox">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
-                        <property name="margin-left">6</property>
-                        <property name="margin-right">6</property>
-                        <property name="margin-start">6</property>
-                        <property name="margin-end">6</property>
-                        <property name="margin-top">6</property>
-                        <property name="margin-bottom">24</property>
-                        <property name="orientation">vertical</property>
+                        <property name="margin-end">13</property>
                         <property name="spacing">6</property>
                         <child>
                           <object class="GtkLabel">
@@ -1033,7 +1023,6 @@ If all of the requirements at least in a single row are satisfied, than the fund
               <object class="GtkNotebook" id="pages">
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
-                <property name="tab-pos">left</property>
                 <property name="show-border">False</property>
                 <child>
                   <object class="GtkBox">
@@ -1581,7 +1570,6 @@ If all of the requirements at least in a single row are satisfied, than the fund
                   <object class="GtkLabel">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
-                    <property name="halign">end</property>
                     <property name="label" translatable="yes">Signers</property>
                   </object>
                   <packing>
@@ -1677,7 +1665,6 @@ If all of the requirements at least in a single row are satisfied, than the fund
                   <object class="GtkLabel">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
-                    <property name="halign">end</property>
                     <property name="label" translatable="yes">Policy</property>
                   </object>
                   <packing>
@@ -2053,7 +2040,6 @@ If all of the requirements at least in a single row are satisfied, than the fund
                   <object class="GtkLabel">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
-                    <property name="halign">end</property>
                     <property name="label" translatable="yes">Network</property>
                   </object>
                   <packing>
@@ -2077,91 +2063,82 @@ If all of the requirements at least in a single row are satisfied, than the fund
                 <property name="tab-fill">False</property>
               </packing>
             </child>
-            <child type="action-end">
-              <object class="GtkBox">
+            <child type="action-start">
+              <object class="GtkMenuButton" id="menu_btn">
                 <property name="visible">True</property>
-                <property name="can-focus">False</property>
+                <property name="can-focus">True</property>
+                <property name="focus-on-click">False</property>
+                <property name="receives-default">True</property>
                 <property name="margin-start">6</property>
                 <property name="margin-end">6</property>
                 <property name="margin-top">6</property>
                 <property name="margin-bottom">6</property>
-                <property name="spacing">6</property>
+                <property name="relief">none</property>
+                <property name="popup">menu</property>
+                <property name="use-popover">False</property>
                 <child>
-                  <object class="GtkButton" id="refresh_btn">
+                  <object class="GtkImage">
                     <property name="visible">True</property>
-                    <property name="sensitive">False</property>
-                    <property name="can-focus">True</property>
-                    <property name="receives-default">True</property>
-                    <child>
-                      <object class="GtkBox">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="spacing">6</property>
-                        <child>
-                          <object class="GtkSpinner" id="refresh_spin">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="active">True</property>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">True</property>
-                            <property name="position">0</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkImage" id="refresh_img">
-                            <property name="can-focus">False</property>
-                            <property name="icon-name">emblem-synchronizing-symbolic</property>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">True</property>
-                            <property name="position">1</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel" id="refresh_lbl">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="label" translatable="yes">Refresh</property>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">True</property>
-                            <property name="position">2</property>
-                          </packing>
-                        </child>
-                      </object>
-                    </child>
+                    <property name="can-focus">False</property>
+                    <property name="icon-name">open-menu-symbolic</property>
                   </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="position">0</property>
-                  </packing>
                 </child>
+              </object>
+              <packing>
+                <property name="tab-fill">False</property>
+              </packing>
+            </child>
+            <child type="action-end">
+              <object class="GtkButton" id="refresh_btn">
+                <property name="visible">True</property>
+                <property name="sensitive">False</property>
+                <property name="can-focus">True</property>
+                <property name="receives-default">True</property>
+                <property name="margin-start">6</property>
+                <property name="margin-end">6</property>
+                <property name="margin-top">6</property>
+                <property name="margin-bottom">6</property>
                 <child>
-                  <object class="GtkMenuButton" id="menu_btn">
+                  <object class="GtkBox">
                     <property name="visible">True</property>
-                    <property name="can-focus">True</property>
-                    <property name="focus-on-click">False</property>
-                    <property name="receives-default">True</property>
-                    <property name="popup">menu</property>
-                    <property name="use-popover">False</property>
+                    <property name="can-focus">False</property>
+                    <property name="spacing">6</property>
                     <child>
-                      <object class="GtkImage">
+                      <object class="GtkSpinner" id="refresh_spin">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
-                        <property name="icon-name">open-menu-symbolic</property>
+                        <property name="active">True</property>
                       </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkImage" id="refresh_img">
+                        <property name="can-focus">False</property>
+                        <property name="icon-name">emblem-synchronizing-symbolic</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="refresh_lbl">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="label" translatable="yes">Refresh</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">2</property>
+                      </packing>
                     </child>
                   </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="position">1</property>
-                  </packing>
                 </child>
               </object>
               <packing>
