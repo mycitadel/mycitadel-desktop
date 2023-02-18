@@ -576,10 +576,20 @@ If all of the requirements at least in a single row are satisfied, than the fund
                   </packing>
                 </child>
                 <child type="tab">
-                  <object class="GtkLabel">
-                    <property name="visible">True</property>
+                  <object class="GtkBox">
                     <property name="can-focus">False</property>
-                    <property name="label" translatable="yes">Addresses</property>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="label" translatable="yes">Addresses</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">0</property>
+                      </packing>
+                    </child>
                   </object>
                   <packing>
                     <property name="position">1</property>
@@ -796,10 +806,40 @@ If all of the requirements at least in a single row are satisfied, than the fund
               </object>
             </child>
             <child type="tab">
-              <object class="GtkLabel">
-                <property name="visible">True</property>
+              <object class="GtkBox">
                 <property name="can-focus">False</property>
-                <property name="label" translatable="yes">Bitcoin</property>
+                <property name="orientation">vertical</property>
+                <property name="spacing">6</property>
+                <child>
+                  <object class="GtkImage">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="pixel-size">32</property>
+                    <property name="icon-name">insert-link-symbolic</property>
+                    <property name="icon_size">3</property>
+                  </object>
+                  <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="label" translatable="yes">Bitcoin</property>
+                    <attributes>
+                      <attribute name="variant" value="small-caps"/>
+                      <attribute name="scale" value="0.80000000000000004"/>
+                    </attributes>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
               </object>
               <packing>
                 <property name="tab-fill">False</property>
@@ -925,10 +965,40 @@ If all of the requirements at least in a single row are satisfied, than the fund
               </packing>
             </child>
             <child type="tab">
-              <object class="GtkLabel">
-                <property name="visible">True</property>
+              <object class="GtkBox">
                 <property name="can-focus">False</property>
-                <property name="label" translatable="yes">Assets</property>
+                <property name="orientation">vertical</property>
+                <property name="spacing">6</property>
+                <child>
+                  <object class="GtkImage">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="pixel-size">32</property>
+                    <property name="icon-name">preferences-color</property>
+                    <property name="icon_size">3</property>
+                  </object>
+                  <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="label" translatable="yes">Assets</property>
+                    <attributes>
+                      <attribute name="variant" value="small-caps"/>
+                      <attribute name="scale" value="0.80000000000000004"/>
+                    </attributes>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
               </object>
               <packing>
                 <property name="position">1</property>
@@ -946,10 +1016,40 @@ If all of the requirements at least in a single row are satisfied, than the fund
               </packing>
             </child>
             <child type="tab">
-              <object class="GtkLabel">
-                <property name="visible">True</property>
+              <object class="GtkBox">
                 <property name="can-focus">False</property>
-                <property name="label" translatable="yes">Collections</property>
+                <property name="orientation">vertical</property>
+                <property name="spacing">6</property>
+                <child>
+                  <object class="GtkImage">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="pixel-size">32</property>
+                    <property name="icon-name">image-x-generic-symbolic</property>
+                    <property name="icon_size">3</property>
+                  </object>
+                  <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="label" translatable="yes">Collections</property>
+                    <attributes>
+                      <attribute name="variant" value="small-caps"/>
+                      <attribute name="scale" value="0.80000000000000004"/>
+                    </attributes>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
               </object>
               <packing>
                 <property name="position">2</property>
@@ -967,10 +1067,40 @@ If all of the requirements at least in a single row are satisfied, than the fund
               </packing>
             </child>
             <child type="tab">
-              <object class="GtkLabel">
-                <property name="visible">True</property>
+              <object class="GtkBox">
                 <property name="can-focus">False</property>
-                <property name="label" translatable="yes">Identities</property>
+                <property name="orientation">vertical</property>
+                <property name="spacing">6</property>
+                <child>
+                  <object class="GtkImage">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="pixel-size">32</property>
+                    <property name="icon-name">auth-fingerprint-symbolic</property>
+                    <property name="icon_size">3</property>
+                  </object>
+                  <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="label" translatable="yes">Ids</property>
+                    <attributes>
+                      <attribute name="variant" value="small-caps"/>
+                      <attribute name="scale" value="0.80000000000000004"/>
+                    </attributes>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
               </object>
               <packing>
                 <property name="position">3</property>
@@ -988,10 +1118,40 @@ If all of the requirements at least in a single row are satisfied, than the fund
               </packing>
             </child>
             <child type="tab">
-              <object class="GtkLabel">
-                <property name="visible">True</property>
+              <object class="GtkBox">
                 <property name="can-focus">False</property>
-                <property name="label" translatable="yes">Address book</property>
+                <property name="orientation">vertical</property>
+                <property name="spacing">6</property>
+                <child>
+                  <object class="GtkImage">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="pixel-size">32</property>
+                    <property name="icon-name">org.gnome.Contacts-symbolic</property>
+                    <property name="icon_size">3</property>
+                  </object>
+                  <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="label" translatable="yes">Contacts</property>
+                    <attributes>
+                      <attribute name="variant" value="small-caps"/>
+                      <attribute name="scale" value="0.80000000000000004"/>
+                    </attributes>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
               </object>
               <packing>
                 <property name="position">4</property>
@@ -1009,10 +1169,40 @@ If all of the requirements at least in a single row are satisfied, than the fund
               </packing>
             </child>
             <child type="tab">
-              <object class="GtkLabel">
-                <property name="visible">True</property>
+              <object class="GtkBox">
                 <property name="can-focus">False</property>
-                <property name="label" translatable="yes">Messages</property>
+                <property name="orientation">vertical</property>
+                <property name="spacing">6</property>
+                <child>
+                  <object class="GtkImage">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="pixel-size">32</property>
+                    <property name="icon-name">mail-unread-symbolic</property>
+                    <property name="icon_size">3</property>
+                  </object>
+                  <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="label" translatable="yes">Messages</property>
+                    <attributes>
+                      <attribute name="variant" value="small-caps"/>
+                      <attribute name="scale" value="0.80000000000000004"/>
+                    </attributes>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
               </object>
               <packing>
                 <property name="position">5</property>
@@ -2053,10 +2243,40 @@ If all of the requirements at least in a single row are satisfied, than the fund
               </packing>
             </child>
             <child type="tab">
-              <object class="GtkLabel">
-                <property name="visible">True</property>
+              <object class="GtkBox">
                 <property name="can-focus">False</property>
-                <property name="label" translatable="yes">Settings</property>
+                <property name="orientation">vertical</property>
+                <property name="spacing">6</property>
+                <child>
+                  <object class="GtkImage">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="pixel-size">32</property>
+                    <property name="icon-name">document-properties-symbolic</property>
+                    <property name="icon_size">3</property>
+                  </object>
+                  <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="label" translatable="yes">Settings</property>
+                    <attributes>
+                      <attribute name="variant" value="small-caps"/>
+                      <attribute name="scale" value="0.80000000000000004"/>
+                    </attributes>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
               </object>
               <packing>
                 <property name="position">6</property>
@@ -2072,7 +2292,7 @@ If all of the requirements at least in a single row are satisfied, than the fund
                 <property name="margin-start">6</property>
                 <property name="margin-end">6</property>
                 <property name="margin-top">6</property>
-                <property name="margin-bottom">6</property>
+                <property name="margin-bottom">24</property>
                 <property name="relief">none</property>
                 <property name="popup">menu</property>
                 <property name="use-popover">False</property>
@@ -2080,7 +2300,9 @@ If all of the requirements at least in a single row are satisfied, than the fund
                   <object class="GtkImage">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
+                    <property name="pixel-size">32</property>
                     <property name="icon-name">open-menu-symbolic</property>
+                    <property name="icon_size">3</property>
                   </object>
                 </child>
               </object>
@@ -2091,23 +2313,24 @@ If all of the requirements at least in a single row are satisfied, than the fund
             <child type="action-end">
               <object class="GtkButton" id="refresh_btn">
                 <property name="visible">True</property>
-                <property name="sensitive">False</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>
                 <property name="margin-start">6</property>
                 <property name="margin-end">6</property>
-                <property name="margin-top">6</property>
+                <property name="margin-top">24</property>
                 <property name="margin-bottom">6</property>
+                <property name="relief">none</property>
                 <child>
                   <object class="GtkBox">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
+                    <property name="halign">center</property>
                     <property name="spacing">6</property>
                     <child>
                       <object class="GtkSpinner" id="refresh_spin">
-                        <property name="visible">True</property>
+                        <property name="width-request">32</property>
+                        <property name="height-request">32</property>
                         <property name="can-focus">False</property>
-                        <property name="active">True</property>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -2117,25 +2340,16 @@ If all of the requirements at least in a single row are satisfied, than the fund
                     </child>
                     <child>
                       <object class="GtkImage" id="refresh_img">
+                        <property name="visible">True</property>
                         <property name="can-focus">False</property>
+                        <property name="pixel-size">32</property>
                         <property name="icon-name">emblem-synchronizing-symbolic</property>
+                        <property name="icon_size">3</property>
                       </object>
                       <packing>
                         <property name="expand">False</property>
                         <property name="fill">True</property>
                         <property name="position">1</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkLabel" id="refresh_lbl">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="label" translatable="yes">Refresh</property>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">2</property>
                       </packing>
                     </child>
                   </object>
