@@ -1,6 +1,6 @@
 [package]
 name = "mycitadel-desktop"
-version = "1.1.0"
+version = "1.2.0"
 authors = ["Dr Maxim Orlovsky <orlovsky@pandoraprime.ch>"]
 description = "Bitcoin, Lightning and RGB wallet; part of MyCitadel software suite."
 repository = "https://github.com/mycitadel/mycitadel-desktop"
@@ -62,4 +62,3 @@ serde = ["serde_with", "serde_yaml",
 
 [patch.crates-io]
 bpro = { git = "https://github.com/pandora-prime/bpro" }
-descriptor-wallet = { git = "https://github.com/BP-WG/descriptor-wallet", branch = "v0.9" }
