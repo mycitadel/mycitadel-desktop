@@ -441,6 +441,18 @@ impl SpendingModel {
     pub fn push_condition(&self, sc: &SpendingCondition) {
         let cond = Condition::default();
 
+        /* TODO: Transform into an exhaustive mapping:
+        match sc {
+            SpendingCondition::Sigs(sigs_req) => {
+                match sigs_req.sigs {
+                    SigsReq::All => {}
+                    SigsReq::AtLeast(_) => {}
+                    SigsReq::Specific(_) => {}
+                    SigsReq::Any => {}
+                }
+            }
+        };
+         */
         cond.set_property(
             "sigs-all",
             matches!(
