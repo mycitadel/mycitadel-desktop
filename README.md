@@ -38,7 +38,7 @@ provided by the Association.
 
 Taproot-enabled from day one, including multisig- and script-based taproot.
 
-## Airgaped, hardware and watch-only wallets
+## Air gapped, hardware and watch-only wallets
 
 ![](assets/screenshots/linux/signers.png)
 
