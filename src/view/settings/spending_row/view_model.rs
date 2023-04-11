@@ -63,21 +63,6 @@ impl Default for ConditionInner {
     }
 }
 
-impl From<&ConditionInner> for SigsReq {
-    fn from(inner: &ConditionInner) -> Self {
-        match (
-            *inner.sigs_all.borrow(),
-            *inner.sigs_at_least.borrow(),
-            *inner.sigs_any.borrow(),
-        ) {
-            (true, false, false) => SigsReq::All,
-            (_, true, false) => SigsReq::AtLeast(*inner.sigs_no.borrow() as u16),
-            (_, _, true) => SigsReq::Any,
-            _ => unreachable!("ConditionInner internal inconsistency in sig requirements"),
-        }
-    }
-}
-
 impl From<&ConditionInner> for TimelockReq {
     fn from(inner: &ConditionInner) -> Self {
         match (
@@ -351,7 +336,7 @@ impl From<&Condition> for SpendingCondition {
     fn from(condition: &Condition) -> Self {
         let condition = condition.imp().borrow();
         SpendingCondition::Sigs(TimelockedSigs {
-            sigs: SigsReq::from(condition),
+            sigs: condition.sigs_req(),
             timelock: TimelockReq::from(condition),
         })
     }
