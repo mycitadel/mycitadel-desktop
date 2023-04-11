@@ -14,18 +14,17 @@ use std::ffi::OsStr;
 use std::path::PathBuf;
 
 use ::wallet::descriptors::InputDescriptor;
-use ::wallet::locks::{LockTime, SeqNo};
 use ::wallet::psbt::Psbt;
-use ::wallet::scripts::PubkeyScript;
 use bitcoin::blockdata::constants::WITNESS_SCALE_FACTOR;
 use bitcoin::policy::DUST_RELAY_TX_FEE;
-use bitcoin::{EcdsaSighashType, Transaction, TxIn, TxOut};
+use bitcoin::{EcdsaSighashType, Sequence, Transaction, TxIn, TxOut};
+use bitcoin_blockchain::locks::{LockTime, SeqNo};
+use bitcoin_scripts::PubkeyScript;
 use bpro::psbt::McKeys;
 use bpro::{AddressSource, TxidMeta, Wallet};
 use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{ApplicationWindow, ResponseType};
-use miniscript::DescriptorTrait;
 use relm::{init, Channel, Relm, StreamHandle, Update, Widget};
 use wallet::hd::{SegmentIndexes, UnhardenedIndex};
 use wallet::lex_order::lex_order::LexOrder;
@@ -125,14 +124,14 @@ impl Component {
                 .map(|p| TxIn {
                     previous_output: p.outpoint,
                     script_sig: none!(),
-                    sequence: 0, // TODO: Support spending from CSV outputs
+                    sequence: Sequence(0), // TODO: Support spending from CSV outputs
                     witness: none!(),
                 })
                 .collect::<Vec<_>>();
 
             let tx = Transaction {
                 version: 1,
-                lock_time: lock_time.into_consensus(),
+                lock_time: bitcoin::LockTime::from_consensus(lock_time.into_consensus()).into(),
                 input: txins,
                 output: txouts.clone(),
             };
@@ -168,7 +167,7 @@ impl Component {
             None,
             wallet,
         )?;
-        psbt.fallback_locktime = Some(lock_time);
+        psbt.fallback_locktime = Some(LockTime::from_consensus(lock_time.into_consensus()));
         psbt.lex_order();
 
         for signer in self.model.as_settings().signers() {

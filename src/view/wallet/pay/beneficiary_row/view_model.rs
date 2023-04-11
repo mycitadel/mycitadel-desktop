@@ -14,11 +14,11 @@ use std::str::FromStr;
 
 use bitcoin::util::address;
 use bitcoin::Address;
+use bitcoin_scripts::address::AddressCompat;
 use glib::subclass::prelude::*;
 use gtk::prelude::*;
 use gtk::subclass::prelude::ListModelImpl;
 use gtk::{gio, glib};
-use wallet::scripts::address::AddressCompat;
 
 // The actual data structure that stores our values. This is not accessible
 // directly from the outside.

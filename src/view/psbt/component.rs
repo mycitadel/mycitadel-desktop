@@ -136,8 +136,8 @@ impl Component {
                 path
             }
         };
-        let file = fs::File::create(&path)?;
-        psbt.consensus_encode(file)?;
+        let mut file = fs::File::create(&path)?;
+        psbt.consensus_encode(&mut file)?;
         self.model.set_path(path);
         self.widgets.update_path(self.model.path().as_deref());
         Ok(true)
