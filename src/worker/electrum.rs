@@ -172,6 +172,7 @@ fn electrum_sync(
             let spk = wallet_settings
                 .script_pubkeys(change, offset..=(offset + 19))
                 .map_err(|err| electrum_client::Error::Message(err.to_string()))?;
+            eprintln!("{:#?}", spk);
             let batch = client
                 .batch_script_get_history(spk.values().map(PubkeyScript::as_inner))?
                 .into_iter()
