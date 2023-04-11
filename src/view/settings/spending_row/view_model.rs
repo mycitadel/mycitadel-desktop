@@ -20,6 +20,8 @@ use gtk::prelude::*;
 use gtk::subclass::prelude::ListModelImpl;
 use gtk::{gio, glib};
 
+use crate::view::settings::spending_row::{MAX_YEAR, MIN_YEAR};
+
 // The actual data structure that stores our values. This is not accessible
 // directly from the outside.
 #[derive(Debug)]
@@ -177,8 +179,8 @@ impl ObjectImpl for ConditionInner {
                     "after-year",
                     "AfterYear",
                     "AfterYear",
-                    2022,
-                    2222,
+                    MIN_YEAR,
+                    MAX_YEAR,
                     2025,
                     flag,
                 ),
