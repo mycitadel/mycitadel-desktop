@@ -25,7 +25,7 @@ dependencies = [
  "bitcoin_hashes",
  "curve25519-dalek",
  "half",
- "paste",
+ "paste 1.0.7",
  "secp256k1",
  "serde",
  "serde_with",
@@ -161,12 +161,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "904dfeac50f3cdaba28fc6f57fdcddb75f49ed61346676a78c4ffe55877802fd"
 
 [[package]]
-name = "base64"
-version = "0.21.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a4a4ddaa51a5bc52a6948f74c06d20aaaddb71924eab79b8c97a8c556e942d6a"
-
-[[package]]
 name = "bech32"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -178,7 +172,7 @@ version = "0.29.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0694ea59225b0c5f3cb405ff3f670e4828358ed26aec49dc352f730f0cb1a8a3"
 dependencies = [
- "base64 0.13.0",
+ "base64",
  "bech32",
  "bitcoin_hashes",
  "secp256k1",
@@ -214,24 +208,23 @@ checksum = "aae39db6b04c44c76c50b8f8dd09799adb71ae7807a1de2efe3d127169c04160"
 dependencies = [
  "amplify",
  "bitcoin",
- "miniscript",
  "secp256k1",
- "serde",
- "slip132",
+ "slip132 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "strict_encoding",
 ]
 
 [[package]]
-name = "bitcoin_hwi"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "92636376cbcac85d06e9bb24cb3a6691785f3b0d46d5cd2a4da6d41137c0ca63"
+name = "bitcoin_hd"
+version = "0.9.0"
+source = "git+https://github.com/BP-WG/descriptor-wallet?branch=v0.9#d279d13309306be6e8be51d06544eb57aa6a0000"
 dependencies = [
  "amplify",
- "base64 0.21.0",
  "bitcoin",
+ "miniscript",
+ "secp256k1",
  "serde",
- "serde_json",
+ "slip132 0.9.0 (git+https://github.com/BP-WG/descriptor-wallet?branch=v0.9)",
+ "strict_encoding",
 ]
 
 [[package]]
@@ -242,7 +235,19 @@ checksum = "5e4a6744365c862b8c74cb33a21532f91f1f32f4082361fd3aab5d22c1afd482"
 dependencies = [
  "amplify",
  "bitcoin",
- "bitcoin_hd",
+ "bitcoin_hd 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "chrono",
+ "strict_encoding",
+]
+
+[[package]]
+name = "bitcoin_onchain"
+version = "0.9.0"
+source = "git+https://github.com/BP-WG/descriptor-wallet?branch=v0.9#d279d13309306be6e8be51d06544eb57aa6a0000"
+dependencies = [
+ "amplify",
+ "bitcoin",
+ "bitcoin_hd 0.9.0 (git+https://github.com/BP-WG/descriptor-wallet?branch=v0.9)",
  "chrono",
  "descriptors",
  "electrum-client",
@@ -283,7 +288,7 @@ dependencies = [
  "bp-dbc",
  "bp-seals",
  "commit_verify",
- "psbt",
+ "psbt 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_with",
  "single_use_seals",
@@ -300,7 +305,7 @@ dependencies = [
  "bitcoin",
  "bitcoin_scripts",
  "commit_verify",
- "psbt",
+ "psbt 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "secp256k1",
  "serde",
  "serde_with",
@@ -315,7 +320,7 @@ checksum = "73bb2e2050af42af6c0ce1cd58b5e2f3b13d5105effc5a5dd1339551c4ed11ec"
 dependencies = [
  "amplify",
  "bitcoin",
- "bitcoin_onchain",
+ "bitcoin_onchain 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "bp-dbc",
  "commit_verify",
  "lnpbp_bech32",
@@ -328,7 +333,7 @@ dependencies = [
 [[package]]
 name = "bpro"
 version = "0.2.0"
-source = "git+https://github.com/pandora-prime/bpro#9cf25b65c3c37e91ba51796b0ae40b7d0f81070e"
+source = "git+https://github.com/pandora-prime/bpro#eeb54c396ab6d15a67a509ac54eb083cbe6ba9ea"
 dependencies = [
  "amplify",
  "bitcoin",
@@ -339,6 +344,7 @@ dependencies = [
  "commit_verify",
  "descriptor-wallet",
  "electrum-client",
+ "hwi",
  "lnpbp",
  "miniscript",
  "rgb-std",
@@ -629,34 +635,32 @@ dependencies = [
 [[package]]
 name = "descriptor-wallet"
 version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5d5dc9100428d2b492e0f50ce0261c856fcd80f4e998f513cdb5eed9ac5ed9d8"
+source = "git+https://github.com/BP-WG/descriptor-wallet?branch=v0.9#d279d13309306be6e8be51d06544eb57aa6a0000"
 dependencies = [
  "amplify",
  "bitcoin",
  "bitcoin_blockchain",
- "bitcoin_hd",
- "bitcoin_hwi",
- "bitcoin_onchain",
+ "bitcoin_hd 0.9.0 (git+https://github.com/BP-WG/descriptor-wallet?branch=v0.9)",
+ "bitcoin_onchain 0.9.0 (git+https://github.com/BP-WG/descriptor-wallet?branch=v0.9)",
  "bitcoin_scripts",
  "chrono",
  "descriptors",
  "electrum-client",
- "psbt",
- "slip132",
+ "hwi",
+ "psbt 0.9.0 (git+https://github.com/BP-WG/descriptor-wallet?branch=v0.9)",
+ "slip132 0.9.0 (git+https://github.com/BP-WG/descriptor-wallet?branch=v0.9)",
  "strict_encoding",
 ]
 
 [[package]]
 name = "descriptors"
 version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2882b380c1be2129610b934abbfbdfa8b2ba13d934c948f0922e8d33bfc78b08"
+source = "git+https://github.com/BP-WG/descriptor-wallet?branch=v0.9#d279d13309306be6e8be51d06544eb57aa6a0000"
 dependencies = [
  "amplify",
  "bitcoin",
  "bitcoin_blockchain",
- "bitcoin_hd",
+ "bitcoin_hd 0.9.0 (git+https://github.com/BP-WG/descriptor-wallet?branch=v0.9)",
  "bitcoin_scripts",
  "chrono",
  "miniscript",
@@ -1087,6 +1091,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 
 [[package]]
+name = "hwi"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "090b4f59024fc97ad60826e34669005302b8cd0c3c13701e0ab73082cfa909ea"
+dependencies = [
+ "base64",
+ "bitcoin",
+ "pyo3",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "iana-time-zone"
 version = "0.1.56"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1138,12 +1155,44 @@ dependencies = [
 ]
 
 [[package]]
+name = "indoc"
+version = "0.3.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "47741a8bc60fb26eb8d6e0238bbb26d8575ff623fdc97b1a2c00c050b9684ed8"
+dependencies = [
+ "indoc-impl",
+ "proc-macro-hack",
+]
+
+[[package]]
+name = "indoc-impl"
+version = "0.3.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ce046d161f000fffde5f432a0d034d0341dc152643b2598ed5bfce44c4f3a8f0"
+dependencies = [
+ "proc-macro-hack",
+ "proc-macro2",
+ "quote",
+ "syn",
+ "unindent",
+]
+
+[[package]]
 name = "inflate"
 version = "0.4.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1cdb29978cc5797bd8dcc8e5bf7de604891df2a8dc576973d71a281e916db2ff"
 dependencies = [
  "adler32",
+]
+
+[[package]]
+name = "instant"
+version = "0.1.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7a5bbe824c507c5da5956355e86a746d82e0e1464f65d862cc5e71da70e94b2c"
+dependencies = [
+ "cfg-if",
 ]
 
 [[package]]
@@ -1248,6 +1297,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "lock_api"
+version = "0.4.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "435011366fe56583b16cf956f9df0095b405b82d76425bc8981c0e22e60ec4df"
+dependencies = [
+ "autocfg",
+ "scopeguard",
+]
+
+[[package]]
 name = "log"
 version = "0.4.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1306,6 +1365,7 @@ dependencies = [
  "electrum-client",
  "gladis",
  "gtk",
+ "hwi",
  "miniscript",
  "once_cell",
  "relm",
@@ -1375,10 +1435,54 @@ dependencies = [
 ]
 
 [[package]]
+name = "parking_lot"
+version = "0.11.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7d17b78036a60663b797adeaee46f5c9dfebb86948d1255007a1d6be0271ff99"
+dependencies = [
+ "instant",
+ "lock_api",
+ "parking_lot_core",
+]
+
+[[package]]
+name = "parking_lot_core"
+version = "0.8.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "60a2cfe6f0ad2bfc16aefa463b497d5c7a5ecd44a23efa72aa342d90177356dc"
+dependencies = [
+ "cfg-if",
+ "instant",
+ "libc",
+ "redox_syscall",
+ "smallvec",
+ "winapi",
+]
+
+[[package]]
+name = "paste"
+version = "0.1.18"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "45ca20c77d80be666aef2b45486da86238fabe33e38306bd3118fe4af33fa880"
+dependencies = [
+ "paste-impl",
+ "proc-macro-hack",
+]
+
+[[package]]
 name = "paste"
 version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0c520e05135d6e763148b6426a837e239041653ba7becd2e538c076c738025fc"
+
+[[package]]
+name = "paste-impl"
+version = "0.1.18"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d95a7db200b97ef370c8e6de0088252f7e0dfff7d047a28528e47456c0fc98b6"
+dependencies = [
+ "proc-macro-hack",
+]
 
 [[package]]
 name = "percent-encoding"
@@ -1454,6 +1558,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "proc-macro-hack"
+version = "0.5.20+deprecated"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dc375e1527247fe1a97d8b7156678dfe7c1af2fc075c9a4db3690ecd2a148068"
+
+[[package]]
 name = "proc-macro2"
 version = "1.0.40"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1471,8 +1581,23 @@ dependencies = [
  "amplify",
  "bitcoin",
  "bitcoin_blockchain",
- "bitcoin_hd",
- "bitcoin_onchain",
+ "bitcoin_hd 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bitcoin_onchain 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bitcoin_scripts",
+ "commit_verify",
+ "strict_encoding",
+]
+
+[[package]]
+name = "psbt"
+version = "0.9.0"
+source = "git+https://github.com/BP-WG/descriptor-wallet?branch=v0.9#d279d13309306be6e8be51d06544eb57aa6a0000"
+dependencies = [
+ "amplify",
+ "bitcoin",
+ "bitcoin_blockchain",
+ "bitcoin_hd 0.9.0 (git+https://github.com/BP-WG/descriptor-wallet?branch=v0.9)",
+ "bitcoin_onchain 0.9.0 (git+https://github.com/BP-WG/descriptor-wallet?branch=v0.9)",
  "bitcoin_scripts",
  "commit_verify",
  "descriptors",
@@ -1480,6 +1605,54 @@ dependencies = [
  "serde",
  "serde_with",
  "strict_encoding",
+]
+
+[[package]]
+name = "pyo3"
+version = "0.15.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d41d50a7271e08c7c8a54cd24af5d62f73ee3a6f6a314215281ebdec421d5752"
+dependencies = [
+ "cfg-if",
+ "indoc",
+ "libc",
+ "parking_lot",
+ "paste 0.1.18",
+ "pyo3-build-config",
+ "pyo3-macros",
+ "unindent",
+]
+
+[[package]]
+name = "pyo3-build-config"
+version = "0.15.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "779239fc40b8e18bc8416d3a37d280ca9b9fb04bda54b98037bb6748595c2410"
+dependencies = [
+ "once_cell",
+]
+
+[[package]]
+name = "pyo3-macros"
+version = "0.15.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "00b247e8c664be87998d8628e86f282c25066165f1f8dda66100c48202fdb93a"
+dependencies = [
+ "pyo3-macros-backend",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "pyo3-macros-backend"
+version = "0.15.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5a8c2812c412e00e641d99eeb79dd478317d981d938aa60325dfa7157b607095"
+dependencies = [
+ "proc-macro2",
+ "pyo3-build-config",
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -1528,6 +1701,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d34f1408f55294453790c48b2f1ebbb1c5b4b7563eb1f418bcfcfdbb06ebb4e7"
 dependencies = [
  "getrandom 0.2.7",
+]
+
+[[package]]
+name = "redox_syscall"
+version = "0.2.16"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fb5a58c1855b4b6819d59012155603f0b22ad30cad752600aadfcb695265519a"
+dependencies = [
+ "bitflags",
 ]
 
 [[package]]
@@ -1644,6 +1826,12 @@ name = "ryu"
 version = "1.0.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f3f6f92acf49d1b98f7a81226834412ada05458b7364277387724a237f062695"
+
+[[package]]
+name = "scopeguard"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d29ab0c6d3fc0ee92fe66e2d99f700eab17a8d57d1c1d3b748380fb20baa78cd"
 
 [[package]]
 name = "scratch"
@@ -1812,6 +2000,15 @@ checksum = "41a2947cb179006a73896fca01015ee5255c05b8b83e74c5e9d623ed4480abe2"
 dependencies = [
  "amplify",
  "bitcoin",
+]
+
+[[package]]
+name = "slip132"
+version = "0.9.0"
+source = "git+https://github.com/BP-WG/descriptor-wallet?branch=v0.9#d279d13309306be6e8be51d06544eb57aa6a0000"
+dependencies = [
+ "amplify",
+ "bitcoin",
  "serde",
  "serde_with",
  "strict_encoding",
@@ -1887,7 +2084,7 @@ version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ff63080f492dd4d289ffcaed8d7ece38adfb423db910eb342c0e04d409536a7a"
 dependencies = [
- "paste",
+ "paste 1.0.7",
  "serde_str_helpers",
 ]
 
@@ -2037,6 +2234,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c0edd1e5b14653f783770bce4a4dabb4a5108a5370a5f5d8cfe8710c361f6c8b"
 
 [[package]]
+name = "unindent"
+version = "0.1.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e1766d682d402817b5ac4490b3c3002d91dfa0d22812f341609f97b08757359c"
+
+[[package]]
 name = "unsafe-libyaml"
 version = "0.2.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2054,7 +2257,7 @@ version = "2.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9399fa2f927a3d327187cbd201480cee55bee6ac5d3c77dd27f0c6814cff16d5"
 dependencies = [
- "base64 0.13.0",
+ "base64",
  "chunked_transfer",
  "flate2",
  "log",

@@ -43,6 +43,7 @@ bitcoin_scripts = "0.9.0"
 bitcoin_blockchain = "0.9.0"
 descriptor-wallet = { version = "0.9.0", features = ["miniscript", "keygen", "hwi", "construct"] }
 bpro = "0.2.0"
+hwi = "0.6.0"
 electrum-client = "0.12.1"
 
 clap = { version = "~3.2.23", features = ["derive"], optional = true }
@@ -61,3 +62,4 @@ serde = ["serde_with", "serde_yaml",
 
 [patch.crates-io]
 bpro = { git = "https://github.com/pandora-prime/bpro" }
+descriptor-wallet = { git = "https://github.com/BP-WG/descriptor-wallet", branch = "v0.9" }

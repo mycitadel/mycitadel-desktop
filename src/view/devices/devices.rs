@@ -6,9 +6,10 @@ use gladis::Gladis;
 use glib::subclass::prelude::*;
 use gtk::prelude::*;
 use gtk::{glib, Button, Dialog, ListBox, MessageDialog};
+use hwi::types::HWIChain;
+use hwi::HWIClient;
 use relm::{Channel, Relm, Sender, Update, Widget};
 use wallet::hd::{Bip43, DerivationStandard, HardenedIndex, SegmentIndexes};
-use wallet::hwi;
 use wallet::onchain::PublicNetwork;
 
 use super::device_row::{DeviceModel, RowWidgets};
@@ -115,8 +116,15 @@ impl Update for Component {
                 let testnet = self.model.network.is_testnet();
                 let sender = self.sender.clone();
                 let hwi = self.model.hwi[&fingerprint].device.clone();
+                let chain = match self.model.network {
+                    PublicNetwork::Mainnet => HWIChain::Main,
+                    PublicNetwork::Testnet => HWIChain::Test,
+                    PublicNetwork::Signet => HWIChain::Signet,
+                };
                 std::thread::spawn(move || {
-                    let msg = match hwi.get_xpub(&derivation, testnet) {
+                    let msg = match HWIClient::get_client(&hwi, false, chain)
+                        .and_then(|client| client.get_xpub(&derivation, testnet))
+                    {
                         Ok(xpub) => Msg::Xpub(fingerprint, xpub.xpub.to_string()),
                         Err(err) => Msg::XpubErr(fingerprint, err),
                     };
