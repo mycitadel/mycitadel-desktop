@@ -438,7 +438,6 @@ impl Widgets {
 
     pub fn update_network(&self) {
         let network = self.network();
-        self.devices_btn.set_sensitive(!network.is_testnet());
         self.devices_btn.set_tooltip_text(if network.is_testnet() {
             Some("Hardware signers can be only used on mainnet")
         } else {
