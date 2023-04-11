@@ -36,18 +36,18 @@ chrono = "0.4.19"
 urlencoding = "2.1.0"
 ureq = { version = "2.4.0", features = ["json"] }
 
-amplify = "3.12.1"
-bitcoin = "0.28.1"
-miniscript = "7.0.0"
-descriptor-wallet = { version = "0.8.2", features = ["miniscript", "keygen", "hwi"] }
-bpro = "0.1.0"
-electrum-client = "0.10.1"
+amplify = "3.13.0"
+bitcoin = "0.29.2"
+miniscript = "9.0.1"
+descriptor-wallet = { version = "0.9.0", features = ["miniscript", "keygen", "hwi"] }
+bpro = "0.2.0"
+electrum-client = "0.12.1"
 
-clap = { version = "~3.1.18", features = ["derive"], optional = true }
+clap = { version = "~3.2.23", features = ["derive"], optional = true }
 serde_crate = { package = "serde", version = "1" }
-serde_with = { version = "1.13", optional = true }
+serde_with = { version = "1.14", optional = true }
 serde_json = { version = "1.0.79" }
-serde_yaml = { version = "0.8.23", optional = true }
+serde_yaml = { version = "0.9", optional = true }
 colored = { version = "2", optional = true }
 
 [features]
@@ -56,3 +56,6 @@ ui = []
 cli = ["clap", "serde", "colored"]
 serde = ["serde_with", "serde_yaml",
          "amplify/serde", "chrono/serde", "bitcoin/serde", "miniscript/serde", "descriptor-wallet/serde"]
+
+[patch.crates-io]
+bpro = { git = "https://github.com/pandora-prime/bpro" }
