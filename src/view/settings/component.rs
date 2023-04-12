@@ -265,11 +265,15 @@ impl Update for Component {
                     self.close();
                     return;
                 }
+                self.devices
+                    .emit(devices::Msg::SetNetwork(self.model.network));
                 self.widgets.reset_ui(&self.model);
             }
             Msg::Duplicate(settings, path) => {
                 self.model
                     .replace_from_settings(self.model.stream(), settings, path, true);
+                self.devices
+                    .emit(devices::Msg::SetNetwork(self.model.network));
                 self.widgets.reset_ui(&self.model);
             }
             Msg::View(settings, path) => {
