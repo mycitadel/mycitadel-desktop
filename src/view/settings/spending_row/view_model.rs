@@ -74,12 +74,16 @@ impl From<&ConditionInner> for TimelockReq {
         ) {
             (true, false, false) => TimelockReq::Anytime,
             (_, true, false) => {
-                let date = NaiveDate::from_ymd(
+                let date = NaiveDate::from_ymd_opt(
                     *inner.after_year.borrow() as i32,
                     *inner.after_month.borrow(),
                     *inner.after_day.borrow(),
-                );
-                TimelockReq::AfterDate(DateTime::from_utc(date.and_hms(0, 0, 0), Utc))
+                )
+                .expect("invalid date");
+                TimelockReq::AfterDate(DateTime::from_utc(
+                    date.and_hms_opt(0, 0, 0).expect("hardcoded time"),
+                    Utc,
+                ))
             }
             (_, _, true) => {
                 let offset = *inner.period_span.borrow();
