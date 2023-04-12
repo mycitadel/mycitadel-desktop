@@ -328,7 +328,8 @@ dependencies = [
 [[package]]
 name = "bpro"
 version = "0.2.0"
-source = "git+https://github.com/pandora-prime/bpro#576ce6bc4de67ac66f21fd6f2f575fa135938357"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5afe3e44ee9064bc8d6029fa72eca84afe5a15b692e2e2ced6dfd39ddbce790b"
 dependencies = [
  "amplify",
  "bitcoin",
