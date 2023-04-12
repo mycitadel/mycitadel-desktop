@@ -22,8 +22,8 @@ path = "src/bin/mycitadel.rs"
 required-features = ["ui"]
 
 [[bin]]
-name = "mc-tx"
-path = "src/bin/mc-tx.rs"
+name = "mcw"
+path = "src/bin/mcw.rs"
 required-features = ["cli"]
 
 [dependencies]
