@@ -22,9 +22,6 @@ extern crate relm;
 extern crate relm_derive;
 #[cfg(feature = "serde")]
 extern crate serde_crate as serde;
-#[cfg(feature = "serde")]
-#[macro_use]
-extern crate serde_with;
 
 pub mod model;
 #[cfg(feature = "ui")]
