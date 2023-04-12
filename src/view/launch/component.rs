@@ -13,15 +13,16 @@ use std::ffi::OsStr;
 use std::fs;
 use std::path::PathBuf;
 
+use ::wallet::onchain::PublicNetwork;
 use ::wallet::psbt::Psbt;
 use bitcoin::consensus::Decodable;
 use bitcoin::psbt::PartiallySignedTransaction;
+use bpro::{FileDocument, Wallet};
 use gladis::Gladis;
 use gtk::{ApplicationWindow, ResponseType};
 use relm::{init, Relm, StreamHandle, Update, Widget};
 
 use super::{Msg, ViewModel, Widgets};
-use crate::model::{FileDocument, PublicNetwork, Wallet};
 use crate::view::launch::Page;
 use crate::view::{about, error_dlg, file_create_dlg, file_open_dlg, psbt, settings, wallet};
 
@@ -73,7 +74,7 @@ impl Component {
     }
 
     fn open_psbt(&mut self, path: PathBuf, network: Option<PublicNetwork>) -> bool {
-        let file = match fs::File::open(&path) {
+        let mut file = match fs::File::open(&path) {
             Ok(file) => file,
             Err(err) => {
                 error_dlg(
@@ -85,7 +86,7 @@ impl Component {
                 return false;
             }
         };
-        let psbt = match PartiallySignedTransaction::consensus_decode(&file) {
+        let psbt = match PartiallySignedTransaction::consensus_decode(&mut file) {
             Ok(psbt) => psbt.into(),
             Err(err) => {
                 error_dlg(

@@ -12,10 +12,10 @@
 use std::ffi::OsStr;
 use std::path::{self, Path};
 
-use ::wallet::address::AddressFormat;
 use ::wallet::psbt::Psbt;
 use bitcoin::blockdata::constants::WITNESS_SCALE_FACTOR;
 use bitcoin::Address;
+use bitcoin_scripts::address::AddressFormat;
 use gladis::Gladis;
 use gtk::gdk_pixbuf::Pixbuf;
 use gtk::prelude::*;
@@ -25,9 +25,9 @@ use gtk::{
 };
 use miniscript::{Legacy, Miniscript, Segwitv0};
 use relm::Relm;
+use wallet::onchain::PublicNetwork;
 
 use super::{Msg, ViewModel};
-use crate::model::PublicNetwork;
 use crate::view::launch::Page;
 use crate::view::psbt::sign_row;
 use crate::view::psbt::sign_row::SigningModel;
@@ -87,7 +87,7 @@ impl Widgets {
 
     pub fn update_ui(&self, model: &ViewModel) {
         let psbt: &Psbt = model.psbt();
-        let tx = psbt.clone().into_transaction();
+        let tx = psbt.to_unsigned_tx();
 
         self.update_path(model.path().as_deref());
 
@@ -326,7 +326,7 @@ impl Widgets {
             let address_str = address
                 .as_ref()
                 .map(Address::to_string)
-                .unwrap_or_else(|| output.script.to_string());
+                .unwrap_or_else(|_| output.script.to_string());
             let address_type = address
                 .map(AddressFormat::from)
                 .as_ref()

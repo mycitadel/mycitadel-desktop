@@ -12,13 +12,11 @@
 use std::collections::BTreeSet;
 use std::path::PathBuf;
 
+use bpro::{file, DescriptorError, ElectrumServer, FileDocument, Signer, Wallet, WalletSettings};
+use wallet::descriptors::DescriptorClass;
 use wallet::hd::UnhardenedIndex;
 
 use super::pay::beneficiary_row::BeneficiaryModel;
-use crate::model::{
-    file, DescriptorClass, DescriptorError, ElectrumServer, FileDocument, Signer, Wallet,
-    WalletSettings,
-};
 use crate::worker::exchange::{Exchange, Fiat};
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]

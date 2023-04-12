@@ -14,11 +14,11 @@ mod widget;
 
 use std::path::PathBuf;
 
+use bpro::WalletSettings;
 pub use component::Component;
+use wallet::onchain::PublicNetwork;
 use wallet::psbt::Psbt;
 pub(self) use widget::Widgets;
-
-use crate::model::{PublicNetwork, WalletSettings};
 
 pub struct ViewModel {}
 

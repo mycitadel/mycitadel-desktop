@@ -14,3 +14,6 @@ mod widget;
 
 pub use view_model::{Condition, SpendingModel};
 pub use widget::RowWidgets;
+
+pub(self) const MIN_YEAR: u32 = 2023;
+pub(self) const MAX_YEAR: u32 = 2223;

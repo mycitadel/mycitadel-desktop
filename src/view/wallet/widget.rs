@@ -12,6 +12,7 @@
 use std::collections::BTreeSet;
 use std::ffi::OsStr;
 
+use bpro::{AddressSummary, ElectrumSec, ElectrumServer, HistoryEntry, UtxoTxid, WalletState};
 use chrono::{DateTime, NaiveDateTime, Utc};
 use electrum_client::HeaderNotification;
 use gladis::Gladis;
@@ -25,14 +26,17 @@ use relm::Relm;
 use wallet::hd::SegmentIndexes;
 
 use super::{pay, ElectrumState, Msg, ViewModel};
-use crate::model::{
-    AddressSummary, ElectrumSec, ElectrumServer, HistoryEntry, UtxoTxid, WalletState,
-};
+use crate::model::UI as UIColorTrait;
 use crate::view::{launch, APP_ICON, APP_ICON_TOOL};
 use crate::worker::exchange::{Exchange, Fiat};
 
-impl ElectrumSec {
-    pub fn icon_name(self) -> &'static str {
+trait UI {
+    fn icon_name(self) -> &'static str;
+    fn tooltip(self) -> &'static str;
+}
+
+impl UI for ElectrumSec {
+    fn icon_name(self) -> &'static str {
         match self {
             ElectrumSec::Tor => "security-high-symbolic",
             ElectrumSec::Tls => "security-medium-symbolic",
@@ -40,7 +44,7 @@ impl ElectrumSec {
         }
     }
 
-    pub fn tooltip(self) -> &'static str {
+    fn tooltip(self) -> &'static str {
         match self {
             ElectrumSec::Tor => "high security and privacy connection using Tor",
             ElectrumSec::Tls => "medium security connection using SSL/TLS",
@@ -311,7 +315,7 @@ impl Widgets {
 
     pub fn update_last_block(&mut self, last_block: &HeaderNotification) {
         let ts = last_block.header.time;
-        let naive = NaiveDateTime::from_timestamp(ts as i64, 0);
+        let naive = NaiveDateTime::from_timestamp_opt(ts as i64, 0).expect("invalid block time");
         let dt = DateTime::<chrono::Local>::from(DateTime::<Utc>::from_utc(naive, Utc));
         let time = dt.time();
         self.lastblock_lbl

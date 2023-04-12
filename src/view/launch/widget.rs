@@ -12,6 +12,7 @@
 use std::borrow::Cow;
 use std::path::PathBuf;
 
+use bpro::{Requirement, WalletTemplate};
 use gladis::Gladis;
 use gtk::gdk_pixbuf::Pixbuf;
 use gtk::prelude::*;
@@ -19,9 +20,10 @@ use gtk::{
     Adjustment, ApplicationWindow, Button, Image, ListBox, Notebook, RecentChooserWidget, Switch,
 };
 use relm::Relm;
+use wallet::descriptors::DescriptorClass;
+use wallet::onchain::PublicNetwork;
 
 use super::{Msg, Page};
-use crate::model::{DescriptorClass, PublicNetwork, Requirement, WalletTemplate};
 use crate::view::{APP_ICON, APP_ICON_TOOL};
 
 #[derive(Clone, Gladis)]

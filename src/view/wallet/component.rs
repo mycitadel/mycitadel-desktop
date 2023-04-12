@@ -14,17 +14,17 @@ use std::ffi::OsStr;
 use std::path::PathBuf;
 
 use ::wallet::descriptors::InputDescriptor;
-use ::wallet::locks::{LockTime, SeqNo};
-use ::wallet::psbt::{Construct, Psbt};
-use ::wallet::scripts::PubkeyScript;
+use ::wallet::psbt::Psbt;
 use bitcoin::blockdata::constants::WITNESS_SCALE_FACTOR;
 use bitcoin::policy::DUST_RELAY_TX_FEE;
-use bitcoin::secp256k1::SECP256K1;
-use bitcoin::{EcdsaSighashType, Transaction, TxIn, TxOut};
+use bitcoin::{EcdsaSighashType, Sequence, Transaction, TxIn, TxOut};
+use bitcoin_blockchain::locks::{LockTime, SeqNo};
+use bitcoin_scripts::PubkeyScript;
+use bpro::psbt::McKeys;
+use bpro::{AddressSource, TxidMeta, Wallet};
 use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{ApplicationWindow, ResponseType};
-use miniscript::DescriptorTrait;
 use relm::{init, Channel, Relm, StreamHandle, Update, Widget};
 use wallet::hd::{SegmentIndexes, UnhardenedIndex};
 use wallet::lex_order::lex_order::LexOrder;
@@ -32,10 +32,7 @@ use wallet::lex_order::lex_order::LexOrder;
 use super::pay::beneficiary_row::Beneficiary;
 use super::pay::FeeRate;
 use super::{pay, ElectrumState, Msg, ViewModel, Widgets};
-use crate::model::psbt::McKeys;
-use crate::model::{AddressSource, Wallet};
 use crate::view::{error_dlg, launch, settings, NotificationBoxExt};
-use crate::worker::electrum::TxidMeta;
 use crate::worker::{electrum, exchange, ElectrumWorker, ExchangeWorker};
 
 pub struct Component {
@@ -106,7 +103,7 @@ impl Component {
 
         // TODO: Support constructing PSBTs from multiple descriptors (at descriptor-wallet lib)
         let (descriptor, _) = self.model.as_settings().descriptors_all()?;
-        let lock_time = LockTime::with_height(734438).expect("hardcoded height");
+        let lock_time = LockTime::from_height(734438).expect("hardcoded height");
         let change_index = wallet.next_change_index();
 
         let fee_rate = self.model.fee_rate();
@@ -127,14 +124,14 @@ impl Component {
                 .map(|p| TxIn {
                     previous_output: p.outpoint,
                     script_sig: none!(),
-                    sequence: 0, // TODO: Support spending from CSV outputs
+                    sequence: Sequence(0), // TODO: Support spending from CSV outputs
                     witness: none!(),
                 })
                 .collect::<Vec<_>>();
 
             let tx = Transaction {
                 version: 1,
-                lock_time: lock_time.as_u32(),
+                lock_time: bitcoin::LockTime::from_consensus(lock_time.into_consensus()).into(),
                 input: txins,
                 output: txouts.clone(),
             };
@@ -151,7 +148,7 @@ impl Component {
             .map(|prevout| InputDescriptor {
                 outpoint: prevout.outpoint,
                 terminal: prevout.terminal(),
-                seq_no: SeqNo::new_rbf(), // TODO: Support spending from CSV outputs
+                seq_no: SeqNo::rbf(), // TODO: Support spending from CSV outputs
                 tweak: None,
                 sighash_type: EcdsaSighashType::All, // TODO: Support more sighashes in the UI
             })
@@ -162,15 +159,15 @@ impl Component {
             .collect::<Vec<_>>();
 
         let mut psbt = Psbt::construct(
-            &SECP256K1,
             &descriptor,
-            lock_time,
             &inputs,
             &outputs,
             change_index,
             fee as u64,
+            None,
             wallet,
         )?;
+        psbt.fallback_locktime = Some(LockTime::from_consensus(lock_time.into_consensus()));
         psbt.lex_order();
 
         for signer in self.model.as_settings().signers() {

@@ -13,14 +13,15 @@ use std::str::FromStr;
 
 use bitcoin::secp256k1::Secp256k1;
 use bitcoin::util::bip32::{ExtendedPrivKey, Fingerprint};
+use bpro::XprivSigner;
 use gladis::Gladis;
 use gtk::{MessageDialog, ResponseType};
 use relm::{Relm, Sender, Update, Widget};
+use wallet::onchain::PublicNetwork;
 use wallet::psbt::sign::SignAll;
 use wallet::psbt::Psbt;
 
 use super::{Msg, ViewModel, Widgets};
-use crate::model::{PublicNetwork, XprivSigner};
 use crate::view::psbt;
 
 pub struct Component {

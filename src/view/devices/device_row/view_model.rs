@@ -15,13 +15,12 @@ use std::str::FromStr;
 use bitcoin::secp256k1::PublicKey;
 use bitcoin::util::bip32::{ChainCode, ChildNumber, ExtendedPubKey, Fingerprint};
 use bitcoin::{secp256k1, Network};
+use bpro::HardwareList;
 use glib::subclass::prelude::*;
 use gtk::prelude::*;
 use gtk::subclass::prelude::ListModelImpl;
 use gtk::{gio, glib};
 use wallet::hd::SegmentIndexes;
-
-use crate::model::HardwareList;
 
 // The actual data structure that stores our values. This is not accessible
 // directly from the outside.

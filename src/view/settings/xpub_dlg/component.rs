@@ -11,13 +11,13 @@
 
 use std::str::FromStr;
 
+use bpro::DerivationType;
 use gladis::Gladis;
 use gtk::{MessageDialog, ResponseType};
 use relm::{Relm, Sender, Update, Widget};
-use wallet::hd::DerivationStandard;
+use wallet::hd::{DerivationStandard, XpubDescriptor, XpubParseError, XpubRequirementError};
 
 use super::{Msg, ViewModel, Widgets};
-use crate::model::{DerivationType, XpubDescriptor, XpubParseError, XpubRequirementError};
 use crate::view::settings;
 
 pub struct Component {

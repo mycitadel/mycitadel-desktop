@@ -14,12 +14,12 @@ use std::path::PathBuf;
 
 use bitcoin::util::bip32::{ChildNumber, Fingerprint};
 use bitcoin::Transaction;
+use bpro::psbt::McKeys;
 use miniscript::ToPublicKey;
+use wallet::onchain::PublicNetwork;
 use wallet::psbt::Psbt;
 
 use super::sign_row::SigningModel;
-use crate::model::psbt::McKeys;
-use crate::model::PublicNetwork;
 use crate::view::psbt::sign_row::Signing;
 
 #[derive(Debug)]

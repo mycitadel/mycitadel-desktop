@@ -16,12 +16,13 @@ mod widget;
 
 use std::collections::BTreeSet;
 
+use bpro::{ElectrumSec, ElectrumServer, Signer};
 use relm::StreamHandle;
 pub(super) use view_model::ViewModel;
+use wallet::descriptors::DescriptorClass;
 pub(self) use widget::Widgets;
 
 pub use self::component::Component;
-use crate::model::{DescriptorClass, ElectrumSec, ElectrumServer, Signer};
 use crate::view::launch;
 use crate::worker::exchange::Fiat;
 use crate::worker::{electrum, exchange};

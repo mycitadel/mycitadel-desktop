@@ -14,6 +14,10 @@ use std::ffi::OsStr;
 use std::str::FromStr;
 
 use bitcoin::util::bip32::ExtendedPubKey;
+use bpro::{
+    DerivationStandardExt, DerivationType, ElectrumPreset, ElectrumSec, OriginFormat, Ownership,
+    Requirement, Signer, WalletTemplate,
+};
 use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{
@@ -23,14 +27,12 @@ use gtk::{
 };
 use miniscript::Descriptor;
 use relm::{Relm, Sender};
-use wallet::hd::{Bip43, DerivationStandard, HardenedIndex, SegmentIndexes, TrackingAccount};
+use wallet::descriptors::DescriptorClass;
+use wallet::hd::{Bip43, DerivationAccount, DerivationStandard, HardenedIndex, SegmentIndexes};
+use wallet::onchain::PublicNetwork;
 
 use super::spending_row::SpendingModel;
 use super::{spending_row, ElectrumModel, Msg, ViewModel};
-use crate::model::{
-    DerivationStandardExt, DerivationType, DescriptorClass, ElectrumPreset, ElectrumSec,
-    OriginFormat, Ownership, PublicNetwork, Requirement, Signer, WalletTemplate,
-};
 use crate::view::NotificationBoxExt;
 
 // Create the structure that holds the widgets used in the view.
@@ -436,7 +438,6 @@ impl Widgets {
 
     pub fn update_network(&self) {
         let network = self.network();
-        self.devices_btn.set_sensitive(!network.is_testnet());
         self.devices_btn.set_tooltip_text(if network.is_testnet() {
             Some("Hardware signers can be only used on mainnet")
         } else {
@@ -585,7 +586,7 @@ impl Widgets {
 
     pub fn update_signer_details(
         &self,
-        details: Option<(&Signer, TrackingAccount)>,
+        details: Option<(&Signer, DerivationAccount)>,
         network: PublicNetwork,
         standard: Bip43,
     ) {
@@ -686,7 +687,7 @@ impl Widgets {
         }
     }
 
-    pub fn update_signer_derivation(&self, derivation: &TrackingAccount) {
+    pub fn update_signer_derivation(&self, derivation: &DerivationAccount) {
         self.derivation_fld.set_text(&derivation.to_string());
     }
 
@@ -741,7 +742,7 @@ impl Widgets {
 
     pub fn update_descriptor(
         &mut self,
-        descriptor: Option<&Descriptor<TrackingAccount>>,
+        descriptor: Option<&Descriptor<DerivationAccount>>,
         format: bool,
     ) {
         let text = match (descriptor, format) {

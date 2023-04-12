@@ -17,17 +17,16 @@ pub(self) mod xpub_dlg;
 
 use std::path::PathBuf;
 
+use ::wallet::descriptors::DescriptorClass;
+use ::wallet::onchain::PublicNetwork;
 use bitcoin::util::bip32::{ExtendedPubKey, Fingerprint};
+use bpro::{ElectrumPreset, ElectrumSec, HardwareDevice, WalletSettings, WalletTemplate};
 pub use component::Component;
 use gtk::ResponseType;
 use relm::StreamHandle;
 pub(self) use view_model::{ElectrumModel, ViewModel};
 pub(self) use widget::Widgets;
 
-use crate::model::{
-    DescriptorClass, ElectrumPreset, ElectrumSec, HardwareDevice, PublicNetwork, WalletSettings,
-    WalletTemplate,
-};
 use crate::view::{launch, wallet};
 
 #[derive(Msg)]
