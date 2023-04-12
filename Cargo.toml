@@ -27,24 +27,24 @@ path = "src/bin/mc-tx.rs"
 required-features = ["cli"]
 
 [dependencies]
-gtk = "0.15.4"
+gtk = "0.15.5"
 relm = "0.23.0"
 relm-derive = "0.23.0"
-gladis = "2.0.0"
+gladis = "2.1.2"
 once_cell = "1.10.0"
 chrono = "0.4.19"
 urlencoding = "2.1.0"
 ureq = { version = "2.4.0", features = ["json"] }
 
-amplify = "3.13.0"
+amplify = "3.14.2"
 bitcoin = "0.29.2"
 miniscript = "9.0.1"
 bitcoin_scripts = "0.9.0"
 bitcoin_blockchain = "0.9.0"
 descriptor-wallet = { version = "0.9.0", features = ["miniscript", "keygen", "hwi", "construct"] }
-bpro = "0.2.0"
+bpro = "0.2.1"
 hwi = "0.6.0"
-electrum-client = "0.12.1"
+electrum-client = "0.13.0"
 
 clap = { version = "~3.2.23", features = ["derive"], optional = true }
 serde_crate = { package = "serde", version = "1" }

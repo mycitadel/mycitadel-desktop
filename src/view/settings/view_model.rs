@@ -339,7 +339,6 @@ impl ViewModel {
         eprint!("Testing connection to {} ... ", url);
         let config = electrum_client::ConfigBuilder::new()
             .timeout(Some(5))
-            .expect("we do not use socks here")
             .build();
         std::thread::spawn(move || {
             match ElectrumClient::from_config(&url, config).and_then(|client| client.ping()) {

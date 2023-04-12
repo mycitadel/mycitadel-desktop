@@ -123,7 +123,6 @@ impl ElectrumWorker {
 pub fn electrum_connect(url: &str) -> Result<ElectrumClient, electrum_client::Error> {
     let config = electrum_client::ConfigBuilder::new()
         .timeout(Some(5))
-        .expect("we do not use socks here")
         .build();
     ElectrumClient::from_config(url, config)
 }
