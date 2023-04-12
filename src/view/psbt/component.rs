@@ -19,7 +19,7 @@ use electrum_client::ElectrumApi;
 use gladis::Gladis;
 use gtk::prelude::ListModelExt;
 use gtk::{ApplicationWindow, MessageType};
-use hwi::types::{HWIChain, HWIDevice, HWIDeviceType};
+use hwi::types::HWIChain;
 use hwi::HWIClient;
 use miniscript::psbt::PsbtExt;
 use relm::{init, Cast, Channel, Relm, Sender, StreamHandle, Update, Widget};
@@ -62,14 +62,6 @@ impl Component {
         let signer = self.signer_for_index(signer_index);
         let name = signer.name();
         let master_fp = signer.master_fp();
-        let device = HWIDevice {
-            device_type: HWIDeviceType::Other(s!("")),
-            model: s!(""),
-            path: s!(""),
-            needs_pin_sent: false,
-            needs_passphrase_sent: false,
-            fingerprint: master_fp,
-        };
 
         self.widgets
             .show_sign(&format!("Signing with device {} [{}]", name, master_fp));
@@ -82,7 +74,21 @@ impl Component {
             PublicNetwork::Signet => HWIChain::Signet,
         };
         thread::spawn(move || {
-            match HWIClient::get_client(&device, false, chain)
+            let device = match HWIClient::enumerate().ok().and_then(|devices| {
+                devices
+                    .into_iter()
+                    .filter_map(|d| d.ok())
+                    .find(|d| d.fingerprint == master_fp)
+            }) {
+                None => {
+                    sender
+                        .send(SignMsg::Failed(name, master_fp, s!("device is not found")))
+                        .expect("channel is broken");
+                    return;
+                }
+                Some(device) => device,
+            };
+            match HWIClient::get_client(&device, true, chain)
                 .and_then(|client| client.sign_tx(&psbt).map(|resp| resp.psbt))
             {
                 Err(err) => sender.send(SignMsg::Failed(name, master_fp, err.to_string())),
