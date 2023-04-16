@@ -355,7 +355,11 @@ impl Update for Component {
             Msg::SignerOriginUpdate => {
                 let terminal = self.model.terminal_derivation();
                 if let Some(ref mut signer) = self.model.active_signer {
-                    match DerivationPath::from_str(&self.widgets.signer_origin()) {
+                    let orig = self.widgets.signer_origin();
+                    match DerivationPath::from_str(&orig) {
+                        _ if orig == "m" || orig == "m/" => {
+                            signer.origin = DerivationPath::master();
+                        }
                         Err(err) => {
                             return self
                                 .widgets

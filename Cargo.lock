@@ -168,7 +168,7 @@ dependencies = [
 [[package]]
 name = "bitcoin_hd"
 version = "0.10.0-alpha.2"
-source = "git+https://github.com/BP-WG/descriptor-wallet#834eab6e0473ab23f9a751182a3d13f4ae330d46"
+source = "git+https://github.com/BP-WG/descriptor-wallet#bb346754a87f95c93374b8057cc92cdd5abbafea"
 dependencies = [
  "amplify",
  "bitcoin",
@@ -182,7 +182,7 @@ dependencies = [
 [[package]]
 name = "bitcoin_onchain"
 version = "0.10.0-alpha.2"
-source = "git+https://github.com/BP-WG/descriptor-wallet#834eab6e0473ab23f9a751182a3d13f4ae330d46"
+source = "git+https://github.com/BP-WG/descriptor-wallet#bb346754a87f95c93374b8057cc92cdd5abbafea"
 dependencies = [
  "amplify",
  "bitcoin",
@@ -511,7 +511,7 @@ dependencies = [
 [[package]]
 name = "descriptor-wallet"
 version = "0.10.0-alpha.2"
-source = "git+https://github.com/BP-WG/descriptor-wallet#834eab6e0473ab23f9a751182a3d13f4ae330d46"
+source = "git+https://github.com/BP-WG/descriptor-wallet#bb346754a87f95c93374b8057cc92cdd5abbafea"
 dependencies = [
  "amplify",
  "bitcoin",
@@ -531,7 +531,7 @@ dependencies = [
 [[package]]
 name = "descriptors"
 version = "0.10.0-alpha.2"
-source = "git+https://github.com/BP-WG/descriptor-wallet#834eab6e0473ab23f9a751182a3d13f4ae330d46"
+source = "git+https://github.com/BP-WG/descriptor-wallet#bb346754a87f95c93374b8057cc92cdd5abbafea"
 dependencies = [
  "amplify",
  "bitcoin",
@@ -1408,7 +1408,7 @@ dependencies = [
 [[package]]
 name = "psbt"
 version = "0.10.0-alpha.2"
-source = "git+https://github.com/BP-WG/descriptor-wallet#834eab6e0473ab23f9a751182a3d13f4ae330d46"
+source = "git+https://github.com/BP-WG/descriptor-wallet#bb346754a87f95c93374b8057cc92cdd5abbafea"
 dependencies = [
  "amplify",
  "bitcoin",
@@ -1764,7 +1764,7 @@ dependencies = [
 [[package]]
 name = "slip132"
 version = "0.10.0-alpha.2"
-source = "git+https://github.com/BP-WG/descriptor-wallet#834eab6e0473ab23f9a751182a3d13f4ae330d46"
+source = "git+https://github.com/BP-WG/descriptor-wallet#bb346754a87f95c93374b8057cc92cdd5abbafea"
 dependencies = [
  "amplify",
  "bitcoin",

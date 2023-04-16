@@ -631,7 +631,9 @@ impl Widgets {
             gtk::prelude::ComboBoxTextExt::remove(&self.path_cmb, 2);
             self.path_cmb.append(
                 Some("purpose"),
-                &standard.account_template_string(network.into()),
+                standard
+                    .account_template_string(network.into())
+                    .trim_end_matches("*h/"),
             );
 
             self.account_stp.set_visible(true);
