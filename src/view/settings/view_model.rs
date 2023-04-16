@@ -150,7 +150,7 @@ impl ViewModel {
             template: None,
             descriptor_classes: bset![DescriptorClass::SegwitV0],
             support_multiclass: false,
-            export_lnpbp: true,
+            export_lnpbp: false,
             new_wallet: true,
         }
     }

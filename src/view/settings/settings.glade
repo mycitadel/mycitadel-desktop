@@ -1006,7 +1006,7 @@ Feature of limited compatibility which can be used only if all signewrs are usin
                             <property name="can-focus">True</property>
                             <property name="receives-default">False</property>
                             <property name="draw-indicator">False</property>
-                            <property name="group">export_lnpbp_tgl</property>
+                            <property name="active">True</property>
                           </object>
                           <packing>
                             <property name="expand">True</property>
@@ -1024,8 +1024,8 @@ Feature of limited compatibility which can be used only if all signewrs are usin
                             <property name="tooltip-text" translatable="yes">Multi-descriptor wallets allow using multiple forms of addresses, for instance SegWit, Legacy and Taproot.
 
 However, they are not supported by other wallets. Wallets of this type can be usable only if all other multisig participants are using MyCitadel.</property>
-                            <property name="active">True</property>
                             <property name="draw-indicator">False</property>
+                            <property name="group">export_core_tgl</property>
                           </object>
                           <packing>
                             <property name="expand">True</property>
