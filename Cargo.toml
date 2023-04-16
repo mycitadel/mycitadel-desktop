@@ -1,6 +1,6 @@
 [package]
 name = "mycitadel-desktop"
-version = "1.2.0"
+version = "1.3.0"
 authors = ["Dr Maxim Orlovsky <orlovsky@pandoraprime.ch>"]
 description = "Bitcoin, Lightning and RGB wallet; part of MyCitadel software suite."
 repository = "https://github.com/mycitadel/mycitadel-desktop"
@@ -39,12 +39,12 @@ ureq = { version = "2.4.0", features = ["json"] }
 amplify = "3.14.2"
 bitcoin = "0.29.2"
 miniscript = "9.0.1"
-bitcoin_scripts = "0.9.0"
-bitcoin_blockchain = "0.9.0"
-descriptor-wallet = { version = "0.9.0", features = ["miniscript", "keygen", "hwi", "construct"] }
-bpro = "0.2.1"
+bitcoin_scripts = "0.10.0-alpha.2"
+bitcoin_blockchain = "0.10.0-alpha.2"
+descriptor-wallet = { version = "0.10.0-alpha.2", features = ["miniscript", "keygen", "hwi", "construct"] }
+bpro = "0.3.0"
 hwi = "0.6.0"
-electrum-client = "0.13.0"
+electrum-client = "0.14.0"
 
 clap = { version = "~3.2.23", features = ["derive"], optional = true }
 serde_crate = { package = "serde", version = "1" }
@@ -59,3 +59,9 @@ ui = []
 cli = ["clap", "serde", "colored"]
 serde = ["serde_with", "serde_yaml",
          "amplify/serde", "chrono/serde", "bitcoin/serde", "miniscript/serde", "descriptor-wallet/serde"]
+
+[patch.crates-io]
+bitcoin_scripts = { git = "https://github.com/BP-WG/bp-foundation" }
+bitcoin_blockchain = { git = "https://github.com/BP-WG/bp-foundation" }
+descriptor-wallet = { git = "https://github.com/BP-WG/descriptor-wallet" }
+bpro = { git = "https://github.com/pandora-prime/bpro" }

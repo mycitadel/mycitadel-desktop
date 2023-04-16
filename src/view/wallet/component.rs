@@ -164,7 +164,6 @@ impl Component {
             &outputs,
             change_index,
             fee as u64,
-            None,
             wallet,
         )?;
         psbt.fallback_locktime = Some(LockTime::from_consensus(lock_time.into_consensus()));
