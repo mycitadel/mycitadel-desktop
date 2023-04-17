@@ -20,6 +20,8 @@ use gtk::prelude::*;
 use gtk::subclass::prelude::ListModelImpl;
 use gtk::{gio, glib};
 
+use crate::view::settings::spending_row::{MAX_YEAR, MIN_YEAR};
+
 // The actual data structure that stores our values. This is not accessible
 // directly from the outside.
 #[derive(Debug)]
@@ -63,21 +65,6 @@ impl Default for ConditionInner {
     }
 }
 
-impl From<&ConditionInner> for SigsReq {
-    fn from(inner: &ConditionInner) -> Self {
-        match (
-            *inner.sigs_all.borrow(),
-            *inner.sigs_at_least.borrow(),
-            *inner.sigs_any.borrow(),
-        ) {
-            (true, false, false) => SigsReq::All,
-            (_, true, false) => SigsReq::AtLeast(*inner.sigs_no.borrow() as u16),
-            (_, _, true) => SigsReq::Any,
-            _ => unreachable!("ConditionInner internal inconsistency in sig requirements"),
-        }
-    }
-}
-
 impl From<&ConditionInner> for TimelockReq {
     fn from(inner: &ConditionInner) -> Self {
         match (
@@ -87,12 +74,16 @@ impl From<&ConditionInner> for TimelockReq {
         ) {
             (true, false, false) => TimelockReq::Anytime,
             (_, true, false) => {
-                let date = NaiveDate::from_ymd(
+                let date = NaiveDate::from_ymd_opt(
                     *inner.after_year.borrow() as i32,
                     *inner.after_month.borrow(),
                     *inner.after_day.borrow(),
-                );
-                TimelockReq::AfterDate(DateTime::from_utc(date.and_hms(0, 0, 0), Utc))
+                )
+                .expect("invalid date");
+                TimelockReq::AfterDate(DateTime::from_utc(
+                    date.and_hms_opt(0, 0, 0).expect("hardcoded time"),
+                    Utc,
+                ))
             }
             (_, _, true) => {
                 let offset = *inner.period_span.borrow();
@@ -192,8 +183,8 @@ impl ObjectImpl for ConditionInner {
                     "after-year",
                     "AfterYear",
                     "AfterYear",
-                    2022,
-                    2222,
+                    MIN_YEAR,
+                    MAX_YEAR,
                     2025,
                     flag,
                 ),
@@ -351,7 +342,7 @@ impl From<&Condition> for SpendingCondition {
     fn from(condition: &Condition) -> Self {
         let condition = condition.imp().borrow();
         SpendingCondition::Sigs(TimelockedSigs {
-            sigs: SigsReq::from(condition),
+            sigs: condition.sigs_req(),
             timelock: TimelockReq::from(condition),
         })
     }
@@ -456,6 +447,18 @@ impl SpendingModel {
     pub fn push_condition(&self, sc: &SpendingCondition) {
         let cond = Condition::default();
 
+        /* TODO: Transform into an exhaustive mapping:
+        match sc {
+            SpendingCondition::Sigs(sigs_req) => {
+                match sigs_req.sigs {
+                    SigsReq::All => {}
+                    SigsReq::AtLeast(_) => {}
+                    SigsReq::Specific(_) => {}
+                    SigsReq::Any => {}
+                }
+            }
+        };
+         */
         cond.set_property(
             "sigs-all",
             matches!(

@@ -438,7 +438,6 @@ impl Widgets {
 
     pub fn update_network(&self) {
         let network = self.network();
-        self.devices_btn.set_sensitive(!network.is_testnet());
         self.devices_btn.set_tooltip_text(if network.is_testnet() {
             Some("Hardware signers can be only used on mainnet")
         } else {
@@ -632,7 +631,9 @@ impl Widgets {
             gtk::prelude::ComboBoxTextExt::remove(&self.path_cmb, 2);
             self.path_cmb.append(
                 Some("purpose"),
-                &standard.account_template_string(network.into()),
+                standard
+                    .account_template_string(network.into())
+                    .trim_end_matches("*h/"),
             );
 
             self.account_stp.set_visible(true);

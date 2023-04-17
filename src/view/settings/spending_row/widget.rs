@@ -19,6 +19,7 @@ use gtk::{
 use relm::Sender;
 
 use super::Condition;
+use crate::view::settings::spending_row::{MAX_YEAR, MIN_YEAR};
 
 #[derive(Clone, Gladis)]
 pub struct RowWidgets {
@@ -122,7 +123,9 @@ impl RowWidgets {
             .connect_day_selected_double_click(move |cal| {
                 c.set_property("after-day", cal.day() as u32);
                 c.set_property("after-month", cal.month() as u32 + 1);
-                c.set_property("after-year", cal.year() as u32);
+                if (MIN_YEAR..MAX_YEAR).contains(&(cal.year() as u32)) {
+                    c.set_property("after-year", cal.year() as u32);
+                }
                 row_widgets.calendar_popover.hide();
             });
 

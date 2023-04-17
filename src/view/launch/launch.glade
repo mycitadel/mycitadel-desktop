@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.38.2 -->
+<!-- Generated with glade 3.40.0 -->
 <interface>
   <requires lib="gtk+" version="3.24"/>
   <object class="GtkAdjustment" id="hwcount_adj">
     <property name="lower">2</property>
-    <property name="upper">5</property>
+    <property name="upper">15</property>
     <property name="value">2</property>
     <property name="step-increment">1</property>
-    <property name="page-increment">10</property>
+    <property name="page-increment">2</property>
   </object>
   <object class="GtkRecentFilter" id="recentfilter">
     <patterns>
@@ -21,7 +21,6 @@
     <property name="can-focus">False</property>
     <property name="window-position">center</property>
     <property name="default-height">250</property>
-    <property name="icon"></property>
     <child>
       <object class="GtkNotebook" id="pages">
         <property name="height-request">250</property>
@@ -46,7 +45,6 @@
                   <object class="GtkSwitch" id="taproot_swch">
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
-                    <property name="active">False</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -71,7 +69,6 @@
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="margin-start">13</property>
-                    <property name="active">False</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>

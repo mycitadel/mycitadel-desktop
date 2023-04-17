@@ -17,11 +17,11 @@ use std::{io, thread};
 
 use amplify::Wrapper;
 use bitcoin::Transaction;
+use bitcoin_scripts::PubkeyScript;
 use bpro::{AddressSource, ElectrumServer, TxidMeta, UtxoTxid, WalletSettings};
 use electrum_client::{Client as ElectrumClient, ElectrumApi, HeaderNotification};
 use relm::Sender;
 use wallet::hd::{SegmentIndexes, UnhardenedIndex};
-use wallet::scripts::PubkeyScript;
 
 enum Cmd {
     Sync,
@@ -123,7 +123,6 @@ impl ElectrumWorker {
 pub fn electrum_connect(url: &str) -> Result<ElectrumClient, electrum_client::Error> {
     let config = electrum_client::ConfigBuilder::new()
         .timeout(Some(5))
-        .expect("we do not use socks here")
         .build();
     ElectrumClient::from_config(url, config)
 }

@@ -74,7 +74,7 @@ impl Component {
     }
 
     fn open_psbt(&mut self, path: PathBuf, network: Option<PublicNetwork>) -> bool {
-        let file = match fs::File::open(&path) {
+        let mut file = match fs::File::open(&path) {
             Ok(file) => file,
             Err(err) => {
                 error_dlg(
@@ -86,7 +86,7 @@ impl Component {
                 return false;
             }
         };
-        let psbt = match PartiallySignedTransaction::consensus_decode(&file) {
+        let psbt = match PartiallySignedTransaction::consensus_decode(&mut file) {
             Ok(psbt) => psbt.into(),
             Err(err) => {
                 error_dlg(

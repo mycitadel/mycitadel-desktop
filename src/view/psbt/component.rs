@@ -9,7 +9,6 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
-use std::str::FromStr;
 use std::{fs, io, thread};
 
 use bitcoin::consensus::Encodable;
@@ -20,9 +19,11 @@ use electrum_client::ElectrumApi;
 use gladis::Gladis;
 use gtk::prelude::ListModelExt;
 use gtk::{ApplicationWindow, MessageType};
+use hwi::types::HWIChain;
+use hwi::HWIClient;
 use miniscript::psbt::PsbtExt;
 use relm::{init, Cast, Channel, Relm, Sender, StreamHandle, Update, Widget};
-use wallet::hwi::HWIDevice;
+use wallet::onchain::PublicNetwork;
 
 use super::sign_row::Signing;
 use super::{xpriv_dlg, ModelParam, Msg, SignMsg, ViewModel, Widgets};
@@ -61,27 +62,35 @@ impl Component {
         let signer = self.signer_for_index(signer_index);
         let name = signer.name();
         let master_fp = signer.master_fp();
-        let device = HWIDevice {
-            device_type: s!(""),
-            model: s!(""),
-            path: s!(""),
-            needs_pin_sent: false,
-            needs_passphrase_sent: false,
-            fingerprint: master_fp,
-        };
 
         self.widgets
             .show_sign(&format!("Signing with device {} [{}]", name, master_fp));
 
         let psbt = self.model.psbt().clone().into();
         let sender = self.signer_sender.clone();
+        let chain = match self.model.network() {
+            PublicNetwork::Mainnet => HWIChain::Main,
+            PublicNetwork::Testnet => HWIChain::Test,
+            PublicNetwork::Signet => HWIChain::Signet,
+        };
         thread::spawn(move || {
-            match device
-                .sign_tx(&psbt, false)
-                .map_err(|e| e.to_string())
-                .and_then(|resp| {
-                    PartiallySignedTransaction::from_str(&resp.psbt).map_err(|e| e.to_string())
-                }) {
+            let device = match HWIClient::enumerate().ok().and_then(|devices| {
+                devices
+                    .into_iter()
+                    .filter_map(|d| d.ok())
+                    .find(|d| d.fingerprint == master_fp)
+            }) {
+                None => {
+                    sender
+                        .send(SignMsg::Failed(name, master_fp, s!("device is not found")))
+                        .expect("channel is broken");
+                    return;
+                }
+                Some(device) => device,
+            };
+            match HWIClient::get_client(&device, true, chain)
+                .and_then(|client| client.sign_tx(&psbt).map(|resp| resp.psbt))
+            {
                 Err(err) => sender.send(SignMsg::Failed(name, master_fp, err.to_string())),
                 Ok(psbt) => sender.send(SignMsg::Signed(psbt.into())),
             }
@@ -136,8 +145,8 @@ impl Component {
                 path
             }
         };
-        let file = fs::File::create(&path)?;
-        psbt.consensus_encode(file)?;
+        let mut file = fs::File::create(&path)?;
+        psbt.consensus_encode(&mut file)?;
         self.model.set_path(path);
         self.widgets.update_path(self.model.path().as_deref());
         Ok(true)

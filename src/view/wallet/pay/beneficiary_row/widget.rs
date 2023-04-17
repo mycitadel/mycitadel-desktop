@@ -11,9 +11,9 @@
 
 use std::str::FromStr;
 
-use ::wallet::address::AddressCompat;
 use ::wallet::onchain::PublicNetwork;
 use bitcoin::Address;
+use bitcoin_scripts::address::AddressCompat;
 use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{glib, Entry, ListBoxRow};

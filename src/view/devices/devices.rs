@@ -6,9 +6,10 @@ use gladis::Gladis;
 use glib::subclass::prelude::*;
 use gtk::prelude::*;
 use gtk::{glib, Button, Dialog, ListBox, MessageDialog};
+use hwi::types::HWIChain;
+use hwi::HWIClient;
 use relm::{Channel, Relm, Sender, Update, Widget};
 use wallet::hd::{Bip43, DerivationStandard, HardenedIndex, SegmentIndexes};
-use wallet::hwi;
 use wallet::onchain::PublicNetwork;
 
 use super::device_row::{DeviceModel, RowWidgets};
@@ -27,6 +28,7 @@ pub struct ViewModel {
 pub enum Msg {
     Show(Bip43),
     Refresh,
+    SetNetwork(PublicNetwork),
     Devices(Result<(HardwareList, Vec<Error>), Error>),
     AccountChange(Fingerprint, u32),
     Xpub(Fingerprint, String),
@@ -77,7 +79,22 @@ impl Update for Component {
                 self.widgets.dialog.show();
                 self.widgets.refresh_btn.emit_clicked();
             }
-            Msg::Refresh => self.widgets.refresh_dlg.show(),
+            Msg::Refresh => {
+                self.widgets.refresh_dlg.show();
+                let scheme = self.model.scheme;
+                let network = self.model.network;
+                let sender = self.sender.clone();
+                std::thread::spawn(move || {
+                    let result = HardwareList::enumerate(&scheme, network, HardenedIndex::zero());
+                    sender
+                        .send(Msg::Devices(result))
+                        .expect("broken channel in devices dialog");
+                });
+            }
+            Msg::SetNetwork(network) => {
+                self.model.network = network;
+                eprintln!("Applied {} network", self.model.network);
+            }
             Msg::Devices(result) => {
                 self.widgets.refresh_dlg.hide();
                 self.model.hwi = match result {
@@ -115,8 +132,15 @@ impl Update for Component {
                 let testnet = self.model.network.is_testnet();
                 let sender = self.sender.clone();
                 let hwi = self.model.hwi[&fingerprint].device.clone();
+                let chain = match self.model.network {
+                    PublicNetwork::Mainnet => HWIChain::Main,
+                    PublicNetwork::Testnet => HWIChain::Test,
+                    PublicNetwork::Signet => HWIChain::Signet,
+                };
                 std::thread::spawn(move || {
-                    let msg = match hwi.get_xpub(&derivation, testnet) {
+                    let msg = match HWIClient::get_client(&hwi, false, chain)
+                        .and_then(|client| client.get_xpub(&derivation, testnet))
+                    {
                         Ok(xpub) => Msg::Xpub(fingerprint, xpub.xpub.to_string()),
                         Err(err) => Msg::XpubErr(fingerprint, err),
                     };
@@ -184,22 +208,11 @@ impl Widget for Component {
         let (_channel, sender) = Channel::new(move |msg| {
             stream.emit(msg);
         });
-        let scheme = model.scheme.clone();
         let sender2 = sender.clone();
         widgets.refresh_btn.connect_clicked(move |_| {
             sender2
                 .send(Msg::Refresh)
                 .expect("broken channel in devices dialog");
-            // TODO: This fixes the schema used in the wallet once and forever
-            let scheme = scheme.clone();
-            let sender = sender2.clone();
-            // TODO: move enumeration into Refresh event processing
-            std::thread::spawn(move || {
-                let result = HardwareList::enumerate(&scheme, model.network, HardenedIndex::zero());
-                sender
-                    .send(Msg::Devices(result))
-                    .expect("broken channel in devices dialog");
-            });
         });
 
         widgets.error_dlg.connect_close(|dlg| dlg.hide());

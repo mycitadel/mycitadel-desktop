@@ -17,9 +17,9 @@ extern crate amplify;
 use std::fs;
 use std::path::PathBuf;
 
+use bpro::{file, FileDocument, Wallet};
 use clap::Parser;
 use colored::Colorize;
-use mycitadel::model::{file, FileDocument, Wallet};
 
 /// Command-line arguments
 #[derive(Parser)]

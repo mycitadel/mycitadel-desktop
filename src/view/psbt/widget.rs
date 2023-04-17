@@ -12,10 +12,10 @@
 use std::ffi::OsStr;
 use std::path::{self, Path};
 
-use ::wallet::address::AddressFormat;
 use ::wallet::psbt::Psbt;
 use bitcoin::blockdata::constants::WITNESS_SCALE_FACTOR;
 use bitcoin::Address;
+use bitcoin_scripts::address::AddressFormat;
 use gladis::Gladis;
 use gtk::gdk_pixbuf::Pixbuf;
 use gtk::prelude::*;
@@ -326,7 +326,7 @@ impl Widgets {
             let address_str = address
                 .as_ref()
                 .map(Address::to_string)
-                .unwrap_or_else(|| output.script.to_string());
+                .unwrap_or_else(|_| output.script.to_string());
             let address_type = address
                 .map(AddressFormat::from)
                 .as_ref()
