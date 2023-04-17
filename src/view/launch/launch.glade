@@ -91,9 +91,9 @@
                 <child>
                   <object class="GtkSwitch" id="rgb_swch">
                     <property name="visible">True</property>
-                    <property name="sensitive">False</property>
+                    <property name="sensitive">True</property>
                     <property name="can-focus">True</property>
-                    <property name="tooltip-text" translatable="yes">RGB support will be shipped soon</property>
+                    <property name="tooltip-text" translatable="yes">Wallet should support RGB smart contracts</property>
                     <property name="margin-start">13</property>
                   </object>
                   <packing>
@@ -105,9 +105,8 @@
                 <child>
                   <object class="GtkLabel">
                     <property name="visible">True</property>
-                    <property name="sensitive">False</property>
                     <property name="can-focus">False</property>
-                    <property name="tooltip-text" translatable="yes">RGB support will be shipped soon</property>
+                    <property name="tooltip-text" translatable="yes">Wallet should support RGB smart contracts</property>
                     <property name="label" translatable="yes">Use RGB</property>
                   </object>
                   <packing>
@@ -129,7 +128,7 @@
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <child>
-                  <object class="GtkListBoxRow">
+                  <object class="GtkListBoxRow" id="watchonly_row">
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="selectable">False</property>
@@ -194,7 +193,7 @@
                   </object>
                 </child>
                 <child>
-                  <object class="GtkListBoxRow">
+                  <object class="GtkListBoxRow" id="singlesig_row">
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="selectable">False</property>
@@ -263,7 +262,7 @@
                   </object>
                 </child>
                 <child>
-                  <object class="GtkListBoxRow">
+                  <object class="GtkListBoxRow" id="hodling_row">
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="selectable">False</property>
@@ -332,7 +331,7 @@
                   </object>
                 </child>
                 <child>
-                  <object class="GtkListBoxRow">
+                  <object class="GtkListBoxRow" id="multisig_row">
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="selectable">False</property>
@@ -437,7 +436,7 @@
                   </object>
                 </child>
                 <child>
-                  <object class="GtkListBoxRow">
+                  <object class="GtkListBoxRow" id="company_row">
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="selectable">False</property>
@@ -506,7 +505,7 @@
                   </object>
                 </child>
                 <child>
-                  <object class="GtkListBoxRow">
+                  <object class="GtkListBoxRow" id="custom_row">
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="selectable">False</property>
@@ -575,7 +574,7 @@
                   </object>
                 </child>
                 <child>
-                  <object class="GtkListBoxRow">
+                  <object class="GtkListBoxRow" id="lightning_row">
                     <property name="visible">True</property>
                     <property name="sensitive">False</property>
                     <property name="can-focus">False</property>

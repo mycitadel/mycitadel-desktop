@@ -17,7 +17,8 @@ use gladis::Gladis;
 use gtk::gdk_pixbuf::Pixbuf;
 use gtk::prelude::*;
 use gtk::{
-    Adjustment, ApplicationWindow, Button, Image, ListBox, Notebook, RecentChooserWidget, Switch,
+    Adjustment, ApplicationWindow, Button, Image, ListBox, ListBoxRow, Notebook,
+    RecentChooserWidget, Switch,
 };
 use relm::Relm;
 use wallet::descriptors::DescriptorClass;
@@ -36,7 +37,16 @@ pub struct Widgets {
     taproot_swch: Switch,
     testnet_swch: Switch,
     rgb_swch: Switch,
+
     create_box: ListBox,
+    watchonly_row: ListBoxRow,
+    singlesig_row: ListBoxRow,
+    hodling_row: ListBoxRow,
+    multisig_row: ListBoxRow,
+    company_row: ListBoxRow,
+    custom_row: ListBoxRow,
+    lightning_row: ListBoxRow,
+
     import_box: ListBox,
     open_box: ListBox,
     recent: RecentChooserWidget,
@@ -64,6 +74,7 @@ impl Widgets {
     }
 
     fn is_taproot(&self) -> bool { self.taproot_swch.is_active() }
+    fn is_rgb(&self) -> bool { self.rgb_swch.is_active() }
 
     fn network(&self) -> PublicNetwork {
         match self.testnet_swch.is_active() {
@@ -80,8 +91,16 @@ impl Widgets {
         };
         let network = self.network();
         match index {
-            0 => WalletTemplate::singlesig(class, network, false),
-            1 => WalletTemplate::singlesig(class, network, true),
+            0 if self.is_rgb() => {
+                debug_assert!(self.is_taproot());
+                WalletTemplate::taproot_singlesig_rgb(network, false)
+            }
+            1 if self.is_rgb() => {
+                debug_assert!(self.is_taproot());
+                WalletTemplate::taproot_singlesig_rgb(network, true)
+            }
+            0 => WalletTemplate::singlesig(class, network, false, false),
+            1 => WalletTemplate::singlesig(class, network, true, false),
             2 => WalletTemplate::hodling(class, network, 4, Requirement::Allow, Requirement::Allow),
             3 => {
                 let count = self.hwcount_adj.value() as u16;
@@ -135,6 +154,18 @@ impl Widgets {
             connect_row_activated(_, _),
             Msg::Import
         );
+        connect!(
+            relm,
+            self.rgb_swch,
+            connect_changed_active(_),
+            Msg::ToggleRgb
+        );
+        connect!(
+            relm,
+            self.taproot_swch,
+            connect_changed_active(_),
+            Msg::ToggleTaproot
+        );
         connect!(relm, self.open_box, connect_row_activated(_, row), {
             if row.index() == 0 {
                 Msg::Wallet
@@ -149,5 +180,22 @@ impl Widgets {
             connect_delete_event(_, _),
             return (Some(Msg::Close), Inhibit(true))
         );
+    }
+
+    pub fn update_rgb(&self) {
+        let rgb = self.is_rgb();
+        if rgb {
+            self.taproot_swch.set_active(true);
+        }
+        self.hodling_row.set_sensitive(!rgb);
+        self.multisig_row.set_sensitive(!rgb);
+        self.company_row.set_sensitive(!rgb);
+        self.custom_row.set_sensitive(!rgb);
+    }
+
+    pub fn update_taproot(&self) {
+        if !self.is_taproot() {
+            self.rgb_swch.set_active(false);
+        }
     }
 }

@@ -339,7 +339,7 @@ dependencies = [
 [[package]]
 name = "bitcoin_hd"
 version = "0.10.0-alpha.2"
-source = "git+https://github.com/BP-WG/descriptor-wallet#bb346754a87f95c93374b8057cc92cdd5abbafea"
+source = "git+https://github.com/BP-WG/descriptor-wallet#40649972e596ba7649064e32638e471435c250c0"
 dependencies = [
  "amplify 3.14.2",
  "bitcoin 0.29.2",
@@ -353,14 +353,13 @@ dependencies = [
 [[package]]
 name = "bitcoin_onchain"
 version = "0.10.0-alpha.2"
-source = "git+https://github.com/BP-WG/descriptor-wallet#bb346754a87f95c93374b8057cc92cdd5abbafea"
+source = "git+https://github.com/BP-WG/descriptor-wallet#40649972e596ba7649064e32638e471435c250c0"
 dependencies = [
  "amplify 3.14.2",
  "bitcoin 0.29.2",
  "bitcoin_hd",
  "chrono",
  "descriptors",
- "electrum-client 0.13.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "miniscript",
  "serde",
  "strict_encoding 0.9.0",
@@ -472,23 +471,20 @@ dependencies = [
 
 [[package]]
 name = "bpro"
-version = "0.3.0"
-source = "git+https://github.com/pandora-prime/bpro#951197222c4aa2a28c5dd3c04601f6c77e359ced"
+version = "0.4.0"
+source = "git+https://github.com/pandora-prime/bpro?branch=v0.4#b1f306594f8ea5c4c201f03ed9f4773b75c83712"
 dependencies = [
  "amplify 3.14.2",
  "bitcoin 0.29.2",
  "bitcoin_scripts",
  "chrono",
- "clap",
  "descriptor-wallet",
  "electrum-client 0.14.0",
  "hwi",
  "lnpbp",
  "miniscript",
  "serde",
- "serde_json",
- "serde_with 1.14.0",
- "serde_yaml",
+ "serde_with 2.3.2",
  "strict_encoding 0.9.0",
 ]
 
@@ -800,7 +796,7 @@ dependencies = [
 [[package]]
 name = "descriptor-wallet"
 version = "0.10.0-alpha.2"
-source = "git+https://github.com/BP-WG/descriptor-wallet#bb346754a87f95c93374b8057cc92cdd5abbafea"
+source = "git+https://github.com/BP-WG/descriptor-wallet#40649972e596ba7649064e32638e471435c250c0"
 dependencies = [
  "amplify 3.14.2",
  "bitcoin 0.29.2",
@@ -810,7 +806,6 @@ dependencies = [
  "bitcoin_scripts",
  "chrono",
  "descriptors",
- "electrum-client 0.13.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "hwi",
  "psbt",
  "slip132",
@@ -820,7 +815,7 @@ dependencies = [
 [[package]]
 name = "descriptors"
 version = "0.10.0-alpha.2"
-source = "git+https://github.com/BP-WG/descriptor-wallet#bb346754a87f95c93374b8057cc92cdd5abbafea"
+source = "git+https://github.com/BP-WG/descriptor-wallet#40649972e596ba7649064e32638e471435c250c0"
 dependencies = [
  "amplify 3.14.2",
  "bitcoin 0.29.2",
@@ -843,24 +838,6 @@ dependencies = [
  "block-buffer",
  "crypto-common",
  "subtle",
-]
-
-[[package]]
-name = "electrum-client"
-version = "0.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "43224a43201a58034759d2682c603607d98ea0ff459a8d3622e0616b2badcd5c"
-dependencies = [
- "bitcoin 0.29.2",
- "byteorder",
- "libc",
- "log",
- "rustls",
- "serde",
- "serde_json",
- "webpki",
- "webpki-roots",
- "winapi",
 ]
 
 [[package]]
@@ -1854,7 +1831,7 @@ dependencies = [
 [[package]]
 name = "psbt"
 version = "0.10.0-alpha.2"
-source = "git+https://github.com/BP-WG/descriptor-wallet#bb346754a87f95c93374b8057cc92cdd5abbafea"
+source = "git+https://github.com/BP-WG/descriptor-wallet#40649972e596ba7649064e32638e471435c250c0"
 dependencies = [
  "amplify 3.14.2",
  "bitcoin 0.29.2",
@@ -2013,14 +1990,14 @@ dependencies = [
 [[package]]
 name = "rgb-contracts"
 version = "0.10.0"
-source = "git+https://github.com/RGB-WG/rgb#9ee91bc6ce13f0be5bb87664101f1cf6ab5efbe5"
+source = "git+https://github.com/RGB-WG/rgb#9abe06d8cb6dc602e08171a3ee89c126259f3089"
 dependencies = [
  "amplify 4.0.0",
  "baid58",
  "bitcoin 0.30.0",
  "bp-core",
  "commit_verify",
- "electrum-client 0.13.0 (git+https://github.com/RCasatta/rust-electrum-client?branch=bitcoin_0_30)",
+ "electrum-client 0.13.0",
  "env_logger",
  "log",
  "rgb-persist-fs",
@@ -2054,7 +2031,7 @@ dependencies = [
 [[package]]
 name = "rgb-persist-fs"
 version = "0.10.0"
-source = "git+https://github.com/RGB-WG/rgb#9ee91bc6ce13f0be5bb87664101f1cf6ab5efbe5"
+source = "git+https://github.com/RGB-WG/rgb#9abe06d8cb6dc602e08171a3ee89c126259f3089"
 dependencies = [
  "amplify 4.0.0",
  "rgb-std",
@@ -2382,7 +2359,7 @@ dependencies = [
 [[package]]
 name = "slip132"
 version = "0.10.0-alpha.2"
-source = "git+https://github.com/BP-WG/descriptor-wallet#bb346754a87f95c93374b8057cc92cdd5abbafea"
+source = "git+https://github.com/BP-WG/descriptor-wallet#40649972e596ba7649064e32638e471435c250c0"
 dependencies = [
  "amplify 3.14.2",
  "bitcoin 0.29.2",

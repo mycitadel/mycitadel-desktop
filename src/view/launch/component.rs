@@ -180,6 +180,8 @@ impl Update for Component {
                         .emit(settings::Msg::Duplicate(settings, path));
                 }
             }
+            Msg::ToggleRgb => self.widgets.update_rgb(),
+            Msg::ToggleTaproot => self.widgets.update_taproot(),
             Msg::Import => {}
             Msg::Wallet => {
                 if let Some(path) = file_open_dlg(None, "Open wallet", "MyCitadel wallet", "*.mcw")
