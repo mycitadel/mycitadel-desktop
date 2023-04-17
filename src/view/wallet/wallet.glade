@@ -291,7 +291,7 @@
         <property name="position-set">True</property>
         <property name="wide-handle">True</property>
         <child>
-          <object class="GtkBox">
+          <object class="GtkBox" id="assets_box">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
             <property name="orientation">vertical</property>

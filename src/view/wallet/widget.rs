@@ -71,6 +71,7 @@ pub struct Widgets {
     launcher_mi: MenuItem,
     about_mi: MenuItem,
 
+    assets_box: gtk::Box,
     asset_list: ListBox,
 
     balance_btc_lbl: Label,
@@ -211,6 +212,8 @@ impl Widgets {
 
     pub fn init_ui(&self, model: &ViewModel) {
         let settings = model.as_settings();
+
+        self.assets_box.set_visible(settings.is_rgb());
 
         let icon = Pixbuf::from_read(APP_ICON).expect("app icon is missed");
         self.window.set_icon(Some(&icon));
