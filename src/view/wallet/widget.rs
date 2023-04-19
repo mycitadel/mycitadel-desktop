@@ -224,7 +224,7 @@ impl Widgets {
         self.header_bar
             .set_title(model.path().file_name().and_then(OsStr::to_str));
         self.header_bar
-            .set_subtitle(Some(&format!("{}", model.as_settings().core())));
+            .set_subtitle(Some(&format!("{}", settings.core())));
         let network = settings.network().to_string();
         self.network_lbl
             .set_text(&(network[0..1].to_uppercase() + &network[1..]));
@@ -233,6 +233,14 @@ impl Widgets {
         self.fiat_usd.set_active(model.fiat == Fiat::USD);
         self.fiat_eur.set_active(model.fiat == Fiat::EUR);
         self.fiat_chf.set_active(model.fiat == Fiat::CHF);
+
+        if *settings.testnet() {
+            self.ticker_lbl.set_text("tBTC");
+            self.asset_lbl.set_text("Test bitcoins");
+        }
+        if !settings.is_rgb() {
+            self.contract_box.set_visible(false);
+        }
 
         self.bind_asset_model(model.asset_model());
 
