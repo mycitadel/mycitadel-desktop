@@ -85,6 +85,8 @@
       <column type="GdkRGBA"/>
       <!-- column-name description -->
       <column type="gchararray"/>
+      <!-- column-name descr_color -->
+      <column type="GdkRGBA"/>
     </columns>
   </object>
   <object class="GtkAdjustment" id="index_adj">
@@ -1034,7 +1036,7 @@
                           <object class="GtkTreeViewColumn">
                             <property name="resizable">True</property>
                             <property name="sizing">autosize</property>
-                            <property name="title" translatable="yes">Description</property>
+                            <property name="title" translatable="yes">Description or txid</property>
                             <property name="expand">True</property>
                             <property name="clickable">True</property>
                             <property name="reorderable">True</property>
@@ -1045,6 +1047,7 @@
                               </object>
                               <attributes>
                                 <attribute name="text">6</attribute>
+                                <attribute name="foreground-rgba">7</attribute>
                                 <attribute name="placeholder-text">1</attribute>
                               </attributes>
                             </child>

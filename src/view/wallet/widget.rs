@@ -354,6 +354,7 @@ impl Widgets {
             balance += item.balance();
             let btc = format!("{:+.08}", item.balance() as f64 / 100_000_000.0);
             let btc_balance = format!("{:.08}", balance as f64 / 100_000_000.0);
+            let descr_color = gdk::RGBA::new(80.0 / 255.0, 80.0 / 255.0, 80.0 / 255.0, 1.0);
             self.history_store.insert_with_values(None, &[
                 (0, &item.icon_name()),
                 (1, &item.onchain.txid.to_string()),
@@ -361,6 +362,10 @@ impl Widgets {
                 (3, &btc_balance),
                 (4, &item.mining_info()),
                 (5, &item.color()),
+                // TODO: Use description
+                (6, &item.onchain.txid.to_string()),
+                // TODO: Change color depending on the presence of description
+                (7, &descr_color),
             ]);
         }
     }
@@ -371,7 +376,7 @@ impl Widgets {
             let btc = format_btc_value(item.value);
             self.utxo_store.insert_with_values(None, &[
                 (0, &item.addr_src.address.to_string()),
-                (1, &item.onchain.txid.to_string()),
+                (1, &format!("{}:{}", item.onchain.txid, item.vout)),
                 (2, &btc),
                 (3, &item.mining_info()),
             ]);
