@@ -80,6 +80,9 @@
             <property name="label" translatable="yes">-</property>
             <property name="wrap">True</property>
             <property name="ellipsize">end</property>
+            <attributes>
+              <attribute name="foreground" value="#777776767b7b"/>
+            </attributes>
           </object>
           <packing>
             <property name="left-attach">0</property>
