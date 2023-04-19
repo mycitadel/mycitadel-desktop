@@ -82,6 +82,7 @@ pub struct Widgets {
     balance_btc_lbl: Label,
     balance_sat_lbl: Label,
     balance_fiat_lbl: Label,
+    balance_cents_lbl: Label,
 
     exchange_lbl: Label,
     fiat_usd: RadioMenuItem,
@@ -410,8 +411,10 @@ impl Widgets {
             .set_text(&format!("{:.2}", state.volume_btc() * exchange_rate));
          */
 
-        self.balance_fiat_lbl
-            .set_text(&format!("{:.2}", state.balance_btc() * exchange_rate));
+        let s = format!("{:.02}", state.balance_btc() * exchange_rate);
+        let (fiat, cents) = s.split_once('.').expect("formatting produces decimal");
+        self.balance_fiat_lbl.set_text(fiat);
+        self.balance_cents_lbl.set_text(cents);
     }
 
     pub fn update_fiat(&self, fiat: Fiat) {
@@ -420,6 +423,7 @@ impl Widgets {
 
         self.exchange_lbl.set_text(&"...");
         self.balance_fiat_lbl.set_text("?");
+        self.balance_cents_lbl.set_text("");
         //self.volume_fiat_lbl.set_text("?");
     }
 
@@ -434,8 +438,11 @@ impl Widgets {
 
         if exchange_rate > 0.0 {
             self.exchange_lbl.set_text(&format!("{:.0}", exchange_rate));
-            self.balance_fiat_lbl
-                .set_text(&format!("{:.2}", state.balance_btc() * exchange_rate));
+
+            let s = format!("{:.02}", state.balance_btc() * exchange_rate);
+            let (fiat, cents) = s.split_once('.').expect("formatting produces decimal");
+            self.balance_fiat_lbl.set_text(fiat);
+            self.balance_cents_lbl.set_text(cents);
             //self.volume_fiat_lbl
             //    .set_text(&format!("{:.2}", state.volume_btc() * exchange_rate));
         }
@@ -444,6 +451,7 @@ impl Widgets {
     pub fn update_exchange_error(&self, _err: String) {
         self.exchange_lbl.set_text(&"n/a");
         self.balance_fiat_lbl.set_text("n/a");
+        self.balance_cents_lbl.set_text("");
         //self.volume_fiat_lbl.set_text("n/a");
     }
 }
