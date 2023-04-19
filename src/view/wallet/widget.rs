@@ -223,6 +223,8 @@ impl Widgets {
 
         self.header_bar
             .set_title(model.path().file_name().and_then(OsStr::to_str));
+        self.header_bar
+            .set_subtitle(Some(&format!("{}", model.as_settings().core())));
         let network = settings.network().to_string();
         self.network_lbl
             .set_text(&(network[0..1].to_uppercase() + &network[1..]));
@@ -244,7 +246,7 @@ impl Widgets {
 
     pub fn update_invoice(&self, model: &ViewModel) {
         let invoice = model.as_invoice();
-        let wallet = model.as_wallet();
+        let wallet = model.wallet();
         let next_index = wallet.next_default_index();
         let address = wallet.indexed_address(invoice.index.unwrap_or(next_index));
         let index_reuse = invoice.index.unwrap_or(next_index) >= next_index;

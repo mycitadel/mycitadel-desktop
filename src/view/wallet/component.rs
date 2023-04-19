@@ -72,7 +72,7 @@ impl Component {
     }
 
     pub fn compose_psbt(&mut self) -> Result<(Psbt, UnhardenedIndex, u32), pay::Error> {
-        let wallet = self.model.as_wallet();
+        let wallet = self.model.wallet();
 
         let output_count = self.model.beneficiaries().n_items();
         let mut txouts = Vec::with_capacity(output_count as usize);
@@ -196,7 +196,7 @@ impl Component {
 
         self.pay_widgets.update_info(
             self.model.fee_rate(),
-            self.model.as_wallet().ephemerals().fees,
+            self.model.wallet().ephemerals().fees,
             self.model.vsize(),
             res.as_ref().ok().map(|(_, _, fee)| (total, *fee)),
         );
@@ -223,7 +223,7 @@ impl Component {
                     fiat,
                     exchange,
                     rate,
-                    self.model.as_wallet().state(),
+                    self.model.wallet().state(),
                 );
             }
             exchange::Msg::Error(err) => {
@@ -248,17 +248,17 @@ impl Component {
             electrum::Msg::LastBlock(block_info) => {
                 self.widgets
                     .update_electrum_state(ElectrumState::RetrievingFees);
-                self.model.as_wallet_mut().update_last_block(&block_info);
+                self.model.wallet_mut().update_last_block(&block_info);
                 self.widgets.update_last_block(&block_info);
             }
             electrum::Msg::LastBlockUpdate(block_info) => {
-                self.model.as_wallet_mut().update_last_block(&block_info);
+                self.model.wallet_mut().update_last_block(&block_info);
                 self.widgets.update_last_block(&block_info);
             }
             electrum::Msg::FeeEstimate(f0, f1, f2) => {
                 self.widgets
                     .update_electrum_state(ElectrumState::RetrievingHistory(0));
-                let wallet = self.model.as_wallet_mut();
+                let wallet = self.model.wallet_mut();
                 wallet.update_fees(f0, f1, f2);
                 wallet.clear_utxos();
             }
@@ -270,7 +270,7 @@ impl Component {
             electrum::Msg::UtxoBatch(batch, no) => {
                 self.widgets
                     .update_electrum_state(ElectrumState::RetrievingHistory(no as usize * 2 + 1));
-                let wallet = self.model.as_wallet_mut();
+                let wallet = self.model.wallet_mut();
                 wallet.update_utxos(batch);
                 self.widgets.update_utxos(&wallet.utxos());
                 self.widgets.update_state(
@@ -286,14 +286,14 @@ impl Component {
             }
             electrum::Msg::Complete => {
                 self.model
-                    .as_wallet_mut()
+                    .wallet_mut()
                     .update_complete(&self.addr_buffer, &self.tx_buffer);
                 self.addr_buffer.clear();
                 self.tx_buffer.clear();
                 self.save();
 
                 let exchange_rate = self.model.exchange_rate;
-                let wallet = self.model.as_wallet_mut();
+                let wallet = self.model.wallet_mut();
                 self.widgets.update_history(&wallet.history());
                 self.widgets
                     .update_state(wallet.state(), wallet.tx_count(), exchange_rate);
@@ -404,7 +404,7 @@ impl Update for Component {
             }
             Msg::InvoiceIndexToggle(set) => {
                 self.model.as_invoice_mut().index = match set {
-                    true => Some(self.model.as_wallet().next_default_index()),
+                    true => Some(self.model.wallet().next_default_index()),
                     false => None,
                 };
                 self.widgets.update_invoice(&self.model);
@@ -446,7 +446,7 @@ impl Component {
                 self.model.beneficiaries_mut().clear();
                 self.model.beneficiaries_mut().append(&Beneficiary::new());
                 self.model
-                    .set_fee_rate(self.model.as_wallet().ephemerals().fees.0);
+                    .set_fee_rate(self.model.wallet().ephemerals().fees.0);
                 self.pay_widgets.init_ui(&self.model);
                 self.pay_widgets.show();
             }
@@ -466,7 +466,7 @@ impl Component {
                 // component
                 if self
                     .model
-                    .as_wallet_mut()
+                    .wallet_mut()
                     .update_next_change_index(change_index)
                 {
                     self.save();
@@ -501,7 +501,7 @@ impl Component {
                 self.model.set_fee_rate(fee_rate as f32);
             }
             pay::Msg::FeeSetBlocks(ty) => {
-                let fees = self.model.as_wallet().ephemerals().fees;
+                let fees = self.model.wallet().ephemerals().fees;
                 let fee_rate = match ty {
                     FeeRate::OneBlock => fees.0,
                     FeeRate::TwoBlocks => fees.1,
@@ -537,7 +537,7 @@ impl Widget for Component {
         let stream = relm.stream().clone();
         let (electrum_channel, sender) =
             Channel::new(move |msg| stream.emit(Msg::ElectrumWatch(msg)));
-        let electrum_worker = ElectrumWorker::with(sender, model.as_wallet().to_settings(), 60)
+        let electrum_worker = ElectrumWorker::with(sender, model.wallet().to_settings(), 60)
             .expect("unable to instantiate electrum thread");
 
         let stream = relm.stream().clone();

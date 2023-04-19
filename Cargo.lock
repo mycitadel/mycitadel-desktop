@@ -339,7 +339,7 @@ dependencies = [
 [[package]]
 name = "bitcoin_hd"
 version = "0.10.0-alpha.2"
-source = "git+https://github.com/BP-WG/descriptor-wallet#40649972e596ba7649064e32638e471435c250c0"
+source = "git+https://github.com/BP-WG/descriptor-wallet#c6336c79b0003c547b35500b17912b4751a30631"
 dependencies = [
  "amplify 3.14.2",
  "bitcoin 0.29.2",
@@ -353,7 +353,7 @@ dependencies = [
 [[package]]
 name = "bitcoin_onchain"
 version = "0.10.0-alpha.2"
-source = "git+https://github.com/BP-WG/descriptor-wallet#40649972e596ba7649064e32638e471435c250c0"
+source = "git+https://github.com/BP-WG/descriptor-wallet#c6336c79b0003c547b35500b17912b4751a30631"
 dependencies = [
  "amplify 3.14.2",
  "bitcoin 0.29.2",
@@ -472,7 +472,7 @@ dependencies = [
 [[package]]
 name = "bpro"
 version = "0.4.0"
-source = "git+https://github.com/pandora-prime/bpro?branch=v0.4#b1f306594f8ea5c4c201f03ed9f4773b75c83712"
+source = "git+https://github.com/pandora-prime/bpro?branch=v0.4#34aabce0587751374f0a6bc38fbcd334ec892cc1"
 dependencies = [
  "amplify 3.14.2",
  "bitcoin 0.29.2",
@@ -815,7 +815,7 @@ dependencies = [
 [[package]]
 name = "descriptors"
 version = "0.10.0-alpha.2"
-source = "git+https://github.com/BP-WG/descriptor-wallet#40649972e596ba7649064e32638e471435c250c0"
+source = "git+https://github.com/BP-WG/descriptor-wallet#c6336c79b0003c547b35500b17912b4751a30631"
 dependencies = [
  "amplify 3.14.2",
  "bitcoin 0.29.2",
@@ -1831,7 +1831,7 @@ dependencies = [
 [[package]]
 name = "psbt"
 version = "0.10.0-alpha.2"
-source = "git+https://github.com/BP-WG/descriptor-wallet#40649972e596ba7649064e32638e471435c250c0"
+source = "git+https://github.com/BP-WG/descriptor-wallet#c6336c79b0003c547b35500b17912b4751a30631"
 dependencies = [
  "amplify 3.14.2",
  "bitcoin 0.29.2",
@@ -2359,7 +2359,7 @@ dependencies = [
 [[package]]
 name = "slip132"
 version = "0.10.0-alpha.2"
-source = "git+https://github.com/BP-WG/descriptor-wallet#40649972e596ba7649064e32638e471435c250c0"
+source = "git+https://github.com/BP-WG/descriptor-wallet#c6336c79b0003c547b35500b17912b4751a30631"
 dependencies = [
  "amplify 3.14.2",
  "bitcoin 0.29.2",

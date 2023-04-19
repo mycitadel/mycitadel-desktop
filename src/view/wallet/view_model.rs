@@ -28,6 +28,7 @@ pub struct InvoiceModel {
 
 #[derive(Getters)]
 pub struct ViewModel {
+    #[getter(as_mut)]
     wallet: Wallet,
 
     path: PathBuf,
@@ -83,10 +84,6 @@ impl ViewModel {
     }
 
     pub fn save(&mut self) -> Result<usize, file::Error> { self.wallet.write_file(&self.path) }
-
-    pub fn as_wallet(&self) -> &Wallet { &self.wallet }
-    pub fn as_wallet_mut(&mut self) -> &mut Wallet { &mut self.wallet }
-    pub fn to_wallet(&self) -> Wallet { self.wallet.clone() }
 
     pub fn as_settings(&self) -> &WalletSettings { self.wallet.as_settings() }
     pub fn to_settings(&self) -> WalletSettings { self.wallet.to_settings() }
