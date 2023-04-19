@@ -74,21 +74,21 @@ pub struct Widgets {
     assets_box: gtk::Box,
     asset_list: ListBox,
 
+    asset_lbl: Label,
+    ticker_lbl: Label,
+    contract_box: gtk::Box,
+    contract_entry: Entry,
+
     balance_btc_lbl: Label,
     balance_sat_lbl: Label,
     balance_fiat_lbl: Label,
-    volume_btc_lbl: Label,
-    volume_sat_lbl: Label,
-    volume_fiat_lbl: Label,
-    txcount_lbl: Label,
 
     exchange_lbl: Label,
     fiat_usd: RadioMenuItem,
     fiat_eur: RadioMenuItem,
     fiat_chf: RadioMenuItem,
     fiat_pair_lbl: Label,
-    fiat_name1_lbl: Label,
-    fiat_name2_lbl: Label,
+    fiat_name_lbl: Label,
 
     refresh_btn: Button,
     refresh_spin: Spinner,
@@ -384,31 +384,33 @@ impl Widgets {
         }
     }
 
-    pub fn update_state(&self, state: WalletState, tx_count: usize, exchange_rate: f64) {
+    pub fn update_state(&self, state: WalletState, _tx_count: usize, exchange_rate: f64) {
         self.balance_lbl
             .set_text(&format!("{} sat", state.balance.to_string()));
         self.balance_btc_lbl
             .set_text(&format!("{:.4}", state.balance_btc()));
         self.balance_sat_lbl.set_text(&state.balance.to_string());
+
+        /*
         self.volume_btc_lbl
             .set_text(&format!("{:.2}", state.volume_btc()));
         self.volume_sat_lbl.set_text(&state.volume.to_string());
         self.txcount_lbl.set_text(&tx_count.to_string());
+        self.volume_fiat_lbl
+            .set_text(&format!("{:.2}", state.volume_btc() * exchange_rate));
+         */
 
         self.balance_fiat_lbl
             .set_text(&format!("{:.2}", state.balance_btc() * exchange_rate));
-        self.volume_fiat_lbl
-            .set_text(&format!("{:.2}", state.volume_btc() * exchange_rate));
     }
 
     pub fn update_fiat(&self, fiat: Fiat) {
         self.fiat_pair_lbl.set_text(fiat.pair());
-        self.fiat_name1_lbl.set_text(fiat.fiat());
-        self.fiat_name2_lbl.set_text(fiat.fiat());
+        self.fiat_name_lbl.set_text(fiat.symbol());
 
         self.exchange_lbl.set_text(&"...");
         self.balance_fiat_lbl.set_text("?");
-        self.volume_fiat_lbl.set_text("?");
+        //self.volume_fiat_lbl.set_text("?");
     }
 
     pub fn update_exchange_rate(
@@ -424,15 +426,15 @@ impl Widgets {
             self.exchange_lbl.set_text(&format!("{:.0}", exchange_rate));
             self.balance_fiat_lbl
                 .set_text(&format!("{:.2}", state.balance_btc() * exchange_rate));
-            self.volume_fiat_lbl
-                .set_text(&format!("{:.2}", state.volume_btc() * exchange_rate));
+            //self.volume_fiat_lbl
+            //    .set_text(&format!("{:.2}", state.volume_btc() * exchange_rate));
         }
     }
 
     pub fn update_exchange_error(&self, _err: String) {
         self.exchange_lbl.set_text(&"n/a");
         self.balance_fiat_lbl.set_text("n/a");
-        self.volume_fiat_lbl.set_text("n/a");
+        //self.volume_fiat_lbl.set_text("n/a");
     }
 }
 

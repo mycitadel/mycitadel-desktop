@@ -35,6 +35,14 @@ pub enum Fiat {
 }
 
 impl Fiat {
+    pub fn symbol(self) -> &'static str {
+        match self {
+            Fiat::USD => "$",
+            Fiat::EUR => "€",
+            Fiat::CHF => "₣",
+        }
+    }
+
     pub fn fiat(self) -> &'static str {
         match self {
             Fiat::USD => "USD",
