@@ -218,7 +218,7 @@ checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
 [[package]]
 name = "bpro"
 version = "0.3.0"
-source = "git+https://github.com/pandora-prime/bpro#73ce015c44057398e322b9a603499608f424661e"
+source = "git+https://github.com/pandora-prime/bpro#b8ebff35099365f9c84209bae8f9c77ec8d1b8f3"
 dependencies = [
  "amplify",
  "bitcoin",

@@ -220,7 +220,7 @@ impl RowWidgets {
             .flags(flags_ro)
             .build();
         condition
-            .bind_property("account-based", &self.account_spin, "sensitive")
+            .bind_property("account-based", &self.account_spin, "visible")
             .flags(flags_ro)
             .build();
 
