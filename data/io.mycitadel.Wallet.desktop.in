@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=My Citadel
+GenericName=Wallet
+Comment=Bitcoin & RGB wallet for self-custody
+Exec=mycitadel
+Icon=io.mycitadel.Wallet
+Terminal=false
+Type=Application
+Categories=GTK;Utility;Finance;
+StartupNotify=true
