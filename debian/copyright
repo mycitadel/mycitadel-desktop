@@ -4,12 +4,11 @@ Upstream-Contact: Dr Maxim Orlovsky <orlovsky@mycitadel.io>
 Source: <https://mycitadel.io>
 
 Files: *
-Copyright: <years> <put author's name and email here>
-           <years> <likewise for another author>
+Copyright: 2022-23 Pandora Prime SA <orlovsky@mycitadel.io>
 License: AGPL-3.0+
 
 Files: debian/*
-Copyright: 2022-23 Dr Maxim Orlovsky <orlovsky@mycitadel.io>
+Copyright: 2022-23 Pandora Prime SA <orlovsky@mycitadel.io>
 License: AGPL-3.0+
 
 License: AGPL-3.0+

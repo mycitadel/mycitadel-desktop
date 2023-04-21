@@ -1,5 +1,22 @@
 mycitadel (1.3.0-1) unstable; urgency=medium
 
+  * Account-based multi-sigs with time-locks and complex miniscript descriptors.
+    This adds ability to compose complex time-locked conditions involving same
+    signers in different time-locks (for instance having 2-of-4 multi-sig which
+    in 1 year becomes 1-of-2)
+
+  [ UI improvements ]
+
+  * Double-click on addresses copies address to clipboard
+  * Double-click on history entry copies transaction id to clipboard
+  * Double-click on coin entry copies outpoint information to clipboard
+  * Added displaying of unused addresses, visually distinguished from used
+
+  [ New distributive packages ]
+
+  * Debian package
+  * Flatpak package
+  * Freedesktop environment integration
 
  -- Dr Maxim Orlovsky <orlovsky@mycitadel.io>  Sat, 23 Apr 2023 00:43:55 +0200
 
