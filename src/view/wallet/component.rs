@@ -297,7 +297,7 @@ impl Component {
                 self.widgets.update_history(&wallet.history());
                 self.widgets
                     .update_state(wallet.state(), wallet.tx_count(), exchange_rate);
-                self.widgets.update_addresses(&wallet.address_info());
+                self.widgets.update_addresses(&wallet.address_info(true));
                 self.widgets.update_electrum_state(ElectrumState::Complete(
                     self.model.as_settings().electrum().sec,
                 ));

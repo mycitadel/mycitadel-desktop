@@ -168,7 +168,7 @@ dependencies = [
 [[package]]
 name = "bitcoin_hd"
 version = "0.10.0-alpha.2"
-source = "git+https://github.com/BP-WG/descriptor-wallet#bb346754a87f95c93374b8057cc92cdd5abbafea"
+source = "git+https://github.com/BP-WG/descriptor-wallet#c6336c79b0003c547b35500b17912b4751a30631"
 dependencies = [
  "amplify",
  "bitcoin",
@@ -182,7 +182,7 @@ dependencies = [
 [[package]]
 name = "bitcoin_onchain"
 version = "0.10.0-alpha.2"
-source = "git+https://github.com/BP-WG/descriptor-wallet#bb346754a87f95c93374b8057cc92cdd5abbafea"
+source = "git+https://github.com/BP-WG/descriptor-wallet#c6336c79b0003c547b35500b17912b4751a30631"
 dependencies = [
  "amplify",
  "bitcoin",
@@ -218,7 +218,7 @@ checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
 [[package]]
 name = "bpro"
 version = "0.3.0"
-source = "git+https://github.com/pandora-prime/bpro#951197222c4aa2a28c5dd3c04601f6c77e359ced"
+source = "git+https://github.com/pandora-prime/bpro#09abd92751e8ebbbd431f3b4dd57e8a62dc42e9b"
 dependencies = [
  "amplify",
  "bitcoin",
@@ -531,7 +531,7 @@ dependencies = [
 [[package]]
 name = "descriptors"
 version = "0.10.0-alpha.2"
-source = "git+https://github.com/BP-WG/descriptor-wallet#bb346754a87f95c93374b8057cc92cdd5abbafea"
+source = "git+https://github.com/BP-WG/descriptor-wallet#c6336c79b0003c547b35500b17912b4751a30631"
 dependencies = [
  "amplify",
  "bitcoin",
@@ -1408,7 +1408,7 @@ dependencies = [
 [[package]]
 name = "psbt"
 version = "0.10.0-alpha.2"
-source = "git+https://github.com/BP-WG/descriptor-wallet#bb346754a87f95c93374b8057cc92cdd5abbafea"
+source = "git+https://github.com/BP-WG/descriptor-wallet#c6336c79b0003c547b35500b17912b4751a30631"
 dependencies = [
  "amplify",
  "bitcoin",
@@ -1764,7 +1764,7 @@ dependencies = [
 [[package]]
 name = "slip132"
 version = "0.10.0-alpha.2"
-source = "git+https://github.com/BP-WG/descriptor-wallet#bb346754a87f95c93374b8057cc92cdd5abbafea"
+source = "git+https://github.com/BP-WG/descriptor-wallet#c6336c79b0003c547b35500b17912b4751a30631"
 dependencies = [
  "amplify",
  "bitcoin",
