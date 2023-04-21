@@ -1,10 +1,10 @@
 Source: mycitadel
 Section: unknown
 Priority: optional
-Maintainer: orlovsky <orlovsky@mycitadel.io>
+Maintainer: Dr Maxim Orlovsky <orlovsky@mycitadel.io>
 Build-Depends: debhelper-compat (= 13)
 Standards-Version: 4.5.1
-Homepage: <insert the upstream URL, if relevant>
+Homepage: https://mycitadel.io
 #Vcs-Browser: https://salsa.debian.org/debian/mycitadel
 #Vcs-Git: https://salsa.debian.org/debian/mycitadel.git
 Rules-Requires-Root: no
@@ -12,5 +12,14 @@ Rules-Requires-Root: no
 Package: mycitadel
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: <insert up to 60 chars description>
- <insert long description, indented with spaces>
+Description: Bitcoin, RGB and Lightning wallet
+  MyCitadel is a wallet for bitcoin, digital assets and bitcoin finance (#BiFi)
+  smart contracts. It is blazingly fast, secure, cross-platform and technically
+  most advanced wallet on the market, being the first wallet allowing taproot
+  multi-sig and timelock-based spending conditions.
+
+  Do a reliable hodling (with inheritance options), corporate/organization &
+  current accounts - or instant Lightning payments. Work with single- and
+  multi-sig setups, based on hardware, air-gaped, cold and server-side hot key
+  storage, involving arbitrary complex time-lock scripts (with miniscript) and
+  wide interoperability (because of use of wallet descriptors).

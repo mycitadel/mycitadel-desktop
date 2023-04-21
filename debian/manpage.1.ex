@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.\" (C) Copyright 2023 orlovsky <orlovsky@mycitadel.io>,
+.\" (C) Copyright 2023 Dr Maxim Orlovsky <orlovsky@mycitadel.io>,
 .\"
 .\" First parameter, NAME, should be all caps
 .\" Second parameter, SECTION, should be 1-8, maybe w/ subsection

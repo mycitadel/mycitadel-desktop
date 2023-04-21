@@ -1,0 +1,10 @@
+ff05fde4017f2024543e5b029e7cc12b  usr/bin/mycitadel
+3d8472af70700baf50db9f0b917816d6  usr/share/appdata/io.mycitadel.Wallet.appdata.xml
+b2070151e2c9bc02779bd8d674f4e313  usr/share/applications/io.mycitadel.Wallet.desktop
+4e588148e584bc3948784b4c682e731b  usr/share/doc/mycitadel/README.Debian
+12000b5ea79aa6ba4e38747d1435fcf7  usr/share/doc/mycitadel/changelog.Debian.gz
+568ef63b8f746c04f481c5e183dc8b2d  usr/share/doc/mycitadel/copyright
+d08564c16a635a71f6e387114dfe6e77  usr/share/glib-2.0/schemas/io.mycitadel.Wallet.gschema.xml
+54386cec75430517e52440305a3e884c  usr/share/icons/hicolor/scalable/apps/io.mycitadel.Wallet.svg
+437c9fad4419b1fdbcd90cd7e5cbaf53  usr/share/icons/hicolor/symbolic/apps/io.mycitadel.Wallet-symbolic.svg
+10a017f14b1c8a9a6414c2b50048299f  usr/share/mycitadel/mycitadel.gresource
