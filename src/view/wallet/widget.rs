@@ -150,6 +150,18 @@ impl Widgets {
         );
         connect!(relm, self.about_mi, connect_activate(_), Msg::About);
 
+        self.history_list.connect_row_activated(|me, path, _| {
+            let model = me.model().unwrap();
+            let iter = model.iter(path).unwrap();
+            let val: String = model.value(&iter, 1).get().unwrap();
+            gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).set_text(&val);
+        });
+        self.utxo_list.connect_row_activated(|me, path, _| {
+            let model = me.model().unwrap();
+            let iter = model.iter(path).unwrap();
+            let val: String = model.value(&iter, 1).get().unwrap();
+            gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).set_text(&val);
+        });
         self.address_list.connect_row_activated(|me, path, _| {
             let model = me.model().unwrap();
             let iter = model.iter(path).unwrap();
