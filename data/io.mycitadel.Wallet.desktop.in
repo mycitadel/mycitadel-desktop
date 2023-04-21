@@ -1,10 +1,11 @@
 [Desktop Entry]
-Name=My Citadel
+Name=MyCitadel Wallet
 GenericName=Wallet
 Comment=Bitcoin & RGB wallet for self-custody
 Exec=mycitadel
 Icon=io.mycitadel.Wallet
 Terminal=false
 Type=Application
-Categories=GTK;Utility;Finance;
+Categories=GNOME;GTK;Finance;Office;
+Keywords=wallet;bitcoin;lightning;RGB;smart contracts
 StartupNotify=true
