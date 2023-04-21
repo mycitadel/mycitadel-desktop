@@ -1,0 +1,4 @@
+data/io.mycitadel.Wallet.desktop.in
+data/io.mycitadel.Wallet.appdata.xml.in
+data/io.mycitadel.Wallet.gschema.xml
+src/window.ui

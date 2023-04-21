@@ -2,7 +2,7 @@
 
 ## Bitcoin, Lightning and RGB wallet
 
-![Banner](assets/banner.jpg)
+![Banner](data/banner.jpg)
 
 MyCitadel is a wallet for **bitcoin, digital assets and bitcoin finance (#BiFi) 
 smart contracts**. It is blazingly fast, secure, cross-platform and technically 
@@ -15,7 +15,7 @@ multisig setups, based on hardware, air-gaped, cold and server-side hot key
 storage, involving arbitrary complex time-lock scripts (with miniscript) and 
 wide interoperability (because of use of wallet descriptors). 
 
-![](assets/screenshots/linux/history.png)
+![](data/screenshots/linux/history.png)
 
 MyCitadel™ is a suite of software, hardware and Internet services focused on 
 digital individual sovereignty and privacy. It includes mobile &amp; desktop 
@@ -34,29 +34,29 @@ provided by the Association.
 
 ## Support of Taproot multisigs
 
-![](assets/screenshots/linux/launcher.png)
+![](data/screenshots/linux/launcher.png)
 
 Taproot-enabled from day one, including multisig- and script-based taproot.
 
 ## Air gapped, hardware and watch-only wallets
 
-![](assets/screenshots/linux/signers.png)
+![](data/screenshots/linux/signers.png)
 
 ## Arbitrary complex spending conditions
 
-![](assets/screenshots/linux/conditions.png)
+![](data/screenshots/linux/conditions.png)
 
 ## Wallet descriptors
 
-![](assets/screenshots/linux/descriptor.png)
+![](data/screenshots/linux/descriptor.png)
 
 ## Batched payments
 
-![](assets/screenshots/linux/pay.png)
+![](data/screenshots/linux/pay.png)
 
 ## Wallet-independent PSBT signer
 
-![](assets/screenshots/linux/psbt.png)
+![](data/screenshots/linux/psbt.png)
 
 
 # Installation
