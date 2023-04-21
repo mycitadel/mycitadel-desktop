@@ -19,6 +19,7 @@ use glib::subclass::prelude::*;
 use gtk::prelude::*;
 use gtk::subclass::prelude::ListModelImpl;
 use gtk::{gio, glib};
+use wallet::hd::{HardenedIndex, SegmentIndexes};
 
 use crate::view::settings::spending_row::{MAX_YEAR, MIN_YEAR};
 
@@ -30,6 +31,8 @@ pub struct ConditionInner {
     sigs_at_least: RefCell<bool>,
     sigs_any: RefCell<bool>,
     sigs_no: RefCell<u32>,
+    account_based: RefCell<bool>,
+    account_no: RefCell<u32>,
     lock_none: RefCell<bool>,
     lock_older: RefCell<bool>,
     lock_after: RefCell<bool>,
@@ -50,6 +53,8 @@ impl Default for ConditionInner {
             sigs_at_least: RefCell::new(false),
             sigs_any: RefCell::new(false),
             sigs_no: RefCell::new(2),
+            account_based: RefCell::new(false),
+            account_no: RefCell::new(0),
             lock_none: RefCell::new(true),
             lock_older: RefCell::new(false),
             lock_after: RefCell::new(false),
@@ -143,6 +148,22 @@ impl ObjectImpl for ConditionInner {
                 ),
                 glib::ParamSpecBoolean::new("sigs-any", "SigsAny", "SigsAny", false, flag),
                 glib::ParamSpecUInt::new("sigs-no", "SigsNo", "SigsNo", 1, 100, 2, flag),
+                glib::ParamSpecBoolean::new(
+                    "account-based",
+                    "AccountBased",
+                    "AccountBased",
+                    false,
+                    flag,
+                ),
+                glib::ParamSpecUInt::new(
+                    "account-no",
+                    "AccountNo",
+                    "AccountNo",
+                    0,
+                    0xEFFF_FFFF,
+                    0,
+                    flag,
+                ),
                 glib::ParamSpecBoolean::new("lock-none", "LockNone", "LockNone", true, flag),
                 glib::ParamSpecBoolean::new("lock-after", "LockAfter", "LockAfter", false, flag),
                 glib::ParamSpecBoolean::new("lock-older", "LockOlder", "LockOlder", false, flag),
@@ -226,6 +247,18 @@ impl ObjectImpl for ConditionInner {
                     .expect("type conformity checked by `Object::set_property`");
                 self.sigs_no.replace(value);
             }
+            "account-based" => {
+                let value = value
+                    .get()
+                    .expect("type conformity checked by `Object::set_property`");
+                self.account_based.replace(value);
+            }
+            "account-no" => {
+                let value = value
+                    .get()
+                    .expect("type conformity checked by `Object::set_property`");
+                self.account_no.replace(value);
+            }
             "lock-none" => {
                 let value = value
                     .get()
@@ -302,6 +335,8 @@ impl ObjectImpl for ConditionInner {
             "sigs-at-least" => self.sigs_at_least.borrow().to_value(),
             "sigs-any" => self.sigs_any.borrow().to_value(),
             "sigs-no" => self.sigs_no.borrow().to_value(),
+            "account-based" => self.account_based.borrow().to_value(),
+            "account-no" => self.account_no.borrow().to_value(),
             "lock-none" => self.lock_none.borrow().to_value(),
             "lock-after" => self.lock_after.borrow().to_value(),
             "lock-older" => self.lock_older.borrow().to_value(),
@@ -324,6 +359,10 @@ impl ConditionInner {
             SigsReq::All
         } else if *self.sigs_any.borrow() {
             SigsReq::Any
+        } else if *self.account_based.borrow() {
+            let index = HardenedIndex::from_index(*self.account_no.borrow())
+                .expect("guarantees of adjustment control on the hardened index range are broken");
+            SigsReq::AccountBased(*self.sigs_no.borrow() as u16, index)
         } else {
             SigsReq::AtLeast(*self.sigs_no.borrow() as u16)
         }
@@ -350,12 +389,18 @@ impl From<&Condition> for SpendingCondition {
 
 impl Condition {
     pub fn sigs_req(&self) -> SigsReq {
+        let sigs_no = self.property::<u32>("sigs-no") as u16;
         if self.property("sigs-all") {
             SigsReq::All
         } else if self.property("sigs-any") {
             SigsReq::Any
+        } else if self.property("account-based") {
+            let account_no = self.property::<u32>("account-no");
+            let account_no = HardenedIndex::from_index(account_no)
+                .expect("guarantees of adjustment control on the hardened index range are broken");
+            SigsReq::AccountBased(sigs_no, account_no)
         } else {
-            SigsReq::AtLeast(self.property::<u32>("sigs-no") as u16)
+            SigsReq::AtLeast(sigs_no)
         }
     }
 }
@@ -474,7 +519,7 @@ impl SpendingModel {
             matches!(
                 sc,
                 SpendingCondition::Sigs(TimelockedSigs {
-                    sigs: SigsReq::AtLeast(_),
+                    sigs: SigsReq::AtLeast(_) | SigsReq::AccountBased(..),
                     ..
                 })
             ),
@@ -489,14 +534,31 @@ impl SpendingModel {
                 })
             ),
         );
-        match sc {
-            SpendingCondition::Sigs(TimelockedSigs {
-                sigs: SigsReq::AtLeast(no),
-                ..
-            }) => Some(no),
-            _ => None,
+        if let SpendingCondition::Sigs(TimelockedSigs {
+            sigs: SigsReq::AtLeast(no) | SigsReq::AccountBased(no, _),
+            ..
+        }) = sc
+        {
+            cond.set_property("sigs-no", *no as u32)
         }
-        .map(|no| cond.set_property("sigs-no", *no as u32));
+
+        cond.set_property(
+            "account-based",
+            matches!(
+                sc,
+                SpendingCondition::Sigs(TimelockedSigs {
+                    sigs: SigsReq::AccountBased(..),
+                    ..
+                })
+            ),
+        );
+        if let SpendingCondition::Sigs(TimelockedSigs {
+            sigs: SigsReq::AccountBased(_, account_no),
+            ..
+        }) = sc
+        {
+            cond.set_property("account-no", account_no.first_index());
+        }
 
         cond.set_property(
             "lock-none",

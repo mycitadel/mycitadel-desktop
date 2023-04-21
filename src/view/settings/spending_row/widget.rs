@@ -13,8 +13,8 @@ use gladis::Gladis;
 use gtk::glib::Binding;
 use gtk::prelude::*;
 use gtk::{
-    glib, Adjustment, Calendar, Label, ListBoxRow, Menu, MenuButton, Popover, RadioMenuItem,
-    SpinButton,
+    glib, Adjustment, Calendar, CheckButton, Label, ListBoxRow, Menu, MenuButton, Popover,
+    RadioMenuItem, SpinButton,
 };
 use relm::Sender;
 
@@ -32,6 +32,9 @@ pub struct RowWidgets {
     sigs_spin: SpinButton,
     sigs_adj: Adjustment,
     sigtext_lbl: Label,
+    account_check: CheckButton,
+    account_adj: Adjustment,
+    account_spin: SpinButton,
     lock_mbt: MenuButton,
     lock_menu: Menu,
     lock_anytime_item: RadioMenuItem,
@@ -86,6 +89,11 @@ impl RowWidgets {
         row_widgets
             .sigs_any_item
             .connect_toggled(move |mi| c.set_property("sigs-any", mi.is_active()));
+
+        let c = condition.clone();
+        row_widgets
+            .account_check
+            .connect_toggled(move |mi| c.set_property("account-based", mi.is_active()));
 
         let c = condition.clone();
         row_widgets
@@ -193,6 +201,27 @@ impl RowWidgets {
                     None
                 }
             })
+            .build();
+
+        condition
+            .bind_property("account-based", &self.account_check, "active")
+            .flags(flags_ro)
+            .build();
+        condition
+            .bind_property("account-no", &self.account_adj, "value")
+            .flags(flags_rw)
+            .build();
+        condition
+            .bind_property("sigs-at-least", &self.account_check, "visible")
+            .flags(flags_ro)
+            .build();
+        condition
+            .bind_property("sigs-at-least", &self.account_spin, "visible")
+            .flags(flags_ro)
+            .build();
+        condition
+            .bind_property("account-based", &self.account_spin, "visible")
+            .flags(flags_ro)
             .build();
 
         condition
