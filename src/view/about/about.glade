@@ -76,7 +76,7 @@
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <property name="halign">start</property>
-                    <property name="label" translatable="yes">Walpurgisnacht version (1.1.0)</property>
+                    <property name="label" translatable="yes">Lyrid Meteors (1.2.1)</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -89,7 +89,7 @@
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <property name="halign">start</property>
-                    <property name="label" translatable="yes">© 2022 Pandora Prime SA, Neuchatel, Switzerland
+                    <property name="label" translatable="yes">© 2022-23 Pandora Prime SA, Neuchatel, Switzerland
 Some rights are reserved; for details please read the license agreement below</property>
                     <property name="wrap">True</property>
                     <attributes>
@@ -145,7 +145,7 @@ Some rights are reserved; for details please read the license agreement below</p
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="label" translatable="yes">Wallet for bitcoin, digital assets and bitcoin finance (#BiFi) smart contracts. 
-Tool for reliable hodling (with inheritance options), corporate &amp; organization use, current accounts with instant Lightning payments. Works with single- and multisig setups, based on hardware, air-gaped, cold and server-side hot key storage, involving arbitrary complex time-lock scripts (with miniscript) and wide interoperability (because of use of wallet descriptors). Taproot-enabled from day one, including multisig- and script-based taproot</property>
+Tool for reliable hodling (with inheritance options), corporate &amp; organization use, current accounts with instant Lightning payments. Works with single- and multisig setups, based on hardware, air-gaped, cold and server-side hot key storage, involving arbitrary complex time-lock scripts (with miniscript) and wide interoperability (because of use of wallet descriptors). Taproot-enabled from day one, including multi-sig and script-based taproot</property>
                 <property name="wrap">True</property>
                 <property name="selectable">True</property>
               </object>
@@ -219,7 +219,7 @@ Tool for reliable hodling (with inheritance options), corporate &amp; organizati
                   <object class="GtkLabel">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
-                    <property name="label" translatable="yes">Designed &amp; written in 2022 by Dr. Maxim Orlovsky. The software should be signed with the key of the author. You can copy the key fingerprint from below and verify your app:</property>
+                    <property name="label" translatable="yes">Designed &amp; written in 2022-23 by Dr. Maxim Orlovsky. The software should be signed with the key of the author. You can copy the key fingerprint from below and verify your app:</property>
                     <property name="wrap">True</property>
                   </object>
                   <packing>
