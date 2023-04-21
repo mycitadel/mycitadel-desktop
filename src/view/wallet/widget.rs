@@ -155,6 +155,18 @@ impl Widgets {
         );
         connect!(relm, self.about_mi, connect_activate(_), Msg::About);
 
+        self.history_list.connect_row_activated(|me, path, _| {
+            let model = me.model().unwrap();
+            let iter = model.iter(path).unwrap();
+            let val: String = model.value(&iter, 1).get().unwrap();
+            gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).set_text(&val);
+        });
+        self.utxo_list.connect_row_activated(|me, path, _| {
+            let model = me.model().unwrap();
+            let iter = model.iter(path).unwrap();
+            let val: String = model.value(&iter, 1).get().unwrap();
+            gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).set_text(&val);
+        });
         self.address_list.connect_row_activated(|me, path, _| {
             let model = me.model().unwrap();
             let iter = model.iter(path).unwrap();
@@ -253,6 +265,10 @@ impl Widgets {
 
         self.bind_asset_model(model.asset_model());
 
+        self.history_store
+            .set_sort_column_id(SortColumn::Index(6), SortType::Descending);
+        self.utxo_store
+            .set_sort_column_id(SortColumn::Index(4), SortType::Descending);
         self.address_store
             .set_sort_column_id(SortColumn::Index(6), SortType::Ascending);
 
@@ -373,10 +389,11 @@ impl Widgets {
                 (3, &btc_balance),
                 (4, &item.mining_info()),
                 (5, &item.color()),
+                (6, &item.onchain.status.into_u32()),
                 // TODO: Use description
-                (6, &item.onchain.txid.to_string()),
+                (7, &item.onchain.txid.to_string()),
                 // TODO: Change color depending on the presence of description
-                (7, &descr_color),
+                (8, &descr_color),
             ]);
         }
     }
@@ -390,6 +407,7 @@ impl Widgets {
                 (1, &format!("{}:{}", item.onchain.txid, item.vout)),
                 (2, &btc),
                 (3, &item.mining_info()),
+                (4, &item.onchain.status.into_u32()),
             ]);
         }
     }

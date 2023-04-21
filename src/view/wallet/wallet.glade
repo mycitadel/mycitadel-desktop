@@ -87,6 +87,8 @@
       <column type="gchararray"/>
       <!-- column-name color -->
       <column type="GdkRGBA"/>
+      <!-- column-name height_sort -->
+      <column type="guint"/>
       <!-- column-name description -->
       <column type="gchararray"/>
       <!-- column-name descr_color -->
@@ -283,6 +285,8 @@
       <column type="gchararray"/>
       <!-- column-name height -->
       <column type="gchararray"/>
+      <!-- column-name height_sort -->
+      <column type="guint"/>
     </columns>
   </object>
   <object class="GtkApplicationWindow" id="window">
@@ -1025,7 +1029,7 @@
                             <property name="reorderable">True</property>
                             <property name="sort-indicator">True</property>
                             <property name="sort-order">descending</property>
-                            <property name="sort-column-id">4</property>
+                            <property name="sort-column-id">6</property>
                             <child>
                               <object class="GtkCellRendererText" id="height">
                                 <property name="alignment">right</property>
@@ -1050,8 +1054,8 @@
                                 <property name="ellipsize">middle</property>
                               </object>
                               <attributes>
-                                <attribute name="text">6</attribute>
-                                <attribute name="foreground-rgba">7</attribute>
+                                <attribute name="text">7</attribute>
+                                <attribute name="foreground-rgba">8</attribute>
                                 <attribute name="placeholder-text">1</attribute>
                               </attributes>
                             </child>
@@ -1130,7 +1134,8 @@
                             <property name="title" translatable="yes">Height</property>
                             <property name="clickable">True</property>
                             <property name="reorderable">True</property>
-                            <property name="sort-column-id">3</property>
+                            <property name="sort-indicator">True</property>
+                            <property name="sort-column-id">4</property>
                             <child>
                               <object class="GtkCellRendererText" id="height2">
                                 <property name="alignment">right</property>
@@ -1153,7 +1158,8 @@
                             <child>
                               <object class="GtkCellRendererText" id="txid2">
                                 <property name="ellipsize">middle</property>
-                                <property name="width-chars">32</property>
+                                <property name="family">monospace</property>
+                                <property name="width-chars">66</property>
                               </object>
                               <attributes>
                                 <attribute name="text">1</attribute>
