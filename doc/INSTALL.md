@@ -1,0 +1,126 @@
+Prerequisites
+=============
+
+If you plan to work with hardware wallets it is required to get `hwi`
+application installed and working (this application provides an 
+interface to hardware wallets). In order to do that please follow 
+[the instructions from the official repository][hwi]
+
+
+Using package managers
+======================
+
+## Flatpak (all Linux distributions)
+
+First, you have to get flatpak installed and connected to Flathub remote. 
+While some Linux distributions are shipping with Flatpak and Flathub 
+pre-installed (Debian), others may not have them (Ubuntu).
+
+To install flatpak please follow instructions from the official 
+[flatpak website](https://flatpak.org/setup/). Do not forget to add Flathub 
+as a remote repository:
+
+```console
+$ flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+```
+
+After that, download Mycitadel flatpak file and install with `flatpack 
+install` command, providing the filename of the downloaded file as an argument.
+
+
+## Debian package
+
+This method should work for all Debian-based distributions, including Ubuntu.
+Download deb package from the release files and run locally 
+```console
+$ sudo apt install mycitadel_1.3.0_1_amd64.deb
+```
+replacing `mycitadel_1.3.0_1_amd64.deb` with the downloaded file name 
+matching your platform.
+
+
+## Nix
+
+To be written
+
+
+Compiling from source
+=====================
+
+As an alternative, you may want to compile the program from the source code. 
+This allows not to use binaries downloaded from the internet, reducing the 
+risk of fishing attacks. However, comparing to other options, this is pretty 
+low-level task which may require more qualification.
+
+Please pay attention that at this moment compilation from source doesn't
+provide integration of MyCitadel with the desktop environment (icons, 
+presence in application/startup menu, launcher etc). If you prefer to have a 
+fully-integrated experience, please use package managers as described in the 
+previous section
+
+
+Prerequisites
+-------------
+
+Compilation from source requires you to install additional tools and 
+developer libraries. This operation should be done only once and is OS-specific.
+
+- For Debian Linux, please do
+    ```console
+    $ sudo apt update && \
+      sudo apt install -y build-essentials git cargo libssl-dev pkg-config \
+       libgtk-3-dev libusb-1.0-0-dev libudev-dev python3-dev
+    ```
+
+- For macOS, please do
+    ```console
+    $ brew install gtk+3 libadwaita adwaita-icon-theme libusb
+    ```
+
+- For Windows, you need to install Visual Studio C tools and MSYSY2-based GTK.
+  To do so please follow instructions at
+  <https://www.gtk.org/docs/installations/windows/#using-gtk-from-msys2-packages>.
+
+Cargo is a package manager for rust programming language.
+
+You should have it installed locally; if you are not sure please consult
+[Rust programming language website][rust], providing necessary installation
+instructions.
+
+
+### Using crates.io
+
+Once you have `cargo` installed run the following command:
+```console
+$ cargo install mycitadel-desktop
+```
+
+This will download the source code from https://crates.io, compile and 
+install the latest MyCitadel desktop version on the local system. To run the 
+application type in the command line `mycitadel` command, which will open 
+the application window on your desktop.
+
+
+### Using local repository
+
+You may also clone MyCitadel git repository locally and run copilation from 
+inside of it. This allows installing the latest nightly version from the 
+master branch.
+
+```console
+$ git clone https://github.com/mycitadel/mycitadel-desktop
+$ cd mycitadel-desktop
+$ cargo install --path .
+```
+
+You may also compile a specific release tag; for that after the cloning
+in the reposirory directory run, replacing `v1.3.0` with the desired version 
+name:
+```console
+$ git checkout v1.3.0
+$ cargo install --path .
+```
+
+
+[hwi]: https://github.com/bitcoin-core/HWI
+[rust]: https://rust-lang.org
