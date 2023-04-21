@@ -20,7 +20,8 @@ use gtk::gdk_pixbuf::Pixbuf;
 use gtk::prelude::*;
 use gtk::{
     gdk, Adjustment, ApplicationWindow, Button, CheckButton, Entry, HeaderBar, Image, Label,
-    ListBox, ListStore, MenuItem, Popover, RadioMenuItem, SpinButton, Spinner, Statusbar, TreeView,
+    ListBox, ListStore, MenuItem, Popover, RadioMenuItem, SortColumn, SortType, SpinButton, Spinner,
+    Statusbar, TreeView,
 };
 use relm::Relm;
 use wallet::hd::SegmentIndexes;
@@ -154,6 +155,13 @@ impl Widgets {
         );
         connect!(relm, self.about_mi, connect_activate(_), Msg::About);
 
+        self.address_list.connect_row_activated(|me, path, _| {
+            let model = me.model().unwrap();
+            let iter = model.iter(path).unwrap();
+            let val: String = model.value(&iter, 0).get().unwrap();
+            gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).set_text(&val);
+        });
+
         connect!(
             relm,
             self.fiat_usd,
@@ -244,6 +252,9 @@ impl Widgets {
         }
 
         self.bind_asset_model(model.asset_model());
+
+        self.address_store
+            .set_sort_column_id(SortColumn::Index(6), SortType::Ascending);
 
         self.update_invoice(model);
     }
@@ -389,6 +400,15 @@ impl Widgets {
             let balance = format_btc_value(info.balance);
             let volume = format_btc_value(info.volume);
             let terminal = info.terminal_string();
+            let terminal_sort =
+                (info.addr_src.index.first_index() as u64) | ((info.addr_src.change as u64) << 32);
+            let style = self.address_list.style_context();
+            let addr_color = match (info.balance == 0, info.volume == 0) {
+                (true, true) => style.lookup_color("theme_text_color").unwrap(),
+                (true, false) => gdk::RGBA::parse("grey").unwrap(),
+                (false, false) => gdk::RGBA::parse("dark grey").unwrap(),
+                _ => unreachable!("address with zero volume but positive balance"),
+            };
             self.address_store.insert_with_values(None, &[
                 (0, &info.addr_src.address.to_string()),
                 (1, &balance),
@@ -396,6 +416,8 @@ impl Widgets {
                 (3, &info.tx_count),
                 (4, &info.icon_name()),
                 (5, &terminal),
+                (6, &terminal_sort),
+                (7, &addr_color),
             ]);
         }
     }

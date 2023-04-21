@@ -472,7 +472,7 @@ dependencies = [
 [[package]]
 name = "bpro"
 version = "0.4.0"
-source = "git+https://github.com/pandora-prime/bpro?branch=v0.4#34aabce0587751374f0a6bc38fbcd334ec892cc1"
+source = "git+https://github.com/pandora-prime/bpro?branch=v0.4#698522573ab7777bb21bf837ef40a4cb37bf1d46"
 dependencies = [
  "amplify 3.14.2",
  "bitcoin 0.29.2",
