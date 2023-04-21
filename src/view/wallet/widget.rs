@@ -234,6 +234,10 @@ impl Widgets {
         self.fiat_eur.set_active(model.fiat == Fiat::EUR);
         self.fiat_chf.set_active(model.fiat == Fiat::CHF);
 
+        self.history_store
+            .set_sort_column_id(SortColumn::Index(6), SortType::Descending);
+        self.utxo_store
+            .set_sort_column_id(SortColumn::Index(4), SortType::Descending);
         self.address_store
             .set_sort_column_id(SortColumn::Index(6), SortType::Ascending);
 
@@ -348,6 +352,7 @@ impl Widgets {
                 (3, &btc_balance),
                 (4, &item.mining_info()),
                 (5, &item.color()),
+                (6, &item.onchain.status.into_u32()),
             ]);
         }
     }
@@ -361,6 +366,7 @@ impl Widgets {
                 (1, &item.onchain.txid.to_string()),
                 (2, &btc),
                 (3, &item.mining_info()),
+                (4, &item.onchain.status.into_u32()),
             ]);
         }
     }
