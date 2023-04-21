@@ -83,15 +83,15 @@
       <column type="gchararray"/>
       <!-- column-name balance -->
       <column type="gchararray"/>
-      <!-- column-name height -->
+      <!-- column-name date -->
       <column type="gchararray"/>
-      <!-- column-name color -->
+      <!-- column-name amount_fg -->
       <column type="GdkRGBA"/>
-      <!-- column-name height_sort -->
+      <!-- column-name height -->
       <column type="guint"/>
       <!-- column-name description -->
       <column type="gchararray"/>
-      <!-- column-name descr_color -->
+      <!-- column-name descr_fg -->
       <column type="GdkRGBA"/>
     </columns>
   </object>
@@ -279,13 +279,13 @@
     <columns>
       <!-- column-name address -->
       <column type="gchararray"/>
-      <!-- column-name txid -->
+      <!-- column-name outpoint -->
       <column type="gchararray"/>
       <!-- column-name amount -->
       <column type="gchararray"/>
-      <!-- column-name height -->
+      <!-- column-name date -->
       <column type="gchararray"/>
-      <!-- column-name height_sort -->
+      <!-- column-name height -->
       <column type="guint"/>
     </columns>
   </object>
@@ -1002,7 +1002,7 @@
                         <property name="vexpand">True</property>
                         <property name="model">history_store</property>
                         <property name="reorderable">True</property>
-                        <property name="search-column">0</property>
+                        <property name="search-column">5</property>
                         <child internal-child="selection">
                           <object class="GtkTreeSelection"/>
                         </child>
@@ -1145,7 +1145,8 @@
                         <property name="vexpand">True</property>
                         <property name="model">utxo_store</property>
                         <property name="reorderable">True</property>
-                        <property name="search-column">0</property>
+                        <property name="search-column">5</property>
+                        <property name="tooltip-column">0</property>
                         <child internal-child="selection">
                           <object class="GtkTreeSelection"/>
                         </child>
