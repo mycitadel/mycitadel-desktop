@@ -1,0 +1,5 @@
+mycitadel (1.3.0-1) unstable; urgency=medium
+
+  * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
+
+ -- orlovsky <orlovsky@mycitadel.io>  Fri, 21 Apr 2023 21:43:55 +0200
