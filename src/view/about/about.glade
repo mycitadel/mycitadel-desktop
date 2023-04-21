@@ -76,7 +76,7 @@
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <property name="halign">start</property>
-                    <property name="label" translatable="yes">Pacific Eclipse version (1.3.0)</property>
+                    <property name="label" translatable="yes">Pacific Eclipse (v1.3.0)</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -145,7 +145,7 @@ Some rights are reserved; for details please read the license agreement below</p
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="label" translatable="yes">Wallet for bitcoin, digital assets and bitcoin finance (#BiFi) smart contracts. 
-Tool for reliable hodling (with inheritance options), corporate &amp; organization use, current accounts with instant Lightning payments. Works with single- and multi-sig setups, based on hardware, air-gaped, cold and server-side hot key storage, involving arbitrary complex time-lock scripts (with miniscript) and wide interoperability (because of use of wallet descriptors). Taproot-enabled from day one, including multisig- and script-based taproot</property>
+Tool for reliable hodling (with inheritance options), corporate &amp; organization use, current accounts with instant Lightning payments. Works with single- and multi-sig setups, based on hardware, air gaped, cold and server-side hot key storage, involving arbitrary complex time-lock scripts (with miniscript) and wide interoperability (because of use of wallet descriptors). Taproot-enabled from day one, including multisig- and script-based taproot</property>
                 <property name="wrap">True</property>
                 <property name="selectable">True</property>
               </object>
