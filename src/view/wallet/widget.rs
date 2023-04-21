@@ -20,8 +20,8 @@ use gtk::gdk_pixbuf::Pixbuf;
 use gtk::prelude::*;
 use gtk::{
     gdk, Adjustment, ApplicationWindow, Button, CheckButton, Entry, HeaderBar, Image, Label,
-    ListBox, ListStore, MenuItem, Popover, RadioMenuItem, SortColumn, SortType, SpinButton, Spinner,
-    Statusbar, TreeView,
+    ListBox, ListStore, MenuItem, Popover, RadioMenuItem, SortColumn, SortType, SpinButton,
+    Spinner, Statusbar, TreeView,
 };
 use relm::Relm;
 use wallet::hd::SegmentIndexes;
@@ -444,7 +444,7 @@ impl Widgets {
         self.balance_lbl
             .set_text(&format!("{} sat", state.balance.to_string()));
         self.balance_btc_lbl
-            .set_text(&format!("{:.4}", state.balance_btc()));
+            .set_text(&format!("{}.", state.balance_btc() as u64));
         self.balance_sat_lbl.set_text(&state.balance.to_string());
 
         /*
