@@ -100,6 +100,13 @@ install the latest MyCitadel desktop version on the local system. To run the
 application type in the command line `mycitadel` command, which will open 
 the application window on your desktop.
 
+If you are getting compilation errors, please try the following:
+
+1. Update to the latest rust by running `rustup update`.
+2. Try doing `cargo install --locked mycitadel-desktop`, which will prevent 
+   from using upstream dependencies which may have broken semantic versioning
+   in their recent updates.
+
 
 ### Using local repository
 
@@ -120,6 +127,9 @@ name:
 $ git checkout v1.3.0
 $ cargo install --path .
 ```
+
+If the build fails try to do the same things as described in the "Using 
+crates.io" section above.
 
 
 [hwi]: https://github.com/bitcoin-core/HWI
