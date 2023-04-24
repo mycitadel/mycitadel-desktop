@@ -3,6 +3,7 @@
 /.flatpak-builder
 /build
 /debian/.debhelper
+/debian/mycitadel/
 /releases
 /obj-*
 

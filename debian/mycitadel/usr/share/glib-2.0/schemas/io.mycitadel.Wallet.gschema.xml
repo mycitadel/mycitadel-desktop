@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<schemalist gettext-domain="mycitadel">
-	<schema id="io.mycitadel.Wallet" path="/io/mycitadel/Wallet/">
-	</schema>
-</schemalist>
