@@ -36,10 +36,10 @@ Using package managers
 This is the recommended way of installing MyCitadel for Debian systems.
 
 You need to pick up a proper deb file matching your distribution. For
-instance, for distributions based on the current Debian stable please
-use `mycitadel_*_debian11_amd64.deb` files; for more frequently updated
+instance, for distributions based on the current Debian stable (like PureOS) 
+please use `mycitadel_*_debian11_amd64.deb` files; for more frequently updated
 distributions (like Ubuntu) try `mycitadel_*_ubuntu_amd64.deb`. The
-difference is that `debian11` version depends on Python 3.9, which is no
+difference is that `debian11` version depends on Python 3.9, which is no 
 longer available on more recent Ubuntu releases.
 
 Download deb package from the release files matching your platform and run 

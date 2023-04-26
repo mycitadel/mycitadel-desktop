@@ -147,8 +147,9 @@ dependencies = [
 
 [[package]]
 name = "bitcoin_blockchain"
-version = "0.10.0-alpha.2"
-source = "git+https://github.com/BP-WG/bp-foundation#164eb2f20767f33bbbc0da5bad580fc4ff83161f"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "90f2d44b94b4add196f2f8bfa314873b9ff767dd16c7879c8d99c8a5eaeb242a"
 dependencies = [
  "amplify",
  "chrono",
@@ -167,8 +168,9 @@ dependencies = [
 
 [[package]]
 name = "bitcoin_hd"
-version = "0.10.0-alpha.2"
-source = "git+https://github.com/BP-WG/descriptor-wallet#c6336c79b0003c547b35500b17912b4751a30631"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dae6bc05feed3ae9f379f5be383d28a0cefda41c12307e7940e4a17a4775957a"
 dependencies = [
  "amplify",
  "bitcoin",
@@ -181,15 +183,16 @@ dependencies = [
 
 [[package]]
 name = "bitcoin_onchain"
-version = "0.10.0-alpha.2"
-source = "git+https://github.com/BP-WG/descriptor-wallet#c6336c79b0003c547b35500b17912b4751a30631"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a797b9174676cc3a3567f3bc3fb640536e2443c804b78f622cf8514089bf01c8"
 dependencies = [
  "amplify",
  "bitcoin",
  "bitcoin_hd",
  "chrono",
  "descriptors",
- "electrum-client 0.13.0",
+ "electrum-client",
  "miniscript",
  "serde",
  "strict_encoding",
@@ -197,8 +200,9 @@ dependencies = [
 
 [[package]]
 name = "bitcoin_scripts"
-version = "0.10.0-alpha.2"
-source = "git+https://github.com/BP-WG/bp-foundation#164eb2f20767f33bbbc0da5bad580fc4ff83161f"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9d4ab9af39abb9d9dfb52c3926bde921da7e2289a2a8a7fca35369ecc0148054"
 dependencies = [
  "amplify",
  "bitcoin",
@@ -217,8 +221,9 @@ checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
 
 [[package]]
 name = "bpro"
-version = "0.3.0"
-source = "git+https://github.com/pandora-prime/bpro#09abd92751e8ebbbd431f3b4dd57e8a62dc42e9b"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2747117bec775ab564dab81768610723c1fc231bf1f9a919cbce040d6446019a"
 dependencies = [
  "amplify",
  "bitcoin",
@@ -226,7 +231,7 @@ dependencies = [
  "chrono",
  "clap",
  "descriptor-wallet",
- "electrum-client 0.14.0",
+ "electrum-client",
  "hwi",
  "lnpbp",
  "miniscript",
@@ -510,8 +515,9 @@ dependencies = [
 
 [[package]]
 name = "descriptor-wallet"
-version = "0.10.0-alpha.2"
-source = "git+https://github.com/BP-WG/descriptor-wallet#bb346754a87f95c93374b8057cc92cdd5abbafea"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "251cff72bc98b4b96b99bee9f31e8eef264fed881c99d70dc11320ab31d53219"
 dependencies = [
  "amplify",
  "bitcoin",
@@ -521,7 +527,7 @@ dependencies = [
  "bitcoin_scripts",
  "chrono",
  "descriptors",
- "electrum-client 0.13.0",
+ "electrum-client",
  "hwi",
  "psbt",
  "slip132",
@@ -530,8 +536,9 @@ dependencies = [
 
 [[package]]
 name = "descriptors"
-version = "0.10.0-alpha.2"
-source = "git+https://github.com/BP-WG/descriptor-wallet#c6336c79b0003c547b35500b17912b4751a30631"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e4b4337ad272d5393d191ba0fae719992b5906efe94661902079c546daca7e49"
 dependencies = [
  "amplify",
  "bitcoin",
@@ -543,24 +550,6 @@ dependencies = [
  "serde",
  "serde_with 2.3.2",
  "strict_encoding",
-]
-
-[[package]]
-name = "electrum-client"
-version = "0.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "43224a43201a58034759d2682c603607d98ea0ff459a8d3622e0616b2badcd5c"
-dependencies = [
- "bitcoin",
- "byteorder",
- "libc",
- "log",
- "rustls",
- "serde",
- "serde_json",
- "webpki",
- "webpki-roots",
- "winapi",
 ]
 
 [[package]]
@@ -1217,7 +1206,7 @@ dependencies = [
  "clap",
  "colored",
  "descriptor-wallet",
- "electrum-client 0.14.0",
+ "electrum-client",
  "embed-resource",
  "gladis",
  "gtk",
@@ -1421,8 +1410,9 @@ dependencies = [
 
 [[package]]
 name = "psbt"
-version = "0.10.0-alpha.2"
-source = "git+https://github.com/BP-WG/descriptor-wallet#c6336c79b0003c547b35500b17912b4751a30631"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "00b1ec8cb789ff3f2029bb3aa0e9eed8344bf1c066e53b99111cfedab40cc82e"
 dependencies = [
  "amplify",
  "bitcoin",
@@ -1777,8 +1767,9 @@ dependencies = [
 
 [[package]]
 name = "slip132"
-version = "0.10.0-alpha.2"
-source = "git+https://github.com/BP-WG/descriptor-wallet#c6336c79b0003c547b35500b17912b4751a30631"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "890b12cf298c4548739d6b1e53286576e43014ff1d3421751f2c26c80cc7a639"
 dependencies = [
  "amplify",
  "bitcoin",
