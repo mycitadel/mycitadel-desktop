@@ -9,6 +9,8 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
+#![windows_subsystem = "windows"]
+
 //! Main binary module. See [`launch::Component`] for the main app component.
 
 use mycitadel::view::launch;
