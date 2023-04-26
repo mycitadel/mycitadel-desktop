@@ -53,6 +53,9 @@ serde_json = { version = "1.0.79" }
 serde_yaml = { version = "0.9", optional = true }
 colored = { version = "2", optional = true }
 
+[target.'cfg(windows)'.build-dependencies]
+embed-resource = "2.1"
+
 [features]
 default = ["ui"]
 ui = []
