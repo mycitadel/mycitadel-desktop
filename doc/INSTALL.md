@@ -1,14 +1,56 @@
 Prerequisites
 =============
 
+## HWI
+
 If you plan to work with hardware wallets it is required to get `hwi`
 application installed and working (this application provides an 
 interface to hardware wallets). In order to do that please follow 
-[the instructions from the official repository][hwi]
+[the instructions from the official repository][hwi].
+
+One of the simplest ways to install it on Linux and macOS should be 
+running
+```console
+$ sudo pip3 install hwi
+```
+
+Note that you need to have Python 3 and PIP installed. On Debian-based
+systems this can be achieved through
+```console
+$ sudo apt install python3 python3-pip
+```
+For other systems, please refer to the python website for the 
+installation instructions.
+
+To see your hardware wallets you may need to modify udev rules; please
+instruct hardware wallet documentation. The rule of thumb: if your device
+is not seen with the original wallet companion app and doesn't appear in
+`hwi enumerate` output, it won't be seen by MyCitadel either.
 
 
 Using package managers
 ======================
+
+## Debian package
+
+This is the recommended way of installing MyCitadel for Debian systems.
+
+You need to pick up a proper deb file matching your distribution. For
+instance, for distributions based on the current Debian stable please
+use `mycitadel_*_debian11_amd64.deb` files; for more frequently updated
+distributions (like Ubuntu) try `mycitadel_*_ubuntu_amd64.deb`. The
+difference is that `debian11` version depends on Python 3.9, which is no
+longer available on more recent Ubuntu releases.
+
+Download deb package from the release files matching your platform and run 
+locally
+```console
+$ sudo apt install mycitadel_N_OS_amd64.deb
+```
+replacing `N` and `OS` in the package name with the filename you have 
+downloaded (like `mycitadel_1.3.0_1_ubuntu_amd64.deb`) matching latest 
+MyCitadel version and the target platform.
+
 
 ## Flatpak (all Linux distributions)
 
@@ -24,19 +66,8 @@ as a remote repository:
 $ flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 ```
 
-After that, download Mycitadel flatpak file and install with `flatpack 
+After that, download MyCitadel flatpak file and install with `flatpack 
 install` command, providing the filename of the downloaded file as an argument.
-
-
-## Debian package
-
-This method should work for all Debian-based distributions, including Ubuntu.
-Download deb package from the release files and run locally 
-```console
-$ sudo apt install mycitadel_1.3.0_1_amd64.deb
-```
-replacing `mycitadel_1.3.0_1_amd64.deb` with the downloaded file name 
-matching your platform.
 
 
 ## Nix
@@ -68,8 +99,12 @@ developer libraries. This operation should be done only once and is OS-specific.
 - For Debian Linux, please do
     ```console
     $ sudo apt update && \
-      sudo apt install -y build-essentials git cargo libssl-dev pkg-config \
-       libgtk-3-dev libusb-1.0-0-dev libudev-dev python3-dev
+      sudo apt install -y build-essentials git cargo pkg-config libgtk-3-dev python3-dev
+    ```
+  
+    If you'd like to build debian package for your machine, please also install
+    ```console
+    $ sudo apt install -y debhelper dh-make
     ```
 
 - For macOS, please do
