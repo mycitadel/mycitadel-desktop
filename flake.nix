@@ -39,10 +39,12 @@
 
       commonArgs = {
         src = ./.;
-        buildInputs = [
-          pkgs.pango
-          pkgs.atk
-          pkgs.gtk3
+        buildInputs = with pkgs; [
+          python311
+          pango
+          atk
+          gtk3
+          wrapGAppsHook
         ];
         nativeBuildInputs = [
           pkgs.pkgconfig
