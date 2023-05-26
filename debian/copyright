@@ -1,0 +1,35 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: mycitadel
+Upstream-Contact: Dr Maxim Orlovsky <orlovsky@mycitadel.io>
+Source: <https://mycitadel.io>
+
+Files: *
+Copyright: 2022-23 Pandora Prime SA <orlovsky@mycitadel.io>
+License: AGPL-3.0+
+
+Files: debian/*
+Copyright: 2022-23 Pandora Prime SA <orlovsky@mycitadel.io>
+License: AGPL-3.0+
+
+License: AGPL-3.0+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU Afero General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+ .
+ This package is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ .
+ You should have received a copy of the GNU Afero General Public License
+ along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+# Please also look if there are files or directories which have a
+# different copyright/license attached and list them here.
+# Please avoid picking licenses with terms that are more restrictive than the
+# packaged work, as it may make Debian's contributions unacceptable upstream.
+#
+# If you need, there are some extra license texts available in two places:
+#   /usr/share/debhelper/dh_make/licenses/
+#   /usr/share/common-licenses/

@@ -17,8 +17,8 @@ use gladis::Gladis;
 use gtk::gdk_pixbuf::Pixbuf;
 use gtk::prelude::*;
 use gtk::{
-    Adjustment, ApplicationWindow, Button, Image, ListBox, ListBoxRow, Notebook,
-    RecentChooserWidget, Switch,
+    Adjustment, ApplicationWindow, Button, Image, InfoBar, ListBox, ListBoxRow, Notebook,
+    RecentChooserWidget, ResponseType, Switch,
 };
 use relm::Relm;
 use wallet::descriptors::DescriptorClass;
@@ -31,6 +31,7 @@ use crate::view::{APP_ICON, APP_ICON_TOOL};
 pub struct Widgets {
     window: ApplicationWindow,
     logo_img: Image,
+    info_bar: InfoBar,
     about_btn: Button,
     pages: Notebook,
     hwcount_adj: Adjustment,
@@ -141,6 +142,11 @@ impl Widgets {
     }
 
     pub(super) fn connect(&self, relm: &Relm<super::Component>) {
+        self.info_bar.connect_response(|me, resp| {
+            if resp == ResponseType::Close {
+                me.set_visible(false);
+            }
+        });
         connect!(relm, self.about_btn, connect_clicked(_), Msg::About);
         connect!(
             relm,

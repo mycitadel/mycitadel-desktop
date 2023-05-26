@@ -39,12 +39,12 @@ ureq = { version = "2.4.0", features = ["json"] }
 amplify = "3.14.2"
 bitcoin = "0.29.2"
 miniscript = "9.0.1"
-bitcoin_scripts = "0.10.0-alpha.2"
-bitcoin_blockchain = "0.10.0-alpha.2"
-descriptor-wallet = { version = "0.10.0-alpha.2", features = ["miniscript", "keygen", "hwi", "construct"] }
+bitcoin_scripts = "0.10.0"
+bitcoin_blockchain = "0.10.0"
+descriptor-wallet = { version = "0.10.0", features = ["miniscript", "keygen", "hwi", "construct"] }
 bpro = { version = "0.4.0", features = ["electrum"] }
 hwi = "0.6.0"
-rgb-contracts = "0.10.0"
+rgb-contracts = "0.10.0-beta.2"
 electrum-client = "0.14.0"
 
 clap = { version = "~3.2.23", features = ["derive"], optional = true }
@@ -53,6 +53,9 @@ serde_with = { version = "1.14", optional = true }
 serde_json = { version = "1.0.79" }
 serde_yaml = { version = "0.9", optional = true }
 colored = { version = "2", optional = true }
+
+[target.'cfg(windows)'.build-dependencies]
+embed-resource = "2.1"
 
 [features]
 default = ["ui"]
@@ -65,5 +68,5 @@ serde = ["serde_with", "serde_yaml",
 bitcoin_scripts = { git = "https://github.com/BP-WG/bp-foundation" }
 bitcoin_blockchain = { git = "https://github.com/BP-WG/bp-foundation" }
 descriptor-wallet = { git = "https://github.com/BP-WG/descriptor-wallet" }
-bpro = { git = "https://github.com/pandora-prime/bpro", branch = "v0.4" }
+bpro = { git = "https://github.com/pandora-prime/bpro", branch = "v0.5" }
 rgb-contracts = { git = "https://github.com/RGB-WG/rgb" }

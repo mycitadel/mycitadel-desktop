@@ -1,0 +1,64 @@
+mycitadel (1.3.0-1) unstable; urgency=medium
+
+  * Account-based multi-sigs with time-locks and complex miniscript descriptors.
+    This adds ability to compose complex time-locked conditions involving same
+    signers in different time-locks (for instance having 2-of-4 multi-sig which
+    in 1 year becomes 1-of-2)
+
+  [ UI improvements ]
+
+  * Double-click on addresses copies address to clipboard
+  * Double-click on history entry copies transaction id to clipboard
+  * Double-click on coin entry copies outpoint information to clipboard
+  * Added displaying of unused addresses, visually distinguished from used
+
+  [ New distributive packages ]
+
+  * Debian package
+  * Flatpak package
+  * Freedesktop environment integration
+
+ -- Dr Maxim Orlovsky <orlovsky@mycitadel.io>  Sat, 23 Apr 2023 00:43:55 +0200
+
+mycitadel (1.2.1-1) unstable; urgency=medium
+
+  * Fix version information in "About" dialog
+
+ -- Dr Maxim Orlovsky <orlovsky@mycitadel.io>  Fri, 22 Apr 2023 21:43:55 +0200
+
+mycitadel (1.2.0-1) unstable; urgency=medium
+
+  * Allow hardware signers on testnet
+  * Rename command-line tool to `mcw`
+  * Update to LNP/BP stack v0.9
+  * Update to rust-bitcoin v0.29.2
+  * Update to rust-miniscript 9.0
+  * Update to HWI 2.2.1
+  * Add nix flake support
+  * Test and add an instruction to use `lld` for linking
+
+ -- Dr Maxim Orlovsky <orlovsky@mycitadel.io>  Wed, 12 Apr 2023 21:43:55 +0200
+
+mycitadel (1.1.0-1) unstable; urgency=medium
+
+  * Ability to sign PSBTs with xpriv
+    To use non-hardware signers just create a read-only xpub in a wallet and use
+    "sign with xpriv" feature from the screenshot above when signing PSBT.
+
+  * Selecting network to publish PSBT
+  * Add basic nix env to compile the project
+  * Fixed bug with calendar month selection
+  * Fixed bug with unsaved signer name under certain conditions
+
+ -- Dr Maxim Orlovsky <orlovsky@mycitadel.io>  Fri, 6 May 2022 21:43:55 +0200
+
+mycitadel (1.0.0-1) unstable; urgency=medium
+
+  * Hardware signing devices (tested with Ledger Nano X, Ledger Nano S, BitBox2)
+  * Multisigs and single-sig wallets
+  * Taproot, segwit, nested segwit and legacy addresses
+  * Taproot script spendings
+  * Complex timelock spending conditions with variable multisigs
+  * Signing arbitrary PSBTs with hardware signers
+
+ -- Dr Maxim Orlovsky <orlovsky@mycitadel.io>  Tue, 3 May 2022 21:43:55 +0200
