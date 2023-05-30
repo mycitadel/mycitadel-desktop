@@ -158,6 +158,8 @@ impl ViewModel {
         let rgb = self.wallet.rgb_mut();
 
         let status = rgb.import_contract(contract.unbindle(), resolver)?;
+        eprintln!("Contract importing status:");
+        eprintln!("{status}");
 
         let iface = rgb
             .contract_iface_named(id, "RGB20")

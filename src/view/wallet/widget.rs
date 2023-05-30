@@ -21,7 +21,7 @@ use gtk::prelude::*;
 use gtk::{
     gdk, Adjustment, ApplicationWindow, Button, CheckButton, Entry, HeaderBar, Image, Label,
     ListBox, ListStore, MenuItem, Popover, RadioMenuItem, SortColumn, SortType, SpinButton,
-    Spinner, Statusbar, TextView, TreeView,
+    Spinner, Statusbar, TextBuffer, TreeView,
 };
 use relm::Relm;
 use wallet::hd::SegmentIndexes;
@@ -124,7 +124,8 @@ pub struct Widgets {
     index_img: Image,
     address_fld: Entry,
 
-    contract_text: TextView,
+    contract_text: TextBuffer,
+    import_popover: Popover,
     import_btn: Button,
 }
 
@@ -227,6 +228,17 @@ impl Widgets {
             gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).set_text(&val);
         });
 
+        let import_btn = self.import_btn.clone();
+        self.contract_text.connect_changed(move |buffer| {
+            import_btn.set_sensitive(buffer.char_count() > 0);
+        });
+        let popover = self.import_popover.clone();
+        let contract_text = self.contract_text.clone();
+        self.import_btn.connect_clicked(move |_| {
+            contract_text.set_text("");
+            popover.hide();
+        });
+
         connect!(
             relm,
             self.window,
@@ -285,9 +297,11 @@ impl Widgets {
     }
 
     pub fn contract_import_text(&self) -> String {
-        let buffer = self.contract_text.buffer().unwrap();
-        let (start, end) = buffer.bounds();
-        buffer.text(&start, &end, false).unwrap().to_string()
+        let (start, end) = self.contract_text.bounds();
+        self.contract_text
+            .text(&start, &end, false)
+            .unwrap()
+            .to_string()
     }
 
     pub fn update_invoice(&self, model: &ViewModel) {
