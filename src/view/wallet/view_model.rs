@@ -10,11 +10,17 @@
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
 use std::collections::BTreeSet;
+use std::convert::Infallible;
 use std::path::PathBuf;
+use std::str::FromStr;
 
 use bpro::{file, DescriptorError, ElectrumServer, FileDocument, Signer, Wallet, WalletSettings};
+use rgb::BlockchainResolver;
+use rgbstd::containers::{Bindle, BindleParseError, Contract};
+use rgbstd::contract::ContractId;
 use rgbstd::interface::rgb20::Rgb20;
-use rgbstd::persistence::Inventory;
+use rgbstd::persistence::{Inventory, InventoryError};
+use rgbstd::validation;
 use wallet::descriptors::DescriptorClass;
 use wallet::hd::UnhardenedIndex;
 
@@ -58,6 +64,18 @@ pub struct ViewModel {
 
     #[getter(as_copy)]
     pub exchange_rate: f64,
+}
+
+#[derive(Debug, Display, Error, From)]
+#[display(inner)]
+pub enum RgbImportError {
+    #[from]
+    Bindle(BindleParseError<ContractId>),
+    #[from]
+    Import(InventoryError<Infallible>),
+    /// the provided contract doesn't implement RGB20 interface.
+    #[display(doc_comments)]
+    NotRgb20,
 }
 
 impl ViewModel {
@@ -127,5 +145,33 @@ impl ViewModel {
         } else {
             None
         })
+    }
+
+    pub fn import_rgb_contract(
+        &mut self,
+        text: String,
+        resolver: &mut BlockchainResolver,
+    ) -> Result<validation::Status, RgbImportError> {
+        let contract = Bindle::<Contract>::from_str(&text)?;
+        let id = contract.id();
+
+        let rgb = self.wallet.rgb_mut();
+
+        let status = rgb.import_contract(contract.unbindle(), resolver)?;
+
+        let iface = rgb
+            .contract_iface_named(id, "RGB20")
+            .map_err(|_| RgbImportError::NotRgb20)?;
+        let iface = Rgb20::from(iface);
+        let spec = iface.spec();
+        self.asset_model.append(&AssetInfo::with(
+            spec.name(),
+            spec.ticker(),
+            0,
+            spec.precision.into(),
+            &iface.contract_id().to_string(),
+        ));
+
+        Ok(status)
     }
 }

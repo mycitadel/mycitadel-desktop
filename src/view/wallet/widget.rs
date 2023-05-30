@@ -21,7 +21,7 @@ use gtk::prelude::*;
 use gtk::{
     gdk, Adjustment, ApplicationWindow, Button, CheckButton, Entry, HeaderBar, Image, Label,
     ListBox, ListStore, MenuItem, Popover, RadioMenuItem, SortColumn, SortType, SpinButton,
-    Spinner, Statusbar, TreeView,
+    Spinner, Statusbar, TextView, TreeView,
 };
 use relm::Relm;
 use wallet::hd::SegmentIndexes;
@@ -123,6 +123,9 @@ pub struct Widgets {
     index_adj: Adjustment,
     index_img: Image,
     address_fld: Entry,
+
+    contract_text: TextView,
+    import_btn: Button,
 }
 
 impl Widgets {
@@ -137,6 +140,7 @@ impl Widgets {
         connect!(relm, self.new_btn, connect_clicked(_), Msg::New);
         connect!(relm, self.open_btn, connect_clicked(_), Msg::Open);
         connect!(relm, self.settings_btn, connect_clicked(_), Msg::Settings);
+        connect!(relm, self.import_btn, connect_clicked(_), Msg::ImportRgb);
         connect!(
             relm,
             self.pay_btn,
@@ -278,6 +282,12 @@ impl Widgets {
     fn bind_asset_model(&self, model: &AssetModel) {
         self.asset_list
             .bind_model(Some(model), move |item| asset_row::RowWidgets::init(item));
+    }
+
+    pub fn contract_import_text(&self) -> String {
+        let buffer = self.contract_text.buffer().unwrap();
+        let (start, end) = buffer.bounds();
+        buffer.text(&start, &end, false).unwrap().to_string()
     }
 
     pub fn update_invoice(&self, model: &ViewModel) {

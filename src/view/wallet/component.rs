@@ -26,6 +26,7 @@ use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{ApplicationWindow, ResponseType};
 use relm::{init, Channel, Relm, StreamHandle, Update, Widget};
+use rgb::BlockchainResolver;
 use wallet::hd::{SegmentIndexes, UnhardenedIndex};
 use wallet::lex_order::lex_order::LexOrder;
 
@@ -49,6 +50,8 @@ pub struct Component {
 
     settings: relm::Component<settings::Component>,
     launcher_stream: Option<StreamHandle<launch::Msg>>,
+
+    resolver: BlockchainResolver,
 }
 
 impl Component {
@@ -353,6 +356,10 @@ impl Update for Component {
                     .as_ref()
                     .map(|stream| stream.emit(launch::Msg::ShowPage(launch::Page::Import)));
             }
+            Msg::ImportRgb => {
+                let text = self.widgets.contract_import_text();
+                self.model.import_rgb_contract(text, &mut self.resolver);
+            }
             Msg::Close => self.close(),
             Msg::About => {
                 self.launcher_stream
@@ -559,6 +566,11 @@ impl Widget for Component {
 
         electrum_worker.sync();
 
+        // TODO: remove the panic and allow user to fix resolver settings
+        let resolver =
+            BlockchainResolver::with(&model.wallet().as_settings().electrum().to_string())
+                .expect("invalid electrum server");
+
         Component {
             model,
             widgets,
@@ -573,6 +585,7 @@ impl Widget for Component {
             addr_buffer: empty!(),
 
             launcher_stream: None,
+            resolver,
         }
     }
 }

@@ -15,6 +15,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "aae1277d39aeec15cb388266ecc24b11c80469deae6067e17a1a7aa9e5c1f234"
 
 [[package]]
+name = "aho-corasick"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "67fc08ce920c31afb70f013dcce1bfc3a3195de6a228474e45e1f145b36f8d04"
+dependencies = [
+ "memchr",
+]
+
+[[package]]
 name = "aluvm"
 version = "0.10.2"
 source = "git+https://github.com/AluVM/rust-aluvm#8bd7539ae4c4a42c58381a32ae189c427dd167b8"
@@ -225,7 +234,7 @@ version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d9b39be18770d11421cdb1b9947a45dd3f37e93092cbf377614828a319d5fee8"
 dependencies = [
- "hermit-abi",
+ "hermit-abi 0.1.19",
  "libc",
  "winapi",
 ]
@@ -295,6 +304,7 @@ dependencies = [
  "bitcoin_hashes 0.12.0",
  "hex_lit",
  "secp256k1 0.27.0",
+ "serde",
 ]
 
 [[package]]
@@ -331,6 +341,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5d7066118b13d4b20b23645932dfb3a81ce7e29f95726c2036fa33cd7b092501"
 dependencies = [
  "bitcoin-private",
+ "serde",
 ]
 
 [[package]]
@@ -477,7 +488,7 @@ dependencies = [
  "bitcoin_scripts",
  "chrono",
  "descriptor-wallet",
- "electrum-client",
+ "electrum-client 0.14.1",
  "hwi",
  "lnpbp",
  "miniscript",
@@ -832,6 +843,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "electrum-client"
+version = "0.15.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "06bd24afe8bbe869220a7f03ff413dcb9c4824a663e8f06f3cbd7f1c75126d21"
+dependencies = [
+ "bitcoin 0.30.0",
+ "bitcoin-private",
+ "byteorder",
+ "libc",
+ "log",
+ "rustls",
+ "serde",
+ "serde_json",
+ "webpki",
+ "webpki-roots",
+ "winapi",
+]
+
+[[package]]
 name = "embed-resource"
 version = "2.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -854,6 +884,40 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "env_logger"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "85cdab6a89accf66733ad5a1693a4dcced6aeff64602b634530dd73c1f3ee9f0"
+dependencies = [
+ "humantime",
+ "is-terminal",
+ "log",
+ "regex",
+ "termcolor",
+]
+
+[[package]]
+name = "errno"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4bcfec3a70f97c962c307b2d2c56e358cf1d00b558d74262b5f929ee8cc7e73a"
+dependencies = [
+ "errno-dragonfly",
+ "libc",
+ "windows-sys",
+]
+
+[[package]]
+name = "errno-dragonfly"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "aa68f1b12764fab894d2755d2518754e71b4fd80ecfb822714a1206c2aab39bf"
+dependencies = [
+ "cc",
+ "libc",
 ]
 
 [[package]]
@@ -1240,6 +1304,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "hermit-abi"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fed44880c466736ef9a5c5b5facefb5ed0785676d0c02d612db14e54f0d84286"
+
+[[package]]
 name = "hex"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1250,6 +1320,12 @@ name = "hex_lit"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3011d1213f159867b13cfd6ac92d2cd5f1345762c63be3554e84092d85a50bbd"
+
+[[package]]
+name = "humantime"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9a3a5bfb195931eeb336b2a7b4d761daec841b97f947d34394601737a7bba5e4"
 
 [[package]]
 name = "hwi"
@@ -1356,6 +1432,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "io-lifetimes"
+version = "1.0.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eae7b9aee968036d54dce06cebaefd919e4472e753296daccd6d344e3e2df0c2"
+dependencies = [
+ "hermit-abi 0.3.1",
+ "libc",
+ "windows-sys",
+]
+
+[[package]]
+name = "is-terminal"
+version = "0.4.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "adcf93614601c8129ddf72e2d5633df827ba6551541c6d8c59520a371475be1f"
+dependencies = [
+ "hermit-abi 0.3.1",
+ "io-lifetimes",
+ "rustix",
+ "windows-sys",
+]
+
+[[package]]
 name = "itoa"
 version = "1.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1381,6 +1480,12 @@ name = "libc"
 version = "0.2.144"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2b00cc1c228a6782d0f076e7b232802e0c5689d41bb5df366f2a6b6621cfdfe1"
+
+[[package]]
+name = "linux-raw-sys"
+version = "0.3.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ef53942eb7bf7ff43a617b3e2c1c4a5ecf5944a7c1bc12d7ee39bbb15e5c1519"
 
 [[package]]
 name = "lnpbp"
@@ -1506,7 +1611,7 @@ dependencies = [
  "clap",
  "colored",
  "descriptor-wallet",
- "electrum-client",
+ "electrum-client 0.14.1",
  "embed-resource",
  "gladis",
  "gtk",
@@ -1515,6 +1620,7 @@ dependencies = [
  "once_cell",
  "relm",
  "relm-derive",
+ "rgb-contracts",
  "rgb-std",
  "rgb-wallet",
  "serde",
@@ -1816,6 +1922,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "regex"
+version = "1.8.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "81ca098a9821bd52d6b24fd8b10bd081f47d39c22778cafaa75a2857a62c6390"
+dependencies = [
+ "aho-corasick",
+ "memchr",
+ "regex-syntax",
+]
+
+[[package]]
+name = "regex-syntax"
+version = "0.7.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "436b050e76ed2903236f032a59761c1eb99e1b0aead2c257922771dab1fc8c78"
+
+[[package]]
 name = "relm"
 version = "0.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1844,6 +1967,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "rgb-contracts"
+version = "0.10.0-beta.2"
+source = "git+https://github.com/RGB-WG/rgb#c693a01f4a048d680d1d7c50e64f66757d3721d2"
+dependencies = [
+ "amplify 4.0.0",
+ "baid58",
+ "bitcoin 0.30.0",
+ "bp-core",
+ "commit_verify",
+ "electrum-client 0.15.1",
+ "env_logger",
+ "log",
+ "rgb-persist-fs",
+ "rgb-std",
+ "rgb-wallet",
+ "serde",
+ "serde_yaml",
+ "strict_types",
+]
+
+[[package]]
 name = "rgb-core"
 version = "0.10.3"
 source = "git+https://github.com/RGB-WG/rgb-core#ee1ba44108826dee8c60a1d0f14d3631382a347e"
@@ -1864,9 +2008,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "rgb-persist-fs"
+version = "0.10.0"
+source = "git+https://github.com/RGB-WG/rgb#c693a01f4a048d680d1d7c50e64f66757d3721d2"
+dependencies = [
+ "amplify 4.0.0",
+ "rgb-std",
+ "strict_encoding 2.3.0",
+]
+
+[[package]]
 name = "rgb-std"
 version = "0.10.2"
-source = "git+https://github.com/RGB-WG/rgb-wallet?branch=rgb20#83f97df8a69d3eea0c14806e9f7d932cdb8e0761"
+source = "git+https://github.com/RGB-WG/rgb-wallet#42d32f2e0159ded1490bd79d2001fd6b30938c5e"
 dependencies = [
  "amplify 4.0.0",
  "baid58",
@@ -1884,8 +2038,7 @@ dependencies = [
 [[package]]
 name = "rgb-wallet"
 version = "0.10.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cb00fe6b8bb5f9b6586f6d92a579ccd92be85e27d9160ba21d96c6df0901bee2"
+source = "git+https://github.com/RGB-WG/rgb-wallet#42d32f2e0159ded1490bd79d2001fd6b30938c5e"
 dependencies = [
  "amplify 4.0.0",
  "baid58",
@@ -1934,6 +2087,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bfa0f585226d2e68097d4f95d113b15b83a82e819ab25717ec0590d9584ef366"
 dependencies = [
  "semver",
+]
+
+[[package]]
+name = "rustix"
+version = "0.37.19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "acf8729d8542766f1b2cf77eb034d52f40d375bb8b615d0b147089946e16613d"
+dependencies = [
+ "bitflags",
+ "errno",
+ "io-lifetimes",
+ "libc",
+ "linux-raw-sys",
+ "windows-sys",
 ]
 
 [[package]]
@@ -2726,6 +2893,15 @@ name = "windows"
 version = "0.48.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e686886bc078bc1b0b600cac0147aadb815089b6e4da64016cbd754b6342700f"
+dependencies = [
+ "windows-targets",
+]
+
+[[package]]
+name = "windows-sys"
+version = "0.48.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "677d2418bec65e3338edb076e806bc1ec15693c5d0104683f2efe857f61056a9"
 dependencies = [
  "windows-targets",
 ]

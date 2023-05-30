@@ -36,6 +36,7 @@ pub enum Msg {
     About,
     Duplicate,
     Import,
+    ImportRgb,
     Launch(launch::Msg),
     Settings,
     Update(Vec<Signer>, BTreeSet<DescriptorClass>, ElectrumServer),
