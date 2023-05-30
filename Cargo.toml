@@ -67,7 +67,7 @@ serde = ["serde_with", "serde_yaml",
          "amplify/serde", "chrono/serde", "bitcoin/serde", "miniscript/serde", "descriptor-wallet/serde"]
 
 [patch.crates-io]
-strict_types = { git = "https://github.com/strict-types/strict-types", branch = "develop" }
+strict_types = { git = "https://github.com/strict-types/strict-types" }
 commit_verify = { git = "https://github.com/LNP-BP/client_side_validation" }
 bp-core = { git = "https://github.com/BP-WG/bp-core" }
 aluvm = { git = "https://github.com/AluVM/rust-aluvm" }

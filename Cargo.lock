@@ -560,9 +560,9 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "chrono"
-version = "0.4.25"
+version = "0.4.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fdbc37d37da9e5bce8173f3a41b71d9bf3c674deebbaceacd0ebdabde76efb03"
+checksum = "ec837a71355b28f6556dbd569b37b3f363091c0bd4b2e735674521b4c5fd9bc5"
 dependencies = [
  "android-tzdata",
  "iana-time-zone",
@@ -2020,7 +2020,7 @@ dependencies = [
 [[package]]
 name = "rgb-std"
 version = "0.10.2"
-source = "git+https://github.com/RGB-WG/rgb-wallet#42d32f2e0159ded1490bd79d2001fd6b30938c5e"
+source = "git+https://github.com/RGB-WG/rgb-wallet#4b6803829d83e644a99b33f36c5203fed737122b"
 dependencies = [
  "amplify 4.0.0",
  "baid58",
@@ -2038,7 +2038,7 @@ dependencies = [
 [[package]]
 name = "rgb-wallet"
 version = "0.10.2"
-source = "git+https://github.com/RGB-WG/rgb-wallet#42d32f2e0159ded1490bd79d2001fd6b30938c5e"
+source = "git+https://github.com/RGB-WG/rgb-wallet#4b6803829d83e644a99b33f36c5203fed737122b"
 dependencies = [
  "amplify 4.0.0",
  "baid58",
@@ -2440,7 +2440,7 @@ dependencies = [
 [[package]]
 name = "strict_types"
 version = "1.2.0"
-source = "git+https://github.com/strict-types/strict-types?branch=develop#e882e5200903fb60df5401632088c611b24b917e"
+source = "git+https://github.com/strict-types/strict-types#35056165b99dce1b1b14dfdeb41f2b879bb3f79c"
 dependencies = [
  "amplify 4.0.0",
  "baid58",

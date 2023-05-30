@@ -76,6 +76,10 @@ pub enum RgbImportError {
     /// the provided contract doesn't implement RGB20 interface.
     #[display(doc_comments)]
     NotRgb20,
+    /// invalid contract.
+    ///
+    /// {0}
+    InvalidContract(validation::Status),
 }
 
 impl ViewModel {
@@ -157,7 +161,10 @@ impl ViewModel {
 
         let rgb = self.wallet.rgb_mut();
 
-        let status = rgb.import_contract(contract.unbindle(), resolver)?;
+        let contract = contract.unbindle().validate(resolver).map_err(|c| {
+            RgbImportError::InvalidContract(c.validation_status().expect("validated").clone())
+        })?;
+        let status = rgb.import_contract(contract, resolver)?;
         eprintln!("Contract importing status:");
         eprintln!("{status}");
 

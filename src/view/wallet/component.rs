@@ -356,9 +356,13 @@ impl Update for Component {
                     .as_ref()
                     .map(|stream| stream.emit(launch::Msg::ShowPage(launch::Page::Import)));
             }
-            Msg::ImportRgb => {
-                let text = self.widgets.contract_import_text();
-                self.model.import_rgb_contract(text, &mut self.resolver);
+            Msg::ImportRgbContract(text) => {
+                // TODO: Report error properly
+                if let Err(err) = self.model.import_rgb_contract(text, &mut self.resolver) {
+                    eprintln!("Error: {err}");
+                } else {
+                    self.save();
+                }
             }
             Msg::Close => self.close(),
             Msg::About => {

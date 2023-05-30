@@ -141,7 +141,6 @@ impl Widgets {
         connect!(relm, self.new_btn, connect_clicked(_), Msg::New);
         connect!(relm, self.open_btn, connect_clicked(_), Msg::Open);
         connect!(relm, self.settings_btn, connect_clicked(_), Msg::Settings);
-        connect!(relm, self.import_btn, connect_clicked(_), Msg::ImportRgb);
         connect!(
             relm,
             self.pay_btn,
@@ -234,7 +233,11 @@ impl Widgets {
         });
         let popover = self.import_popover.clone();
         let contract_text = self.contract_text.clone();
+        let stream = relm.stream().clone();
         self.import_btn.connect_clicked(move |_| {
+            let (start, end) = contract_text.bounds();
+            let text = contract_text.text(&start, &end, false).unwrap().to_string();
+            stream.emit(Msg::ImportRgbContract(text));
             contract_text.set_text("");
             popover.hide();
         });
@@ -294,14 +297,6 @@ impl Widgets {
     fn bind_asset_model(&self, model: &AssetModel) {
         self.asset_list
             .bind_model(Some(model), move |item| asset_row::RowWidgets::init(item));
-    }
-
-    pub fn contract_import_text(&self) -> String {
-        let (start, end) = self.contract_text.bounds();
-        self.contract_text
-            .text(&start, &end, false)
-            .unwrap()
-            .to_string()
     }
 
     pub fn update_invoice(&self, model: &ViewModel) {
