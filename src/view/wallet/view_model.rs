@@ -13,6 +13,8 @@ use std::collections::BTreeSet;
 use std::path::PathBuf;
 
 use bpro::{file, DescriptorError, ElectrumServer, FileDocument, Signer, Wallet, WalletSettings};
+use rgbstd::interface::rgb20::Rgb20;
+use rgbstd::persistence::Inventory;
 use wallet::descriptors::DescriptorClass;
 use wallet::hd::UnhardenedIndex;
 
@@ -59,7 +61,7 @@ pub struct ViewModel {
 }
 
 impl ViewModel {
-    pub fn with(wallet: Wallet, path: PathBuf) -> ViewModel {
+    pub fn with(mut wallet: Wallet, path: PathBuf) -> ViewModel {
         let (btc, bitcoin) = match wallet.as_settings().network().is_testnet() {
             true => ("tBTC", "Test bitcoin"),
             false => ("BTC", "Bitcoin"),
@@ -67,7 +69,21 @@ impl ViewModel {
         let btc_asset = AssetInfo::with(bitcoin, btc, wallet.state().balance, 8, "-");
         let asset_model = AssetModel::new();
         asset_model.append(&btc_asset);
-        // TODO: Take assets from wallet
+        for iface in wallet
+            .rgb_mut()
+            .contracts_with_iface("RGB20")
+            .expect("internal RGB data inconsistency")
+        {
+            let iface = Rgb20::from(iface);
+            let spec = iface.spec();
+            asset_model.append(&AssetInfo::with(
+                spec.name(),
+                spec.ticker(),
+                0,
+                spec.precision.into(),
+                &iface.contract_id().to_string(),
+            ));
+        }
 
         ViewModel {
             fee_rate: wallet.ephemerals().fees.0 * 100_000_000.0, // TODO: Update on window opening
