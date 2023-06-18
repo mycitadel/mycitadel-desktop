@@ -67,11 +67,7 @@ serde = ["serde_with", "serde_yaml",
          "amplify/serde", "chrono/serde", "bitcoin/serde", "miniscript/serde", "descriptor-wallet/serde"]
 
 [patch.crates-io]
-strict_types = { git = "https://github.com/strict-types/strict-types" }
-commit_verify = { git = "https://github.com/LNP-BP/client_side_validation" }
-bp-core = { git = "https://github.com/BP-WG/bp-core" }
-aluvm = { git = "https://github.com/AluVM/rust-aluvm" }
-rgb-core = { git = "https://github.com/RGB-WG/rgb-core" }
+rgb-core = { git = "https://github.com/RGB-WG/rgb-core", branch = "fix/66" }
 rgb-std = { git = "https://github.com/RGB-WG/rgb-wallet" }
 rgb-wallet = { git = "https://github.com/RGB-WG/rgb-wallet" }
 rgb-contracts = { git = "https://github.com/RGB-WG/rgb" }
