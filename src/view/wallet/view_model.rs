@@ -91,20 +91,21 @@ impl ViewModel {
         let btc_asset = AssetInfo::with(bitcoin, btc, wallet.state().balance, 8, "-");
         let asset_model = AssetModel::new();
         asset_model.append(&btc_asset);
-        for iface in wallet
-            .rgb_mut()
-            .contracts_with_iface("RGB20")
-            .expect("internal RGB data inconsistency")
-        {
-            let iface = Rgb20::from(iface);
-            let spec = iface.spec();
-            asset_model.append(&AssetInfo::with(
-                spec.name(),
-                spec.ticker(),
-                0,
-                spec.precision.into(),
-                &iface.contract_id().to_string(),
-            ));
+        if let Some(rgb_controller) = wallet.rgb_mut() {
+            for iface in rgb_controller
+                .contracts_with_iface("RGB20")
+                .expect("internal RGB data inconsistency")
+            {
+                let iface = Rgb20::from(iface);
+                let spec = iface.spec();
+                asset_model.append(&AssetInfo::with(
+                    spec.name(),
+                    spec.ticker(),
+                    0,
+                    spec.precision.into(),
+                    &iface.contract_id().to_string(),
+                ));
+            }
         }
 
         ViewModel {
@@ -159,14 +160,15 @@ impl ViewModel {
         let contract = Bindle::<Contract>::from_str(&text)?;
         let id = contract.id();
 
-        let rgb = self.wallet.rgb_mut();
+        let rgb = self
+            .wallet
+            .rgb_mut()
+            .expect("calling RGB-specific method on non-RGB-enabled wallet");
 
         let contract = contract.unbindle().validate(resolver).map_err(|c| {
             RgbImportError::InvalidContract(c.validation_status().expect("validated").clone())
         })?;
         let status = rgb.import_contract(contract, resolver)?;
-        eprintln!("Contract importing status:");
-        eprintln!("{status}");
 
         let iface = rgb
             .contract_iface_named(id, "RGB20")
