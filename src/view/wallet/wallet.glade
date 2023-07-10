@@ -773,6 +773,7 @@
                             <property name="selectable">True</property>
                             <attributes>
                               <attribute name="scale" value="2"/>
+                              <attribute name="foreground" value="#777776767b7b"/>
                             </attributes>
                           </object>
                           <packing>
@@ -819,6 +820,7 @@
                         <property name="label" translatable="yes">Price:</property>
                         <attributes>
                           <attribute name="weight" value="bold"/>
+                          <attribute name="foreground" value="#777776767b7b"/>
                         </attributes>
                       </object>
                       <packing>
@@ -1009,7 +1011,7 @@
                         <child>
                           <object class="GtkTreeViewColumn">
                             <property name="resizable">True</property>
-                            <property name="title" translatable="yes">Height</property>
+                            <property name="title" translatable="yes">Date &amp; time</property>
                             <property name="clickable">True</property>
                             <property name="reorderable">True</property>
                             <property name="sort-indicator">True</property>
@@ -1018,6 +1020,7 @@
                             <child>
                               <object class="GtkCellRendererText" id="height">
                                 <property name="alignment">right</property>
+                                <property name="family">monospace</property>
                               </object>
                               <attributes>
                                 <attribute name="text">4</attribute>
@@ -1138,7 +1141,7 @@
                         <child>
                           <object class="GtkTreeViewColumn">
                             <property name="resizable">True</property>
-                            <property name="title" translatable="yes">Height</property>
+                            <property name="title" translatable="yes">Date &amp; time</property>
                             <property name="clickable">True</property>
                             <property name="reorderable">True</property>
                             <property name="sort-indicator">True</property>
@@ -1146,6 +1149,7 @@
                             <child>
                               <object class="GtkCellRendererText" id="height2">
                                 <property name="alignment">right</property>
+                                <property name="family">monospace</property>
                               </object>
                               <attributes>
                                 <attribute name="text">3</attribute>
