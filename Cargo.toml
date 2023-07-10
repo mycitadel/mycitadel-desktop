@@ -42,7 +42,7 @@ miniscript = "9.0.1"
 bitcoin_scripts = "0.10.0"
 bitcoin_blockchain = "0.10.0"
 descriptor-wallet = { version = "0.10.0", features = ["miniscript", "keygen", "hwi", "construct"] }
-bpro = "0.4.0"
+bpro = "0.4.1"
 hwi = "0.6.0"
 electrum-client = "0.14.0"
 

@@ -221,9 +221,9 @@ checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
 
 [[package]]
 name = "bpro"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2747117bec775ab564dab81768610723c1fc231bf1f9a919cbce040d6446019a"
+checksum = "29bea5322eeb93fa4e71df932fd3a95a9fc513c8d8f7b5c1dba77cfabd5a1ebf"
 dependencies = [
  "amplify",
  "bitcoin",
