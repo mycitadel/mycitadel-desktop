@@ -810,14 +810,14 @@ volume</property>
                     <child>
                       <object class="GtkTreeViewColumn">
                         <property name="resizable">True</property>
-                        <property name="title" translatable="yes">Height</property>
+                        <property name="title" translatable="yes">Date &amp; time</property>
                         <property name="clickable">True</property>
                         <property name="reorderable">True</property>
                         <property name="sort-indicator">True</property>
                         <property name="sort-column-id">6</property>
                         <child>
                           <object class="GtkCellRendererText" id="height">
-                            <property name="alignment">right</property>
+                            <property name="family">monospace</property>
                           </object>
                           <attributes>
                             <attribute name="text">4</attribute>
@@ -837,6 +837,8 @@ volume</property>
                         <child>
                           <object class="GtkCellRendererText" id="txid">
                             <property name="ellipsize">middle</property>
+                            <property name="family">monospace</property>
+                            <property name="foreground">gray</property>
                           </object>
                           <attributes>
                             <attribute name="text">1</attribute>
@@ -912,14 +914,14 @@ volume</property>
                     <child>
                       <object class="GtkTreeViewColumn">
                         <property name="resizable">True</property>
-                        <property name="title" translatable="yes">Height</property>
+                        <property name="title" translatable="yes">Date &amp; time</property>
                         <property name="clickable">True</property>
                         <property name="reorderable">True</property>
                         <property name="sort-indicator">True</property>
                         <property name="sort-column-id">4</property>
                         <child>
                           <object class="GtkCellRendererText" id="height2">
-                            <property name="alignment">right</property>
+                            <property name="family">monospace</property>
                           </object>
                           <attributes>
                             <attribute name="text">3</attribute>
