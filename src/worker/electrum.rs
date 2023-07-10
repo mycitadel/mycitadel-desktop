@@ -18,7 +18,8 @@ use std::{io, thread};
 use amplify::Wrapper;
 use bitcoin::Transaction;
 use bitcoin_scripts::PubkeyScript;
-use bpro::{AddressSource, ElectrumServer, TxidMeta, UtxoTxid, WalletSettings};
+use bpro::{AddressSource, ElectrumServer, OnchainStatus, TxidMeta, UtxoTxid, WalletSettings};
+use chrono::{DateTime, NaiveDateTime, Utc};
 use electrum_client::{Client as ElectrumClient, ElectrumApi, HeaderNotification};
 use relm::Sender;
 use wallet::hd::{SegmentIndexes, UnhardenedIndex};
@@ -163,6 +164,8 @@ fn electrum_sync(
     let network = bitcoin::Network::from(wallet_settings.network());
 
     let mut txids = bset![];
+    let mut block_heights = bset![];
+    let mut headers = bmap![];
     let mut upto_index = map! { true => UnhardenedIndex::zero(), false => UnhardenedIndex::zero() };
     for change in [false, true] {
         let mut offset = 0u16;
@@ -171,15 +174,42 @@ fn electrum_sync(
             let spk = wallet_settings
                 .script_pubkeys(change, offset..=(offset + 19))
                 .map_err(|err| electrum_client::Error::Message(err.to_string()))?;
-            let batch = client
-                .batch_script_get_history(spk.values().map(PubkeyScript::as_inner))?
+            let batch =
+                client.batch_script_get_history(spk.values().map(PubkeyScript::as_inner))?;
+
+            // Retrieve unknown headers
+            let heights = batch
+                .iter()
+                .flatten()
+                .map(|res| res.height as u32)
+                .collect::<BTreeSet<_>>();
+            let diff = heights
+                .difference(&block_heights)
+                .copied()
+                .collect::<Vec<_>>();
+            let new_headers = client.batch_block_header(&diff)?;
+            headers.extend(diff.iter().copied().zip(new_headers));
+            block_heights.extend(diff);
+
+            let batch = batch
                 .into_iter()
                 .zip(&spk)
                 .map(|(history, (index, script))| {
                     let addr_src = AddressSource::with(script, *index, change, network);
                     let txids = history
                         .into_iter()
-                        .map(TxidMeta::from)
+                        .map(|item| {
+                            let mut meta = TxidMeta::from(item);
+                            if let OnchainStatus::Blockchain(height) = meta.onchain.status {
+                                meta.onchain.date_time = headers
+                                    .get(&height)
+                                    .and_then(|header| {
+                                        NaiveDateTime::from_timestamp_opt(header.time as i64, 0)
+                                    })
+                                    .map(|naive| DateTime::<Utc>::from_utc(naive, Utc));
+                            }
+                            meta
+                        })
                         .collect::<BTreeSet<_>>();
                     (addr_src, txids)
                 })
@@ -203,14 +233,47 @@ fn electrum_sync(
                 .send(Msg::TxidBatch(batch, offset))
                 .expect("electrum watcher channel is broken");
 
-            let utxos = client
-                .batch_script_list_unspent(spk.values().map(PubkeyScript::as_inner))?
+            // Get transactions
+            let utxos =
+                client.batch_script_list_unspent(spk.values().map(PubkeyScript::as_inner))?;
+
+            // Retrieve unknown headers
+            let heights = utxos
+                .iter()
+                .flatten()
+                .map(|res| res.height as u32)
+                .collect::<BTreeSet<_>>();
+            let diff = heights
+                .difference(&block_heights)
+                .copied()
+                .collect::<Vec<_>>();
+            let new_headers = client.batch_block_header(&diff)?;
+            headers.extend(diff.iter().copied().zip(new_headers));
+            block_heights.extend(diff);
+
+            // Construct UTXO information
+            let utxos = utxos
                 .into_iter()
                 .zip(spk)
                 .flat_map(|(utxo, (index, script))| {
-                    utxo.into_iter().map(move |res| {
-                        UtxoTxid::with(res, AddressSource::with(&script, index, change, network))
-                    })
+                    utxo.into_iter()
+                        .map(move |res| {
+                            UtxoTxid::with(
+                                res,
+                                AddressSource::with(&script, index, change, network),
+                            )
+                        })
+                        .map(|mut utxo| {
+                            if let OnchainStatus::Blockchain(height) = utxo.onchain.status {
+                                utxo.onchain.date_time = headers
+                                    .get(&height)
+                                    .and_then(|header| {
+                                        NaiveDateTime::from_timestamp_opt(header.time as i64, 0)
+                                    })
+                                    .map(|naive| DateTime::<Utc>::from_utc(naive, Utc));
+                            }
+                            utxo
+                        })
                 })
                 .collect::<BTreeSet<_>>();
             txids.extend(utxos.iter().map(|item| item.onchain.txid));

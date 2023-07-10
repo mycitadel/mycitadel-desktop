@@ -12,7 +12,9 @@
 use std::collections::BTreeSet;
 use std::ffi::OsStr;
 
-use bpro::{AddressSummary, ElectrumSec, ElectrumServer, HistoryEntry, UtxoTxid, WalletState};
+use bpro::{
+    AddressSummary, ElectrumSec, ElectrumServer, HistoryEntry, OnchainStatus, UtxoTxid, WalletState,
+};
 use chrono::{DateTime, NaiveDateTime, Utc};
 use electrum_client::HeaderNotification;
 use gladis::Gladis;
@@ -401,12 +403,20 @@ impl Widgets {
             let btc = format!("{:+.08}", item.balance() as f64 / 100_000_000.0);
             let btc_balance = format!("{:.08}", balance as f64 / 100_000_000.0);
             let descr_color = gdk::RGBA::new(80.0 / 255.0, 80.0 / 255.0, 80.0 / 255.0, 1.0);
+            let date = match item.onchain.status {
+                OnchainStatus::Blockchain(height) => item
+                    .onchain
+                    .date_time()
+                    .map(|dt| dt.format("%F %H:%M").to_string())
+                    .unwrap_or_else(|| format!("{height}")),
+                OnchainStatus::Mempool => s!("mempool"),
+            };
             self.history_store.insert_with_values(None, &[
                 (0, &item.icon_name()),
                 (1, &item.onchain.txid.to_string()),
                 (2, &btc),
                 (3, &btc_balance),
-                (4, &item.mining_info()),
+                (4, &date),
                 (5, &item.color()),
                 (6, &item.onchain.status.into_u32()),
                 // TODO: Use description
@@ -421,11 +431,19 @@ impl Widgets {
         self.utxo_store.clear();
         for item in utxos {
             let btc = format_btc_value(item.value);
+            let date = match item.onchain.status {
+                OnchainStatus::Blockchain(height) => item
+                    .onchain
+                    .date_time()
+                    .map(|dt| dt.format("%F %H:%M").to_string())
+                    .unwrap_or_else(|| format!("{height}")),
+                OnchainStatus::Mempool => s!("mempool"),
+            };
             self.utxo_store.insert_with_values(None, &[
                 (0, &item.addr_src.address.to_string()),
                 (1, &format!("{}:{}", item.onchain.txid, item.vout)),
                 (2, &btc),
-                (3, &item.mining_info()),
+                (3, &date),
                 (4, &item.onchain.status.into_u32()),
             ]);
         }
