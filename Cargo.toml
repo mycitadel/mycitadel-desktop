@@ -67,7 +67,7 @@ serde = ["serde_with", "serde_yaml",
          "amplify/serde", "chrono/serde", "bitcoin/serde", "miniscript/serde", "descriptor-wallet/serde"]
 
 [patch.crates-io]
-rgb-core = { git = "https://github.com/RGB-WG/rgb-core", branch = "fix/66" }
+rgb-core = { git = "https://github.com/RGB-WG/rgb-core" }
 rgb-std = { git = "https://github.com/RGB-WG/rgb-wallet" }
 rgb-wallet = { git = "https://github.com/RGB-WG/rgb-wallet" }
 rgb-contracts = { git = "https://github.com/RGB-WG/rgb" }
