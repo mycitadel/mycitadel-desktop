@@ -33,6 +33,7 @@ use wallet::lex_order::lex_order::LexOrder;
 use super::pay::beneficiary_row::Beneficiary;
 use super::pay::FeeRate;
 use super::{pay, ElectrumState, Msg, ViewModel, Widgets};
+use crate::view::wallet::payto;
 use crate::view::{error_dlg, launch, settings, NotificationBoxExt};
 use crate::worker::{electrum, exchange, ElectrumWorker, ExchangeWorker};
 
@@ -40,6 +41,7 @@ pub struct Component {
     model: ViewModel,
     widgets: Widgets,
     pay_widgets: pay::Widgets,
+    payto_widgets: payto::Widgets,
 
     exchange_channel: Channel<exchange::Msg>,
     exchange_worker: ExchangeWorker,
@@ -376,6 +378,7 @@ impl Update for Component {
                     .map(|stream| stream.emit(launch::Msg::About));
             }
             Msg::Pay(msg) => self.update_pay(msg),
+            Msg::PayTo(msg) => self.update_payto(msg),
             Msg::Settings => self.settings.emit(settings::Msg::View(
                 self.model.to_settings(),
                 self.model.path().clone(),
@@ -539,6 +542,44 @@ impl Component {
     }
 }
 
+impl Component {
+    fn update_payto(&mut self, event: payto::Msg) {
+        match event {
+            payto::Msg::Show => {
+                self.payto_widgets.init_ui(&self.model);
+                self.payto_widgets.show();
+            }
+            payto::Msg::Response(ResponseType::Ok) => {
+                let (psbt, change_index) = match self.sync_pay() {
+                    Some(data) => data,
+                    None => return,
+                };
+                self.payto_widgets.hide();
+                self.launcher_stream.as_ref().map(|stream| {
+                    stream.emit(launch::Msg::CreatePsbt(
+                        psbt,
+                        self.model.as_settings().network(),
+                    ))
+                });
+                // Update latest change index in wallet settings by sending message to the wallet
+                // component
+                if self
+                    .model
+                    .wallet_mut()
+                    .update_next_change_index(change_index)
+                {
+                    self.save();
+                }
+            }
+            payto::Msg::Response(ResponseType::Cancel) => {
+                self.payto_widgets.hide();
+            }
+            payto::Msg::Response(_) => {}
+            _ => {} // Changes which update wallet tx
+        }
+    }
+}
+
 impl Widget for Component {
     // Specify the type of the root widget.
     type Root = ApplicationWindow;
@@ -571,10 +612,14 @@ impl Widget for Component {
 
         let glade_src = include_str!("pay/pay.glade");
         let pay_widgets = pay::Widgets::from_string(glade_src).expect("glade file broken");
-
         pay_widgets.connect(relm);
         pay_widgets.bind_beneficiary_model(relm, &model);
         pay_widgets.init_ui(&model);
+
+        let glade_src = include_str!("payto/payto.glade");
+        let payto_widgets = payto::Widgets::from_string(glade_src).expect("glade file broken");
+        payto_widgets.connect(relm);
+        payto_widgets.init_ui(&model);
 
         electrum_worker.sync();
 
@@ -587,6 +632,7 @@ impl Widget for Component {
             model,
             widgets,
             pay_widgets,
+            payto_widgets,
             settings,
 
             exchange_channel,

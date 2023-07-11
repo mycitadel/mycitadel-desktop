@@ -2,7 +2,7 @@
 <!-- Generated with glade 3.38.2 -->
 <interface>
   <requires lib="gtk+" version="3.24"/>
-  <object class="GtkDialog" id="payto_dlg">
+  <object class="GtkDialog" id="dialog">
     <property name="can-focus">False</property>
     <property name="window-position">center</property>
     <property name="type-hint">dialog</property>
@@ -232,7 +232,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkButton" id="advanced_btn">
+          <object class="GtkButton" id="batch_btn">
             <property name="label" translatable="yes">Batch</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
