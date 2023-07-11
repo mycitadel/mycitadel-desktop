@@ -73,4 +73,7 @@ pub enum Error {
 
     /// Unable to compute proper fee
     FeeFailure,
+
+    /// Multiple outputs have flag "MAX" set.
+    MultipleMaxOutputs,
 }
