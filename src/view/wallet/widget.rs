@@ -107,6 +107,17 @@ pub struct Widgets {
     hist_copy_balance_mi: MenuItem,
     hist_copy_height_mi: MenuItem,
 
+    address_menu: Menu,
+    addr_copy_mi: MenuItem,
+    addr_copy_volume_mi: MenuItem,
+    addr_copy_balance_mi: MenuItem,
+
+    coin_menu: Menu,
+    coin_copy_txid_mi: MenuItem,
+    coin_copy_addr_mi: MenuItem,
+    coin_copy_amount_mi: MenuItem,
+    coin_copy_height_mi: MenuItem,
+
     status_bar: Statusbar,
     status_lbl: Label,
     balance_lbl: Label,
@@ -178,11 +189,41 @@ impl Widgets {
             let val: String = model.value(&iter, 1).get().unwrap();
             gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).set_text(&val);
         });
+
+        let menu = self.coin_menu.clone();
+        self.utxo_list
+            .connect_button_release_event(move |me, event| {
+                if event.button() == 3 {
+                    me.emit_popup_menu();
+                    Inhibit(true)
+                } else {
+                    Inhibit(false)
+                }
+            });
+        self.utxo_list.connect_popup_menu(move |_me| {
+            menu.popup(None::<&Menu>, None::<&MenuItem>, |_, _, _| false, 0, 0);
+            true
+        });
         self.utxo_list.connect_row_activated(|me, path, _| {
             let model = me.model().unwrap();
             let iter = model.iter(path).unwrap();
             let val: String = model.value(&iter, 1).get().unwrap();
             gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).set_text(&val);
+        });
+
+        let menu = self.address_menu.clone();
+        self.address_list
+            .connect_button_release_event(move |me, event| {
+                if event.button() == 3 {
+                    me.emit_popup_menu();
+                    Inhibit(true)
+                } else {
+                    Inhibit(false)
+                }
+            });
+        self.address_list.connect_popup_menu(move |_me| {
+            menu.popup(None::<&Menu>, None::<&MenuItem>, |_, _, _| false, 0, 0);
+            true
         });
         self.address_list.connect_row_activated(|me, path, _| {
             let model = me.model().unwrap();
@@ -218,6 +259,58 @@ impl Widgets {
                 let val = list.model().unwrap().value(&iter, 6);
                 gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD)
                     .set_text(&val.get::<u32>().unwrap().to_string());
+            }
+        });
+
+        let list = self.utxo_list.clone();
+        self.coin_copy_txid_mi.connect_activate(move |_| {
+            if let Some(iter) = list.selection().selected().map(|(_, iter)| iter) {
+                let val = list.model().unwrap().value(&iter, 1);
+                gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).set_text(val.get::<&str>().unwrap());
+            }
+        });
+        let list = self.utxo_list.clone();
+        self.coin_copy_addr_mi.connect_activate(move |_| {
+            if let Some(iter) = list.selection().selected().map(|(_, iter)| iter) {
+                let val = list.model().unwrap().value(&iter, 0);
+                gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).set_text(val.get::<&str>().unwrap());
+            }
+        });
+        let list = self.utxo_list.clone();
+        self.coin_copy_amount_mi.connect_activate(move |_| {
+            if let Some(iter) = list.selection().selected().map(|(_, iter)| iter) {
+                let val = list.model().unwrap().value(&iter, 2);
+                gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).set_text(val.get::<&str>().unwrap());
+            }
+        });
+        let list = self.utxo_list.clone();
+        self.coin_copy_height_mi.connect_activate(move |_| {
+            if let Some(iter) = list.selection().selected().map(|(_, iter)| iter) {
+                let val = list.model().unwrap().value(&iter, 4);
+                gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD)
+                    .set_text(&val.get::<u32>().unwrap().to_string());
+            }
+        });
+
+        let list = self.address_list.clone();
+        self.addr_copy_mi.connect_activate(move |_| {
+            if let Some(iter) = list.selection().selected().map(|(_, iter)| iter) {
+                let val = list.model().unwrap().value(&iter, 0);
+                gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).set_text(val.get::<&str>().unwrap());
+            }
+        });
+        let list = self.address_list.clone();
+        self.addr_copy_volume_mi.connect_activate(move |_| {
+            if let Some(iter) = list.selection().selected().map(|(_, iter)| iter) {
+                let val = list.model().unwrap().value(&iter, 2);
+                gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).set_text(val.get::<&str>().unwrap());
+            }
+        });
+        let list = self.address_list.clone();
+        self.addr_copy_balance_mi.connect_activate(move |_| {
+            if let Some(iter) = list.selection().selected().map(|(_, iter)| iter) {
+                let val = list.model().unwrap().value(&iter, 1);
+                gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).set_text(val.get::<&str>().unwrap());
             }
         });
 
