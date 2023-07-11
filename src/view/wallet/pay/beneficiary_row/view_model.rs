@@ -26,6 +26,7 @@ use gtk::{gio, glib};
 pub struct BeneficiaryInner {
     address: RefCell<String>,
     amount: RefCell<u64>,
+    max: RefCell<bool>,
 }
 
 // Basic declaration of our type for the GObject type system
@@ -63,6 +64,13 @@ impl ObjectImpl for BeneficiaryInner {
                     0, // Allowed range and default value
                     glib::ParamFlags::READWRITE,
                 ),
+                glib::ParamSpecBoolean::new(
+                    "max",
+                    "Max",
+                    "Max",
+                    false,
+                    glib::ParamFlags::READWRITE,
+                ),
             ]
         });
 
@@ -89,6 +97,12 @@ impl ObjectImpl for BeneficiaryInner {
                     .expect("type conformity checked by `Object::set_property`");
                 self.amount.replace(amount);
             }
+            "max" => {
+                let max = value
+                    .get()
+                    .expect("type conformity checked by `Object::set_property`");
+                self.max.replace(max);
+            }
             _ => unimplemented!(),
         }
     }
@@ -97,6 +111,7 @@ impl ObjectImpl for BeneficiaryInner {
         match pspec.name() {
             "address" => self.address.borrow().to_value(),
             "amount" => self.amount.borrow().to_value(),
+            "max" => self.max.borrow().to_value(),
             _ => unimplemented!(),
         }
     }
@@ -106,15 +121,26 @@ glib::wrapper! {
     pub struct Beneficiary(ObjectSubclass<BeneficiaryInner>);
 }
 
+impl Default for Beneficiary {
+    fn default() -> Self {
+        glib::Object::new(&[("address", &""), ("amount", &0u64), ("max", &false)])
+            .expect("Failed to create row data")
+    }
+}
+
 impl Beneficiary {
-    pub fn new() -> Beneficiary {
-        glib::Object::new(&[("address", &""), ("amount", &0u64)])
+    pub fn new_max(address: AddressCompat) -> Beneficiary {
+        glib::Object::new(&[("address", &address.to_string()), ("amount", &true)])
             .expect("Failed to create row data")
     }
 
     pub fn with(address: AddressCompat, amount: u64) -> Beneficiary {
-        glib::Object::new(&[("address", &address.to_string()), ("amount", &amount)])
-            .expect("Failed to create row data")
+        glib::Object::new(&[
+            ("address", &address.to_string()),
+            ("amount", &amount),
+            ("new", &false),
+        ])
+        .expect("Failed to create row data")
     }
 
     pub fn address(&self) -> Result<Address, address::Error> {

@@ -444,7 +444,9 @@ impl Component {
         match event {
             pay::Msg::Show => {
                 self.model.beneficiaries_mut().clear();
-                self.model.beneficiaries_mut().append(&Beneficiary::new());
+                self.model
+                    .beneficiaries_mut()
+                    .append(&Beneficiary::default());
                 self.model
                     .set_fee_rate(self.model.as_wallet().ephemerals().fees.0);
                 self.pay_widgets.init_ui(&self.model);
@@ -481,7 +483,9 @@ impl Component {
 
         match event {
             pay::Msg::BeneficiaryAdd => {
-                self.model.beneficiaries_mut().append(&Beneficiary::new());
+                self.model
+                    .beneficiaries_mut()
+                    .append(&Beneficiary::default());
             }
             pay::Msg::BeneficiaryRemove => {
                 self.pay_widgets.selected_beneficiary_index().map(|index| {
