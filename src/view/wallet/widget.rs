@@ -108,6 +108,7 @@ pub struct Widgets {
 
     history_menu: Menu,
     hist_copy_txid_mi: MenuItem,
+    hist_copy_desc_mi: MenuItem,
     hist_copy_amount_mi: MenuItem,
     hist_copy_balance_mi: MenuItem,
     hist_copy_height_mi: MenuItem,
@@ -245,6 +246,13 @@ impl Widgets {
         self.hist_copy_txid_mi.connect_activate(move |_| {
             if let Some(iter) = list.selection().selected().map(|(_, iter)| iter) {
                 let val = list.model().unwrap().value(&iter, 1);
+                gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).set_text(val.get::<&str>().unwrap());
+            }
+        });
+        let list = self.history_list.clone();
+        self.hist_copy_desc_mi.connect_activate(move |_| {
+            if let Some(iter) = list.selection().selected().map(|(_, iter)| iter) {
+                let val = list.model().unwrap().value(&iter, 7);
                 gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).set_text(val.get::<&str>().unwrap());
             }
         });
