@@ -48,7 +48,7 @@ locally
 $ sudo apt install mycitadel_N_OS_amd64.deb
 ```
 replacing `N` and `OS` in the package name with the filename you have 
-downloaded (like `mycitadel_1.3.0_1_ubuntu_amd64.deb`) matching latest 
+downloaded (like `mycitadel_1.4.0_1_ubuntu_amd64.deb`) matching latest 
 MyCitadel version and the target platform.
 
 
@@ -156,10 +156,10 @@ $ cargo install --path .
 ```
 
 You may also compile a specific release tag; for that after the cloning
-in the reposirory directory run, replacing `v1.3.0` with the desired version 
+in the reposirory directory run, replacing `v1.4.0` with the desired version 
 name:
 ```console
-$ git checkout v1.3.0
+$ git checkout v1.4.0
 $ cargo install --path .
 ```
 
