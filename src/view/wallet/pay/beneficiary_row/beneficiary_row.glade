@@ -23,6 +23,7 @@
             <property name="width-chars">66</property>
             <property name="max-width-chars">66</property>
             <property name="truncate-multiline">True</property>
+            <property name="secondary-icon-name">edit-paste-symbolic</property>
             <property name="input-purpose">alpha</property>
             <property name="input-hints">GTK_INPUT_HINT_NO_SPELLCHECK | GTK_INPUT_HINT_NO_EMOJI | GTK_INPUT_HINT_NONE</property>
           </object>
@@ -37,6 +38,7 @@
             <property name="visible">True</property>
             <property name="can-focus">True</property>
             <property name="truncate-multiline">True</property>
+            <property name="secondary-icon-name">edit-paste-symbolic</property>
             <property name="input-purpose">number</property>
             <property name="input-hints">GTK_INPUT_HINT_NO_SPELLCHECK | GTK_INPUT_HINT_NO_EMOJI | GTK_INPUT_HINT_NONE</property>
           </object>
@@ -44,6 +46,19 @@
             <property name="expand">False</property>
             <property name="fill">True</property>
             <property name="position">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkToggleButton" id="max_btn">
+            <property name="label" translatable="yes">MAX</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">2</property>
           </packing>
         </child>
       </object>
