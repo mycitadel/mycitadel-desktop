@@ -55,7 +55,7 @@ impl Component {
     fn replace_signer(&mut self) {
         if let Some(signer) = self.model.active_signer.clone() {
             self.widgets.replace_signer(&signer);
-            debug_assert!(self.model.replace_signer(signer));
+            self.model.replace_signer(signer);
         }
     }
 
