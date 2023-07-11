@@ -22,7 +22,7 @@ use gtk::gdk_pixbuf::Pixbuf;
 use gtk::prelude::*;
 use gtk::{
     gdk, Adjustment, ApplicationWindow, Button, CheckButton, Entry, HeaderBar, Image, Label,
-    ListStore, MenuItem, Popover, RadioMenuItem, SortColumn, SortType, SpinButton, Spinner,
+    ListStore, Menu, MenuItem, Popover, RadioMenuItem, SortColumn, SortType, SpinButton, Spinner,
     Statusbar, TreeView,
 };
 use relm::Relm;
@@ -101,6 +101,12 @@ pub struct Widgets {
     utxo_list: TreeView,
     history_list: TreeView,
 
+    history_menu: Menu,
+    hist_copy_txid_mi: MenuItem,
+    hist_copy_amount_mi: MenuItem,
+    hist_copy_balance_mi: MenuItem,
+    hist_copy_height_mi: MenuItem,
+
     status_bar: Statusbar,
     status_lbl: Label,
     balance_lbl: Label,
@@ -152,6 +158,20 @@ impl Widgets {
         );
         connect!(relm, self.about_mi, connect_activate(_), Msg::About);
 
+        let menu = self.history_menu.clone();
+        self.history_list
+            .connect_button_release_event(move |me, event| {
+                if event.button() == 3 {
+                    me.emit_popup_menu();
+                    Inhibit(true)
+                } else {
+                    Inhibit(false)
+                }
+            });
+        self.history_list.connect_popup_menu(move |_me| {
+            menu.popup(None::<&Menu>, None::<&MenuItem>, |_, _, _| false, 0, 0);
+            true
+        });
         self.history_list.connect_row_activated(|me, path, _| {
             let model = me.model().unwrap();
             let iter = model.iter(path).unwrap();
@@ -169,6 +189,36 @@ impl Widgets {
             let iter = model.iter(path).unwrap();
             let val: String = model.value(&iter, 0).get().unwrap();
             gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).set_text(&val);
+        });
+
+        let list = self.history_list.clone();
+        self.hist_copy_txid_mi.connect_activate(move |_| {
+            if let Some(iter) = list.selection().selected().map(|(_, iter)| iter) {
+                let val = list.model().unwrap().value(&iter, 1);
+                gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).set_text(val.get::<&str>().unwrap());
+            }
+        });
+        let list = self.history_list.clone();
+        self.hist_copy_amount_mi.connect_activate(move |_| {
+            if let Some(iter) = list.selection().selected().map(|(_, iter)| iter) {
+                let val = list.model().unwrap().value(&iter, 2);
+                gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).set_text(val.get::<&str>().unwrap());
+            }
+        });
+        let list = self.history_list.clone();
+        self.hist_copy_balance_mi.connect_activate(move |_| {
+            if let Some(iter) = list.selection().selected().map(|(_, iter)| iter) {
+                let val = list.model().unwrap().value(&iter, 3);
+                gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).set_text(val.get::<&str>().unwrap());
+            }
+        });
+        let list = self.history_list.clone();
+        self.hist_copy_height_mi.connect_activate(move |_| {
+            if let Some(iter) = list.selection().selected().map(|(_, iter)| iter) {
+                let val = list.model().unwrap().value(&iter, 6);
+                gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD)
+                    .set_text(&val.get::<u32>().unwrap().to_string());
+            }
         });
 
         connect!(
