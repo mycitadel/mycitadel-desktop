@@ -17,7 +17,7 @@ use bitcoin::Address;
 use bitcoin_scripts::address::AddressCompat;
 use gladis::Gladis;
 use gtk::prelude::*;
-use gtk::{glib, Entry, ListBoxRow, ToggleButton};
+use gtk::{gdk, glib, Entry, EntryIconPosition, ListBoxRow, ToggleButton};
 use relm::Relm;
 
 use super::Beneficiary;
@@ -66,6 +66,28 @@ impl RowWidgets {
             connect_toggled(_),
             wallet::Msg::Pay(pay::Msg::BeneficiaryEdit(row.index() as u32))
         );
+
+        row_widgets.address_fld.connect_icon_press(|me, icon, _| {
+            let me = me.clone();
+            if icon == EntryIconPosition::Secondary {
+                gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).request_text(move |_, text| {
+                    if let Some(text) = text {
+                        me.set_text(text);
+                    }
+                })
+            }
+        });
+
+        row_widgets.amount_fld.connect_icon_press(|me, icon, _| {
+            let me = me.clone();
+            if icon == EntryIconPosition::Secondary {
+                gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).request_text(move |_, text| {
+                    if let Some(text) = text {
+                        me.set_text(text);
+                    }
+                })
+            }
+        });
 
         row_widgets.beneficiary_row.upcast::<gtk::Widget>()
     }
