@@ -37,9 +37,6 @@ pub struct ViewModel {
     #[getter(as_copy)]
     fee_rate: f32, // Used by payment window
 
-    #[getter(as_copy)]
-    vsize: f32,
-
     #[getter(skip)]
     invoice: InvoiceModel,
 
@@ -57,7 +54,6 @@ impl ViewModel {
     pub fn with(wallet: Wallet, path: PathBuf) -> ViewModel {
         ViewModel {
             fee_rate: wallet.ephemerals().fees.0 * 100_000_000.0, // TODO: Update on window opening
-            vsize: 0.0,
             wallet,
             path,
             beneficiaries: BeneficiaryModel::new(),
@@ -79,8 +75,6 @@ impl ViewModel {
 
     pub fn as_invoice(&self) -> &InvoiceModel { &self.invoice }
     pub fn as_invoice_mut(&mut self) -> &mut InvoiceModel { &mut self.invoice }
-
-    pub fn set_vsize(&mut self, vsize: f32) { self.vsize = vsize; }
 
     pub fn set_fee_rate(&mut self, fee_rate: f32) { self.fee_rate = fee_rate; }
 

@@ -10,13 +10,14 @@
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
 use std::str::FromStr;
+use std::sync::{Arc, Mutex};
 
 use ::wallet::onchain::PublicNetwork;
 use bitcoin::Address;
 use bitcoin_scripts::address::AddressCompat;
 use gladis::Gladis;
 use gtk::prelude::*;
-use gtk::{glib, Entry, ListBoxRow};
+use gtk::{glib, Entry, ListBoxRow, ToggleButton};
 use relm::Relm;
 
 use super::Beneficiary;
@@ -27,6 +28,7 @@ pub struct RowWidgets {
     beneficiary_row: ListBoxRow,
     address_fld: Entry,
     amount_fld: Entry,
+    max_btn: ToggleButton,
 }
 
 impl RowWidgets {
@@ -57,15 +59,45 @@ impl RowWidgets {
             connect_changed(_),
             wallet::Msg::Pay(pay::Msg::BeneficiaryEdit(row.index() as u32))
         );
+        let row = row_widgets.beneficiary_row.clone();
+        connect!(
+            relm,
+            row_widgets.max_btn,
+            connect_toggled(_),
+            wallet::Msg::Pay(pay::Msg::BeneficiaryEdit(row.index() as u32))
+        );
 
         row_widgets.beneficiary_row.upcast::<gtk::Widget>()
     }
 
     fn bind_model(&self, beneficiary: &Beneficiary, network: PublicNetwork) {
-        let flags = glib::BindingFlags::DEFAULT
+        let ro_flags = glib::BindingFlags::DEFAULT | glib::BindingFlags::SYNC_CREATE;
+        let rw_flags = glib::BindingFlags::DEFAULT
             | glib::BindingFlags::SYNC_CREATE
             | glib::BindingFlags::BIDIRECTIONAL;
 
+        beneficiary
+            .bind_property("amount", &self.address_fld, "primary_icon_name")
+            .transform_to(move |_binding, value| {
+                if value.get::<u64>().unwrap() == 0 {
+                    Some("dialog-error-symbolic".to_value())
+                } else {
+                    None
+                }
+            })
+            .flags(ro_flags)
+            .build();
+        beneficiary
+            .bind_property("amount", &self.address_fld, "primary_icon_tooltip_text")
+            .transform_to(move |_binding, value| {
+                if value.get::<u64>().unwrap() == 0 {
+                    Some("Payment without beneficiary address".to_value())
+                } else {
+                    None
+                }
+            })
+            .flags(ro_flags)
+            .build();
         self.address_fld
             .bind_property("text", beneficiary, "address")
             .transform_to(move |binding, value| {
@@ -97,33 +129,24 @@ impl RowWidgets {
                     ),
                     (Ok(_), _) => (Some("emblem-ok-symbolic"), Some(s!("Address is valid"))),
                 };
-                address_fld.set_secondary_icon_name(icon);
-                address_fld.set_secondary_icon_tooltip_text(msg.as_deref());
+                address_fld.set_primary_icon_name(icon);
+                address_fld.set_primary_icon_tooltip_text(msg.as_deref());
                 Some(value.clone())
             })
-            .flags(flags)
+            .flags(rw_flags)
             .build();
 
         self.amount_fld
             .bind_property("text", beneficiary, "amount")
-            .transform_to(move |binding, _value| {
-                let item: Beneficiary = binding.target().unwrap().downcast().unwrap();
+            .transform_to(move |binding, value| {
                 let amount_fld: Entry = binding.source().unwrap().downcast().unwrap();
-
-                let amount_str = amount_fld.text();
-                let amount_str = amount_str.as_str();
-                let addr_str: String = item.property("address");
+                let amount_str = value.get::<&str>().unwrap();
                 let (icon, msg, amount) = match f64::from_str(amount_str) {
                     _ if amount_str.is_empty() => (None, None, 0u64),
                     Err(err) => (
                         Some("dialog-error-symbolic"),
                         Some(format!("Invalid amount: {}", err)),
                         0u64,
-                    ),
-                    Ok(amount) if addr_str.is_empty() => (
-                        Some("dialog-error-symbolic"),
-                        Some(format!("Payment without beneficiary address")),
-                        (amount * 100_000_000.0) as u64,
                     ),
                     Ok(amount) => {
                         let s = format!("{}", amount);
@@ -143,11 +166,52 @@ impl RowWidgets {
                         }
                     }
                 };
-                amount_fld.set_secondary_icon_name(icon);
-                amount_fld.set_secondary_icon_tooltip_text(msg.as_deref());
+                amount_fld.set_primary_icon_name(icon);
+                amount_fld.set_primary_icon_tooltip_text(msg.as_deref());
                 Some(amount.to_value())
             })
-            .flags(flags)
+            .transform_from(move |_binding, value| {
+                let btc = value.get::<u64>().unwrap();
+                if btc == 0 {
+                    Some("".to_value())
+                } else {
+                    Some(format!("{:.8}", btc as f64 / 100_000_000.0).to_value())
+                }
+            })
+            .flags(rw_flags)
+            .build();
+
+        let saved_amount = Arc::new(Mutex::new(0u64));
+        beneficiary
+            .bind_property("max", &self.amount_fld, "editable")
+            .transform_to(move |binding, value| {
+                let active = value.get::<bool>().unwrap();
+                let amount_fld: Entry = binding.target().unwrap().downcast().unwrap();
+                if active {
+                    amount_fld.set_primary_icon_name(None);
+                }
+                amount_fld.set_sensitive(!active);
+                Some((!active).to_value())
+            })
+            .flags(ro_flags)
+            .build();
+        self.max_btn
+            .bind_property("active", beneficiary, "max")
+            .transform_to(move |binding, value| {
+                let active = value
+                    .get::<bool>()
+                    .expect("toggle button value is not bool");
+
+                let item: Beneficiary = binding.target().unwrap().downcast().unwrap();
+                if active {
+                    *saved_amount.lock().unwrap() = item.property::<u64>("amount");
+                    item.set_property("amount", 0u64);
+                } else {
+                    item.set_property("amount", *saved_amount.lock().unwrap());
+                }
+                Some(value.clone())
+            })
+            .flags(rw_flags)
             .build();
     }
 }

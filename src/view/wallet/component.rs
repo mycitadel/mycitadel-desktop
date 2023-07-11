@@ -21,7 +21,7 @@ use bitcoin::{EcdsaSighashType, Sequence, Transaction, TxIn, TxOut};
 use bitcoin_blockchain::locks::{LockTime, SeqNo};
 use bitcoin_scripts::PubkeyScript;
 use bpro::psbt::McKeys;
-use bpro::{AddressSource, TxidMeta, Wallet};
+use bpro::{AddressSource, Prevout, TxidMeta, Wallet};
 use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{ApplicationWindow, ResponseType};
@@ -71,12 +71,13 @@ impl Component {
         }
     }
 
-    pub fn compose_psbt(&mut self) -> Result<(Psbt, UnhardenedIndex, u32), pay::Error> {
+    pub fn compose_psbt(&mut self) -> Result<(Psbt, UnhardenedIndex, u64, u32, f32), pay::Error> {
         let wallet = self.model.as_wallet();
 
         let output_count = self.model.beneficiaries().n_items();
         let mut txouts = Vec::with_capacity(output_count as usize);
         let mut output_value = 0u64;
+        let mut output_max = None;
         for no in 0..output_count {
             let beneficiary = self
                 .model
@@ -86,19 +87,24 @@ impl Component {
                 .downcast::<Beneficiary>()
                 .expect("BeneficiaryModel is broken");
             let script_pubkey = beneficiary.address()?.script_pubkey();
-            let value = beneficiary.amount_sats();
-            if value == 0 {
-                return Err(pay::Error::Amount);
-            }
+            let value = if beneficiary.is_amount_max() {
+                match output_max {
+                    None => output_max = Some(no),
+                    Some(_) => return Err(pay::Error::MultipleMaxOutputs),
+                }
+                0
+            } else {
+                let value = beneficiary.amount_sats();
+                if value == 0 {
+                    return Err(pay::Error::Amount);
+                }
+                value
+            };
             output_value += value;
             txouts.push(TxOut {
                 script_pubkey,
                 value,
             });
-        }
-
-        if output_value == 0 {
-            return Err(pay::Error::NoBeneficiaries);
         }
 
         // TODO: Support constructing PSBTs from multiple descriptors (at descriptor-wallet lib)
@@ -115,10 +121,18 @@ impl Component {
         let mut vsize = 0.0f32;
         while fee <= DUST_RELAY_TX_FEE && fee != next_fee {
             fee = next_fee;
-            prevouts = wallet
-                .coinselect(output_value + fee as u64)
-                .ok_or(pay::Error::InsufficientFunds)?
-                .0;
+            if output_max.is_some() {
+                prevouts = wallet
+                    .utxos()
+                    .iter()
+                    .map(Prevout::from)
+                    .collect::<BTreeSet<_>>();
+            } else {
+                prevouts = wallet
+                    .coinselect(output_value + fee as u64)
+                    .ok_or(pay::Error::InsufficientFunds)?
+                    .0;
+            }
             let txins = prevouts
                 .iter()
                 .map(|p| TxIn {
@@ -141,6 +155,16 @@ impl Component {
             if cycle_lim > 6 {
                 return Err(pay::Error::FeeFailure);
             }
+        }
+
+        let input_value = prevouts.iter().map(|p| p.amount).sum::<u64>();
+        if let Some(vout) = output_max {
+            let max_value = input_value - output_value - fee as u64;
+            txouts[vout as usize].value = max_value;
+            output_value += max_value;
+        }
+        if output_value == 0 {
+            return Err(pay::Error::NoBeneficiaries);
         }
 
         let inputs = prevouts
@@ -173,38 +197,19 @@ impl Component {
             psbt.set_signer_name(signer.master_fp, &signer.name);
         }
 
-        self.model.set_vsize(vsize);
-
-        Ok((psbt, change_index, fee))
+        Ok((psbt, change_index, output_value, fee, vsize))
     }
 
-    pub fn sync_pay(&mut self) -> Option<(Psbt, UnhardenedIndex, u32)> {
-        let res = self.compose_psbt();
-
-        let output_count = self.model.beneficiaries().n_items();
-        let mut total = 0u64;
-        for no in 0..output_count {
-            let beneficiary = self
-                .model
-                .beneficiaries()
-                .item(no)
-                .expect("BeneficiaryModel is broken")
-                .downcast::<Beneficiary>()
-                .expect("BeneficiaryModel is broken");
-            total += beneficiary.amount_sats();
-        }
-
-        self.pay_widgets.update_info(
-            self.model.fee_rate(),
-            self.model.as_wallet().ephemerals().fees,
-            self.model.vsize(),
-            res.as_ref().ok().map(|(_, _, fee)| (total, *fee)),
-        );
-
-        match res {
-            Ok(data) => {
+    pub fn sync_pay(&mut self) -> Option<(Psbt, UnhardenedIndex)> {
+        match self.compose_psbt() {
+            Ok((psbt, change_index, output_value, fee, vsize)) => {
                 self.pay_widgets.hide_message();
-                Some(data)
+                self.pay_widgets.update_info(
+                    self.model.fee_rate(),
+                    self.model.as_wallet().ephemerals().fees,
+                    Some((output_value, fee, vsize)),
+                );
+                Some((psbt, change_index))
             }
             Err(err) => {
                 self.pay_widgets.show_error(&err.to_string());
@@ -444,14 +449,16 @@ impl Component {
         match event {
             pay::Msg::Show => {
                 self.model.beneficiaries_mut().clear();
-                self.model.beneficiaries_mut().append(&Beneficiary::new());
+                self.model
+                    .beneficiaries_mut()
+                    .append(&Beneficiary::default());
                 self.model
                     .set_fee_rate(self.model.as_wallet().ephemerals().fees.0);
                 self.pay_widgets.init_ui(&self.model);
                 self.pay_widgets.show();
             }
             pay::Msg::Response(ResponseType::Ok) => {
-                let (psbt, change_index, _) = match self.sync_pay() {
+                let (psbt, change_index) = match self.sync_pay() {
                     Some(data) => data,
                     None => return,
                 };
@@ -481,7 +488,9 @@ impl Component {
 
         match event {
             pay::Msg::BeneficiaryAdd => {
-                self.model.beneficiaries_mut().append(&Beneficiary::new());
+                self.model
+                    .beneficiaries_mut()
+                    .append(&Beneficiary::default());
             }
             pay::Msg::BeneficiaryRemove => {
                 self.pay_widgets.selected_beneficiary_index().map(|index| {
@@ -491,7 +500,6 @@ impl Component {
             pay::Msg::SelectBeneficiary(index) => self.pay_widgets.select_beneficiary(index),
             pay::Msg::BeneficiaryEdit(index) => {
                 self.pay_widgets.select_beneficiary(index);
-                /* Check correctness of the model data */
             }
             pay::Msg::FeeSet => {
                 let fee_rate = self.pay_widgets.fee_rate();
