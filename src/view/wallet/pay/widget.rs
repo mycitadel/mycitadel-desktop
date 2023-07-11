@@ -31,7 +31,7 @@ pub struct Widgets {
     msg_img: Image,
 
     cancel_btn: Button,
-    prepare_btn: Button,
+    compose_btn: Button,
 
     add_btn: ToolButton,
     remove_btn: ToolButton,
@@ -156,14 +156,14 @@ impl Widgets {
         fees: (f32, f32, f32),
         tx_info: Option<(u64, u32, f32)>,
     ) {
-        self.prepare_btn.set_sensitive(tx_info.is_some());
+        self.compose_btn.set_sensitive(tx_info.is_some());
 
         self.fee_adj.set_upper(fees.0 as f64 * 5.0);
         self.fee_adj.set_lower(fees.2 as f64 / 10.0);
 
-        if let Some((paid, fee, vsize)) = tx_info {
-            let total_fee = fee as f64;
-            let total = paid as f64 + total_fee;
+        if let Some((total, total_fee, vsize)) = tx_info {
+            let total_fee = total_fee as f64;
+            let total = total as f64 + total_fee;
 
             self.weight_lbl.set_text(&format!("{:.0} vbytes", vsize));
             self.fee_lbl
@@ -217,7 +217,7 @@ impl Widgets {
 impl NotificationBoxExt for Widgets {
     fn notification_box(&self) -> &Box { &self.msg_box }
     fn main_dialog(&self) -> &Dialog { &self.dialog }
-    fn main_action_button(&self) -> &Button { &self.prepare_btn }
+    fn main_action_button(&self) -> &Button { &self.compose_btn }
     fn notification_image(&self) -> &Image { &self.msg_img }
     fn notification_label(&self) -> &Label { &self.msg_lbl }
 }

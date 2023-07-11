@@ -39,10 +39,15 @@
   </object>
   <object class="GtkDialog" id="dialog">
     <property name="can-focus">False</property>
+    <property name="modal">False</property>
     <property name="window-position">center</property>
     <property name="default-width">400</property>
     <property name="default-height">300</property>
     <property name="type-hint">dialog</property>
+    <action-widgets>
+      <action-widget response="cancel">cancel_btn</action-widget>
+      <action-widget response="ok" default="true">compose_btn</action-widget>
+    </action-widgets>
     <child internal-child="vbox">
       <object class="GtkBox">
         <property name="can-focus">False</property>
@@ -579,7 +584,7 @@
           </object>
         </child>
         <child>
-          <object class="GtkButton" id="prepare_btn">
+          <object class="GtkButton" id="compose_btn">
             <property name="label" translatable="yes">Compose</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
