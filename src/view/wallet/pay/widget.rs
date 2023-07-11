@@ -62,7 +62,7 @@ impl Widgets {
         self.fee_adj.set_upper(fees.0 as f64 * 2.0);
         self.fee_adj.set_lower(fees.2 as f64 / 10.0);
 
-        self.update_info(model.fee_rate(), fees, model.vsize(), None);
+        self.update_info(model.fee_rate(), fees, None);
     }
 
     pub fn show(&self) { self.dialog.show() }
@@ -154,15 +154,14 @@ impl Widgets {
         &self,
         fee_rate: f32,
         fees: (f32, f32, f32),
-        vsize: f32,
-        paid: Option<(u64, u32)>,
+        tx_info: Option<(u64, u32, f32)>,
     ) {
-        self.prepare_btn.set_sensitive(paid.is_some());
+        self.prepare_btn.set_sensitive(tx_info.is_some());
 
         self.fee_adj.set_upper(fees.0 as f64 * 5.0);
         self.fee_adj.set_lower(fees.2 as f64 / 10.0);
 
-        if let Some((paid, fee)) = paid {
+        if let Some((paid, fee, vsize)) = tx_info {
             let total_fee = fee as f64;
             let total = paid as f64 + total_fee;
 

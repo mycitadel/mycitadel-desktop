@@ -157,6 +157,8 @@ impl Beneficiary {
     }
 
     pub fn amount_sats(&self) -> u64 { self.property::<u64>("amount") }
+
+    pub fn is_amount_max(&self) -> bool { self.property::<bool>("max") }
 }
 
 #[derive(Debug, Default)]
