@@ -1,0 +1,13 @@
+app: mycitadel
+
+ingredients:
+  dist: bullseye
+  sources:
+    - deb http://debian.ethz.ch/debian/ bullseye main contrib non-free
+  debs:
+    - /home/orlovsky/repos/mycitadel_1.4.0-1_amd64.deb
+
+script:
+  - cp ./usr/share/applications/io.mycitadel.Wallet.desktop mycitadel.desktop
+  - sed -i -e 's|Icon=.*|Icon=mycitadel|g' mycitadel.desktop
+  - cp usr/share/icons/hicolor/scalable/apps/io.mycitadel.Wallet.svg mycitadel.svg
