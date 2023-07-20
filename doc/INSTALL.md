@@ -112,7 +112,7 @@ developer libraries. This operation should be done only once and is OS-specific.
     $ brew install gtk+3 libadwaita adwaita-icon-theme libusb
     ```
 
-- For Windows, you need to install Visual Studio C tools and MSYSY2-based GTK.
+- For Windows, you need to install Visual Studio C tools and MSYS2-based GTK.
   To do so please follow instructions at
   <https://www.gtk.org/docs/installations/windows/#using-gtk-from-msys2-packages>.
 
