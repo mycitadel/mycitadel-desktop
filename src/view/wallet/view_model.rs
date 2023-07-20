@@ -41,6 +41,8 @@ pub struct ViewModel {
 
     path: PathBuf,
 
+    asset: Option<ContractId>,
+
     #[getter(as_mut)]
     beneficiaries: BeneficiaryModel,
 
@@ -109,6 +111,7 @@ impl ViewModel {
             fee_rate: wallet.ephemerals().fees.0 * 100_000_000.0, // TODO: Update on window opening
             wallet,
             path,
+            asset: None,
             beneficiaries: BeneficiaryModel::new(),
             invoice: none!(),
             exchange: Exchange::Kraken,
