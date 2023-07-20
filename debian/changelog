@@ -1,3 +1,25 @@
+mycitadel (1.4.0-1) unstable; urgency=medium
+
+  [ UI improvements ]
+
+  * Context menus for transaction, address and coin lists
+  * Copy txid, address, amounts, heights to clipboard via context menu
+  * Ability to pay full wallet balance to an address
+  * Improved fonts and colors for the transaction list
+
+  [ Bugfixes ]
+
+  * Fixed date & time precision for the list of transactions
+  * Fixed display of transactions in mempool
+  * Fixed signer renaming persistence in wallet settings
+
+  [ Distributive ]
+
+  * New distributive format: Appimage
+  * Included Python packaging in Windows, simplifying installation process
+
+ -- Dr Maxim Orlovsky <orlovsky@mycitadel.io>  Tue, 11 Jul 2023 12:51:00 +0200
+
 mycitadel (1.3.0-1) unstable; urgency=medium
 
   * Account-based multi-sigs with time-locks and complex miniscript descriptors.
