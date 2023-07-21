@@ -371,6 +371,11 @@ impl Update for Component {
                     self.save();
                 }
             }
+            Msg::ChangeAsset(index) => {
+                let success = self.model.change_asset(index);
+                debug_assert!(success, "invalid index selection");
+                self.widgets.update_ui(&mut self.model);
+            }
             Msg::Close => self.close(),
             Msg::About => {
                 self.launcher_stream

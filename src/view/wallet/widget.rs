@@ -179,6 +179,13 @@ impl Widgets {
         );
         connect!(relm, self.about_mi, connect_activate(_), Msg::About);
 
+        connect!(
+            relm,
+            self.asset_list,
+            connect_row_activated(_, row),
+            Msg::ChangeAsset(row.index() as u32)
+        );
+
         let menu = self.history_menu.clone();
         self.history_list
             .connect_button_release_event(move |me, event| {
@@ -427,10 +434,6 @@ impl Widgets {
         self.fiat_eur.set_active(model.fiat == Fiat::EUR);
         self.fiat_chf.set_active(model.fiat == Fiat::CHF);
 
-        if *settings.testnet() {
-            self.ticker_lbl.set_text("tBTC");
-            self.asset_lbl.set_text("Test bitcoins");
-        }
         if !settings.is_rgb() {
             self.contract_box.set_visible(false);
         }
@@ -445,6 +448,12 @@ impl Widgets {
             .set_sort_column_id(SortColumn::Index(6), SortType::Ascending);
 
         self.update_invoice(model);
+    }
+
+    pub fn update_ui(&self, model: &mut ViewModel) {
+        let info = model.asset_info();
+        self.ticker_lbl.set_text(&info.ticker());
+        self.asset_lbl.set_text(&info.name());
     }
 
     fn bind_asset_model(&self, model: &AssetModel) {

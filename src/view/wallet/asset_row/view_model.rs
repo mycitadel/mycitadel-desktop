@@ -125,6 +125,14 @@ glib::wrapper! {
 }
 
 impl AssetInfo {
+    pub fn btc(testnet: bool, amount: u64) -> AssetInfo {
+        let (btc, bitcoin) = match testnet {
+            true => ("tBTC", "Test bitcoin"),
+            false => ("BTC", "Bitcoin"),
+        };
+        AssetInfo::with(bitcoin, btc, amount, 8, "-")
+    }
+
     pub fn with(
         name: &str,
         ticker: &str,
