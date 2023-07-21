@@ -118,13 +118,7 @@ impl ObjectImpl for DeviceDataInner {
         PROPERTIES.as_ref()
     }
 
-    fn set_property(
-        &self,
-        _obj: &Self::Type,
-        _id: usize,
-        value: &glib::Value,
-        pspec: &glib::ParamSpec,
-    ) {
+    fn set_property(&self, _id: usize, value: &glib::Value, pspec: &glib::ParamSpec) {
         match pspec.name() {
             "name" => {
                 let name = value
@@ -160,7 +154,7 @@ impl ObjectImpl for DeviceDataInner {
         }
     }
 
-    fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
+    fn property(&self, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
         match pspec.name() {
             "name" => self.name.borrow().to_value(),
             "fingerprint" => self.fingerprint.borrow().to_value(),
@@ -189,7 +183,6 @@ impl DeviceData {
             ("xpub", &xpub.to_string()),
             ("account", &account),
         ])
-        .expect("Failed to create row data")
     }
 
     pub fn fingerprint(&self) -> Fingerprint {
@@ -213,9 +206,9 @@ impl ObjectSubclass for DeviceModelInner {
 impl ObjectImpl for DeviceModelInner {}
 
 impl ListModelImpl for DeviceModelInner {
-    fn item_type(&self, _list_model: &Self::Type) -> glib::Type { DeviceData::static_type() }
-    fn n_items(&self, _list_model: &Self::Type) -> u32 { self.0.borrow().len() as u32 }
-    fn item(&self, _list_model: &Self::Type, position: u32) -> Option<glib::Object> {
+    fn item_type(&self) -> glib::Type { DeviceData::static_type() }
+    fn n_items(&self) -> u32 { self.0.borrow().len() as u32 }
+    fn item(&self, position: u32) -> Option<glib::Object> {
         self.0
             .borrow()
             .get(position as usize)
@@ -230,7 +223,7 @@ glib::wrapper! {
 
 impl DeviceModel {
     #[allow(clippy::new_without_default)]
-    pub fn new() -> DeviceModel { glib::Object::new(&[]).expect("Failed to create DeviceModel") }
+    pub fn new() -> DeviceModel { glib::Object::new(&[]) }
 
     pub fn refresh(&self, devices: &HardwareList) {
         self.clear();
