@@ -183,12 +183,6 @@ impl Widgets {
             menu.popup(None::<&Menu>, None::<&MenuItem>, |_, _, _| false, 0, 0);
             true
         });
-        self.history_list.connect_row_activated(|me, path, _| {
-            let model = me.model().unwrap();
-            let iter = model.iter(path).unwrap();
-            let val: String = model.value(&iter, 1).get().unwrap();
-            gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).set_text(&val);
-        });
 
         let menu = self.coin_menu.clone();
         self.utxo_list
@@ -204,12 +198,6 @@ impl Widgets {
             menu.popup(None::<&Menu>, None::<&MenuItem>, |_, _, _| false, 0, 0);
             true
         });
-        self.utxo_list.connect_row_activated(|me, path, _| {
-            let model = me.model().unwrap();
-            let iter = model.iter(path).unwrap();
-            let val: String = model.value(&iter, 1).get().unwrap();
-            gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).set_text(&val);
-        });
 
         let menu = self.address_menu.clone();
         self.address_list
@@ -224,12 +212,6 @@ impl Widgets {
         self.address_list.connect_popup_menu(move |_me| {
             menu.popup(None::<&Menu>, None::<&MenuItem>, |_, _, _| false, 0, 0);
             true
-        });
-        self.address_list.connect_row_activated(|me, path, _| {
-            let model = me.model().unwrap();
-            let iter = model.iter(path).unwrap();
-            let val: String = model.value(&iter, 0).get().unwrap();
-            gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).set_text(&val);
         });
 
         let list = self.history_list.clone();
