@@ -29,7 +29,7 @@ use relm::Relm;
 use wallet::hd::SegmentIndexes;
 
 use super::asset_row::{self, AssetModel};
-use super::{pay, ElectrumState, Msg, ViewModel};
+use super::{payto, ElectrumState, Msg, ViewModel};
 use crate::model::UI as UIColorTrait;
 use crate::view::{launch, APP_ICON, APP_ICON_TOOL};
 use crate::worker::exchange::{Exchange, Fiat};
@@ -165,7 +165,7 @@ impl Widgets {
             relm,
             self.pay_btn,
             connect_clicked(_),
-            Msg::Pay(pay::Msg::Show)
+            Msg::PayTo(payto::Msg::Show)
         );
         connect!(relm, self.refresh_btn, connect_clicked(_), Msg::Refresh);
         connect!(relm, self.redefine_mi, connect_activate(_), Msg::Duplicate);

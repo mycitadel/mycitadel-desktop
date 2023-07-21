@@ -574,7 +574,10 @@ impl Component {
             payto::Msg::Response(ResponseType::Cancel) => {
                 self.payto_widgets.hide();
             }
-            payto::Msg::Response(_) => {}
+            payto::Msg::Response(ResponseType::Other(1000)) => {
+                self.payto_widgets.hide();
+                self.update_pay(pay::Msg::Show);
+            }
             _ => {} // Changes which update wallet tx
         }
     }
