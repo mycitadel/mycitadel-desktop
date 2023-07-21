@@ -21,6 +21,7 @@ use rgb::BlockchainResolver;
 use rgbstd::containers::{Bindle, BindleParseError, Contract};
 use rgbstd::contract::ContractId;
 use rgbstd::interface::rgb20::Rgb20;
+use rgbstd::interface::FungibleAllocation;
 use rgbstd::persistence::{Inventory, InventoryError};
 use rgbstd::validation;
 use wallet::descriptors::DescriptorClass;
@@ -198,7 +199,7 @@ impl ViewModel {
         Ok(status)
     }
 
-    fn asset_info_for(&mut self, id: ContractId) -> AssetInfo {
+    fn asset_for(&mut self, id: ContractId) -> Rgb20 {
         let rgb = self
             .wallet
             .rgb_mut()
@@ -207,9 +208,20 @@ impl ViewModel {
         let iface = rgb
             .contract_iface_named(id, "RGB20")
             .expect("Not an RGB20 contract");
-        let iface = Rgb20::from(iface);
-        let spec = iface.spec();
+        Rgb20::from(iface)
+    }
 
+    pub fn asset_allocations(&mut self) -> Vec<FungibleAllocation> {
+        let Some(id) = self.asset else {
+            return vec![];
+        };
+        let iface = self.asset_for(id);
+        iface.allocations(&self.wallet).into_inner()
+    }
+
+    fn asset_info_for(&mut self, id: ContractId) -> AssetInfo {
+        let iface = self.asset_for(id);
+        let spec = iface.spec();
         AssetInfo::with(
             spec.name(),
             spec.ticker(),

@@ -22,10 +22,11 @@ use gtk::gdk_pixbuf::Pixbuf;
 use gtk::prelude::*;
 use gtk::{
     gdk, Adjustment, ApplicationWindow, Button, CheckButton, Entry, HeaderBar, Image, Label,
-    ListBox, ListStore, Menu, MenuItem, Popover, RadioMenuItem, Separator, SortColumn, SortType,
-    SpinButton, Spinner, Statusbar, TextBuffer, TreeView,
+    ListBox, ListStore, Menu, MenuItem, Notebook, Popover, RadioMenuItem, Separator, SortColumn,
+    SortType, SpinButton, Spinner, Statusbar, TextBuffer, TreeView,
 };
 use relm::Relm;
+use rgbstd::interface::FungibleAllocation;
 use wallet::hd::SegmentIndexes;
 
 use super::asset_row::{self, AssetModel};
@@ -109,6 +110,7 @@ pub struct Widgets {
     refresh_spin: Spinner,
     refresh_img: Image,
 
+    notebook: Notebook,
     history_store: ListStore,
     utxo_store: ListStore,
     address_store: ListStore,
@@ -421,7 +423,7 @@ impl Widgets {
         );
     }
 
-    pub fn init_ui(&self, model: &ViewModel) {
+    pub fn init_ui(&mut self, model: &ViewModel) {
         let settings = model.as_settings();
 
         self.assets_box.set_visible(settings.is_rgb());
@@ -461,7 +463,7 @@ impl Widgets {
         self.update_invoice(model);
     }
 
-    pub fn update_ui(&self, model: &mut ViewModel) {
+    pub fn update_ui(&mut self, model: &mut ViewModel) {
         let info = model.asset_info();
         self.ticker_lbl.set_text(&info.ticker());
         self.asset_lbl.set_text(&info.name());
@@ -480,6 +482,10 @@ impl Widgets {
         self.sep1.set_visible(!is_asset);
         self.sep2.set_visible(!is_asset);
 
+        self.notebook.set_page(if is_asset { 1 } else { 0 });
+        self.notebook.set_show_tabs(!is_asset);
+
+        self.update_outpoints(model);
         self.update_balance(model);
     }
 
@@ -610,6 +616,39 @@ impl Widgets {
                 (7, &item.onchain.txid.to_string()),
                 // TODO: Change color depending on the presence of description
                 (8, &descr_color),
+            ]);
+        }
+    }
+
+    pub fn update_outpoints(&mut self, model: &mut ViewModel) {
+        match model.asset() {
+            None => {
+                self.update_utxos(model.wallet().utxos());
+            }
+            Some(_) => {
+                let info = model.asset_info();
+                self.update_allocations(&model.asset_allocations(), info.precision());
+            }
+        }
+    }
+
+    pub fn update_allocations(&mut self, allocations: &[FungibleAllocation], precision: u8) {
+        let pow = 10u64.pow(precision as u32);
+        self.utxo_store.clear();
+        for allocation in allocations {
+            let int = allocation.value / pow;
+            let fract = allocation.value - int * pow;
+            self.utxo_store.insert_with_values(None, &[
+                (0, &""),
+                (1, &allocation.owner.to_string()),
+                (
+                    2,
+                    &format!("{int}.{fract}")
+                        .trim_end_matches('0')
+                        .trim_end_matches('.'),
+                ),
+                (3, &""),
+                (4, &0u32),
             ]);
         }
     }

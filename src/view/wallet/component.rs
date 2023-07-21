@@ -282,7 +282,7 @@ impl Component {
                     .update_electrum_state(ElectrumState::RetrievingHistory(no as usize * 2 + 1));
                 let wallet = self.model.wallet_mut();
                 wallet.update_utxos(batch);
-                self.widgets.update_utxos(&wallet.utxos());
+                self.widgets.update_outpoints(&mut self.model);
                 self.widgets.update_balance(&mut self.model);
             }
             electrum::Msg::TxBatch(batch, progress) => {
@@ -591,7 +591,7 @@ impl Widget for Component {
 
     fn view(relm: &Relm<Self>, mut model: Self::Model) -> Self {
         let glade_src = include_str!("wallet.glade");
-        let widgets = Widgets::from_string(glade_src).expect("glade file broken");
+        let mut widgets = Widgets::from_string(glade_src).expect("glade file broken");
 
         let settings = init::<settings::Component>(()).expect("error in settings component");
         settings.emit(settings::Msg::SetWallet(relm.stream().clone()));
