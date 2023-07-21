@@ -101,13 +101,7 @@ impl ObjectImpl for SigningInner {
         PROPERTIES.as_ref()
     }
 
-    fn set_property(
-        &self,
-        _obj: &Self::Type,
-        _id: usize,
-        value: &glib::Value,
-        pspec: &glib::ParamSpec,
-    ) {
+    fn set_property(&self, _id: usize, value: &glib::Value, pspec: &glib::ParamSpec) {
         match pspec.name() {
             "name" => {
                 let value = value
@@ -149,7 +143,7 @@ impl ObjectImpl for SigningInner {
         }
     }
 
-    fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
+    fn property(&self, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
         match pspec.name() {
             "name" => self.name.borrow().to_value(),
             "master-fp" => self.master_fp.borrow().to_value(),
@@ -188,7 +182,6 @@ impl Signing {
             ("sigs-required", &sigs_required),
             ("signable", &(sigs_present < sigs_required)),
         ])
-        .expect("Failed to create row data")
     }
 
     pub fn master_fp(&self) -> Fingerprint {
@@ -214,9 +207,9 @@ impl ObjectSubclass for SigningModelInner {
 impl ObjectImpl for SigningModelInner {}
 
 impl ListModelImpl for SigningModelInner {
-    fn item_type(&self, _list_model: &Self::Type) -> glib::Type { Signing::static_type() }
-    fn n_items(&self, _list_model: &Self::Type) -> u32 { self.0.borrow().len() as u32 }
-    fn item(&self, _list_model: &Self::Type, position: u32) -> Option<glib::Object> {
+    fn item_type(&self) -> glib::Type { Signing::static_type() }
+    fn n_items(&self) -> u32 { self.0.borrow().len() as u32 }
+    fn item(&self, position: u32) -> Option<glib::Object> {
         self.0
             .borrow()
             .get(position as usize)
@@ -234,7 +227,7 @@ impl Default for SigningModel {
 }
 
 impl SigningModel {
-    pub fn new() -> SigningModel { glib::Object::new(&[]).expect("Failed to create SigningModel") }
+    pub fn new() -> SigningModel { glib::Object::new(&[]) }
 
     pub fn append(&self, obj: &Signing) {
         let imp = self.imp();

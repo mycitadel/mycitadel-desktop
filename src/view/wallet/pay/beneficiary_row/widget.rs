@@ -100,8 +100,8 @@ impl RowWidgets {
 
         beneficiary
             .bind_property("amount", &self.address_fld, "primary_icon_name")
-            .transform_to(move |_binding, value| {
-                if value.get::<u64>().unwrap() == 0 {
+            .transform_to(move |_binding, value: u64| {
+                if value == 0 {
                     Some("dialog-error-symbolic".to_value())
                 } else {
                     None
@@ -111,8 +111,8 @@ impl RowWidgets {
             .build();
         beneficiary
             .bind_property("amount", &self.address_fld, "primary_icon_tooltip_text")
-            .transform_to(move |_binding, value| {
-                if value.get::<u64>().unwrap() == 0 {
+            .transform_to(move |_binding, value: u64| {
+                if value == 0 {
                     Some("Payment without beneficiary address".to_value())
                 } else {
                     None
@@ -122,7 +122,7 @@ impl RowWidgets {
             .build();
         self.address_fld
             .bind_property("text", beneficiary, "address")
-            .transform_to(move |binding, value| {
+            .transform_to(move |binding, value: String| {
                 let address_fld: Entry = binding.source().unwrap().downcast().unwrap();
 
                 let addr_str = address_fld.text();
@@ -153,16 +153,15 @@ impl RowWidgets {
                 };
                 address_fld.set_primary_icon_name(icon);
                 address_fld.set_primary_icon_tooltip_text(msg.as_deref());
-                Some(value.clone())
+                Some(value)
             })
             .flags(rw_flags)
             .build();
 
         self.amount_fld
             .bind_property("text", beneficiary, "amount")
-            .transform_to(move |binding, value| {
+            .transform_to(move |binding, amount_str: &str| {
                 let amount_fld: Entry = binding.source().unwrap().downcast().unwrap();
-                let amount_str = value.get::<&str>().unwrap();
                 let (icon, msg, amount) = match f64::from_str(amount_str) {
                     _ if amount_str.is_empty() => (None, None, 0u64),
                     Err(err) => (
@@ -192,8 +191,7 @@ impl RowWidgets {
                 amount_fld.set_primary_icon_tooltip_text(msg.as_deref());
                 Some(amount.to_value())
             })
-            .transform_from(move |_binding, value| {
-                let btc = value.get::<u64>().unwrap();
+            .transform_from(move |_binding, btc: u64| {
                 if btc == 0 {
                     Some("".to_value())
                 } else {
@@ -206,8 +204,7 @@ impl RowWidgets {
         let saved_amount = Arc::new(Mutex::new(0u64));
         beneficiary
             .bind_property("max", &self.amount_fld, "editable")
-            .transform_to(move |binding, value| {
-                let active = value.get::<bool>().unwrap();
+            .transform_to(move |binding, active: bool| {
                 let amount_fld: Entry = binding.target().unwrap().downcast().unwrap();
                 if active {
                     amount_fld.set_primary_icon_name(None);
@@ -219,11 +216,7 @@ impl RowWidgets {
             .build();
         self.max_btn
             .bind_property("active", beneficiary, "max")
-            .transform_to(move |binding, value| {
-                let active = value
-                    .get::<bool>()
-                    .expect("toggle button value is not bool");
-
+            .transform_to(move |binding, active: bool| {
                 let item: Beneficiary = binding.target().unwrap().downcast().unwrap();
                 if active {
                     *saved_amount.lock().unwrap() = item.property::<u64>("amount");
@@ -231,7 +224,7 @@ impl RowWidgets {
                 } else {
                     item.set_property("amount", *saved_amount.lock().unwrap());
                 }
-                Some(value.clone())
+                Some(active)
             })
             .flags(rw_flags)
             .build();

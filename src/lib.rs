@@ -23,6 +23,8 @@ extern crate relm_derive;
 #[cfg(feature = "serde")]
 extern crate serde_crate as serde;
 
+extern crate glade as gladis;
+
 pub mod model;
 #[cfg(feature = "ui")]
 pub mod view;

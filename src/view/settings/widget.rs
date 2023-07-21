@@ -445,11 +445,14 @@ impl Widgets {
 
     pub fn update_network(&self) {
         let network = self.network();
-        self.devices_btn.set_tooltip_text(if network.is_testnet() {
-            Some("Hardware signers can be only used on mainnet")
-        } else {
-            None
-        });
+        WidgetExt::set_tooltip_text(
+            &self.devices_btn,
+            if network.is_testnet() {
+                Some("Hardware signers can be only used on mainnet")
+            } else {
+                None
+            },
+        );
     }
 
     pub fn electrum_server(&self) -> String { self.electrum_fld.text().to_string() }
