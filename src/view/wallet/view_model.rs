@@ -100,7 +100,7 @@ impl ViewModel {
                 asset_model.append(&AssetInfo::with(
                     spec.name(),
                     spec.ticker(),
-                    0,
+                    iface.balance(&mut wallet),
                     spec.precision.into(),
                     &iface.contract_id().to_string(),
                 ));
@@ -209,10 +209,11 @@ impl ViewModel {
             .expect("Not an RGB20 contract");
         let iface = Rgb20::from(iface);
         let spec = iface.spec();
+
         AssetInfo::with(
             spec.name(),
             spec.ticker(),
-            0,
+            iface.balance(&self.wallet),
             spec.precision.into(),
             &iface.contract_id().to_string(),
         )

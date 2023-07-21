@@ -494,7 +494,7 @@ dependencies = [
 [[package]]
 name = "bpro"
 version = "0.5.0"
-source = "git+https://github.com/pandora-prime/bpro?branch=v0.5#9d151d4ba11701a9e399ef93dea74040fd773ba6"
+source = "git+https://github.com/pandora-prime/bpro?branch=v0.5#e2506b58ea30ce53bb9bffe09a7819ca3f6f4b33"
 dependencies = [
  "amplify 3.14.2",
  "bitcoin 0.29.2",
@@ -2070,8 +2070,7 @@ dependencies = [
 [[package]]
 name = "rgb-std"
 version = "0.10.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6dc78835a03d99c91c1f190df971589ea195a4dce933cf00ba5efe163c082413"
+source = "git+https://github.com/RGB-WG/rgb-wallet?branch=develop#ac9aeae6a185ba39b0a3a9d608f0bda729b103da"
 dependencies = [
  "amplify 4.0.0",
  "baid58",
@@ -2810,9 +2809,9 @@ dependencies = [
 
 [[package]]
 name = "urlencoding"
-version = "2.1.2"
+version = "2.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e8db7427f936968176eaa7cdf81b7f98b980b18495ec28f1b5791ac3bfe3eea9"
+checksum = "daf8dba3b7eb870caf1ddeed7bc9d2a049f3cfdfae7cb521b087cc33ae4c49da"
 
 [[package]]
 name = "version-compare"

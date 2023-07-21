@@ -68,3 +68,4 @@ serde = ["serde_with", "serde_yaml",
 
 [patch.crates-io]
 bpro = { git = "https://github.com/pandora-prime/bpro", branch = "v0.5" }
+rgb-std = { git = "https://github.com/RGB-WG/rgb-wallet", branch = "develop" }

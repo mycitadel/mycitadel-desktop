@@ -21,7 +21,8 @@ use gtk::{gio, glib};
 #[derive(Default)]
 pub struct AssetInner {
     name: RefCell<String>,
-    amount: RefCell<String>,
+    amount: RefCell<u64>,
+    precision: RefCell<u8>,
     ticker: RefCell<String>,
     contract: RefCell<String>,
 }
@@ -52,11 +53,22 @@ impl ObjectImpl for AssetInner {
                     None, // Default value
                     glib::ParamFlags::READWRITE,
                 ),
-                glib::ParamSpecString::new(
+                glib::ParamSpecUInt64::new(
                     "amount",
                     "Amount",
                     "Amount",
-                    None,
+                    0,
+                    u64::MAX,
+                    0,
+                    glib::ParamFlags::READWRITE,
+                ),
+                glib::ParamSpecUChar::new(
+                    "precision",
+                    "Precision",
+                    "Precision",
+                    0,
+                    u8::MAX,
+                    0,
                     glib::ParamFlags::READWRITE,
                 ),
                 glib::ParamSpecString::new(
@@ -93,6 +105,12 @@ impl ObjectImpl for AssetInner {
                     .expect("type conformity checked by `Object::set_property`");
                 self.amount.replace(amount);
             }
+            "precision" => {
+                let amount = value
+                    .get()
+                    .expect("type conformity checked by `Object::set_property`");
+                self.precision.replace(amount);
+            }
             "ticker" => {
                 let ticker = value
                     .get()
@@ -113,6 +131,7 @@ impl ObjectImpl for AssetInner {
         match pspec.name() {
             "name" => self.name.borrow().to_value(),
             "amount" => self.amount.borrow().to_value(),
+            "precision" => self.precision.borrow().to_value(),
             "ticker" => self.ticker.borrow().to_value(),
             "contract" => self.contract.borrow().to_value(),
             _ => unimplemented!(),
@@ -140,11 +159,10 @@ impl AssetInfo {
         precision: u8,
         contract_name: &str,
     ) -> AssetInfo {
-        let precision = precision as u32;
-        let amount = amount as f64 / 10_i32.pow(precision) as f64;
         glib::Object::new(&[
             ("name", &name),
-            ("amount", &format!("{}", amount)),
+            ("amount", &amount),
+            ("precision", &precision),
             ("ticker", &ticker),
             ("contract", &contract_name),
         ])
@@ -156,7 +174,9 @@ impl AssetInfo {
 
     pub fn contract_name(&self) -> String { self.property::<String>("contract") }
 
-    pub fn amount(&self) -> String { self.property::<String>("amount") }
+    pub fn amount(&self) -> u64 { self.property::<u64>("amount") }
+
+    pub fn precision(&self) -> u8 { self.property::<u8>("precision") }
 }
 
 #[derive(Debug, Default)]

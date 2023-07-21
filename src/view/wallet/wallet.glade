@@ -641,7 +641,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkSeparator">
+                  <object class="GtkSeparator" id="sep0">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                   </object>

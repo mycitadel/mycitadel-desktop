@@ -94,6 +94,7 @@ pub struct Widgets {
     value_lbl: Label,
     fiat_lbl: Label,
     price_lbl: Label,
+    sep0: Separator,
     sep1: Separator,
     sep2: Separator,
 
@@ -475,8 +476,11 @@ impl Widgets {
         self.fiat_lbl.set_visible(!is_asset);
         self.price_box.set_visible(!is_asset);
         self.price_lbl.set_visible(!is_asset);
+        self.sep0.set_visible(!is_asset);
         self.sep1.set_visible(!is_asset);
         self.sep2.set_visible(!is_asset);
+
+        self.update_balance(model);
     }
 
     fn bind_asset_model(&self, model: &AssetModel) {
@@ -660,12 +664,34 @@ impl Widgets {
         }
     }
 
-    pub fn update_state(&self, state: WalletState, _tx_count: usize, exchange_rate: f64) {
-        self.balance_lbl
-            .set_text(&format!("{} sat", state.balance.to_string()));
-        self.balance_btc_lbl
-            .set_text(&format!("{}.", state.balance_btc() as u64));
-        self.balance_sat_lbl.set_text(&state.balance.to_string());
+    pub fn update_balance(&self, model: &mut ViewModel) {
+        let wallet = model.wallet();
+        let state = wallet.state();
+        let exchange_rate = model.exchange_rate;
+
+        let asset = model.asset_info();
+        let precision: u8 = asset.property("precision");
+        let balance: u64 = asset.property("amount");
+        let pow = 10u64.pow(precision as u32);
+        let int = balance / pow;
+        let fract = balance - int * pow;
+        let remain = format!("{fract}").trim_end_matches('0').to_string();
+        let zeros = precision as usize - remain.len();
+
+        let main = if int == 0 {
+            self.balance_btc_lbl
+                .set_text(&format!("0.{:01$}", "", zeros));
+            remain
+        } else if fract != 0 {
+            self.balance_btc_lbl.set_text("");
+            format!("{}.{}", int, remain)
+        } else {
+            self.balance_btc_lbl.set_text("");
+            format!("{}", int)
+        };
+        self.balance_sat_lbl.set_text(&main);
+
+        self.balance_lbl.set_text(&format!("{} sat", state.balance));
 
         /*
         self.volume_btc_lbl

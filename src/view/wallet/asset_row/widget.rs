@@ -57,6 +57,17 @@ impl RowWidgets {
 
         asset
             .bind_property("amount", &self.amount_lbl, "label")
+            .transform_to(|binding, value: u64| {
+                let precision = binding.source().unwrap().property::<u8>("precision");
+                let pow = 10u64.pow(precision as u32);
+                let int = value / pow;
+                let mut fract = (value - int * pow) as f64 / pow as f64;
+                if fract > 0.0 && fract < 0.01 {
+                    fract = 0.01;
+                }
+                let fract = format!("{:.2}", fract);
+                Some(format!("{int}.{}", fract.trim_start_matches("0.")))
+            })
             .flags(flags)
             .build();
     }

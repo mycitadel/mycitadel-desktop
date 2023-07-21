@@ -283,11 +283,7 @@ impl Component {
                 let wallet = self.model.wallet_mut();
                 wallet.update_utxos(batch);
                 self.widgets.update_utxos(&wallet.utxos());
-                self.widgets.update_state(
-                    wallet.state(),
-                    wallet.tx_count(),
-                    self.model.exchange_rate,
-                );
+                self.widgets.update_balance(&mut self.model);
             }
             electrum::Msg::TxBatch(batch, progress) => {
                 self.widgets
@@ -302,11 +298,9 @@ impl Component {
                 self.tx_buffer.clear();
                 self.save();
 
-                let exchange_rate = self.model.exchange_rate;
+                self.widgets.update_balance(&mut self.model);
                 let wallet = self.model.wallet_mut();
                 self.widgets.update_history(&wallet.history());
-                self.widgets
-                    .update_state(wallet.state(), wallet.tx_count(), exchange_rate);
                 self.widgets.update_addresses(&wallet.address_info(true));
                 self.widgets.update_electrum_state(ElectrumState::Complete(
                     self.model.as_settings().electrum().sec,
