@@ -215,13 +215,7 @@ impl ObjectImpl for ConditionInner {
         PROPERTIES.as_ref()
     }
 
-    fn set_property(
-        &self,
-        _obj: &Self::Type,
-        _id: usize,
-        value: &glib::Value,
-        pspec: &glib::ParamSpec,
-    ) {
+    fn set_property(&self, _id: usize, value: &glib::Value, pspec: &glib::ParamSpec) {
         match pspec.name() {
             "sigs-all" => {
                 let value = value
@@ -329,7 +323,7 @@ impl ObjectImpl for ConditionInner {
         }
     }
 
-    fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
+    fn property(&self, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
         match pspec.name() {
             "sigs-all" => self.sigs_all.borrow().to_value(),
             "sigs-at-least" => self.sigs_at_least.borrow().to_value(),
@@ -374,7 +368,7 @@ glib::wrapper! {
 }
 
 impl Default for Condition {
-    fn default() -> Self { glib::Object::new(&[]).expect("Failed to create row data") }
+    fn default() -> Self { glib::Object::new(&[]) }
 }
 
 impl From<&Condition> for SpendingCondition {
@@ -423,9 +417,9 @@ impl ObjectSubclass for SpendingModelInner {
 impl ObjectImpl for SpendingModelInner {}
 
 impl ListModelImpl for SpendingModelInner {
-    fn item_type(&self, _list_model: &Self::Type) -> glib::Type { Condition::static_type() }
-    fn n_items(&self, _list_model: &Self::Type) -> u32 { self.conditions.borrow().len() as u32 }
-    fn item(&self, _list_model: &Self::Type, position: u32) -> Option<glib::Object> {
+    fn item_type(&self) -> glib::Type { Condition::static_type() }
+    fn n_items(&self) -> u32 { self.conditions.borrow().len() as u32 }
+    fn item(&self, position: u32) -> Option<glib::Object> {
         self.conditions
             .borrow()
             .get(position as usize)
@@ -440,9 +434,7 @@ glib::wrapper! {
 
 impl SpendingModel {
     #[allow(clippy::new_without_default)]
-    pub fn new() -> SpendingModel {
-        glib::Object::new(&[]).expect("Failed to create SpendingModel")
-    }
+    pub fn new() -> SpendingModel { glib::Object::new(&[]) }
 
     pub fn refresh(&self, signers: BTreeSet<Signer>) {
         let imp = self.imp();

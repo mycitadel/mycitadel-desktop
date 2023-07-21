@@ -172,8 +172,8 @@ impl RowWidgets {
         condition
             .bind_property("sigs-all", &self.sig_lbl, "label")
             .flags(flags_ro)
-            .transform_to(|_, val| {
-                if val.get().unwrap() {
+            .transform_to(|_, val: bool| {
+                if val {
                     Some("All signatures".to_value())
                 } else {
                     None
@@ -183,8 +183,8 @@ impl RowWidgets {
         condition
             .bind_property("sigs-any", &self.sig_lbl, "label")
             .flags(flags_ro)
-            .transform_to(|_, val| {
-                if val.get().unwrap() {
+            .transform_to(|_, val: bool| {
+                if val {
                     Some("Any signature".to_value())
                 } else {
                     None
@@ -194,8 +194,8 @@ impl RowWidgets {
         condition
             .bind_property("sigs-at-least", &self.sig_lbl, "label")
             .flags(flags_ro)
-            .transform_to(|_, val| {
-                if val.get().unwrap() {
+            .transform_to(|_, val: bool| {
+                if val {
                     Some("At least".to_value())
                 } else {
                     None
@@ -251,8 +251,8 @@ impl RowWidgets {
         condition
             .bind_property("lock-none", &self.lock_lbl, "label")
             .flags(flags_ro)
-            .transform_to(|_, val| {
-                if val.get().unwrap() {
+            .transform_to(|_, val: bool| {
+                if val {
                     Some("at any time".to_value())
                 } else {
                     None
@@ -262,19 +262,21 @@ impl RowWidgets {
         condition
             .bind_property("lock-after", &self.lock_lbl, "label")
             .flags(flags_ro)
-            .transform_to(|_, val| {
-                if val.get().unwrap() {
-                    Some("after".to_value())
-                } else {
-                    None
-                }
-            })
+            .transform_to(
+                |_, val: bool| {
+                    if val {
+                        Some("after".to_value())
+                    } else {
+                        None
+                    }
+                },
+            )
             .build();
         condition
             .bind_property("lock-older", &self.lock_lbl, "label")
             .flags(flags_ro)
-            .transform_to(|_, val| {
-                if val.get().unwrap() {
+            .transform_to(|_, val: bool| {
+                if val {
                     Some("starting from".to_value())
                 } else {
                     None
@@ -305,8 +307,8 @@ impl RowWidgets {
         condition
             .bind_property("period-years", &self.period_lbl, "label")
             .flags(flags_ro)
-            .transform_to(|_, val| {
-                if val.get().unwrap() {
+            .transform_to(|_, val: bool| {
+                if val {
                     Some("year(s)".to_value())
                 } else {
                     None
@@ -316,8 +318,8 @@ impl RowWidgets {
         condition
             .bind_property("period-weeks", &self.period_lbl, "label")
             .flags(flags_ro)
-            .transform_to(|_, val| {
-                if val.get().unwrap() {
+            .transform_to(|_, val: bool| {
+                if val {
                     Some("week(s)".to_value())
                 } else {
                     None
@@ -327,8 +329,8 @@ impl RowWidgets {
         condition
             .bind_property("period-months", &self.period_lbl, "label")
             .flags(flags_ro)
-            .transform_to(|_, val| {
-                if val.get().unwrap() {
+            .transform_to(|_, val: bool| {
+                if val {
                     Some("month(s)".to_value())
                 } else {
                     None
@@ -338,13 +340,15 @@ impl RowWidgets {
         condition
             .bind_property("period-days", &self.period_lbl, "label")
             .flags(flags_ro)
-            .transform_to(|_, val| {
-                if val.get().unwrap() {
-                    Some("day(s)".to_value())
-                } else {
-                    None
-                }
-            })
+            .transform_to(
+                |_, val: bool| {
+                    if val {
+                        Some("day(s)".to_value())
+                    } else {
+                        None
+                    }
+                },
+            )
             .build();
 
         condition
@@ -353,8 +357,7 @@ impl RowWidgets {
             .build();
         condition
             .bind_property("after-month", &self.calendar, "month")
-            .transform_to(|_, value| {
-                let month: u32 = value.get().unwrap();
+            .transform_to(|_, month: u32| {
                 let month = month as i32 - 1;
                 Some(month.to_value())
             })

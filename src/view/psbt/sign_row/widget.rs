@@ -73,10 +73,7 @@ impl RowWidgets {
             .build();
         signing
             .bind_property("master-fp", &self.fingerprint_lbl, "label")
-            .transform_to(|_, value| {
-                let s: String = value.clone().get().expect("non-string fingerprint");
-                Some(format!("[{}]", s).to_value())
-            })
+            .transform_to(|_, s: String| Some(format!("[{}]", s).to_value()))
             .flags(flags_ro)
             .build();
         signing

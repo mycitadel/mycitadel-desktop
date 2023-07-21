@@ -27,10 +27,10 @@ path = "src/bin/mcw.rs"
 required-features = ["cli"]
 
 [dependencies]
-gtk = "0.15.5"
-relm = "0.23.0"
-relm-derive = "0.23.0"
-gladis = "2.1.2"
+gtk = "0.16.2"
+relm = "0.24.1"
+relm-derive = "0.24.0"
+glade = "2.2.0"
 once_cell = "1.10.0"
 chrono = "0.4.19"
 urlencoding = "2.1.0"
