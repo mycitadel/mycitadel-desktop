@@ -1481,6 +1481,7 @@ However, they are not supported by other wallets. Wallets of this type can be us
             <property name="visible">True</property>
             <property name="can-focus">True</property>
             <property name="receives-default">True</property>
+            <property name="can-default">True</property>
           </object>
         </child>
         <child>
@@ -1489,6 +1490,7 @@ However, they are not supported by other wallets. Wallets of this type can be us
             <property name="visible">True</property>
             <property name="can-focus">True</property>
             <property name="receives-default">True</property>
+            <property name="can-default">True</property>
             <style>
               <class name="suggested-action"/>
             </style>
