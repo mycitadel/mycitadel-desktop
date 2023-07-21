@@ -22,8 +22,8 @@ use gtk::gdk_pixbuf::Pixbuf;
 use gtk::prelude::*;
 use gtk::{
     gdk, Adjustment, ApplicationWindow, Button, CheckButton, Entry, HeaderBar, Image, Label,
-    ListBox, ListStore, Menu, MenuItem, Popover, RadioMenuItem, SortColumn, SortType, SpinButton,
-    Spinner, Statusbar, TextBuffer, TreeView,
+    ListBox, ListStore, Menu, MenuItem, Popover, RadioMenuItem, Separator, SortColumn, SortType,
+    SpinButton, Spinner, Statusbar, TextBuffer, TreeView,
 };
 use relm::Relm;
 use wallet::hd::SegmentIndexes;
@@ -82,10 +82,20 @@ pub struct Widgets {
     contract_box: gtk::Box,
     contract_entry: Entry,
 
+    b_lbl: Label,
+    s_lbl: Label,
     balance_btc_lbl: Label,
     balance_sat_lbl: Label,
     balance_fiat_lbl: Label,
     balance_cents_lbl: Label,
+
+    fiat_box: gtk::Box,
+    price_box: gtk::Box,
+    value_lbl: Label,
+    fiat_lbl: Label,
+    price_lbl: Label,
+    sep1: Separator,
+    sep2: Separator,
 
     exchange_lbl: Label,
     fiat_usd: RadioMenuItem,
@@ -454,6 +464,19 @@ impl Widgets {
         let info = model.asset_info();
         self.ticker_lbl.set_text(&info.ticker());
         self.asset_lbl.set_text(&info.name());
+        self.contract_entry.set_text(&info.contract_name());
+
+        let is_asset = model.asset().is_some();
+        self.contract_box.set_visible(is_asset);
+        self.value_lbl.set_visible(!is_asset);
+        self.b_lbl.set_visible(!is_asset);
+        self.s_lbl.set_visible(!is_asset);
+        self.fiat_box.set_visible(!is_asset);
+        self.fiat_lbl.set_visible(!is_asset);
+        self.price_box.set_visible(!is_asset);
+        self.price_lbl.set_visible(!is_asset);
+        self.sep1.set_visible(!is_asset);
+        self.sep2.set_visible(!is_asset);
     }
 
     fn bind_asset_model(&self, model: &AssetModel) {

@@ -595,7 +595,7 @@ impl Widget for Component {
     // Return the root widget.
     fn root(&self) -> Self::Root { self.widgets.to_root() }
 
-    fn view(relm: &Relm<Self>, model: Self::Model) -> Self {
+    fn view(relm: &Relm<Self>, mut model: Self::Model) -> Self {
         let glade_src = include_str!("wallet.glade");
         let widgets = Widgets::from_string(glade_src).expect("glade file broken");
 
@@ -616,6 +616,7 @@ impl Widget for Component {
 
         widgets.connect(relm);
         widgets.init_ui(&model);
+        widgets.update_ui(&mut model);
         widgets.show();
 
         let glade_src = include_str!("pay/pay.glade");

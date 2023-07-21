@@ -43,7 +43,6 @@ pub struct ViewModel {
 
     path: PathBuf,
 
-    #[getter(skip)]
     asset: Option<ContractId>,
 
     #[getter(as_mut)]
