@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.38.2 -->
+<!-- Generated with glade 3.40.0 -->
 <interface>
   <requires lib="gtk+" version="3.22"/>
   <object class="GtkMenu" id="address_menu">
@@ -322,7 +322,6 @@
         <child>
           <object class="GtkCheckButton" id="index_chk">
             <property name="label" translatable="yes">Use custom address no:</property>
-            <property name="visible">True</property>
             <property name="can-focus">True</property>
             <property name="receives-default">False</property>
             <property name="draw-indicator">True</property>
@@ -350,7 +349,6 @@
         </child>
         <child>
           <object class="GtkSpinButton" id="index_stp">
-            <property name="visible">True</property>
             <property name="sensitive">False</property>
             <property name="can-focus">True</property>
             <property name="text" translatable="yes">0</property>
@@ -373,7 +371,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkLabel">
+          <object class="GtkLabel" id="currency_lbl">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
             <property name="label" translatable="yes">BTC</property>
@@ -643,7 +641,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkSeparator">
+                  <object class="GtkSeparator" id="sep0">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                   </object>
@@ -658,13 +656,14 @@
                   <object class="GtkGrid">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
-                    <property name="valign">center</property>
+                    <property name="valign">end</property>
                     <property name="margin-top">6</property>
                     <property name="margin-bottom">6</property>
+                    <property name="vexpand">False</property>
                     <property name="column-spacing">12</property>
                     <property name="baseline-row">1</property>
                     <child>
-                      <object class="GtkLabel">
+                      <object class="GtkLabel" id="value_lbl">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                         <property name="halign">start</property>
@@ -687,7 +686,7 @@
                         <property name="halign">start</property>
                         <property name="valign">baseline</property>
                         <child>
-                          <object class="GtkLabel">
+                          <object class="GtkLabel" id="b_lbl">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="valign">baseline</property>
@@ -739,7 +738,7 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkLabel">
+                          <object class="GtkLabel" id="s_lbl">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="valign">baseline</property>
@@ -764,7 +763,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkSeparator">
+                      <object class="GtkSeparator" id="sep1">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                       </object>
@@ -774,7 +773,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkBox">
+                      <object class="GtkBox" id="fiat_box">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                         <property name="halign">start</property>
@@ -855,7 +854,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkSeparator">
+                      <object class="GtkSeparator" id="sep2">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                       </object>
@@ -866,7 +865,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkBox">
+                      <object class="GtkBox" id="price_box">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                         <property name="halign">start</property>
@@ -920,7 +919,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkLabel">
+                      <object class="GtkLabel" id="price_lbl">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                         <property name="halign">start</property>
@@ -940,6 +939,8 @@
                       <object class="GtkBox" id="contract_box">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
+                        <property name="valign">end</property>
+                        <property name="vexpand">False</property>
                         <property name="spacing">6</property>
                         <child>
                           <object class="GtkLabel">
@@ -979,7 +980,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkLabel">
+                      <object class="GtkLabel" id="fiat_lbl">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                         <property name="halign">start</property>
@@ -1078,7 +1079,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkNotebook">
+              <object class="GtkNotebook" id="notebook">
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="vexpand">True</property>

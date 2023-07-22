@@ -9,8 +9,14 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
-mod format;
-mod ui;
+mod widget;
 
-pub use format::FormatDate;
-pub use ui::{Notification, UI};
+use gtk::ResponseType;
+pub use widget::Widgets;
+
+#[derive(Msg)]
+pub enum Msg {
+    Show,
+    Advanced,
+    Response(ResponseType),
+}

@@ -13,7 +13,8 @@ use std::collections::BTreeSet;
 use std::ffi::OsStr;
 
 use bpro::{
-    AddressSummary, ElectrumSec, ElectrumServer, HistoryEntry, OnchainStatus, UtxoTxid, WalletState,
+    AddressSummary, ElectrumSec, ElectrumServer, HistoryEntry, OnchainStatus, OnchainTxid,
+    UtxoTxid, WalletState,
 };
 use chrono::{DateTime, NaiveDateTime, Utc};
 use electrum_client::HeaderNotification;
@@ -22,15 +23,17 @@ use gtk::gdk_pixbuf::Pixbuf;
 use gtk::prelude::*;
 use gtk::{
     gdk, Adjustment, ApplicationWindow, Button, CheckButton, Entry, HeaderBar, Image, Label,
-    ListBox, ListStore, Menu, MenuItem, Popover, RadioMenuItem, SortColumn, SortType, SpinButton,
-    Spinner, Statusbar, TextBuffer, TreeView,
+    ListBox, ListStore, Menu, MenuItem, Notebook, Popover, RadioMenuItem, Separator, SortColumn,
+    SortType, SpinButton, Spinner, Statusbar, TextBuffer, TreeView,
 };
 use relm::Relm;
+use rgb::contract::SealWitness;
+use rgbstd::interface::FungibleAllocation;
 use wallet::hd::SegmentIndexes;
 
 use super::asset_row::{self, AssetModel};
-use super::{pay, ElectrumState, Msg, ViewModel};
-use crate::model::UI as UIColorTrait;
+use super::{payto, ElectrumState, Msg, ViewModel};
+use crate::model::{FormatDate, UI as UIColorTrait};
 use crate::view::{launch, APP_ICON, APP_ICON_TOOL};
 use crate::worker::exchange::{Exchange, Fiat};
 
@@ -82,10 +85,21 @@ pub struct Widgets {
     contract_box: gtk::Box,
     contract_entry: Entry,
 
+    b_lbl: Label,
+    s_lbl: Label,
     balance_btc_lbl: Label,
     balance_sat_lbl: Label,
     balance_fiat_lbl: Label,
     balance_cents_lbl: Label,
+
+    fiat_box: gtk::Box,
+    price_box: gtk::Box,
+    value_lbl: Label,
+    fiat_lbl: Label,
+    price_lbl: Label,
+    sep0: Separator,
+    sep1: Separator,
+    sep2: Separator,
 
     exchange_lbl: Label,
     fiat_usd: RadioMenuItem,
@@ -98,6 +112,7 @@ pub struct Widgets {
     refresh_spin: Spinner,
     refresh_img: Image,
 
+    notebook: Notebook,
     history_store: ListStore,
     utxo_store: ListStore,
     address_store: ListStore,
@@ -165,7 +180,7 @@ impl Widgets {
             relm,
             self.pay_btn,
             connect_clicked(_),
-            Msg::Pay(pay::Msg::Show)
+            Msg::PayTo(payto::Msg::Show)
         );
         connect!(relm, self.refresh_btn, connect_clicked(_), Msg::Refresh);
         connect!(relm, self.redefine_mi, connect_activate(_), Msg::Duplicate);
@@ -178,6 +193,13 @@ impl Widgets {
             Msg::Launch(launch::Msg::Show)
         );
         connect!(relm, self.about_mi, connect_activate(_), Msg::About);
+
+        connect!(
+            relm,
+            self.asset_list,
+            connect_row_activated(_, row),
+            Msg::ChangeAsset(row.index() as u32)
+        );
 
         let menu = self.history_menu.clone();
         self.history_list
@@ -385,7 +407,7 @@ impl Widgets {
         );
     }
 
-    pub fn init_ui(&self, model: &ViewModel) {
+    pub fn init_ui(&mut self, model: &ViewModel) {
         let settings = model.as_settings();
 
         self.assets_box.set_visible(settings.is_rgb());
@@ -409,10 +431,6 @@ impl Widgets {
         self.fiat_eur.set_active(model.fiat == Fiat::EUR);
         self.fiat_chf.set_active(model.fiat == Fiat::CHF);
 
-        if *settings.testnet() {
-            self.ticker_lbl.set_text("tBTC");
-            self.asset_lbl.set_text("Test bitcoins");
-        }
         if !settings.is_rgb() {
             self.contract_box.set_visible(false);
         }
@@ -427,6 +445,32 @@ impl Widgets {
             .set_sort_column_id(SortColumn::Index(6), SortType::Ascending);
 
         self.update_invoice(model);
+    }
+
+    pub fn update_ui(&mut self, model: &mut ViewModel) {
+        let info = model.asset_info();
+        self.ticker_lbl.set_text(&info.ticker());
+        self.asset_lbl.set_text(&info.name());
+        self.contract_entry.set_text(&info.contract_name());
+
+        let is_asset = model.asset().is_some();
+        self.contract_box.set_visible(is_asset);
+        self.value_lbl.set_visible(!is_asset);
+        self.b_lbl.set_visible(!is_asset);
+        self.s_lbl.set_visible(!is_asset);
+        self.fiat_box.set_visible(!is_asset);
+        self.fiat_lbl.set_visible(!is_asset);
+        self.price_box.set_visible(!is_asset);
+        self.price_lbl.set_visible(!is_asset);
+        self.sep0.set_visible(!is_asset);
+        self.sep1.set_visible(!is_asset);
+        self.sep2.set_visible(!is_asset);
+
+        self.notebook.set_page(if is_asset { 1 } else { 0 });
+        self.notebook.set_show_tabs(!is_asset);
+
+        self.update_outpoints(model);
+        self.update_balance(model);
     }
 
     fn bind_asset_model(&self, model: &AssetModel) {
@@ -560,23 +604,69 @@ impl Widgets {
         }
     }
 
+    pub fn update_outpoints(&mut self, model: &mut ViewModel) {
+        match model.asset() {
+            None => {
+                self.update_utxos(model.wallet().utxos());
+            }
+            Some(_) => {
+                let info = model.asset_info();
+                let allocations = model.asset_allocations();
+                let rgb = model.wallet().rgb().unwrap();
+                self.update_allocations(
+                    allocations,
+                    info.precision(),
+                    &info.issue(),
+                    rgb.witness_txes(),
+                );
+            }
+        }
+    }
+
+    pub fn update_allocations(
+        &mut self,
+        allocations: Vec<FungibleAllocation>,
+        precision: u8,
+        issue: &str,
+        witness_txes: &BTreeSet<OnchainTxid>,
+    ) {
+        let pow = 10u64.pow(precision as u32);
+        self.utxo_store.clear();
+        for allocation in allocations {
+            let int = allocation.value / pow;
+            let fract = allocation.value - int * pow;
+            let date = match allocation.witness {
+                SealWitness::Genesis => issue.to_string(),
+                SealWitness::Present(txid) => witness_txes
+                    .iter()
+                    .find(|info| info.txid.as_ref() == txid.as_ref().as_slice())
+                    .map(OnchainTxid::format_date)
+                    .unwrap_or_else(|| s!("unknown")),
+                SealWitness::Extension => s!("issue"),
+            };
+            self.utxo_store.insert_with_values(None, &[
+                (0, &""),
+                (1, &allocation.owner.to_string()),
+                (
+                    2,
+                    &format!("{int}.{fract}")
+                        .trim_end_matches('0')
+                        .trim_end_matches('.'),
+                ),
+                (3, &date),
+                (4, &0u32),
+            ]);
+        }
+    }
+
     pub fn update_utxos(&mut self, utxos: &BTreeSet<UtxoTxid>) {
         self.utxo_store.clear();
         for item in utxos {
-            let btc = format_btc_value(item.value);
-            let date = match item.onchain.status {
-                OnchainStatus::Blockchain(height) => item
-                    .onchain
-                    .date_time()
-                    .map(|dt| dt.format("%F %H:%M").to_string())
-                    .unwrap_or_else(|| format!("{height}")),
-                OnchainStatus::Mempool => s!("mempool"),
-            };
             self.utxo_store.insert_with_values(None, &[
                 (0, &item.addr_src.address.to_string()),
                 (1, &format!("{}:{}", item.onchain.txid, item.vout)),
-                (2, &btc),
-                (3, &date),
+                (2, &format_btc_value(item.value)),
+                (3, &item.onchain.format_date()),
                 (4, &item.onchain.status.into_u32()),
             ]);
         }
@@ -610,12 +700,34 @@ impl Widgets {
         }
     }
 
-    pub fn update_state(&self, state: WalletState, _tx_count: usize, exchange_rate: f64) {
-        self.balance_lbl
-            .set_text(&format!("{} sat", state.balance.to_string()));
-        self.balance_btc_lbl
-            .set_text(&format!("{}.", state.balance_btc() as u64));
-        self.balance_sat_lbl.set_text(&state.balance.to_string());
+    pub fn update_balance(&self, model: &mut ViewModel) {
+        let wallet = model.wallet();
+        let state = wallet.state();
+        let exchange_rate = model.exchange_rate;
+
+        let asset = model.asset_info();
+        let precision: u8 = asset.property("precision");
+        let balance: u64 = asset.property("amount");
+        let pow = 10u64.pow(precision as u32);
+        let int = balance / pow;
+        let fract = balance - int * pow;
+        let remain = format!("{fract}").trim_end_matches('0').to_string();
+        let zeros = precision as usize - remain.len();
+
+        let main = if int == 0 {
+            self.balance_btc_lbl
+                .set_text(&format!("0.{:01$}", "", zeros));
+            remain
+        } else if fract != 0 {
+            self.balance_btc_lbl.set_text("");
+            format!("{}.{}", int, remain)
+        } else {
+            self.balance_btc_lbl.set_text("");
+            format!("{}", int)
+        };
+        self.balance_sat_lbl.set_text(&main);
+
+        self.balance_lbl.set_text(&format!("{} sat", state.balance));
 
         /*
         self.volume_btc_lbl

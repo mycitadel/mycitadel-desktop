@@ -33,6 +33,7 @@ use wallet::lex_order::lex_order::LexOrder;
 use super::pay::beneficiary_row::Beneficiary;
 use super::pay::FeeRate;
 use super::{pay, ElectrumState, Msg, ViewModel, Widgets};
+use crate::view::wallet::payto;
 use crate::view::{error_dlg, launch, settings, NotificationBoxExt};
 use crate::worker::{electrum, exchange, ElectrumWorker, ExchangeWorker};
 
@@ -40,6 +41,7 @@ pub struct Component {
     model: ViewModel,
     widgets: Widgets,
     pay_widgets: pay::Widgets,
+    payto_widgets: payto::Widgets,
 
     exchange_channel: Channel<exchange::Msg>,
     exchange_worker: ExchangeWorker,
@@ -280,12 +282,8 @@ impl Component {
                     .update_electrum_state(ElectrumState::RetrievingHistory(no as usize * 2 + 1));
                 let wallet = self.model.wallet_mut();
                 wallet.update_utxos(batch);
-                self.widgets.update_utxos(&wallet.utxos());
-                self.widgets.update_state(
-                    wallet.state(),
-                    wallet.tx_count(),
-                    self.model.exchange_rate,
-                );
+                self.widgets.update_outpoints(&mut self.model);
+                self.widgets.update_balance(&mut self.model);
             }
             electrum::Msg::TxBatch(batch, progress) => {
                 self.widgets
@@ -300,11 +298,9 @@ impl Component {
                 self.tx_buffer.clear();
                 self.save();
 
-                let exchange_rate = self.model.exchange_rate;
+                self.widgets.update_balance(&mut self.model);
                 let wallet = self.model.wallet_mut();
                 self.widgets.update_history(&wallet.history());
-                self.widgets
-                    .update_state(wallet.state(), wallet.tx_count(), exchange_rate);
                 self.widgets.update_addresses(&wallet.address_info(true));
                 self.widgets.update_electrum_state(ElectrumState::Complete(
                     self.model.as_settings().electrum().sec,
@@ -369,6 +365,11 @@ impl Update for Component {
                     self.save();
                 }
             }
+            Msg::ChangeAsset(index) => {
+                let success = self.model.change_asset(index);
+                debug_assert!(success, "invalid index selection");
+                self.widgets.update_ui(&mut self.model);
+            }
             Msg::Close => self.close(),
             Msg::About => {
                 self.launcher_stream
@@ -376,6 +377,7 @@ impl Update for Component {
                     .map(|stream| stream.emit(launch::Msg::About));
             }
             Msg::Pay(msg) => self.update_pay(msg),
+            Msg::PayTo(msg) => self.update_payto(msg),
             Msg::Settings => self.settings.emit(settings::Msg::View(
                 self.model.to_settings(),
                 self.model.path().clone(),
@@ -539,6 +541,47 @@ impl Component {
     }
 }
 
+impl Component {
+    fn update_payto(&mut self, event: payto::Msg) {
+        match event {
+            payto::Msg::Show => {
+                self.payto_widgets.init_ui(&self.model);
+                self.payto_widgets.show();
+            }
+            payto::Msg::Response(ResponseType::Ok) => {
+                let (psbt, change_index) = match self.sync_pay() {
+                    Some(data) => data,
+                    None => return,
+                };
+                self.payto_widgets.hide();
+                self.launcher_stream.as_ref().map(|stream| {
+                    stream.emit(launch::Msg::CreatePsbt(
+                        psbt,
+                        self.model.as_settings().network(),
+                    ))
+                });
+                // Update latest change index in wallet settings by sending message to the wallet
+                // component
+                if self
+                    .model
+                    .wallet_mut()
+                    .update_next_change_index(change_index)
+                {
+                    self.save();
+                }
+            }
+            payto::Msg::Response(ResponseType::Cancel) => {
+                self.payto_widgets.hide();
+            }
+            payto::Msg::Response(ResponseType::Other(1000)) => {
+                self.payto_widgets.hide();
+                self.update_pay(pay::Msg::Show);
+            }
+            _ => {} // Changes which update wallet tx
+        }
+    }
+}
+
 impl Widget for Component {
     // Specify the type of the root widget.
     type Root = ApplicationWindow;
@@ -546,9 +589,9 @@ impl Widget for Component {
     // Return the root widget.
     fn root(&self) -> Self::Root { self.widgets.to_root() }
 
-    fn view(relm: &Relm<Self>, model: Self::Model) -> Self {
+    fn view(relm: &Relm<Self>, mut model: Self::Model) -> Self {
         let glade_src = include_str!("wallet.glade");
-        let widgets = Widgets::from_string(glade_src).expect("glade file broken");
+        let mut widgets = Widgets::from_string(glade_src).expect("glade file broken");
 
         let settings = init::<settings::Component>(()).expect("error in settings component");
         settings.emit(settings::Msg::SetWallet(relm.stream().clone()));
@@ -567,14 +610,19 @@ impl Widget for Component {
 
         widgets.connect(relm);
         widgets.init_ui(&model);
+        widgets.update_ui(&mut model);
         widgets.show();
 
         let glade_src = include_str!("pay/pay.glade");
         let pay_widgets = pay::Widgets::from_string(glade_src).expect("glade file broken");
-
         pay_widgets.connect(relm);
         pay_widgets.bind_beneficiary_model(relm, &model);
         pay_widgets.init_ui(&model);
+
+        let glade_src = include_str!("payto/payto.glade");
+        let payto_widgets = payto::Widgets::from_string(glade_src).expect("glade file broken");
+        payto_widgets.connect(relm);
+        payto_widgets.init_ui(&model);
 
         electrum_worker.sync();
 
@@ -587,6 +635,7 @@ impl Widget for Component {
             model,
             widgets,
             pay_widgets,
+            payto_widgets,
             settings,
 
             exchange_channel,

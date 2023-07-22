@@ -15,14 +15,19 @@ use glib::subclass::prelude::*;
 use gtk::prelude::*;
 use gtk::subclass::prelude::ListModelImpl;
 use gtk::{gio, glib};
+use rgbstd::contract::ContractId;
+use rgbstd::stl::{DivisibleAssetSpec, Timestamp};
 
 // The actual data structure that stores our values. This is not accessible
 // directly from the outside.
 #[derive(Default)]
 pub struct AssetInner {
-    name: RefCell<String>,
-    amount: RefCell<String>,
     ticker: RefCell<String>,
+    name: RefCell<String>,
+    details: RefCell<String>,
+    issue: RefCell<String>,
+    amount: RefCell<u64>,
+    precision: RefCell<u8>,
     contract: RefCell<String>,
 }
 
@@ -53,10 +58,35 @@ impl ObjectImpl for AssetInner {
                     glib::ParamFlags::READWRITE,
                 ),
                 glib::ParamSpecString::new(
+                    "details",
+                    "Details",
+                    "Details",
+                    None, // Default value
+                    glib::ParamFlags::READWRITE,
+                ),
+                glib::ParamSpecString::new(
+                    "issue",
+                    "Issue",
+                    "Issue",
+                    None, // Default value
+                    glib::ParamFlags::READWRITE,
+                ),
+                glib::ParamSpecUInt64::new(
                     "amount",
                     "Amount",
                     "Amount",
-                    None,
+                    0,
+                    u64::MAX,
+                    0,
+                    glib::ParamFlags::READWRITE,
+                ),
+                glib::ParamSpecUChar::new(
+                    "precision",
+                    "Precision",
+                    "Precision",
+                    0,
+                    u8::MAX,
+                    0,
                     glib::ParamFlags::READWRITE,
                 ),
                 glib::ParamSpecString::new(
@@ -87,11 +117,29 @@ impl ObjectImpl for AssetInner {
                     .expect("type conformity checked by `Object::set_property`");
                 self.name.replace(name);
             }
+            "details" => {
+                let details = value
+                    .get()
+                    .expect("type conformity checked by `Object::set_property`");
+                self.details.replace(details);
+            }
+            "issue" => {
+                let issue = value
+                    .get()
+                    .expect("type conformity checked by `Object::set_property`");
+                self.issue.replace(issue);
+            }
             "amount" => {
                 let amount = value
                     .get()
                     .expect("type conformity checked by `Object::set_property`");
                 self.amount.replace(amount);
+            }
+            "precision" => {
+                let amount = value
+                    .get()
+                    .expect("type conformity checked by `Object::set_property`");
+                self.precision.replace(amount);
             }
             "ticker" => {
                 let ticker = value
@@ -112,7 +160,10 @@ impl ObjectImpl for AssetInner {
     fn property(&self, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
         match pspec.name() {
             "name" => self.name.borrow().to_value(),
+            "details" => self.details.borrow().to_value(),
+            "issue" => self.issue.borrow().to_value(),
             "amount" => self.amount.borrow().to_value(),
+            "precision" => self.precision.borrow().to_value(),
             "ticker" => self.ticker.borrow().to_value(),
             "contract" => self.contract.borrow().to_value(),
             _ => unimplemented!(),
@@ -125,18 +176,50 @@ glib::wrapper! {
 }
 
 impl AssetInfo {
+    pub fn btc(testnet: bool, amount: u64) -> AssetInfo {
+        let (btc, bitcoin) = match testnet {
+            true => ("tBTC", "Test bitcoin"),
+            false => ("BTC", "Bitcoin"),
+        };
+        AssetInfo::with_raw(bitcoin, btc, "", "", amount, 8, "-")
+    }
+
     pub fn with(
+        spec: DivisibleAssetSpec,
+        issue: Timestamp,
+        amount: u64,
+        contract_id: ContractId,
+    ) -> AssetInfo {
+        let issue = issue
+            .to_local()
+            .map(|local| local.format("%F %H:%M").to_string())
+            .unwrap_or_else(|| s!("invalid"));
+        Self::with_raw(
+            spec.name(),
+            spec.ticker(),
+            spec.details().unwrap_or_default(),
+            &issue,
+            amount,
+            spec.precision as u8,
+            &contract_id.to_string(),
+        )
+    }
+
+    fn with_raw(
         name: &str,
         ticker: &str,
+        details: &str,
+        issue: &str,
         amount: u64,
         precision: u8,
         contract_name: &str,
     ) -> AssetInfo {
-        let precision = precision as u32;
-        let amount = amount as f64 / 10_i32.pow(precision) as f64;
         glib::Object::new(&[
             ("name", &name),
-            ("amount", &format!("{}", amount)),
+            ("details", &details),
+            ("issue", &issue),
+            ("amount", &amount),
+            ("precision", &precision),
             ("ticker", &ticker),
             ("contract", &contract_name),
         ])
@@ -144,11 +227,17 @@ impl AssetInfo {
 
     pub fn name(&self) -> String { self.property::<String>("name") }
 
+    pub fn details(&self) -> String { self.property::<String>("details") }
+
+    pub fn issue(&self) -> String { self.property::<String>("issue") }
+
     pub fn ticker(&self) -> String { self.property::<String>("ticker") }
 
     pub fn contract_name(&self) -> String { self.property::<String>("contract") }
 
-    pub fn amount(&self) -> String { self.property::<String>("amount") }
+    pub fn amount(&self) -> u64 { self.property::<u64>("amount") }
+
+    pub fn precision(&self) -> u8 { self.property::<u8>("precision") }
 }
 
 #[derive(Debug, Default)]

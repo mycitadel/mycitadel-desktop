@@ -15,10 +15,13 @@ use std::path::PathBuf;
 use std::str::FromStr;
 
 use bpro::{file, DescriptorError, ElectrumServer, FileDocument, Signer, Wallet, WalletSettings};
+use gtk::glib::ObjectExt;
+use gtk::prelude::ListModelExt;
 use rgb::BlockchainResolver;
 use rgbstd::containers::{Bindle, BindleParseError, Contract};
 use rgbstd::contract::ContractId;
 use rgbstd::interface::rgb20::Rgb20;
+use rgbstd::interface::FungibleAllocation;
 use rgbstd::persistence::{Inventory, InventoryError};
 use rgbstd::validation;
 use wallet::descriptors::DescriptorClass;
@@ -40,6 +43,8 @@ pub struct ViewModel {
     wallet: Wallet,
 
     path: PathBuf,
+
+    asset: Option<ContractId>,
 
     #[getter(as_mut)]
     beneficiaries: BeneficiaryModel,
@@ -81,13 +86,11 @@ pub enum RgbImportError {
 
 impl ViewModel {
     pub fn with(mut wallet: Wallet, path: PathBuf) -> ViewModel {
-        let (btc, bitcoin) = match wallet.as_settings().network().is_testnet() {
-            true => ("tBTC", "Test bitcoin"),
-            false => ("BTC", "Bitcoin"),
-        };
-        let btc_asset = AssetInfo::with(bitcoin, btc, wallet.state().balance, 8, "-");
         let asset_model = AssetModel::new();
-        asset_model.append(&btc_asset);
+        asset_model.append(&AssetInfo::btc(
+            *wallet.as_settings().testnet(),
+            wallet.state().balance,
+        ));
         if let Some(rgb_controller) = wallet.rgb_mut() {
             for iface in rgb_controller
                 .contracts_with_iface("RGB20")
@@ -96,11 +99,10 @@ impl ViewModel {
                 let iface = Rgb20::from(iface);
                 let spec = iface.spec();
                 asset_model.append(&AssetInfo::with(
-                    spec.name(),
-                    spec.ticker(),
-                    0,
-                    spec.precision.into(),
-                    &iface.contract_id().to_string(),
+                    spec,
+                    iface.created(),
+                    iface.balance(&mut wallet),
+                    iface.contract_id(),
                 ));
             }
         }
@@ -109,6 +111,7 @@ impl ViewModel {
             fee_rate: wallet.ephemerals().fees.0 * 100_000_000.0, // TODO: Update on window opening
             wallet,
             path,
+            asset: None,
             beneficiaries: BeneficiaryModel::new(),
             invoice: none!(),
             exchange: Exchange::Kraken,
@@ -125,6 +128,16 @@ impl ViewModel {
 
     pub fn as_invoice(&self) -> &InvoiceModel { &self.invoice }
     pub fn as_invoice_mut(&mut self) -> &mut InvoiceModel { &mut self.invoice }
+
+    pub fn asset_info(&mut self) -> AssetInfo {
+        match self.asset {
+            None => AssetInfo::btc(
+                *self.wallet.as_settings().testnet(),
+                self.wallet.state().balance,
+            ),
+            Some(contract_id) => self.asset_info_for(contract_id),
+        }
+    }
 
     pub fn set_fee_rate(&mut self, fee_rate: f32) { self.fee_rate = fee_rate; }
 
@@ -146,37 +159,73 @@ impl ViewModel {
         })
     }
 
+    pub fn change_asset(&mut self, index: u32) -> bool {
+        let Some(asset) = self.asset_model().item(index) else {
+            return false;
+        };
+        let id = asset.property::<String>("contract");
+        match id.as_str() {
+            "-" => self.asset = None,
+            id => {
+                let id = ContractId::from_str(id).expect("invalid RGB contract");
+                self.asset = Some(id);
+            }
+        }
+        true
+    }
+
     pub fn import_rgb_contract(
         &mut self,
         text: String,
         resolver: &mut BlockchainResolver,
     ) -> Result<validation::Status, RgbImportError> {
-        let contract = Bindle::<Contract>::from_str(&text)?;
-        let id = contract.id();
-
         let rgb = self
             .wallet
             .rgb_mut()
             .expect("calling RGB-specific method on non-RGB-enabled wallet");
+
+        let contract = Bindle::<Contract>::from_str(&text)?;
+        let id = contract.id();
 
         let contract = contract.unbindle().validate(resolver).map_err(|c| {
             RgbImportError::InvalidContract(c.validation_status().expect("validated").clone())
         })?;
         let status = rgb.import_contract(contract, resolver)?;
 
-        let iface = rgb
-            .contract_iface_named(id, "RGB20")
-            .map_err(|_| RgbImportError::NotRgb20)?;
-        let iface = Rgb20::from(iface);
-        let spec = iface.spec();
-        self.asset_model.append(&AssetInfo::with(
-            spec.name(),
-            spec.ticker(),
-            0,
-            spec.precision.into(),
-            &iface.contract_id().to_string(),
-        ));
+        let info = self.asset_info_for(id);
+        self.asset_model.append(&info);
 
         Ok(status)
+    }
+
+    fn asset_for(&mut self, id: ContractId) -> Rgb20 {
+        let rgb = self
+            .wallet
+            .rgb_mut()
+            .expect("calling RGB-specific method on non-RGB-enabled wallet");
+
+        let iface = rgb
+            .contract_iface_named(id, "RGB20")
+            .expect("Not an RGB20 contract");
+        Rgb20::from(iface)
+    }
+
+    pub fn asset_allocations(&mut self) -> Vec<FungibleAllocation> {
+        let Some(id) = self.asset else {
+            return vec![];
+        };
+        let iface = self.asset_for(id);
+        iface.allocations(&self.wallet).into_inner()
+    }
+
+    fn asset_info_for(&mut self, id: ContractId) -> AssetInfo {
+        let iface = self.asset_for(id);
+        let spec = iface.spec();
+        AssetInfo::with(
+            spec,
+            iface.created(),
+            iface.balance(&self.wallet),
+            iface.contract_id(),
+        )
     }
 }
