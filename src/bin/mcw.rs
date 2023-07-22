@@ -87,6 +87,6 @@ impl Args {
 fn main() {
     let args = Args::parse();
     if let Err(err) = args.exec() {
-        eprintln!("{}: {}\n", "Error".bright_red(), err);
+        eprintln!("{}: {err}\n", "Error".bright_red());
     }
 }

@@ -93,7 +93,6 @@ impl Update for Component {
             }
             Msg::SetNetwork(network) => {
                 self.model.network = network;
-                eprintln!("Applied {} network", self.model.network);
             }
             Msg::Devices(result) => {
                 self.widgets.refresh_dlg.hide();

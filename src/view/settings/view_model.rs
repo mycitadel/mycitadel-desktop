@@ -364,13 +364,11 @@ impl ViewModel {
         std::thread::spawn(move || {
             match ElectrumClient::from_config(&url, config).and_then(|client| client.ping()) {
                 Err(err) => {
-                    eprintln!("failure: {}", err);
                     sender
                         .send(ElectrumMsg::Failure(err.to_string()))
                         .expect("channel broken");
                 }
                 Ok(_) => {
-                    eprintln!("success");
                     sender.send(ElectrumMsg::Ok).expect("channel broken");
                 }
             }

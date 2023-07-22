@@ -90,7 +90,6 @@ impl Component {
                     .show_error("RGB supported only for a single-sig wallets");
             }
             let spending_conditions = self.model.spending_model.spending_conditions();
-            eprintln!("{spending_conditions:#?}");
             if spending_conditions.len() != 1 {
                 return self
                     .widgets
