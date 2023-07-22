@@ -368,7 +368,7 @@ impl Update for Component {
             Msg::ChangeAsset(index) => {
                 let success = self.model.change_asset(index);
                 debug_assert!(success, "invalid index selection");
-                self.widgets.update_ui(&mut self.model);
+                self.widgets.update_asset(&mut self.model);
             }
             Msg::Close => self.close(),
             Msg::About => {
@@ -610,7 +610,7 @@ impl Widget for Component {
 
         widgets.connect(relm);
         widgets.init_ui(&model);
-        widgets.update_ui(&mut model);
+        widgets.update_asset(&mut model);
         widgets.show();
 
         let glade_src = include_str!("pay/pay.glade");

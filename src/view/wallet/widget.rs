@@ -23,18 +23,19 @@ use gtk::gdk_pixbuf::Pixbuf;
 use gtk::prelude::*;
 use gtk::{
     gdk, Adjustment, ApplicationWindow, Button, CheckButton, Entry, HeaderBar, Image, Label,
-    ListBox, ListStore, Menu, MenuItem, Notebook, Popover, RadioMenuItem, Separator, SortColumn,
-    SortType, SpinButton, Spinner, Statusbar, TextBuffer, TreeView,
+    ListBox, ListStore, Menu, MenuItem, Notebook, Popover, RadioMenuItem, SortColumn, SortType,
+    SpinButton, Spinner, Statusbar, TextBuffer, TreeView,
 };
 use relm::Relm;
 use rgb::contract::SealWitness;
 use rgbstd::interface::FungibleAllocation;
+use rgbstd::stl::Precision;
 use wallet::hd::SegmentIndexes;
 
 use super::asset_row::{self, AssetModel};
 use super::{payto, ElectrumState, Msg, ViewModel};
-use crate::model::{FormatDate, UI as UIColorTrait};
-use crate::view::{launch, APP_ICON, APP_ICON_TOOL};
+use crate::model::{display_accounting_amount, FormatDate, UI as UIColorTrait};
+use crate::view::{launch, APP_ICON};
 use crate::worker::exchange::{Exchange, Fiat};
 
 trait UI {
@@ -66,60 +67,57 @@ pub struct Widgets {
     window: ApplicationWindow,
 
     header_bar: HeaderBar,
-    logo_img: Image,
     new_btn: Button,
     open_btn: Button,
     settings_btn: Button,
-    pay_btn: Button,
     redefine_mi: MenuItem,
     import_mi: MenuItem,
     settings_mi: MenuItem,
     launcher_mi: MenuItem,
     about_mi: MenuItem,
 
-    assets_box: gtk::Box,
-    asset_list: ListBox,
+    refresh_btn: Button,
+    refresh_spin: Spinner,
+    refresh_img: Image,
 
-    asset_lbl: Label,
-    ticker_lbl: Label,
-    contract_box: gtk::Box,
-    contract_entry: Entry,
+    main_tabs: Notebook,
 
-    b_lbl: Label,
-    s_lbl: Label,
-    balance_btc_lbl: Label,
-    balance_sat_lbl: Label,
+    paybtc_btn: Button,
+    pay20_btn: Button,
+
+    balance_lead_lbl: Label,
+    balance_tail_lbl: Label,
     balance_fiat_lbl: Label,
     balance_cents_lbl: Label,
-
-    fiat_box: gtk::Box,
-    price_box: gtk::Box,
+    fiat_name_lbl: Label,
     value_lbl: Label,
-    fiat_lbl: Label,
-    price_lbl: Label,
-    sep0: Separator,
-    sep1: Separator,
-    sep2: Separator,
 
     exchange_lbl: Label,
     fiat_usd: RadioMenuItem,
     fiat_eur: RadioMenuItem,
     fiat_chf: RadioMenuItem,
     fiat_pair_lbl: Label,
-    fiat_name_lbl: Label,
 
-    refresh_btn: Button,
-    refresh_spin: Spinner,
-    refresh_img: Image,
+    asset_list: ListBox,
 
-    notebook: Notebook,
+    ticker_lbl: Label,
+    asset_lbl: Label,
+    details_lbl: Label,
+    id20_entry: Entry,
+    asset_lead_lbl: Label,
+    asset_tail_lbl: Label,
+
     history_store: ListStore,
     utxo_store: ListStore,
     address_store: ListStore,
+    allocation_store: ListStore,
+    operation_store: ListStore,
 
     address_list: TreeView,
     utxo_list: TreeView,
     history_list: TreeView,
+    allocation_list: TreeView,
+    operation_list: TreeView,
 
     history_menu: Menu,
     hist_copy_txid_mi: MenuItem,
@@ -178,7 +176,7 @@ impl Widgets {
         connect!(relm, self.settings_btn, connect_clicked(_), Msg::Settings);
         connect!(
             relm,
-            self.pay_btn,
+            self.paybtc_btn,
             connect_clicked(_),
             Msg::PayTo(payto::Msg::Show)
         );
@@ -410,13 +408,8 @@ impl Widgets {
     pub fn init_ui(&mut self, model: &ViewModel) {
         let settings = model.as_settings();
 
-        self.assets_box.set_visible(settings.is_rgb());
-
         let icon = Pixbuf::from_read(APP_ICON).expect("app icon is missed");
         self.window.set_icon(Some(&icon));
-
-        let img = Pixbuf::from_read(APP_ICON_TOOL).expect("small app icon is missed");
-        self.logo_img.set_pixbuf(Some(&img));
 
         self.header_bar
             .set_title(model.path().file_name().and_then(OsStr::to_str));
@@ -432,7 +425,7 @@ impl Widgets {
         self.fiat_chf.set_active(model.fiat == Fiat::CHF);
 
         if !settings.is_rgb() {
-            self.contract_box.set_visible(false);
+            self.main_tabs.set_show_tabs(false);
         }
 
         self.bind_asset_model(model.asset_model());
@@ -443,39 +436,28 @@ impl Widgets {
             .set_sort_column_id(SortColumn::Index(4), SortType::Descending);
         self.address_store
             .set_sort_column_id(SortColumn::Index(6), SortType::Ascending);
+        self.operation_store
+            .set_sort_column_id(SortColumn::Index(6), SortType::Descending);
+        self.allocation_store
+            .set_sort_column_id(SortColumn::Index(3), SortType::Descending);
 
         self.update_invoice(model);
-    }
-
-    pub fn update_ui(&mut self, model: &mut ViewModel) {
-        let info = model.asset_info();
-        self.ticker_lbl.set_text(&info.ticker());
-        self.asset_lbl.set_text(&info.name());
-        self.contract_entry.set_text(&info.contract_name());
-
-        let is_asset = model.asset().is_some();
-        self.contract_box.set_visible(is_asset);
-        self.value_lbl.set_visible(!is_asset);
-        self.b_lbl.set_visible(!is_asset);
-        self.s_lbl.set_visible(!is_asset);
-        self.fiat_box.set_visible(!is_asset);
-        self.fiat_lbl.set_visible(!is_asset);
-        self.price_box.set_visible(!is_asset);
-        self.price_lbl.set_visible(!is_asset);
-        self.sep0.set_visible(!is_asset);
-        self.sep1.set_visible(!is_asset);
-        self.sep2.set_visible(!is_asset);
-
-        self.notebook.set_page(if is_asset { 1 } else { 0 });
-        self.notebook.set_show_tabs(!is_asset);
-
-        self.update_outpoints(model);
-        self.update_balance(model);
     }
 
     fn bind_asset_model(&self, model: &AssetModel) {
         self.asset_list
             .bind_model(Some(model), move |item| asset_row::RowWidgets::init(item));
+    }
+
+    pub fn update_asset(&mut self, model: &mut ViewModel) {
+        let info = model.asset_info();
+        self.ticker_lbl.set_text(&info.ticker());
+        self.asset_lbl.set_text(&info.name());
+        self.details_lbl.set_text(&info.details());
+        self.id20_entry.set_text(&info.contract_name());
+
+        self.update_outpoints(model);
+        self.update_balance(model);
     }
 
     pub fn update_invoice(&self, model: &ViewModel) {
@@ -542,7 +524,8 @@ impl Widgets {
                 self.connection_img.set_icon_name(Some(sec.icon_name()));
                 self.connection_img.set_tooltip_text(Some(sec.tooltip()));
                 self.connection_img.set_visible(true);
-                self.pay_btn.set_sensitive(true);
+                self.paybtc_btn.set_sensitive(true);
+                self.pay20_btn.set_sensitive(true);
             }
             ElectrumState::Error(err) => {
                 self.refresh_btn.set_sensitive(true);
@@ -554,7 +537,8 @@ impl Widgets {
                     .set_icon_name(Some("emblem-important-symbolic"));
                 self.connection_img.set_tooltip_text(Some(&err));
                 self.connection_img.set_visible(true);
-                self.pay_btn.set_sensitive(false);
+                self.paybtc_btn.set_sensitive(false);
+                self.pay20_btn.set_sensitive(false);
 
                 self.status_lbl.set_text("Error from electrum server");
             }
@@ -631,7 +615,7 @@ impl Widgets {
         witness_txes: &BTreeSet<OnchainTxid>,
     ) {
         let pow = 10u64.pow(precision as u32);
-        self.utxo_store.clear();
+        self.allocation_store.clear();
         for allocation in allocations {
             let int = allocation.value / pow;
             let fract = allocation.value - int * pow;
@@ -644,17 +628,16 @@ impl Widgets {
                     .unwrap_or_else(|| s!("unknown")),
                 SealWitness::Extension => s!("issue"),
             };
-            self.utxo_store.insert_with_values(None, &[
-                (0, &""),
-                (1, &allocation.owner.to_string()),
+            self.allocation_store.insert_with_values(None, &[
+                (0, &allocation.owner.to_string()),
                 (
-                    2,
+                    1,
                     &format!("{int}.{fract}")
                         .trim_end_matches('0')
                         .trim_end_matches('.'),
                 ),
-                (3, &date),
-                (4, &0u32),
+                (2, &date),
+                (3, &0u32),
             ]);
         }
     }
@@ -701,47 +684,40 @@ impl Widgets {
     }
 
     pub fn update_balance(&self, model: &mut ViewModel) {
+        self.update_btc_balance(model);
+        self.update_asset_balance(model);
+    }
+
+    pub fn update_btc_balance(&self, model: &mut ViewModel) {
         let wallet = model.wallet();
         let state = wallet.state();
         let exchange_rate = model.exchange_rate;
 
-        let asset = model.asset_info();
-        let precision: u8 = asset.property("precision");
-        let balance: u64 = asset.property("amount");
-        let pow = 10u64.pow(precision as u32);
-        let int = balance / pow;
-        let fract = balance - int * pow;
-        let remain = format!("{fract}").trim_end_matches('0').to_string();
-        let zeros = precision as usize - remain.len();
-
-        let main = if int == 0 {
-            self.balance_btc_lbl
-                .set_text(&format!("0.{:01$}", "", zeros));
-            remain
-        } else if fract != 0 {
-            self.balance_btc_lbl.set_text("");
-            format!("{}.{}", int, remain)
-        } else {
-            self.balance_btc_lbl.set_text("");
-            format!("{}", int)
-        };
-        self.balance_sat_lbl.set_text(&main);
-
-        self.balance_lbl.set_text(&format!("{} sat", state.balance));
-
-        /*
-        self.volume_btc_lbl
-            .set_text(&format!("{:.2}", state.volume_btc()));
-        self.volume_sat_lbl.set_text(&state.volume.to_string());
-        self.txcount_lbl.set_text(&tx_count.to_string());
-        self.volume_fiat_lbl
-            .set_text(&format!("{:.2}", state.volume_btc() * exchange_rate));
-         */
+        display_accounting_amount(
+            state.balance,
+            Precision::default(),
+            &self.balance_lead_lbl,
+            &self.balance_tail_lbl,
+        );
 
         let s = format!("{:.02}", state.balance_btc() * exchange_rate);
         let (fiat, cents) = s.split_once('.').expect("formatting produces decimal");
         self.balance_fiat_lbl.set_text(fiat);
         self.balance_cents_lbl.set_text(cents);
+
+        self.balance_lbl.set_text(&format!("{} sat", state.balance));
+    }
+
+    pub fn update_asset_balance(&self, model: &mut ViewModel) {
+        let asset = model.asset_info();
+        let precision: u8 = asset.property("precision");
+        let balance: u64 = asset.property("amount");
+        display_accounting_amount(
+            balance,
+            precision,
+            &self.asset_lead_lbl,
+            &self.asset_tail_lbl,
+        );
     }
 
     pub fn update_fiat(&self, fiat: Fiat) {

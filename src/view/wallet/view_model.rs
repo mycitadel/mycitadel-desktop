@@ -87,10 +87,6 @@ pub enum RgbImportError {
 impl ViewModel {
     pub fn with(mut wallet: Wallet, path: PathBuf) -> ViewModel {
         let asset_model = AssetModel::new();
-        asset_model.append(&AssetInfo::btc(
-            *wallet.as_settings().testnet(),
-            wallet.state().balance,
-        ));
         if let Some(rgb_controller) = wallet.rgb_mut() {
             for iface in rgb_controller
                 .contracts_with_iface("RGB20")
@@ -131,10 +127,7 @@ impl ViewModel {
 
     pub fn asset_info(&mut self) -> AssetInfo {
         match self.asset {
-            None => AssetInfo::btc(
-                *self.wallet.as_settings().testnet(),
-                self.wallet.state().balance,
-            ),
+            None => AssetInfo::placeholder(),
             Some(contract_id) => self.asset_info_for(contract_id),
         }
     }

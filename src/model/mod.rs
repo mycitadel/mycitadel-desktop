@@ -12,5 +12,5 @@
 mod format;
 mod ui;
 
-pub use format::FormatDate;
+pub use format::{display_accounting_amount, FormatDate};
 pub use ui::{Notification, UI};
