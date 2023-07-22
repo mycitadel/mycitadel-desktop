@@ -17,6 +17,7 @@ use std::str::FromStr;
 use bpro::{file, DescriptorError, ElectrumServer, FileDocument, Signer, Wallet, WalletSettings};
 use gtk::glib::ObjectExt;
 use gtk::prelude::ListModelExt;
+use relm::Cast;
 use rgb::BlockchainResolver;
 use rgbstd::containers::{Bindle, BindleParseError, Contract};
 use rgbstd::contract::ContractId;
@@ -126,9 +127,10 @@ impl ViewModel {
     pub fn as_invoice_mut(&mut self) -> &mut InvoiceModel { &mut self.invoice }
 
     pub fn asset_info(&mut self) -> AssetInfo {
-        match self.asset {
-            None => AssetInfo::placeholder(),
-            Some(contract_id) => self.asset_info_for(contract_id),
+        match (self.asset, self.asset_model.item(0)) {
+            (None, None) => AssetInfo::placeholder(),
+            (None, Some(asset)) => asset.downcast::<AssetInfo>().unwrap(),
+            (Some(contract_id), _) => self.asset_info_for(contract_id),
         }
     }
 

@@ -87,6 +87,7 @@ pub struct Widgets {
 
     balance_lead_lbl: Label,
     balance_tail_lbl: Label,
+    balance_zero_lbl: Label,
     balance_fiat_lbl: Label,
     balance_cents_lbl: Label,
     fiat_name_lbl: Label,
@@ -106,6 +107,7 @@ pub struct Widgets {
     id20_entry: Entry,
     asset_lead_lbl: Label,
     asset_tail_lbl: Label,
+    asset_zero_lbl: Label,
 
     history_store: ListStore,
     utxo_store: ListStore,
@@ -698,6 +700,7 @@ impl Widgets {
             Precision::default(),
             &self.balance_lead_lbl,
             &self.balance_tail_lbl,
+            &self.balance_zero_lbl,
         );
 
         let s = format!("{:.02}", state.balance_btc() * exchange_rate);
@@ -717,6 +720,7 @@ impl Widgets {
             precision,
             &self.asset_lead_lbl,
             &self.asset_tail_lbl,
+            &self.asset_zero_lbl,
         );
     }
 
