@@ -99,11 +99,10 @@ impl ViewModel {
                 let iface = Rgb20::from(iface);
                 let spec = iface.spec();
                 asset_model.append(&AssetInfo::with(
-                    spec.name(),
-                    spec.ticker(),
+                    spec,
+                    iface.created(),
                     iface.balance(&mut wallet),
-                    spec.precision.into(),
-                    &iface.contract_id().to_string(),
+                    iface.contract_id(),
                 ));
             }
         }
@@ -223,11 +222,10 @@ impl ViewModel {
         let iface = self.asset_for(id);
         let spec = iface.spec();
         AssetInfo::with(
-            spec.name(),
-            spec.ticker(),
+            spec,
+            iface.created(),
             iface.balance(&self.wallet),
-            spec.precision.into(),
-            &iface.contract_id().to_string(),
+            iface.contract_id(),
         )
     }
 }

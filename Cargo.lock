@@ -494,7 +494,7 @@ dependencies = [
 [[package]]
 name = "bpro"
 version = "0.5.0"
-source = "git+https://github.com/pandora-prime/bpro?branch=v0.5#e2506b58ea30ce53bb9bffe09a7819ca3f6f4b33"
+source = "git+https://github.com/pandora-prime/bpro?branch=v0.5#b23cdd1a7e86ef4c5e0e9d8cabe16d8b2cb62f97"
 dependencies = [
  "amplify 3.14.2",
  "bitcoin 0.29.2",
@@ -2070,12 +2070,13 @@ dependencies = [
 [[package]]
 name = "rgb-std"
 version = "0.10.3"
-source = "git+https://github.com/RGB-WG/rgb-wallet?branch=develop#ac9aeae6a185ba39b0a3a9d608f0bda729b103da"
+source = "git+https://github.com/RGB-WG/rgb-wallet?branch=develop#ea4f5920598325579ed8a572fd5da91a4f03e356"
 dependencies = [
  "amplify 4.0.0",
  "baid58",
  "base64 0.21.2",
  "bp-core",
+ "chrono",
  "commit_verify",
  "getrandom",
  "rgb-core",

@@ -13,7 +13,8 @@ use std::collections::BTreeSet;
 use std::ffi::OsStr;
 
 use bpro::{
-    AddressSummary, ElectrumSec, ElectrumServer, HistoryEntry, OnchainStatus, UtxoTxid, WalletState,
+    AddressSummary, ElectrumSec, ElectrumServer, HistoryEntry, OnchainStatus, OnchainTxid,
+    UtxoTxid, WalletState,
 };
 use chrono::{DateTime, NaiveDateTime, Utc};
 use electrum_client::HeaderNotification;
@@ -26,12 +27,13 @@ use gtk::{
     SortType, SpinButton, Spinner, Statusbar, TextBuffer, TreeView,
 };
 use relm::Relm;
+use rgb::contract::SealWitness;
 use rgbstd::interface::FungibleAllocation;
 use wallet::hd::SegmentIndexes;
 
 use super::asset_row::{self, AssetModel};
 use super::{payto, ElectrumState, Msg, ViewModel};
-use crate::model::UI as UIColorTrait;
+use crate::model::{FormatDate, UI as UIColorTrait};
 use crate::view::{launch, APP_ICON, APP_ICON_TOOL};
 use crate::worker::exchange::{Exchange, Fiat};
 
@@ -627,17 +629,39 @@ impl Widgets {
             }
             Some(_) => {
                 let info = model.asset_info();
-                self.update_allocations(&model.asset_allocations(), info.precision());
+                let allocations = model.asset_allocations();
+                let rgb = model.wallet().rgb().unwrap();
+                self.update_allocations(
+                    allocations,
+                    info.precision(),
+                    &info.issue(),
+                    rgb.witness_txes(),
+                );
             }
         }
     }
 
-    pub fn update_allocations(&mut self, allocations: &[FungibleAllocation], precision: u8) {
+    pub fn update_allocations(
+        &mut self,
+        allocations: Vec<FungibleAllocation>,
+        precision: u8,
+        issue: &str,
+        witness_txes: &BTreeSet<OnchainTxid>,
+    ) {
         let pow = 10u64.pow(precision as u32);
         self.utxo_store.clear();
         for allocation in allocations {
             let int = allocation.value / pow;
             let fract = allocation.value - int * pow;
+            let date = match allocation.witness {
+                SealWitness::Genesis => issue.to_string(),
+                SealWitness::Present(txid) => witness_txes
+                    .iter()
+                    .find(|info| info.txid.as_ref() == txid.as_ref().as_slice())
+                    .map(OnchainTxid::format_date)
+                    .unwrap_or_else(|| s!("unknown")),
+                SealWitness::Extension => s!("issue"),
+            };
             self.utxo_store.insert_with_values(None, &[
                 (0, &""),
                 (1, &allocation.owner.to_string()),
@@ -647,7 +671,7 @@ impl Widgets {
                         .trim_end_matches('0')
                         .trim_end_matches('.'),
                 ),
-                (3, &""),
+                (3, &date),
                 (4, &0u32),
             ]);
         }
@@ -656,20 +680,11 @@ impl Widgets {
     pub fn update_utxos(&mut self, utxos: &BTreeSet<UtxoTxid>) {
         self.utxo_store.clear();
         for item in utxos {
-            let btc = format_btc_value(item.value);
-            let date = match item.onchain.status {
-                OnchainStatus::Blockchain(height) => item
-                    .onchain
-                    .date_time()
-                    .map(|dt| dt.format("%F %H:%M").to_string())
-                    .unwrap_or_else(|| format!("{height}")),
-                OnchainStatus::Mempool => s!("mempool"),
-            };
             self.utxo_store.insert_with_values(None, &[
                 (0, &item.addr_src.address.to_string()),
                 (1, &format!("{}:{}", item.onchain.txid, item.vout)),
-                (2, &btc),
-                (3, &date),
+                (2, &format_btc_value(item.value)),
+                (3, &item.onchain.format_date()),
                 (4, &item.onchain.status.into_u32()),
             ]);
         }
