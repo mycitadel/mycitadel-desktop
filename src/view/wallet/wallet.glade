@@ -1634,7 +1634,7 @@ details</property>
                                 <property name="hexpand">True</property>
                                 <property name="editable">False</property>
                                 <property name="has-frame">False</property>
-                                <property name="text" translatable="yes">EscapeLorenzoMouse05MR81F43xqWxeteEiBVt1evrWAt7wks16wv1U9mBe8Dt</property>
+                                <property name="text" translatable="yes">rgb:05MR81F43xqWxeteEiBVt1evrWAt7wks16wv1U9mBe8Dt</property>
                                 <property name="caps-lock-warning">False</property>
                                 <property name="secondary-icon-name">edit-copy-symbolic</property>
                               </object>
