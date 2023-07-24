@@ -591,21 +591,57 @@ impl Widgets {
     }
 
     pub fn update_outpoints(&mut self, model: &mut ViewModel) {
-        match model.asset() {
-            None => {
-                self.update_utxos(model.wallet().utxos());
-            }
-            Some(_) => {
-                let info = model.asset_info();
-                let allocations = model.asset_allocations();
-                let rgb = model.wallet().rgb().unwrap();
-                self.update_allocations(
-                    allocations,
-                    info.precision(),
-                    &info.issue(),
-                    rgb.witness_txes(),
-                );
-            }
+        self.update_utxos(model.wallet().utxos());
+
+        if model.asset().is_some() {
+            let info = model.asset_info();
+            let allocations = model.asset_allocations();
+            let rgb = model.wallet().rgb().unwrap();
+            self.update_allocations(
+                allocations,
+                info.precision(),
+                &info.issue(),
+                rgb.witness_txes(),
+            );
+        }
+    }
+
+    pub fn update_operations(&mut self, model: &mut ViewModel) {
+        let info = model.asset_info();
+        let operations = model.asset_allocations();
+        let rgb = model.wallet().rgb().unwrap();
+
+        let precision = info.precision();
+        let issue = info.issue();
+        let witness_txes = rgb.witness_txes();
+
+        let pow = 10u64.pow(precision as u32);
+        self.operation_store.clear();
+        for allocation in allocations {
+            let int = allocation.value / pow;
+            let fract = allocation.value - int * pow;
+            let date = match allocation.witness {
+                SealWitness::Genesis => issue.to_string(),
+                SealWitness::Present(txid) => witness_txes
+                    .iter()
+                    .find(|info| info.txid.as_ref() == txid.as_ref().as_slice())
+                    .map(OnchainTxid::format_date)
+                    .unwrap_or_else(|| s!("unknown")),
+                SealWitness::Extension => s!("issue"),
+            };
+            self.operation_store.insert_with_values(None, &[
+                (0, &item.icon_name()),
+                (1, &item.onchain.txid.to_string()),
+                (2, &btc),
+                (3, &btc_balance),
+                (4, &date),
+                (5, &item.color()),
+                (6, &item.onchain.status.into_u32()),
+                // TODO: Use description
+                (7, &item.onchain.txid.to_string()),
+                // TODO: Change color depending on the presence of description
+                (8, &descr_color),
+            ]);
         }
     }
 

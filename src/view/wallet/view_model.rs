@@ -14,7 +14,10 @@ use std::convert::Infallible;
 use std::path::PathBuf;
 use std::str::FromStr;
 
-use bpro::{file, DescriptorError, ElectrumServer, FileDocument, Signer, Wallet, WalletSettings};
+use bpro::{
+    file, DescriptorError, ElectrumServer, FileDocument, OperationEntry, Signer, Wallet,
+    WalletSettings,
+};
 use gtk::glib::ObjectExt;
 use gtk::prelude::ListModelExt;
 use relm::Cast;
@@ -211,6 +214,13 @@ impl ViewModel {
         };
         let iface = self.asset_for(id);
         iface.allocations(&self.wallet).into_inner()
+    }
+
+    pub fn asset_operations(&mut self) -> Vec<OperationEntry> {
+        let Some(id) = self.asset else {
+            return vec![];
+        };
+        let iface = self.asset_for(id);
     }
 
     fn asset_info_for(&mut self, id: ContractId) -> AssetInfo {
