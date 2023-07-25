@@ -24,7 +24,7 @@ use gtk::prelude::*;
 use gtk::{
     gdk, Adjustment, ApplicationWindow, Button, CheckButton, Entry, HeaderBar, Image, Label,
     ListBox, ListStore, Menu, MenuItem, Notebook, Popover, RadioMenuItem, SortColumn, SortType,
-    SpinButton, Spinner, Statusbar, TextBuffer, TreeView,
+    SpinButton, Spinner, Statusbar, TextBuffer, TextView, TreeView,
 };
 use relm::Relm;
 use rgb::contract::SealWitness;
@@ -157,7 +157,8 @@ pub struct Widgets {
     index_stp: SpinButton,
     index_adj: Adjustment,
     index_img: Image,
-    address_fld: Entry,
+    copy_invoice_btn: Button,
+    invoice_text: TextView,
 
     contract_text: TextBuffer,
     import_popover: Popover,
@@ -379,9 +380,12 @@ impl Widgets {
             Msg::InvoiceIndex(adj.value() as u32)
         );
 
-        self.address_fld.connect_icon_press(|entry, _, _| {
-            let val = entry.text();
-            gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).set_text(&val);
+        let invoice_text = self.invoice_text.clone();
+        self.copy_invoice_btn.connect_clicked(move |_| {
+            let buffer = invoice_text.buffer().unwrap();
+            let (start, end) = buffer.bounds();
+            let text = buffer.text(&start, &end, false).unwrap().to_string();
+            gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).set_text(&text);
         });
 
         let import_btn = self.import_btn.clone();
@@ -489,7 +493,7 @@ impl Widgets {
             None => address.to_string(),
         };
 
-        self.address_fld.set_text(&invoice_str);
+        self.invoice_text.buffer().unwrap().set_text(&invoice_str);
     }
 
     pub fn update_electrum_server(&self, electrum: &ElectrumServer) {
