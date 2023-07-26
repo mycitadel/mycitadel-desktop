@@ -176,7 +176,17 @@ glib::wrapper! {
 }
 
 impl AssetInfo {
-    pub fn placeholder() -> AssetInfo { AssetInfo::with_raw("", "", "", "", 0, 8, "-") }
+    pub fn btc(balance: u64) -> AssetInfo {
+        AssetInfo::with_raw(
+            "Bitcoin",
+            "BTC",
+            "Native Bitcoin blockchain currency",
+            "",
+            balance,
+            8,
+            "-",
+        )
+    }
 
     pub fn with(
         spec: DivisibleAssetSpec,
@@ -219,6 +229,8 @@ impl AssetInfo {
         ])
     }
 
+    pub fn is_btc(&self) -> bool { self.contract_name() == "-" }
+
     pub fn name(&self) -> String { self.property::<String>("name") }
 
     pub fn details(&self) -> String { self.property::<String>("details") }
@@ -230,6 +242,15 @@ impl AssetInfo {
     pub fn contract_name(&self) -> String { self.property::<String>("contract") }
 
     pub fn amount(&self) -> u64 { self.property::<u64>("amount") }
+
+    pub fn amount_fmt(&self, amount: u64) -> String {
+        let pow = 10u64.pow(self.precision() as u32);
+        let int = amount / pow;
+        let fract = amount - int * pow;
+        format!("{int}.{fract}")
+    }
+
+    pub fn amount_display(&self) -> String { self.amount_fmt(self.amount()) }
 
     pub fn precision(&self) -> u8 { self.property::<u8>("precision") }
 }

@@ -12,11 +12,13 @@
 mod widget;
 
 use gtk::ResponseType;
+use rgbwallet::RgbInvoice;
 pub use widget::Widgets;
 
 #[derive(Msg)]
 pub enum Msg {
     Show,
+    Open(RgbInvoice),
     Advanced,
     Response(ResponseType),
 }

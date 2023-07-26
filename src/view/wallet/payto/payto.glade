@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.38.2 -->
+<!-- Generated with glade 3.40.0 -->
 <interface>
   <requires lib="gtk+" version="3.24"/>
   <object class="GtkDialog" id="dialog">
@@ -14,6 +14,7 @@
     <child internal-child="vbox">
       <object class="GtkBox">
         <property name="can-focus">False</property>
+        <property name="margin-top">13</property>
         <property name="orientation">vertical</property>
         <child internal-child="action_area">
           <object class="GtkButtonBox">
@@ -30,13 +31,78 @@
           </packing>
         </child>
         <child>
+          <object class="GtkLabel">
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="halign">start</property>
+            <property name="margin-start">13</property>
+            <property name="margin-end">3</property>
+            <property name="label" translatable="yes">Asset:</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkBox">
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="margin-left">13</property>
+            <property name="margin-right">13</property>
+            <property name="margin-start">13</property>
+            <property name="margin-end">13</property>
+            <property name="margin-bottom">13</property>
+            <property name="spacing">6</property>
+            <child>
+              <object class="GtkLabel" id="name_lbl">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="label" translatable="yes">token name</property>
+                <property name="single-line-mode">True</property>
+                <attributes>
+                  <attribute name="weight" value="bold"/>
+                </attributes>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="contract_lbl">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="label" translatable="yes">rgb:</property>
+                <property name="ellipsize">middle</property>
+                <property name="single-line-mode">True</property>
+                <attributes>
+                  <attribute name="font-desc" value="Monospace 10"/>
+                  <attribute name="foreground" value="#777776767b7b"/>
+                </attributes>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">2</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child>
           <!-- n-columns=2 n-rows=2 -->
           <object class="GtkGrid">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
             <property name="margin-start">13</property>
             <property name="margin-end">13</property>
-            <property name="margin-top">13</property>
             <property name="margin-bottom">13</property>
             <property name="row-spacing">6</property>
             <property name="column-spacing">6</property>
@@ -46,7 +112,7 @@
                 <property name="can-focus">False</property>
                 <property name="halign">start</property>
                 <property name="valign">baseline</property>
-                <property name="label" translatable="yes">Address or invoice:</property>
+                <property name="label" translatable="yes">Beneficiary:</property>
               </object>
               <packing>
                 <property name="left-attach">0</property>
@@ -54,13 +120,14 @@
               </packing>
             </child>
             <child>
-              <object class="GtkEntry" id="invoice_fld">
+              <object class="GtkEntry" id="beneficiary_fld">
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="hexpand">True</property>
                 <property name="width-chars">66</property>
                 <property name="max-width-chars">66</property>
                 <property name="truncate-multiline">True</property>
+                <property name="primary-icon-name">dialog-information-symbolic</property>
                 <property name="secondary-icon-name">edit-paste-symbolic</property>
                 <property name="input-hints">GTK_INPUT_HINT_NO_SPELLCHECK | GTK_INPUT_HINT_NO_EMOJI | GTK_INPUT_HINT_NONE</property>
               </object>
@@ -104,7 +171,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkLabel" id="asset_lbl">
+                  <object class="GtkLabel" id="ticker_lbl">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <property name="halign">start</property>
@@ -128,7 +195,7 @@
                 <property name="can-focus">False</property>
                 <property name="halign">start</property>
                 <property name="valign">baseline</property>
-                <property name="label" translatable="yes">Amount to pay:</property>
+                <property name="label" translatable="yes">Amount:</property>
               </object>
               <packing>
                 <property name="left-attach">1</property>
@@ -139,7 +206,7 @@
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="position">0</property>
+            <property name="position">2</property>
           </packing>
         </child>
         <child>
@@ -201,7 +268,7 @@
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="position">2</property>
+            <property name="position">3</property>
           </packing>
         </child>
       </object>
@@ -210,7 +277,7 @@
       <object class="GtkHeaderBar" id="header_bar">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
-        <property name="title" translatable="yes">Pay to</property>
+        <property name="title" translatable="yes">Transfer</property>
         <property name="has-subtitle">False</property>
         <child>
           <object class="GtkButton" id="cancel_btn">

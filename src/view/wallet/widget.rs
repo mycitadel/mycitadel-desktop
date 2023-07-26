@@ -166,6 +166,7 @@ pub struct Widgets {
     invoice_text: TextView,
 
     // Pay invoice popover
+    pay_popover: Popover,
     paste_invoice_btn: Button,
     pay_invoice_text: TextView,
     parse_img: Image,
@@ -210,8 +211,20 @@ impl Widgets {
             relm,
             self.asset_list,
             connect_row_activated(_, row),
-            Msg::ChangeAsset(row.index() as u32)
+            Msg::ChangeAsset(Some(row.index() as u32))
         );
+
+        let relm2 = relm.clone();
+        let asset_list = self.asset_list.clone();
+        self.main_tabs.connect_change_current_page(move |_, page| {
+            let index = match page {
+                0 => None,
+                1 => asset_list.selected_row().map(|row| row.index() as u32),
+                _ => unreachable!(),
+            };
+            relm2.stream().emit(Msg::ChangeAsset(index));
+            true
+        });
 
         let menu = self.history_menu.clone();
         self.history_list
@@ -408,11 +421,20 @@ impl Widgets {
             let buffer = invoice_text.buffer().unwrap();
             buffer.set_text(&invoice);
         });
+        self.send20_btn.set_sensitive(false);
         self.pay_invoice_text.buffer().unwrap()
             .connect_changed(clone!(@weak self.parse_img as parse_img, @weak self.send20_btn as send20_btn => move |buffer| {
                 let (start, end) = buffer.bounds();
                 let text = buffer.text(&start, &end, false).unwrap().to_string();
-                match RgbInvoice::from_str(text.trim()) {
+                match RgbInvoice::from_str(text.trim()).map_err(|err| err.to_string()).and_then(|invoice| {
+                    let Some(ref iface) = invoice.iface else {
+                        return Ok(invoice);
+                    };
+                    if iface.as_str() != "RGB20" {
+                        return Err(format!("Unsupported interface {iface}, only RGB20 interface is supported"))
+                    }
+                    Ok(invoice)
+                }) {
                     Ok(_invoice) => {
                         parse_img.set_visible(false);
                         send20_btn.set_sensitive(true);
@@ -424,12 +446,17 @@ impl Widgets {
                     }
                 }
             }));
-        connect!(
-            relm,
-            self.send20_btn,
-            connect_clicked(_),
-            Msg::PayTo(payto::Msg::Show)
-        );
+        let relm2 = relm.clone();
+        let buffer = self.pay_invoice_text.buffer().unwrap();
+        let pay_popover = self.pay_popover.clone();
+        self.send20_btn.connect_clicked(move |_| {
+            let (start, end) = buffer.bounds();
+            let text = buffer.text(&start, &end, false).unwrap().to_string();
+            if let Ok(invoice) = RgbInvoice::from_str(text.trim()) {
+                pay_popover.hide();
+                relm2.stream().emit(Msg::PayTo(payto::Msg::Open(invoice)))
+            }
+        });
 
         let import_btn = self.import_btn.clone();
         self.contract_text.connect_changed(move |buffer| {
@@ -585,7 +612,7 @@ impl Widgets {
                 Beneficiary::BlindedSeal(seal.to_concealed_seal())
             }
             (true, None) => {
-                self.index_chk.set_active(false);
+                self.index_chk.set_active(true);
                 Beneficiary::WitnessUtxo(
                     rgb::bitcoin::Address::from_str(&address.to_string())
                         .unwrap()

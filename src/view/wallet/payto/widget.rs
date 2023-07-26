@@ -13,9 +13,12 @@ use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{Button, Dialog, Entry, HeaderBar, InfoBar, Label, ResponseType, ToggleButton};
 use relm::Relm;
+use rgbstd::interface::TypedState;
+use rgbwallet::{Beneficiary, RgbInvoice};
 
 use super::Msg;
 use crate::view::wallet;
+use crate::view::wallet::asset_row::AssetInfo;
 
 // Create the structure that holds the widgets used in the view.
 #[derive(Clone, Gladis)]
@@ -30,20 +33,16 @@ pub struct Widgets {
     compose_btn: Button,
     batch_btn: Button,
 
-    invoice_fld: Entry,
+    ticker_lbl: Label,
+    name_lbl: Label,
+    contract_lbl: Label,
+
+    beneficiary_fld: Entry,
     amount_fld: Entry,
     max_btn: ToggleButton,
-    asset_lbl: Label,
 }
 
 impl Widgets {
-    pub fn init_ui(&self, model: &wallet::ViewModel) {
-        self.header_bar.set_subtitle(Some(&format!(
-            "{:.08} BTC available",
-            model.wallet().state().balance as f64 / 100_000_000.0
-        )));
-    }
-
     pub fn show(&self) { self.dialog.show() }
     pub fn hide(&self) { self.dialog.hide() }
 
@@ -65,5 +64,54 @@ impl Widgets {
             connect_delete_event(_, _),
             return (None, Inhibit(true))
         );
+    }
+
+    pub fn init_ui(&self, _model: &wallet::ViewModel) {}
+
+    pub fn update_ui(&self, asset: AssetInfo, invoice: Option<RgbInvoice>) {
+        let is_asset = invoice.is_some();
+
+        self.batch_btn.set_visible(!is_asset);
+        self.beneficiary_fld.set_text("");
+        self.amount_fld.set_text("");
+
+        self.info_bar.set_visible(false);
+
+        if let Some(invoice) = invoice {
+            self.beneficiary_fld
+                .set_primary_icon_name(Some("dialog-information-symbolic"));
+            match invoice.beneficiary {
+                Beneficiary::BlindedSeal(seal) => {
+                    self.beneficiary_fld.set_primary_icon_tooltip_text(Some(
+                        "You are paying to an existing blinded unspent transaction output (UTXOb)",
+                    ));
+                    self.beneficiary_fld.set_text(&seal.to_string());
+                }
+                Beneficiary::WitnessUtxo(address) => {
+                    self.beneficiary_fld.set_primary_icon_tooltip_text(Some(
+                        "You will create a new output for the beneficiary and allocate there a \
+                         small amount of bitcoins",
+                    ));
+                    self.beneficiary_fld.set_text(&address.to_string());
+                }
+            }
+            if let TypedState::Amount(amount) = invoice.owned_state {
+                self.amount_fld.set_text(&asset.amount_fmt(amount));
+            }
+        } else {
+            self.beneficiary_fld.set_primary_icon_tooltip_text(None);
+            self.beneficiary_fld.set_primary_icon_name(None);
+        }
+
+        self.header_bar.set_subtitle(Some(&format!(
+            "{} {} available",
+            asset.amount_display(),
+            asset.ticker(),
+        )));
+
+        self.contract_lbl.set_visible(is_asset);
+        self.contract_lbl.set_text(&asset.contract_name());
+        self.ticker_lbl.set_text(&asset.ticker());
+        self.name_lbl.set_text(&asset.name());
     }
 }

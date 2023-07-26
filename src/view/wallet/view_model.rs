@@ -128,7 +128,7 @@ impl ViewModel {
 
     pub fn asset_info(&mut self) -> AssetInfo {
         match (self.asset, self.asset_model.item(0)) {
-            (None, None) => AssetInfo::placeholder(),
+            (None, None) => AssetInfo::btc(self.wallet.state().balance),
             (None, Some(asset)) => asset.downcast::<AssetInfo>().unwrap(),
             (Some(contract_id), _) => self.asset_info_for(contract_id),
         }
@@ -154,18 +154,17 @@ impl ViewModel {
         })
     }
 
-    pub fn change_asset(&mut self, index: u32) -> bool {
+    pub fn change_asset(&mut self, index: Option<u32>) -> bool {
+        let Some(index) = index else {
+            self.asset = None;
+            return true;
+        };
         let Some(asset) = self.asset_model().item(index) else {
             return false;
         };
         let id = asset.property::<String>("contract");
-        match id.as_str() {
-            "-" => self.asset = None,
-            id => {
-                let id = ContractId::from_str(id).expect("invalid RGB contract");
-                self.asset = Some(id);
-            }
-        }
+        let id = ContractId::from_str(&id).expect("invalid RGB contract");
+        self.asset = Some(id);
         true
     }
 

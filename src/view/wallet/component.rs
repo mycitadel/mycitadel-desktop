@@ -545,7 +545,12 @@ impl Component {
     fn update_payto(&mut self, event: payto::Msg) {
         match event {
             payto::Msg::Show => {
-                self.payto_widgets.init_ui(&self.model);
+                self.payto_widgets.update_ui(self.model.asset_info(), None);
+                self.payto_widgets.show();
+            }
+            payto::Msg::Open(invoice) => {
+                self.payto_widgets
+                    .update_ui(self.model.asset_info(), Some(invoice));
                 self.payto_widgets.show();
             }
             payto::Msg::Response(ResponseType::Ok) => {
@@ -622,7 +627,7 @@ impl Widget for Component {
         let glade_src = include_str!("payto/payto.glade");
         let payto_widgets = payto::Widgets::from_string(glade_src).expect("glade file broken");
         payto_widgets.connect(relm);
-        payto_widgets.init_ui(&model);
+        payto_widgets.init_ui(&mut model);
 
         electrum_worker.sync();
 
