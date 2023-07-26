@@ -438,8 +438,7 @@ dependencies = [
 [[package]]
 name = "bp-core"
 version = "0.10.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8ad89567d378fb0bf06e1d3370b12c17b587563fa3ea075d22a6a3d7e3b77f2b"
+source = "git+https://github.com/BP-WG/bp-core?branch=api#a60e0d571338879bec224de37f7a9cf542084457"
 dependencies = [
  "amplify 4.0.0",
  "bp-dbc",
@@ -455,8 +454,7 @@ dependencies = [
 [[package]]
 name = "bp-dbc"
 version = "0.10.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ac8b9fa8ce5e85c3b052f2857eb14b710e893052f2680584f48959627e78148b"
+source = "git+https://github.com/BP-WG/bp-core?branch=api#a60e0d571338879bec224de37f7a9cf542084457"
 dependencies = [
  "amplify 4.0.0",
  "base85",
@@ -470,8 +468,7 @@ dependencies = [
 [[package]]
 name = "bp-primitives"
 version = "0.10.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "608a06488cc9909ed80b1b1dc0acedd655cfe94df60bdb6af80546b993e252e7"
+source = "git+https://github.com/BP-WG/bp-core?branch=api#a60e0d571338879bec224de37f7a9cf542084457"
 dependencies = [
  "amplify 4.0.0",
  "commit_verify",
@@ -484,8 +481,7 @@ dependencies = [
 [[package]]
 name = "bp-seals"
 version = "0.10.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6f02ea90eaca184fda85230cfac2457fd352c3d81bd28f67254185d0b199eb6f"
+source = "git+https://github.com/BP-WG/bp-core?branch=api#a60e0d571338879bec224de37f7a9cf542084457"
 dependencies = [
  "amplify 4.0.0",
  "baid58",
@@ -501,7 +497,7 @@ dependencies = [
 [[package]]
 name = "bpro"
 version = "0.5.0"
-source = "git+https://github.com/pandora-prime/bpro?branch=v0.5#ca81b2b2ab5041cb4a04bc7693d75dc6f473049e"
+source = "git+https://github.com/pandora-prime/bpro?branch=v0.5#ce4457ca2ba872fc3e8343f563f3eb1fb01a1c9f"
 dependencies = [
  "amplify 3.14.2",
  "bitcoin 0.29.2",
@@ -2077,7 +2073,7 @@ dependencies = [
 [[package]]
 name = "rgb-std"
 version = "0.10.4"
-source = "git+https://github.com/RGB-WG/rgb-wallet?branch=invoice-api#1354e5c9350c69a31bd74e776852770f9b8f2d2d"
+source = "git+https://github.com/RGB-WG/rgb-wallet?branch=invoice-api#9d48a2109fbe6971c0a21f65cb04ec8f8e3e91b6"
 dependencies = [
  "amplify 4.0.0",
  "baid58",
@@ -2096,7 +2092,7 @@ dependencies = [
 [[package]]
 name = "rgb-wallet"
 version = "0.10.4"
-source = "git+https://github.com/RGB-WG/rgb-wallet?branch=invoice-api#1354e5c9350c69a31bd74e776852770f9b8f2d2d"
+source = "git+https://github.com/RGB-WG/rgb-wallet?branch=invoice-api#9d48a2109fbe6971c0a21f65cb04ec8f8e3e91b6"
 dependencies = [
  "amplify 4.0.0",
  "baid58",

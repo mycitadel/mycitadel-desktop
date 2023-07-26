@@ -67,6 +67,7 @@ serde = ["serde_with", "serde_yaml",
          "amplify/serde", "chrono/serde", "bitcoin/serde", "miniscript/serde", "descriptor-wallet/serde"]
 
 [patch.crates-io]
-bpro = { git = "https://github.com/pandora-prime/bpro", branch = "v0.5" }
+bp-core = { git = "https://github.com/BP-WG/bp-core", branch = "api" }
 rgb-std = { git = "https://github.com/RGB-WG/rgb-wallet", branch = "invoice-api" }
 rgb-wallet = { git = "https://github.com/RGB-WG/rgb-wallet", branch = "invoice-api" }
+bpro = { git = "https://github.com/pandora-prime/bpro", branch = "v0.5" }

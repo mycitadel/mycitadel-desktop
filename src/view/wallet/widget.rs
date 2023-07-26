@@ -11,7 +11,9 @@
 
 use std::collections::BTreeSet;
 use std::ffi::OsStr;
+use std::str::FromStr;
 
+use bitcoin::hashes::Hash;
 use bpro::{
     AddressSummary, ElectrumSec, ElectrumServer, HistoryEntry, OnchainStatus, OnchainTxid,
     UtxoTxid, WalletState,
@@ -27,9 +29,11 @@ use gtk::{
     SpinButton, Spinner, Statusbar, TextBuffer, TextView, TreeView,
 };
 use relm::Relm;
-use rgb::contract::SealWitness;
+use rgb::contract::{ContractId, GraphSeal, SealWitness};
 use rgbstd::interface::FungibleAllocation;
+use rgbstd::persistence::Inventory;
 use rgbstd::stl::Precision;
+use rgbwallet::{Beneficiary, RgbInvoiceBuilder};
 use wallet::hd::SegmentIndexes;
 
 use super::asset_row::{self, AssetModel};
@@ -150,6 +154,7 @@ pub struct Widgets {
     electrum_spin: Spinner,
 
     invoice_popover: Popover,
+    currency_lbl: Label,
     amount_chk: CheckButton,
     amount_stp: SpinButton,
     amount_adj: Adjustment,
@@ -411,7 +416,7 @@ impl Widgets {
         );
     }
 
-    pub fn init_ui(&mut self, model: &ViewModel) {
+    pub fn init_ui(&mut self, model: &mut ViewModel) {
         let settings = model.as_settings();
 
         let icon = Pixbuf::from_read(APP_ICON).expect("app icon is missed");
@@ -464,9 +469,21 @@ impl Widgets {
 
         self.update_outpoints(model);
         self.update_balance(model);
+        self.update_invoice(model);
     }
 
-    pub fn update_invoice(&self, model: &ViewModel) {
+    pub fn update_invoice(&self, model: &mut ViewModel) {
+        let asset = model.asset_info();
+        self.currency_lbl.set_text(&asset.ticker());
+
+        let invoice_str = match model.asset() {
+            None => self.update_btc_invoice(model),
+            Some(asset) => self.update_rgb_invoice(model, *asset),
+        };
+        self.invoice_text.buffer().unwrap().set_text(&invoice_str);
+    }
+
+    fn update_btc_invoice(&self, model: &mut ViewModel) -> String {
         let invoice = model.as_invoice();
         let wallet = model.wallet();
         let next_index = wallet.next_default_index();
@@ -475,8 +492,11 @@ impl Widgets {
 
         self.amount_chk.set_active(invoice.amount.is_some());
         self.amount_stp.set_sensitive(invoice.amount.is_some());
+        // TODO: Set upper limit for amount
 
+        self.index_chk.set_label("Use custom address no:");
         self.index_chk.set_active(invoice.index.is_some());
+        self.index_stp.set_visible(true);
         self.index_stp.set_sensitive(invoice.index.is_some());
         self.index_adj
             .set_upper((next_index.first_index() + 19) as f64);
@@ -484,16 +504,79 @@ impl Widgets {
             .set_value(invoice.index.unwrap_or(next_index).first_index() as f64);
         self.index_img.set_visible(!index_reuse);
 
-        let invoice_str = match invoice.amount {
+        match invoice.amount {
             Some(amount) => format!(
                 "bitcoin:{}?amount={}",
                 address,
                 amount as f64 / 100_000_000.0
             ),
             None => address.to_string(),
+        }
+    }
+
+    fn update_rgb_invoice(&self, model: &mut ViewModel, contract_id: ContractId) -> String {
+        let asset = model.asset_info();
+
+        // TODO: Set upper limit for amount matching total supply
+        self.index_chk.set_label("Invoice to address");
+        self.index_stp.set_visible(false);
+        self.index_img.set_visible(false);
+
+        let wallet = model.wallet();
+        let next_index = wallet.next_default_index();
+        let address = wallet.indexed_address(next_index);
+
+        self.index_img.set_visible(false);
+        self.index_img.set_tooltip_text(None);
+
+        let utxo = model.wallet().utxos().iter().find(|utxo| {
+            let idx = utxo.addr_src.change.first_index();
+            idx == 9 || idx == 10
+        });
+        self.index_chk.set_sensitive(utxo.is_some());
+        let beneficiary = match (self.index_chk.is_active(), utxo) {
+            (true, Some(utxo)) => {
+                let txid = utxo.onchain.txid.into_inner();
+                let seal = GraphSeal::tapret_first(txid, utxo.vout);
+                model
+                    .wallet_mut()
+                    .rgb_mut()
+                    .expect("call to update_rgb_invoice must be done only in RGB context")
+                    .store_seal_secret(seal)
+                    .expect("unable to store data in RGB stash");
+                Beneficiary::BlindedSeal(seal.to_concealed_seal())
+            }
+            (true, None) => {
+                self.index_chk.set_active(false);
+                Beneficiary::WitnessUtxo(
+                    rgb::bitcoin::Address::from_str(&address.to_string())
+                        .unwrap()
+                        .assume_checked(),
+                )
+            }
+            (false, _) => Beneficiary::WitnessUtxo(
+                rgb::bitcoin::Address::from_str(&address.to_string())
+                    .unwrap()
+                    .assume_checked(),
+            ),
         };
 
-        self.invoice_text.buffer().unwrap().set_text(&invoice_str);
+        let mut builder = RgbInvoiceBuilder::rgb20(contract_id, beneficiary);
+        if self.amount_chk.is_active() {
+            let amount = self.amount_adj.value();
+            let res = unsafe { builder.set_amount_approx(amount, asset.precision()) };
+            builder = match res {
+                Ok(builder) => builder,
+                Err(builder) => {
+                    self.index_img.set_visible(false);
+                    self.index_img.set_tooltip_text(Some("invalid amount"));
+                    builder
+                }
+            }
+        }
+        let invoice = builder.finish();
+
+        invoice.to_string()
     }
 
     pub fn update_electrum_server(&self, electrum: &ElectrumServer) {
@@ -667,8 +750,8 @@ impl Widgets {
             let balance = format_btc_value(info.balance);
             let volume = format_btc_value(info.volume);
             let terminal = info.terminal_string();
-            let terminal_sort =
-                (info.addr_src.index.first_index() as u64) | ((info.addr_src.change as u64) << 32);
+            let terminal_sort = (info.addr_src.index.first_index() as u64)
+                | ((info.addr_src.change.first_index() as u64) << 32);
             let style = self.address_list.style_context();
             let addr_color = match (info.balance == 0, info.volume == 0) {
                 (true, true) => style.lookup_color("theme_text_color").unwrap(),

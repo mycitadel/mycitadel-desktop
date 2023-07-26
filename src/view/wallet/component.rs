@@ -418,14 +418,14 @@ impl Update for Component {
                     true => Some(0),
                     false => None,
                 };
-                self.widgets.update_invoice(&self.model);
+                self.widgets.update_invoice(&mut self.model);
             }
             Msg::InvoiceIndexToggle(set) => {
                 self.model.as_invoice_mut().index = match set {
                     true => Some(self.model.wallet().next_default_index()),
                     false => None,
                 };
-                self.widgets.update_invoice(&self.model);
+                self.widgets.update_invoice(&mut self.model);
             }
             Msg::InvoiceAmount(btc) => {
                 let sats = (btc * 100_000_000.0).ceil() as u64;
@@ -434,7 +434,7 @@ impl Update for Component {
                     .amount
                     .as_mut()
                     .map(|a| *a = sats);
-                self.widgets.update_invoice(&self.model);
+                self.widgets.update_invoice(&mut self.model);
             }
             Msg::InvoiceIndex(index) => {
                 let index = UnhardenedIndex::from_index(index)
@@ -444,7 +444,7 @@ impl Update for Component {
                     .index
                     .as_mut()
                     .map(|i| *i = index);
-                self.widgets.update_invoice(&self.model);
+                self.widgets.update_invoice(&mut self.model);
             }
             Msg::Launch(msg) => {
                 self.launcher_stream.as_ref().map(|stream| stream.emit(msg));
@@ -609,7 +609,7 @@ impl Widget for Component {
             .expect("unable to instantiate exchange thread");
 
         widgets.connect(relm);
-        widgets.init_ui(&model);
+        widgets.init_ui(&mut model);
         widgets.update_asset(&mut model);
         widgets.show();
 
