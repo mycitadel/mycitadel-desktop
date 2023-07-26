@@ -22,6 +22,7 @@ use chrono::{DateTime, NaiveDateTime, Utc};
 use electrum_client::HeaderNotification;
 use gladis::Gladis;
 use gtk::gdk_pixbuf::Pixbuf;
+use gtk::glib::{self, clone};
 use gtk::prelude::*;
 use gtk::{
     gdk, Adjustment, ApplicationWindow, Button, CheckButton, Entry, HeaderBar, Image, Label,
@@ -33,7 +34,7 @@ use rgb::contract::{ContractId, GraphSeal, SealWitness};
 use rgbstd::interface::FungibleAllocation;
 use rgbstd::persistence::Inventory;
 use rgbstd::stl::Precision;
-use rgbwallet::{Beneficiary, RgbInvoiceBuilder};
+use rgbwallet::{Beneficiary, RgbInvoice, RgbInvoiceBuilder};
 use wallet::hd::SegmentIndexes;
 
 use super::asset_row::{self, AssetModel};
@@ -87,7 +88,6 @@ pub struct Widgets {
     main_tabs: Notebook,
 
     paybtc_btn: Button,
-    pay20_btn: Button,
 
     balance_lead_lbl: Label,
     balance_tail_lbl: Label,
@@ -153,7 +153,7 @@ pub struct Widgets {
     connection_img: Image,
     electrum_spin: Spinner,
 
-    invoice_popover: Popover,
+    // Compose invoice popover
     currency_lbl: Label,
     amount_chk: CheckButton,
     amount_stp: SpinButton,
@@ -164,6 +164,12 @@ pub struct Widgets {
     index_img: Image,
     copy_invoice_btn: Button,
     invoice_text: TextView,
+
+    // Pay invoice popover
+    paste_invoice_btn: Button,
+    pay_invoice_text: TextView,
+    parse_img: Image,
+    send20_btn: Button,
 
     contract_text: TextBuffer,
     import_popover: Popover,
@@ -393,6 +399,38 @@ impl Widgets {
             gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).set_text(&text);
         });
 
+        let invoice_text = self.pay_invoice_text.clone();
+        self.paste_invoice_btn.connect_clicked(move |_| {
+            let Some(invoice) = gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).wait_for_text()
+            else {
+                return;
+            };
+            let buffer = invoice_text.buffer().unwrap();
+            buffer.set_text(&invoice);
+        });
+        self.pay_invoice_text.buffer().unwrap()
+            .connect_changed(clone!(@weak self.parse_img as parse_img, @weak self.send20_btn as send20_btn => move |buffer| {
+                let (start, end) = buffer.bounds();
+                let text = buffer.text(&start, &end, false).unwrap().to_string();
+                match RgbInvoice::from_str(text.trim()) {
+                    Ok(_invoice) => {
+                        parse_img.set_visible(false);
+                        send20_btn.set_sensitive(true);
+                    }
+                    Err(err) => {
+                        parse_img.set_tooltip_text(Some(&err.to_string()));
+                        parse_img.set_visible(true);
+                        send20_btn.set_sensitive(false);
+                    }
+                }
+            }));
+        connect!(
+            relm,
+            self.send20_btn,
+            connect_clicked(_),
+            Msg::PayTo(payto::Msg::Show)
+        );
+
         let import_btn = self.import_btn.clone();
         self.contract_text.connect_changed(move |buffer| {
             import_btn.set_sensitive(buffer.char_count() > 0);
@@ -614,7 +652,6 @@ impl Widgets {
                 self.connection_img.set_tooltip_text(Some(sec.tooltip()));
                 self.connection_img.set_visible(true);
                 self.paybtc_btn.set_sensitive(true);
-                self.pay20_btn.set_sensitive(true);
             }
             ElectrumState::Error(err) => {
                 self.refresh_btn.set_sensitive(true);
@@ -627,7 +664,6 @@ impl Widgets {
                 self.connection_img.set_tooltip_text(Some(&err));
                 self.connection_img.set_visible(true);
                 self.paybtc_btn.set_sensitive(false);
-                self.pay20_btn.set_sensitive(false);
 
                 self.status_lbl.set_text("Error from electrum server");
             }

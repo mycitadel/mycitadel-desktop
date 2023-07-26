@@ -377,6 +377,8 @@
           <object class="GtkImage" id="index_img">
             <property name="can-focus">False</property>
             <property name="tooltip-text" translatable="yes">Address re-use</property>
+            <property name="halign">start</property>
+            <property name="margin-start">12</property>
             <property name="icon-name">dialog-warning-symbolic</property>
           </object>
           <packing>
@@ -388,6 +390,7 @@
           <object class="GtkLabel" id="currency_lbl">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
+            <property name="halign">start</property>
             <property name="label" translatable="yes">BTC</property>
           </object>
           <packing>
@@ -421,6 +424,7 @@
             <property name="visible">True</property>
             <property name="can-focus">True</property>
             <property name="receives-default">True</property>
+            <property name="halign">start</property>
             <property name="valign">start</property>
             <property name="relief">none</property>
             <property name="always-show-image">True</property>
@@ -522,6 +526,123 @@
       <!-- column-name descr_fg -->
       <column type="GdkRGBA"/>
     </columns>
+  </object>
+  <object class="GtkPopover" id="pay_popover">
+    <property name="can-focus">False</property>
+    <child>
+      <!-- n-columns=2 n-rows=2 -->
+      <object class="GtkGrid">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+        <property name="margin-left">6</property>
+        <property name="margin-right">6</property>
+        <property name="margin-start">6</property>
+        <property name="margin-end">6</property>
+        <property name="margin-top">6</property>
+        <property name="margin-bottom">6</property>
+        <property name="row-spacing">6</property>
+        <property name="column-spacing">6</property>
+        <child>
+          <object class="GtkScrolledWindow">
+            <property name="width-request">400</property>
+            <property name="height-request">100</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="hexpand">True</property>
+            <property name="hscrollbar-policy">never</property>
+            <property name="shadow-type">in</property>
+            <child>
+              <object class="GtkTextView" id="pay_invoice_text">
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="wrap-mode">word-char</property>
+              </object>
+            </child>
+          </object>
+          <packing>
+            <property name="left-attach">0</property>
+            <property name="top-attach">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="send20_btn">
+            <property name="label" translatable="yes">Process</property>
+            <property name="visible">True</property>
+            <property name="sensitive">False</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <property name="halign">end</property>
+            <style>
+              <class name="destructive-action"/>
+            </style>
+          </object>
+          <packing>
+            <property name="left-attach">0</property>
+            <property name="top-attach">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel">
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+          </object>
+          <packing>
+            <property name="left-attach">1</property>
+            <property name="top-attach">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkBox">
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="margin-bottom">6</property>
+            <property name="orientation">vertical</property>
+            <property name="spacing">6</property>
+            <child>
+              <object class="GtkButton" id="paste_invoice_btn">
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="receives-default">True</property>
+                <property name="halign">start</property>
+                <property name="valign">start</property>
+                <property name="relief">none</property>
+                <property name="always-show-image">True</property>
+                <child>
+                  <object class="GtkImage">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="icon-name">edit-paste-symbolic</property>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkImage" id="parse_img">
+                <property name="can-focus">False</property>
+                <property name="tooltip-text" translatable="yes">Address re-use</property>
+                <property name="margin-left">12</property>
+                <property name="icon-name">dialog-warning-symbolic</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="pack-type">end</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="left-attach">1</property>
+            <property name="top-attach">0</property>
+          </packing>
+        </child>
+      </object>
+    </child>
   </object>
   <object class="GtkImage" id="settings_img">
     <property name="visible">True</property>
@@ -1700,12 +1821,19 @@ details</property>
                             <property name="orientation">vertical</property>
                             <property name="spacing">6</property>
                             <child>
-                              <object class="GtkButton" id="pay20_btn">
-                                <property name="label" translatable="yes">Pay</property>
+                              <object class="GtkMenuButton" id="pay_invoice_btn">
                                 <property name="visible">True</property>
-                                <property name="sensitive">False</property>
                                 <property name="can-focus">True</property>
+                                <property name="focus-on-click">False</property>
                                 <property name="receives-default">True</property>
+                                <property name="popover">pay_popover</property>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="label" translatable="yes">Pay invoice</property>
+                                  </object>
+                                </child>
                                 <style>
                                   <class name="destructive-action"/>
                                 </style>
