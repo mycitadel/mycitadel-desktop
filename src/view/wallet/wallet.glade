@@ -305,7 +305,7 @@
     <property name="step-increment">1</property>
     <property name="page-increment">10</property>
   </object>
-  <object class="GtkPopover" id="invoice_popover">
+  <object class="GtkPopover" id="address_popover">
     <property name="can-focus">False</property>
     <child>
       <!-- n-columns=3 n-rows=3 -->
@@ -387,11 +387,142 @@
           </packing>
         </child>
         <child>
-          <object class="GtkLabel" id="currency_lbl">
+          <object class="GtkLabel">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
             <property name="halign">start</property>
             <property name="label" translatable="yes">BTC</property>
+          </object>
+          <packing>
+            <property name="left-attach">2</property>
+            <property name="top-attach">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkScrolledWindow">
+            <property name="height-request">100</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="hscrollbar-policy">never</property>
+            <property name="shadow-type">in</property>
+            <child>
+              <object class="GtkTextView" id="addr_text">
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="wrap-mode">word-char</property>
+              </object>
+            </child>
+          </object>
+          <packing>
+            <property name="left-attach">0</property>
+            <property name="top-attach">2</property>
+            <property name="width">2</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="copy_addr_btn">
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <property name="halign">start</property>
+            <property name="valign">start</property>
+            <property name="relief">none</property>
+            <property name="always-show-image">True</property>
+            <child>
+              <object class="GtkImage">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="icon-name">edit-copy-symbolic</property>
+              </object>
+            </child>
+          </object>
+          <packing>
+            <property name="left-attach">2</property>
+            <property name="top-attach">2</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+  </object>
+  <object class="GtkPopover" id="invoice_popover">
+    <property name="can-focus">False</property>
+    <child>
+      <!-- n-columns=3 n-rows=3 -->
+      <object class="GtkGrid">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+        <property name="margin-left">6</property>
+        <property name="margin-right">6</property>
+        <property name="margin-start">6</property>
+        <property name="margin-end">6</property>
+        <property name="margin-top">6</property>
+        <property name="margin-bottom">6</property>
+        <property name="row-spacing">6</property>
+        <property name="column-spacing">6</property>
+        <child>
+          <object class="GtkCheckButton" id="value_chk">
+            <property name="label" translatable="yes">Request specific amount:</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">False</property>
+            <property name="draw-indicator">True</property>
+          </object>
+          <packing>
+            <property name="left-attach">0</property>
+            <property name="top-attach">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkCheckButton" id="witness_chk">
+            <property name="label" translatable="yes">Request to pay to an address</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">False</property>
+            <property name="tooltip-text" translatable="yes">The payer will have to create an output for you matching your address and put some above-the-dust amount of bitcoins in addition to the assets payed</property>
+            <property name="draw-indicator">True</property>
+          </object>
+          <packing>
+            <property name="left-attach">0</property>
+            <property name="top-attach">1</property>
+            <property name="width">2</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkSpinButton" id="value_stp">
+            <property name="visible">True</property>
+            <property name="sensitive">False</property>
+            <property name="can-focus">True</property>
+            <property name="hexpand">True</property>
+            <property name="width-chars">12</property>
+            <property name="text" translatable="yes">0.00000000</property>
+            <property name="adjustment">amount_adj</property>
+            <property name="digits">8</property>
+          </object>
+          <packing>
+            <property name="left-attach">1</property>
+            <property name="top-attach">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkImage" id="info_img">
+            <property name="can-focus">False</property>
+            <property name="tooltip-text" translatable="yes">Address re-use</property>
+            <property name="halign">start</property>
+            <property name="margin-left">12</property>
+            <property name="margin-start">12</property>
+            <property name="icon-name">dialog-warning-symbolic</property>
+          </object>
+          <packing>
+            <property name="left-attach">2</property>
+            <property name="top-attach">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="currency_lbl">
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="halign">start</property>
+            <property name="label" translatable="yes">   </property>
           </object>
           <packing>
             <property name="left-attach">2</property>
@@ -1051,7 +1182,7 @@
                             <property name="can-focus">True</property>
                             <property name="focus-on-click">False</property>
                             <property name="receives-default">True</property>
-                            <property name="popover">invoice_popover</property>
+                            <property name="popover">address_popover</property>
                             <child>
                               <object class="GtkLabel">
                                 <property name="visible">True</property>
@@ -2577,5 +2708,10 @@ details</property>
         </child>
       </object>
     </child>
+  </object>
+  <object class="GtkAdjustment" id="value_adj">
+    <property name="upper">10000000000</property>
+    <property name="step-increment">0.01</property>
+    <property name="page-increment">1</property>
   </object>
 </interface>

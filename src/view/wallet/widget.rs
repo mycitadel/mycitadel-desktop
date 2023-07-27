@@ -26,11 +26,11 @@ use gtk::glib::{self, clone};
 use gtk::prelude::*;
 use gtk::{
     gdk, Adjustment, ApplicationWindow, Button, CheckButton, Entry, HeaderBar, Image, Label,
-    ListBox, ListStore, Menu, MenuItem, Notebook, Popover, RadioMenuItem, SortColumn, SortType,
-    SpinButton, Spinner, Statusbar, TextBuffer, TextView, TreeView,
+    ListBox, ListStore, Menu, MenuButton, MenuItem, Notebook, Popover, RadioMenuItem, SortColumn,
+    SortType, SpinButton, Spinner, Statusbar, TextBuffer, TextView, TreeView,
 };
 use relm::Relm;
-use rgb::contract::{ContractId, GraphSeal, SealWitness};
+use rgb::contract::{GraphSeal, SealWitness};
 use rgbstd::interface::FungibleAllocation;
 use rgbstd::persistence::Inventory;
 use rgbstd::stl::Precision;
@@ -153,8 +153,7 @@ pub struct Widgets {
     connection_img: Image,
     electrum_spin: Spinner,
 
-    // Compose invoice popover
-    currency_lbl: Label,
+    // BTC invoice popover
     amount_chk: CheckButton,
     amount_stp: SpinButton,
     amount_adj: Adjustment,
@@ -162,8 +161,19 @@ pub struct Widgets {
     index_stp: SpinButton,
     index_adj: Adjustment,
     index_img: Image,
-    copy_invoice_btn: Button,
+    addr_text: TextView,
+    copy_addr_btn: Button,
+
+    // RGB invoice popover
+    receive20_btn: MenuButton,
+    currency_lbl: Label,
+    value_chk: CheckButton,
+    value_stp: SpinButton,
+    value_adj: Adjustment,
+    witness_chk: CheckButton,
+    info_img: Image,
     invoice_text: TextView,
+    copy_invoice_btn: Button,
 
     // Pay invoice popover
     pay_popover: Popover,
@@ -211,20 +221,8 @@ impl Widgets {
             relm,
             self.asset_list,
             connect_row_activated(_, row),
-            Msg::ChangeAsset(Some(row.index() as u32))
+            Msg::ChangeAsset(row.index() as u32)
         );
-
-        let relm2 = relm.clone();
-        let asset_list = self.asset_list.clone();
-        self.main_tabs.connect_change_current_page(move |_, page| {
-            let index = match page {
-                0 => None,
-                1 => asset_list.selected_row().map(|row| row.index() as u32),
-                _ => unreachable!(),
-            };
-            relm2.stream().emit(Msg::ChangeAsset(index));
-            true
-        });
 
         let menu = self.history_menu.clone();
         self.history_list
@@ -404,6 +402,14 @@ impl Widgets {
             Msg::InvoiceIndex(adj.value() as u32)
         );
 
+        let invoice_text = self.addr_text.clone();
+        self.copy_addr_btn.connect_clicked(move |_| {
+            let buffer = invoice_text.buffer().unwrap();
+            let (start, end) = buffer.bounds();
+            let text = buffer.text(&start, &end, false).unwrap().to_string();
+            gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).set_text(&text);
+        });
+
         let invoice_text = self.invoice_text.clone();
         self.copy_invoice_btn.connect_clicked(move |_| {
             let buffer = invoice_text.buffer().unwrap();
@@ -538,17 +544,11 @@ impl Widgets {
     }
 
     pub fn update_invoice(&self, model: &mut ViewModel) {
-        let asset = model.asset_info();
-        self.currency_lbl.set_text(&asset.ticker());
-
-        let invoice_str = match model.asset() {
-            None => self.update_btc_invoice(model),
-            Some(asset) => self.update_rgb_invoice(model, *asset),
-        };
-        self.invoice_text.buffer().unwrap().set_text(&invoice_str);
+        self.update_btc_invoice(model);
+        self.update_rgb_invoice(model);
     }
 
-    fn update_btc_invoice(&self, model: &mut ViewModel) -> String {
+    fn update_btc_invoice(&self, model: &mut ViewModel) {
         let invoice = model.as_invoice();
         let wallet = model.wallet();
         let next_index = wallet.next_default_index();
@@ -557,11 +557,8 @@ impl Widgets {
 
         self.amount_chk.set_active(invoice.amount.is_some());
         self.amount_stp.set_sensitive(invoice.amount.is_some());
-        // TODO: Set upper limit for amount
 
-        self.index_chk.set_label("Use custom address no:");
         self.index_chk.set_active(invoice.index.is_some());
-        self.index_stp.set_visible(true);
         self.index_stp.set_sensitive(invoice.index.is_some());
         self.index_adj
             .set_upper((next_index.first_index() + 19) as f64);
@@ -569,38 +566,38 @@ impl Widgets {
             .set_value(invoice.index.unwrap_or(next_index).first_index() as f64);
         self.index_img.set_visible(!index_reuse);
 
-        match invoice.amount {
+        let invoice_str = match invoice.amount {
             Some(amount) => format!(
                 "bitcoin:{}?amount={}",
                 address,
                 amount as f64 / 100_000_000.0
             ),
             None => address.to_string(),
-        }
+        };
+        self.addr_text.buffer().unwrap().set_text(&invoice_str);
     }
 
-    fn update_rgb_invoice(&self, model: &mut ViewModel, contract_id: ContractId) -> String {
+    fn update_rgb_invoice(&self, model: &mut ViewModel) {
         let asset = model.asset_info();
+        let Some(contract_id) = *model.asset() else {
+            return;
+        };
 
+        let next_index = model.wallet().next_default_index();
+        let address = model.wallet().indexed_address(next_index);
+
+        self.currency_lbl.set_text(&asset.ticker());
         // TODO: Set upper limit for amount matching total supply
-        self.index_chk.set_label("Invoice to address");
-        self.index_stp.set_visible(false);
-        self.index_img.set_visible(false);
-
-        let wallet = model.wallet();
-        let next_index = wallet.next_default_index();
-        let address = wallet.indexed_address(next_index);
-
-        self.index_img.set_visible(false);
-        self.index_img.set_tooltip_text(None);
+        self.info_img.set_visible(false);
+        self.info_img.set_tooltip_text(None);
 
         let utxo = model.wallet().utxos().iter().find(|utxo| {
             let idx = utxo.addr_src.change.first_index();
             idx == 9 || idx == 10
         });
-        self.index_chk.set_sensitive(utxo.is_some());
-        let beneficiary = match (self.index_chk.is_active(), utxo) {
-            (true, Some(utxo)) => {
+        self.witness_chk.set_sensitive(utxo.is_some());
+        let beneficiary = match (self.witness_chk.is_active(), utxo) {
+            (false, Some(utxo)) => {
                 let txid = utxo.onchain.txid.into_inner();
                 let seal = GraphSeal::tapret_first(txid, utxo.vout);
                 model
@@ -611,15 +608,15 @@ impl Widgets {
                     .expect("unable to store data in RGB stash");
                 Beneficiary::BlindedSeal(seal.to_concealed_seal())
             }
-            (true, None) => {
-                self.index_chk.set_active(true);
+            (false, None) => {
+                self.witness_chk.set_active(true);
                 Beneficiary::WitnessUtxo(
                     rgb::bitcoin::Address::from_str(&address.to_string())
                         .unwrap()
                         .assume_checked(),
                 )
             }
-            (false, _) => Beneficiary::WitnessUtxo(
+            (true, _) => Beneficiary::WitnessUtxo(
                 rgb::bitcoin::Address::from_str(&address.to_string())
                     .unwrap()
                     .assume_checked(),
@@ -627,21 +624,23 @@ impl Widgets {
         };
 
         let mut builder = RgbInvoiceBuilder::rgb20(contract_id, beneficiary);
-        if self.amount_chk.is_active() {
-            let amount = self.amount_adj.value();
+        if self.value_chk.is_active() {
+            let amount = self.value_adj.value();
             let res = unsafe { builder.set_amount_approx(amount, asset.precision()) };
             builder = match res {
                 Ok(builder) => builder,
                 Err(builder) => {
-                    self.index_img.set_visible(false);
-                    self.index_img.set_tooltip_text(Some("invalid amount"));
+                    self.info_img.set_visible(false);
+                    self.info_img.set_tooltip_text(Some("invalid amount"));
                     builder
                 }
             }
         }
         let invoice = builder.finish();
-
-        invoice.to_string()
+        self.invoice_text
+            .buffer()
+            .unwrap()
+            .set_text(&invoice.to_string());
     }
 
     pub fn update_electrum_server(&self, electrum: &ElectrumServer) {

@@ -45,7 +45,7 @@ pub enum Msg {
     PayTo(payto::Msg),
     Fiat(Fiat),
     Refresh,
-    ChangeAsset(Option<u32>),
+    ChangeAsset(u32),
     InvoiceAmountToggle(bool),
     InvoiceIndexToggle(bool),
     InvoiceAmount(f64),
