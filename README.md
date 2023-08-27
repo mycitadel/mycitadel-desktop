@@ -11,7 +11,7 @@ allowing taproot multisig and locktime-based spending conditions.
 
 Do a reliable hodling (with inheritance options), corporate/organization, & 
 current accounts - or instant Lightning payments. Work with single- and 
-multisig setups, based on hardware, air-gapped, cold and server-side hot key 
+multisig setups, based on hardware, air gapped, cold and server-side hot key 
 storage, involving arbitrary complex time-lock scripts (with miniscript) and
 wide interoperability (because of use of wallet descriptors). 
 
