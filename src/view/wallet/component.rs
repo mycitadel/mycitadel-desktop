@@ -26,14 +26,12 @@ use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{ApplicationWindow, ResponseType};
 use relm::{init, Channel, Relm, StreamHandle, Update, Widget};
-use rgb::BlockchainResolver;
 use wallet::hd::{SegmentIndexes, UnhardenedIndex};
 use wallet::lex_order::lex_order::LexOrder;
 
 use super::pay::beneficiary_row::Beneficiary;
 use super::pay::FeeRate;
 use super::{pay, ElectrumState, Msg, ViewModel, Widgets};
-use crate::view::wallet::payto;
 use crate::view::{error_dlg, launch, settings, NotificationBoxExt};
 use crate::worker::{electrum, exchange, ElectrumWorker, ExchangeWorker};
 
@@ -41,7 +39,6 @@ pub struct Component {
     model: ViewModel,
     widgets: Widgets,
     pay_widgets: pay::Widgets,
-    payto_widgets: payto::Widgets,
 
     exchange_channel: Channel<exchange::Msg>,
     exchange_worker: ExchangeWorker,
@@ -52,8 +49,6 @@ pub struct Component {
 
     settings: relm::Component<settings::Component>,
     launcher_stream: Option<StreamHandle<launch::Msg>>,
-
-    resolver: BlockchainResolver,
 }
 
 impl Component {
@@ -357,19 +352,6 @@ impl Update for Component {
                     .as_ref()
                     .map(|stream| stream.emit(launch::Msg::ShowPage(launch::Page::Import)));
             }
-            Msg::ImportRgbContract(text) => {
-                // TODO: Report error properly
-                if let Err(err) = self.model.import_rgb_contract(text, &mut self.resolver) {
-                    eprintln!("Error: {err}");
-                } else {
-                    self.save();
-                }
-            }
-            Msg::ChangeAsset(index) => {
-                let success = self.model.change_asset(index);
-                debug_assert!(success, "invalid index selection");
-                self.widgets.update_asset(&mut self.model);
-            }
             Msg::Close => self.close(),
             Msg::About => {
                 self.launcher_stream
@@ -377,7 +359,6 @@ impl Update for Component {
                     .map(|stream| stream.emit(launch::Msg::About));
             }
             Msg::Pay(msg) => self.update_pay(msg),
-            Msg::PayTo(msg) => self.update_payto(msg),
             Msg::Settings => self.settings.emit(settings::Msg::View(
                 self.model.to_settings(),
                 self.model.path().clone(),
@@ -541,52 +522,6 @@ impl Component {
     }
 }
 
-impl Component {
-    fn update_payto(&mut self, event: payto::Msg) {
-        match event {
-            payto::Msg::Show => {
-                self.payto_widgets.update_ui(self.model.asset_info(), None);
-                self.payto_widgets.show();
-            }
-            payto::Msg::Open(invoice) => {
-                self.payto_widgets
-                    .update_ui(self.model.asset_info(), Some(invoice));
-                self.payto_widgets.show();
-            }
-            payto::Msg::Response(ResponseType::Ok) => {
-                let (psbt, change_index) = match self.sync_pay() {
-                    Some(data) => data,
-                    None => return,
-                };
-                self.payto_widgets.hide();
-                self.launcher_stream.as_ref().map(|stream| {
-                    stream.emit(launch::Msg::CreatePsbt(
-                        psbt,
-                        self.model.as_settings().network(),
-                    ))
-                });
-                // Update latest change index in wallet settings by sending message to the wallet
-                // component
-                if self
-                    .model
-                    .wallet_mut()
-                    .update_next_change_index(change_index)
-                {
-                    self.save();
-                }
-            }
-            payto::Msg::Response(ResponseType::Cancel) => {
-                self.payto_widgets.hide();
-            }
-            payto::Msg::Response(ResponseType::Other(1000)) => {
-                self.payto_widgets.hide();
-                self.update_pay(pay::Msg::Show);
-            }
-            _ => {} // Changes which update wallet tx
-        }
-    }
-}
-
 impl Widget for Component {
     // Specify the type of the root widget.
     type Root = ApplicationWindow;
@@ -615,7 +550,6 @@ impl Widget for Component {
 
         widgets.connect(relm);
         widgets.init_ui(&mut model);
-        widgets.update_asset(&mut model);
         widgets.show();
 
         let glade_src = include_str!("pay/pay.glade");
@@ -624,23 +558,12 @@ impl Widget for Component {
         pay_widgets.bind_beneficiary_model(relm, &model);
         pay_widgets.init_ui(&model);
 
-        let glade_src = include_str!("payto/payto.glade");
-        let payto_widgets = payto::Widgets::from_string(glade_src).expect("glade file broken");
-        payto_widgets.connect(relm);
-        payto_widgets.init_ui(&mut model);
-
         electrum_worker.sync();
-
-        // TODO: remove the panic and allow user to fix resolver settings
-        let resolver =
-            BlockchainResolver::with(&model.wallet().as_settings().electrum().to_string())
-                .expect("invalid electrum server");
 
         Component {
             model,
             widgets,
             pay_widgets,
-            payto_widgets,
             settings,
 
             exchange_channel,
@@ -651,7 +574,6 @@ impl Widget for Component {
             addr_buffer: empty!(),
 
             launcher_stream: None,
-            resolver,
         }
     }
 }

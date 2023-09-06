@@ -9,10 +9,8 @@
 // a copy of the AGPL-3.0 License along with this software. If not, see
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
-mod asset_row;
 mod component;
 mod pay;
-mod payto;
 mod view_model;
 mod widget;
 
@@ -37,15 +35,12 @@ pub enum Msg {
     About,
     Duplicate,
     Import,
-    ImportRgbContract(String),
     Launch(launch::Msg),
     Settings,
     Update(Vec<Signer>, BTreeSet<DescriptorClass>, ElectrumServer),
     Pay(pay::Msg),
-    PayTo(payto::Msg),
     Fiat(Fiat),
     Refresh,
-    ChangeAsset(u32),
     InvoiceAmountToggle(bool),
     InvoiceIndexToggle(bool),
     InvoiceAmount(f64),

@@ -11,35 +11,26 @@
 
 use std::collections::BTreeSet;
 use std::ffi::OsStr;
-use std::str::FromStr;
 
-use bitcoin::hashes::Hash;
 use bpro::{
-    AddressSummary, ElectrumSec, ElectrumServer, HistoryEntry, OnchainStatus, OnchainTxid,
-    UtxoTxid, WalletState,
+    AddressSummary, ElectrumSec, ElectrumServer, HistoryEntry, OnchainStatus, UtxoTxid, WalletState,
 };
 use chrono::{DateTime, NaiveDateTime, Utc};
 use electrum_client::HeaderNotification;
 use gladis::Gladis;
 use gtk::gdk_pixbuf::Pixbuf;
-use gtk::glib::{self, clone};
 use gtk::prelude::*;
 use gtk::{
-    gdk, Adjustment, ApplicationWindow, Button, CheckButton, Entry, HeaderBar, Image, Label,
-    ListBox, ListStore, Menu, MenuButton, MenuItem, Notebook, Popover, RadioMenuItem, SortColumn,
-    SortType, SpinButton, Spinner, Statusbar, TextBuffer, TextView, TreeView,
+    gdk, Adjustment, ApplicationWindow, Button, CheckButton, HeaderBar, Image, Label, ListStore,
+    Menu, MenuItem, Notebook, RadioMenuItem, SortColumn, SortType, SpinButton, Spinner, Statusbar,
+    TextView, TreeView,
 };
 use relm::Relm;
-use rgb::contract::{GraphSeal, SealWitness};
-use rgbstd::interface::FungibleAllocation;
-use rgbstd::persistence::Inventory;
-use rgbstd::stl::Precision;
-use rgbwallet::{Beneficiary, RgbInvoice, RgbInvoiceBuilder};
 use wallet::hd::SegmentIndexes;
 
-use super::asset_row::{self, AssetModel};
-use super::{payto, ElectrumState, Msg, ViewModel};
+use super::{ElectrumState, Msg, ViewModel};
 use crate::model::{display_accounting_amount, FormatDate, UI as UIColorTrait};
+use crate::view::wallet::pay;
 use crate::view::{launch, APP_ICON};
 use crate::worker::exchange::{Exchange, Fiat};
 
@@ -85,8 +76,6 @@ pub struct Widgets {
     refresh_spin: Spinner,
     refresh_img: Image,
 
-    main_tabs: Notebook,
-
     paybtc_btn: Button,
 
     balance_lead_lbl: Label,
@@ -103,27 +92,13 @@ pub struct Widgets {
     fiat_chf: RadioMenuItem,
     fiat_pair_lbl: Label,
 
-    asset_list: ListBox,
-
-    ticker_lbl: Label,
-    asset_lbl: Label,
-    details_lbl: Label,
-    id20_entry: Entry,
-    asset_lead_lbl: Label,
-    asset_tail_lbl: Label,
-    asset_zero_lbl: Label,
-
     history_store: ListStore,
     utxo_store: ListStore,
     address_store: ListStore,
-    allocation_store: ListStore,
-    operation_store: ListStore,
 
     address_list: TreeView,
     utxo_list: TreeView,
     history_list: TreeView,
-    allocation_list: TreeView,
-    operation_list: TreeView,
 
     history_menu: Menu,
     hist_copy_txid_mi: MenuItem,
@@ -163,28 +138,6 @@ pub struct Widgets {
     index_img: Image,
     addr_text: TextView,
     copy_addr_btn: Button,
-
-    // RGB invoice popover
-    receive20_btn: MenuButton,
-    currency_lbl: Label,
-    value_chk: CheckButton,
-    value_stp: SpinButton,
-    value_adj: Adjustment,
-    witness_chk: CheckButton,
-    info_img: Image,
-    invoice_text: TextView,
-    copy_invoice_btn: Button,
-
-    // Pay invoice popover
-    pay_popover: Popover,
-    paste_invoice_btn: Button,
-    pay_invoice_text: TextView,
-    parse_img: Image,
-    send20_btn: Button,
-
-    contract_text: TextBuffer,
-    import_popover: Popover,
-    import_btn: Button,
 }
 
 impl Widgets {
@@ -203,7 +156,7 @@ impl Widgets {
             relm,
             self.paybtc_btn,
             connect_clicked(_),
-            Msg::PayTo(payto::Msg::Show)
+            Msg::Pay(pay::Msg::Show)
         );
         connect!(relm, self.refresh_btn, connect_clicked(_), Msg::Refresh);
         connect!(relm, self.redefine_mi, connect_activate(_), Msg::Duplicate);
@@ -216,13 +169,6 @@ impl Widgets {
             Msg::Launch(launch::Msg::Show)
         );
         connect!(relm, self.about_mi, connect_activate(_), Msg::About);
-
-        connect!(
-            relm,
-            self.asset_list,
-            connect_row_activated(_, row),
-            Msg::ChangeAsset(row.index() as u32)
-        );
 
         let menu = self.history_menu.clone();
         self.history_list
@@ -410,75 +356,6 @@ impl Widgets {
             gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).set_text(&text);
         });
 
-        let invoice_text = self.invoice_text.clone();
-        self.copy_invoice_btn.connect_clicked(move |_| {
-            let buffer = invoice_text.buffer().unwrap();
-            let (start, end) = buffer.bounds();
-            let text = buffer.text(&start, &end, false).unwrap().to_string();
-            gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).set_text(&text);
-        });
-
-        let invoice_text = self.pay_invoice_text.clone();
-        self.paste_invoice_btn.connect_clicked(move |_| {
-            let Some(invoice) = gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).wait_for_text()
-            else {
-                return;
-            };
-            let buffer = invoice_text.buffer().unwrap();
-            buffer.set_text(&invoice);
-        });
-        self.send20_btn.set_sensitive(false);
-        self.pay_invoice_text.buffer().unwrap()
-            .connect_changed(clone!(@weak self.parse_img as parse_img, @weak self.send20_btn as send20_btn => move |buffer| {
-                let (start, end) = buffer.bounds();
-                let text = buffer.text(&start, &end, false).unwrap().to_string();
-                match RgbInvoice::from_str(text.trim()).map_err(|err| err.to_string()).and_then(|invoice| {
-                    let Some(ref iface) = invoice.iface else {
-                        return Ok(invoice);
-                    };
-                    if iface.as_str() != "RGB20" {
-                        return Err(format!("Unsupported interface {iface}, only RGB20 interface is supported"))
-                    }
-                    Ok(invoice)
-                }) {
-                    Ok(_invoice) => {
-                        parse_img.set_visible(false);
-                        send20_btn.set_sensitive(true);
-                    }
-                    Err(err) => {
-                        parse_img.set_tooltip_text(Some(&err.to_string()));
-                        parse_img.set_visible(true);
-                        send20_btn.set_sensitive(false);
-                    }
-                }
-            }));
-        let relm2 = relm.clone();
-        let buffer = self.pay_invoice_text.buffer().unwrap();
-        let pay_popover = self.pay_popover.clone();
-        self.send20_btn.connect_clicked(move |_| {
-            let (start, end) = buffer.bounds();
-            let text = buffer.text(&start, &end, false).unwrap().to_string();
-            if let Ok(invoice) = RgbInvoice::from_str(text.trim()) {
-                pay_popover.hide();
-                relm2.stream().emit(Msg::PayTo(payto::Msg::Open(invoice)))
-            }
-        });
-
-        let import_btn = self.import_btn.clone();
-        self.contract_text.connect_changed(move |buffer| {
-            import_btn.set_sensitive(buffer.char_count() > 0);
-        });
-        let popover = self.import_popover.clone();
-        let contract_text = self.contract_text.clone();
-        let stream = relm.stream().clone();
-        self.import_btn.connect_clicked(move |_| {
-            let (start, end) = contract_text.bounds();
-            let text = contract_text.text(&start, &end, false).unwrap().to_string();
-            stream.emit(Msg::ImportRgbContract(text));
-            contract_text.set_text("");
-            popover.hide();
-        });
-
         connect!(
             relm,
             self.window,
@@ -506,47 +383,17 @@ impl Widgets {
         self.fiat_eur.set_active(model.fiat == Fiat::EUR);
         self.fiat_chf.set_active(model.fiat == Fiat::CHF);
 
-        if !settings.is_rgb() {
-            self.main_tabs.set_show_tabs(false);
-        }
-
-        self.bind_asset_model(model.asset_model());
-
         self.history_store
             .set_sort_column_id(SortColumn::Index(6), SortType::Descending);
         self.utxo_store
             .set_sort_column_id(SortColumn::Index(4), SortType::Descending);
         self.address_store
             .set_sort_column_id(SortColumn::Index(6), SortType::Ascending);
-        self.operation_store
-            .set_sort_column_id(SortColumn::Index(6), SortType::Descending);
-        self.allocation_store
-            .set_sort_column_id(SortColumn::Index(3), SortType::Descending);
 
         self.update_invoice(model);
     }
 
-    fn bind_asset_model(&self, model: &AssetModel) {
-        self.asset_list
-            .bind_model(Some(model), move |item| asset_row::RowWidgets::init(item));
-    }
-
-    pub fn update_asset(&mut self, model: &mut ViewModel) {
-        let info = model.asset_info();
-        self.ticker_lbl.set_text(&info.ticker());
-        self.asset_lbl.set_text(&info.name());
-        self.details_lbl.set_text(&info.details());
-        self.id20_entry.set_text(&info.contract_name());
-
-        self.update_outpoints(model);
-        self.update_balance(model);
-        self.update_invoice(model);
-    }
-
-    pub fn update_invoice(&self, model: &mut ViewModel) {
-        self.update_btc_invoice(model);
-        self.update_rgb_invoice(model);
-    }
+    pub fn update_invoice(&self, model: &mut ViewModel) { self.update_btc_invoice(model); }
 
     fn update_btc_invoice(&self, model: &mut ViewModel) {
         let invoice = model.as_invoice();
@@ -575,72 +422,6 @@ impl Widgets {
             None => address.to_string(),
         };
         self.addr_text.buffer().unwrap().set_text(&invoice_str);
-    }
-
-    fn update_rgb_invoice(&self, model: &mut ViewModel) {
-        let asset = model.asset_info();
-        let Some(contract_id) = *model.asset() else {
-            return;
-        };
-
-        let next_index = model.wallet().next_default_index();
-        let address = model.wallet().indexed_address(next_index);
-
-        self.currency_lbl.set_text(&asset.ticker());
-        // TODO: Set upper limit for amount matching total supply
-        self.info_img.set_visible(false);
-        self.info_img.set_tooltip_text(None);
-
-        let utxo = model.wallet().utxos().iter().find(|utxo| {
-            let idx = utxo.addr_src.change.first_index();
-            idx == 9 || idx == 10
-        });
-        self.witness_chk.set_sensitive(utxo.is_some());
-        let beneficiary = match (self.witness_chk.is_active(), utxo) {
-            (false, Some(utxo)) => {
-                let txid = utxo.onchain.txid.into_inner();
-                let seal = GraphSeal::tapret_first(txid, utxo.vout);
-                model
-                    .wallet_mut()
-                    .rgb_mut()
-                    .expect("call to update_rgb_invoice must be done only in RGB context")
-                    .store_seal_secret(seal)
-                    .expect("unable to store data in RGB stash");
-                Beneficiary::BlindedSeal(seal.to_concealed_seal())
-            }
-            (false, None) => {
-                self.witness_chk.set_active(true);
-                Beneficiary::WitnessUtxo(
-                    rgb::bitcoin::Address::from_str(&address.to_string())
-                        .unwrap()
-                        .assume_checked(),
-                )
-            }
-            (true, _) => Beneficiary::WitnessUtxo(
-                rgb::bitcoin::Address::from_str(&address.to_string())
-                    .unwrap()
-                    .assume_checked(),
-            ),
-        };
-
-        let mut builder = RgbInvoiceBuilder::rgb20(contract_id, beneficiary);
-        if self.value_chk.is_active() {
-            let amount = self.value_adj.value();
-            let res = unsafe { builder.set_amount_approx(amount, asset.precision()) };
-            builder = match res {
-                Ok(builder) => builder,
-                Err(builder) => {
-                    self.info_img.set_visible(false);
-                    self.info_img.set_tooltip_text(Some("invalid amount"));
-                    builder
-                }
-            }
-        }
-        let invoice = builder.finish();
-        self.invoice_text
-            .buffer()
-            .unwrap()
-            .set_text(&invoice.to_string());
     }
 
     pub fn update_electrum_server(&self, electrum: &ElectrumServer) {
@@ -740,57 +521,7 @@ impl Widgets {
     }
 
     pub fn update_outpoints(&mut self, model: &mut ViewModel) {
-        match model.asset() {
-            None => {
-                self.update_utxos(model.wallet().utxos());
-            }
-            Some(_) => {
-                let info = model.asset_info();
-                let allocations = model.asset_allocations();
-                let rgb = model.wallet().rgb().unwrap();
-                self.update_allocations(
-                    allocations,
-                    info.precision(),
-                    &info.issue(),
-                    rgb.witness_txes(),
-                );
-            }
-        }
-    }
-
-    pub fn update_allocations(
-        &mut self,
-        allocations: Vec<FungibleAllocation>,
-        precision: u8,
-        issue: &str,
-        witness_txes: &BTreeSet<OnchainTxid>,
-    ) {
-        let pow = 10u64.pow(precision as u32);
-        self.allocation_store.clear();
-        for allocation in allocations {
-            let int = allocation.value / pow;
-            let fract = allocation.value - int * pow;
-            let date = match allocation.witness {
-                SealWitness::Genesis => issue.to_string(),
-                SealWitness::Present(txid) => witness_txes
-                    .iter()
-                    .find(|info| info.txid.as_ref() == txid.as_ref().as_slice())
-                    .map(OnchainTxid::format_date)
-                    .unwrap_or_else(|| s!("unknown")),
-                SealWitness::Extension => s!("issue"),
-            };
-            self.allocation_store.insert_with_values(None, &[
-                (0, &allocation.owner.to_string()),
-                (
-                    1,
-                    &format!("{int}.{fract}")
-                        .trim_end_matches('0')
-                        .trim_end_matches('.'),
-                ),
-                (2, &date),
-                (3, &0u32),
-            ]);
-        }
+        self.update_utxos(model.wallet().utxos());
     }
 
     pub fn update_utxos(&mut self, utxos: &BTreeSet<UtxoTxid>) {
@@ -834,10 +565,7 @@ impl Widgets {
         }
     }
 
-    pub fn update_balance(&self, model: &mut ViewModel) {
-        self.update_btc_balance(model);
-        self.update_asset_balance(model);
-    }
+    pub fn update_balance(&self, model: &mut ViewModel) { self.update_btc_balance(model); }
 
     pub fn update_btc_balance(&self, model: &mut ViewModel) {
         let wallet = model.wallet();
@@ -846,7 +574,7 @@ impl Widgets {
 
         display_accounting_amount(
             state.balance,
-            Precision::default(),
+            8,
             &self.balance_lead_lbl,
             &self.balance_tail_lbl,
             &self.balance_zero_lbl,
@@ -858,19 +586,6 @@ impl Widgets {
         self.balance_cents_lbl.set_text(cents);
 
         self.balance_lbl.set_text(&format!("{} sat", state.balance));
-    }
-
-    pub fn update_asset_balance(&self, model: &mut ViewModel) {
-        let asset = model.asset_info();
-        let precision: u8 = asset.property("precision");
-        let balance: u64 = asset.property("amount");
-        display_accounting_amount(
-            balance,
-            precision,
-            &self.asset_lead_lbl,
-            &self.asset_tail_lbl,
-            &self.asset_zero_lbl,
-        );
     }
 
     pub fn update_fiat(&self, fiat: Fiat) {
