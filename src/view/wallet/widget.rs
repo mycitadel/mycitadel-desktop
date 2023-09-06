@@ -22,8 +22,8 @@ use gtk::gdk_pixbuf::Pixbuf;
 use gtk::prelude::*;
 use gtk::{
     gdk, Adjustment, ApplicationWindow, Button, CheckButton, HeaderBar, Image, Label, ListStore,
-    Menu, MenuItem, Notebook, RadioMenuItem, SortColumn, SortType, SpinButton, Spinner, Statusbar,
-    TextView, TreeView,
+    Menu, MenuItem, RadioMenuItem, SortColumn, SortType, SpinButton, Spinner, Statusbar, TextView,
+    TreeView,
 };
 use relm::Relm;
 use wallet::hd::SegmentIndexes;

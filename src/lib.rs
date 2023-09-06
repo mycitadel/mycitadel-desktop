@@ -20,6 +20,7 @@ extern crate amplify;
 extern crate relm;
 #[macro_use]
 extern crate relm_derive;
+extern crate bitcoin_hwi as hwi;
 #[cfg(feature = "serde")]
 extern crate serde_crate as serde;
 
