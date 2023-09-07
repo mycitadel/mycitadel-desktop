@@ -1,6 +1,6 @@
 [package]
 name = "mycitadel-desktop"
-version = "2.0.0"
+version = "1.5.0"
 authors = ["Dr Maxim Orlovsky <orlovsky@pandoraprime.ch>"]
 description = "Bitcoin, Lightning and RGB wallet; part of MyCitadel software suite."
 repository = "https://github.com/mycitadel/mycitadel-desktop"
@@ -43,7 +43,7 @@ bitcoin_scripts = "0.10.0"
 bitcoin_blockchain = "0.10.0"
 descriptor-wallet = { version = "0.10.0", features = ["miniscript", "keygen", "hwi", "construct"] }
 bpro = { version = "0.5.0", features = ["electrum"] }
-bitcoin_hwi = "0.4.0"
+bitcoin_hwi = "0.4.1"
 electrum-client = "0.14.0"
 
 clap = { version = "~3.2.23", features = ["derive"], optional = true }
