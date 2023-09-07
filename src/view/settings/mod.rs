@@ -51,7 +51,6 @@ pub enum Msg {
     ConditionChange,
     NetworkChange(PublicNetwork),
     ToggleClass(DescriptorClass),
-    EnableRgb,
     ExportFormat(bool),
     ElectrumSelect(ElectrumPreset),
     ElectrumEdit,

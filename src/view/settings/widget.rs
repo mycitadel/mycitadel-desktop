@@ -21,9 +21,9 @@ use bpro::{
 use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{
-    gdk, glib, Adjustment, Box, Button, ButtonBox, CheckButton, ComboBoxText, Dialog, Entry, Grid,
-    HeaderBar, Image, Label, ListBox, ListBoxRow, ListStore, Notebook, ResponseType, SpinButton,
-    Spinner, TextBuffer, ToggleButton, ToolButton, Toolbar, TreePath, TreeView,
+    gdk, glib, Adjustment, Box, Button, ButtonBox, ComboBoxText, Dialog, Entry, Grid, HeaderBar,
+    Image, Label, ListBox, ListBoxRow, ListStore, Notebook, ResponseType, SpinButton, Spinner,
+    TextBuffer, ToggleButton, ToolButton, Toolbar, TreePath, TreeView,
 };
 use miniscript::Descriptor;
 use relm::{Relm, Sender};
@@ -84,7 +84,6 @@ pub struct Widgets {
     descr_segwit_tgl: ToggleButton,
     descr_nested_tgl: ToggleButton,
     descr_taproot_tgl: ToggleButton,
-    enable_rgb: CheckButton,
 
     network_box: ButtonBox,
     mainnet_tgl: ToggleButton,
@@ -160,8 +159,6 @@ impl Widgets {
             .set_active(model.network == PublicNetwork::Testnet);
         self.signet_tgl
             .set_active(model.network == PublicNetwork::Signet);
-
-        self.enable_rgb.set_active(model.use_rgb);
 
         self.update_electrum(&mut model.electrum_model.clone(), true, true);
         self.update_network();
@@ -290,8 +287,6 @@ impl Widgets {
             connect_clicked(_),
             Msg::ToggleClass(DescriptorClass::TaprootC0)
         );
-
-        connect!(relm, self.enable_rgb, connect_clicked(_), Msg::EnableRgb);
 
         connect!(
             relm,
@@ -427,8 +422,6 @@ impl Widgets {
             Ownership::External
         }
     }
-
-    pub fn is_rgb(&self) -> bool { self.enable_rgb.is_active() }
 
     pub fn network(&self) -> PublicNetwork {
         match (

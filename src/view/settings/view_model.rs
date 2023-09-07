@@ -114,7 +114,6 @@ pub struct ViewModel {
     pub new_wallet: bool,
     pub template: Option<WalletTemplate>,
     pub export_lnpbp: bool,
-    pub use_rgb: bool,
 
     // Non-persisting / dynamic data for this window
     pub active_signer: Option<Signer>,
@@ -126,31 +125,14 @@ impl TryFrom<&ViewModel> for WalletSettings {
     type Error = DescriptorError;
 
     fn try_from(model: &ViewModel) -> Result<Self, Self::Error> {
-        if model.use_rgb {
-            let mut iter = model.descriptor_classes.iter();
-            let Some(descriptor_class) = iter.next() else {
-                return Err(DescriptorError::NoDescriptorClasses);
-            };
-            if iter.count() > 0 {
-                return Err(DescriptorError::MultipleDescriptorsNotAllowed);
-            }
-            WalletSettings::new_rgb(
-                model.signers.clone(),
-                model.spending_model.spending_conditions(),
-                *descriptor_class,
-                model.network,
-                model.electrum_model.clone().into(),
-            )
-        } else {
-            WalletSettings::with_unchecked(
-                model.signers.clone(),
-                model.spending_model.spending_conditions(),
-                model.descriptor_classes.clone(),
-                model.terminal_derivation(),
-                model.network,
-                model.electrum_model.clone().into(),
-            )
-        }
+        WalletSettings::with_unchecked(
+            model.signers.clone(),
+            model.spending_model.spending_conditions(),
+            model.descriptor_classes.clone(),
+            model.terminal_derivation(),
+            model.network,
+            model.electrum_model.clone().into(),
+        )
     }
 }
 
@@ -171,7 +153,6 @@ impl ViewModel {
             support_multiclass: false,
             export_lnpbp: false,
             new_wallet: true,
-            use_rgb: false,
         }
     }
 
@@ -186,7 +167,6 @@ impl ViewModel {
         self.stream = stream;
         self.descriptor_classes = bset![template.descriptor_class];
         self.support_multiclass = false;
-        self.use_rgb = template.use_rgb;
         self.network = template.network;
         self.signers = empty!();
         self.spending_model.reset_conditions(&template.conditions);

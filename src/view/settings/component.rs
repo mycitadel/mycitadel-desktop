@@ -12,10 +12,9 @@
 use std::path::Path;
 use std::str::FromStr;
 
-use ::wallet::descriptors::DescriptorClass;
 use ::wallet::onchain::PublicNetwork;
 use bitcoin::util::bip32::{DerivationPath, Fingerprint};
-use bpro::{ElectrumPreset, Signer, SpendingCondition, WalletSettings};
+use bpro::{ElectrumPreset, Signer, WalletSettings};
 use gladis::Gladis;
 use gtk::prelude::*;
 use gtk::{Dialog, ResponseType};
@@ -71,37 +70,6 @@ impl Component {
             .update_descriptor(self.model.descriptor.as_ref(), self.model.export_lnpbp);
         if let Err(err) = res {
             return self.widgets.show_error(&err.to_string());
-        }
-
-        if self.model.use_rgb {
-            if self.model.descriptor_classes.len() > 1
-                || !self
-                    .model
-                    .descriptor_classes
-                    .contains(&DescriptorClass::TaprootC0)
-            {
-                return self
-                    .widgets
-                    .show_error("RGB can be currently used only with Taproot descriptors");
-            }
-            if self.model.signers.len() > 1 {
-                return self
-                    .widgets
-                    .show_error("RGB supported only for a single-sig wallets");
-            }
-            let spending_conditions = self.model.spending_model.spending_conditions();
-            if spending_conditions.len() != 1 {
-                return self
-                    .widgets
-                    .show_error("RGB support is not yet provided for complex spending conditions");
-            }
-            if let Some((_, condition)) = spending_conditions.first() {
-                if condition != &SpendingCondition::all() {
-                    return self.widgets.show_error(
-                        "RGB support is not yet provided for complex spending conditions",
-                    );
-                }
-            };
         }
 
         for signer in &self.model.signers {
@@ -443,7 +411,6 @@ impl Update for Component {
                         .update_descr_classes(&self.model.descriptor_classes);
                 }
             }
-            Msg::EnableRgb => self.model.use_rgb = self.widgets.is_rgb(),
             Msg::NetworkChange(network) if network != self.model.network => {
                 self.model.network = network;
                 self.widgets.update_network();

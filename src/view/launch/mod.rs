@@ -29,8 +29,6 @@ pub enum Msg {
     Close,
     Template(i32),
     Duplicate(WalletSettings, String),
-    ToggleRgb,
-    ToggleTaproot,
     Import,
     Wallet,
     Psbt(Option<PublicNetwork>),

@@ -174,7 +174,7 @@
                     <child>
                       <object class="GtkSwitch" id="rgb_swch">
                         <property name="visible">True</property>
-                        <property name="sensitive">True</property>
+                        <property name="sensitive">False</property>
                         <property name="can-focus">True</property>
                         <property name="tooltip-text" translatable="yes">Wallet should support RGB smart contracts</property>
                         <property name="margin-start">13</property>
