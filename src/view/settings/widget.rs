@@ -79,7 +79,6 @@ pub struct Widgets {
 
     descriptor_buf: TextBuffer,
     descriptor_box: ButtonBox,
-    derivation_box: Box,
     descr_legacy_tgl: ToggleButton,
     descr_segwit_tgl: ToggleButton,
     descr_nested_tgl: ToggleButton,
@@ -89,8 +88,6 @@ pub struct Widgets {
     mainnet_tgl: ToggleButton,
     testnet_tgl: ToggleButton,
     signet_tgl: ToggleButton,
-    export_core_tgl: ToggleButton,
-    export_lnpbp_tgl: ToggleButton,
     electr_blockstream_tgl: ToggleButton,
     electr_mycitadel_tgl: ToggleButton,
     electr_custom_tgl: ToggleButton,
@@ -126,7 +123,6 @@ impl Widgets {
             let new_wallet = model.is_new_wallet();
             self.signers_tb.set_sensitive(new_wallet);
             self.spending_box.set_sensitive(new_wallet);
-            self.derivation_box.set_sensitive(new_wallet);
             self.descriptor_box.set_sensitive(new_wallet);
 
             self.network_box.set_sensitive(new_wallet);
@@ -166,7 +162,7 @@ impl Widgets {
         self.update_signers(&model.signers);
         self.update_signer_details(None, model.network, model.bip43());
         self.update_descr_classes(&model.descriptor_classes);
-        self.update_descriptor(model.descriptor.as_ref(), model.export_lnpbp);
+        self.update_descriptor(model.descriptor.as_ref());
 
         self.dialog.show();
     }
@@ -209,7 +205,7 @@ impl Widgets {
             relm,
             self.seed_mine_tgl,
             connect_clicked(_),
-            Msg::ExportFormat(false)
+            Msg::SignerOwnershipChange
         );
         connect!(
             relm,
@@ -248,19 +244,6 @@ impl Widgets {
             self.signet_tgl,
             connect_clicked(_),
             Msg::NetworkChange(PublicNetwork::Signet)
-        );
-
-        connect!(
-            relm,
-            self.export_core_tgl,
-            connect_clicked(_),
-            Msg::ExportFormat(false)
-        );
-        connect!(
-            relm,
-            self.export_lnpbp_tgl,
-            connect_clicked(_),
-            Msg::ExportFormat(true)
         );
 
         connect!(
@@ -745,15 +728,10 @@ impl Widgets {
         }
     }
 
-    pub fn update_descriptor(
-        &mut self,
-        descriptor: Option<&Descriptor<DerivationAccount>>,
-        format: bool,
-    ) {
-        let text = match (descriptor, format) {
-            (Some(descriptor), false) => format!("{:#}", descriptor),
-            (Some(descriptor), true) => format!("{}", descriptor),
-            (None, _) => s!(""),
+    pub fn update_descriptor(&mut self, descriptor: Option<&Descriptor<DerivationAccount>>) {
+        let text = match descriptor {
+            Some(descriptor) => format!("{:#}", descriptor),
+            None => s!(""),
         };
         self.descriptor_buf.set_text(&text);
     }

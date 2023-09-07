@@ -113,7 +113,6 @@ pub struct ViewModel {
     // Data provided by the parent window
     pub new_wallet: bool,
     pub template: Option<WalletTemplate>,
-    pub export_lnpbp: bool,
 
     // Non-persisting / dynamic data for this window
     pub active_signer: Option<Signer>,
@@ -151,7 +150,6 @@ impl ViewModel {
             template: None,
             descriptor_classes: bset![DescriptorClass::SegwitV0],
             support_multiclass: false,
-            export_lnpbp: false,
             new_wallet: true,
         }
     }
@@ -173,7 +171,6 @@ impl ViewModel {
         self.electrum_model = ElectrumModel::new(template.network);
         self.template = Some(template);
 
-        self.export_lnpbp = false;
         self.active_signer = None;
         self.devices = empty!();
         self.descriptor = None;
@@ -202,7 +199,6 @@ impl ViewModel {
             .reset_conditions(settings.spending_conditions());
         self.electrum_model = settings.electrum().clone().into();
 
-        self.export_lnpbp = true;
         self.template = None;
         self.active_signer = None;
         self.devices = empty!();

@@ -67,7 +67,7 @@ impl Component {
     fn sync(&mut self) {
         let res = self.model.update_descriptor();
         self.widgets
-            .update_descriptor(self.model.descriptor.as_ref(), self.model.export_lnpbp);
+            .update_descriptor(self.model.descriptor.as_ref());
         if let Err(err) = res {
             return self.widgets.show_error(&err.to_string());
         }
@@ -149,11 +149,6 @@ impl Update for Component {
                     self.model.bip43(),
                 );
                 self.model.active_signer = signer.cloned();
-                return;
-            }
-            Msg::ExportFormat(lnpbp) => {
-                self.model.export_lnpbp = lnpbp;
-                self.sync();
                 return;
             }
             Msg::ConditionSelect => {
