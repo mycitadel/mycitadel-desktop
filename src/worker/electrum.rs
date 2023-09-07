@@ -206,7 +206,9 @@ fn electrum_sync(
                                     .and_then(|header| {
                                         NaiveDateTime::from_timestamp_opt(header.time as i64, 0)
                                     })
-                                    .map(|naive| DateTime::<Utc>::from_utc(naive, Utc));
+                                    .map(|naive| {
+                                        DateTime::<Utc>::from_naive_utc_and_offset(naive, Utc)
+                                    });
                             }
                             meta
                         })
@@ -270,7 +272,9 @@ fn electrum_sync(
                                     .and_then(|header| {
                                         NaiveDateTime::from_timestamp_opt(header.time as i64, 0)
                                     })
-                                    .map(|naive| DateTime::<Utc>::from_utc(naive, Utc));
+                                    .map(|naive| {
+                                        DateTime::<Utc>::from_naive_utc_and_offset(naive, Utc)
+                                    });
                             }
                             utxo
                         })

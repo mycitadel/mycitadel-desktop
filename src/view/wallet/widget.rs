@@ -481,7 +481,8 @@ impl Widgets {
     pub fn update_last_block(&mut self, last_block: &HeaderNotification) {
         let ts = last_block.header.time;
         let naive = NaiveDateTime::from_timestamp_opt(ts as i64, 0).expect("invalid block time");
-        let dt = DateTime::<chrono::Local>::from(DateTime::<Utc>::from_utc(naive, Utc));
+        let dt =
+            DateTime::<chrono::Local>::from(DateTime::<Utc>::from_naive_utc_and_offset(naive, Utc));
         let time = dt.time();
         self.lastblock_lbl
             .set_text(&format!("{}", time.format("%-I:%M %p")));
