@@ -57,12 +57,7 @@ pub fn display_accounting_amount(
         }
         (_, _) => {
             label1.set_text("");
-            label2.set_text(&format!(
-                "{}.{:0<2$}",
-                int,
-                remain.trim_end_matches('0'),
-                zeros
-            ));
+            label2.set_text(&format!("{}.{:0<2$}", int, remain, zeros));
             label3.set_text("");
         }
     }
