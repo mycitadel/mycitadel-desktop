@@ -17,7 +17,7 @@ use ::wallet::descriptors::InputDescriptor;
 use ::wallet::psbt::Psbt;
 use bitcoin::blockdata::constants::WITNESS_SCALE_FACTOR;
 use bitcoin::policy::DUST_RELAY_TX_FEE;
-use bitcoin::{EcdsaSighashType, Sequence, Transaction, TxIn, TxOut};
+use bitcoin::{EcdsaSighashType, Sequence, Transaction, TxIn, TxOut, Witness};
 use bitcoin_blockchain::locks::{LockTime, SeqNo};
 use bitcoin_scripts::PubkeyScript;
 use bpro::psbt::McKeys;
@@ -28,6 +28,7 @@ use gtk::{ApplicationWindow, ResponseType};
 use relm::{init, Channel, Relm, StreamHandle, Update, Widget};
 use wallet::hd::{SegmentIndexes, UnhardenedIndex};
 use wallet::lex_order::lex_order::LexOrder;
+use wallet::psbt::PsbtVersion;
 
 use super::pay::beneficiary_row::Beneficiary;
 use super::pay::FeeRate;
@@ -359,6 +360,33 @@ impl Update for Component {
                     .map(|stream| stream.emit(launch::Msg::About));
             }
             Msg::Pay(msg) => self.update_pay(msg),
+            Msg::Rbf(txid) => {
+                let Some(entry) = self
+                    .model
+                    .wallet()
+                    .history()
+                    .iter()
+                    .find(|entry| entry.tx.txid() == txid).cloned()
+                else {
+                    return;
+                };
+                let mut tx = entry.tx;
+                for input in &mut tx.input {
+                    input.witness = Witness::new();
+                }
+                let mut psbt = Psbt::with(tx, PsbtVersion::V0).unwrap();
+                for (no, input) in psbt.inputs.iter_mut().enumerate() {
+                    if let Some(info) = entry.debit.get(&(no as u32)) {
+                        input.
+                    }
+                }
+                self.launcher_stream.as_ref().map(|stream| {
+                    stream.emit(launch::Msg::CreatePsbt(
+                        psbt,
+                        self.model.as_settings().network(),
+                    ))
+                });
+            }
             Msg::Settings => self.settings.emit(settings::Msg::View(
                 self.model.to_settings(),
                 self.model.path().clone(),

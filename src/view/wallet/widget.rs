@@ -13,7 +13,9 @@ use std::collections::BTreeSet;
 use std::ffi::OsStr;
 
 use baid58::Baid58;
+use bitcoin::hashes::hex::FromHex;
 use bitcoin::hashes::Hash;
+use bitcoin::Txid;
 use bpro::{
     AddressSummary, ElectrumSec, ElectrumServer, HistoryEntry, OnchainStatus, UtxoTxid, WalletState,
 };
@@ -108,6 +110,7 @@ pub struct Widgets {
     hist_copy_amount_mi: MenuItem,
     hist_copy_balance_mi: MenuItem,
     hist_copy_height_mi: MenuItem,
+    rbf_mi: MenuItem,
 
     address_menu: Menu,
     addr_copy_mi: MenuItem,
@@ -251,6 +254,15 @@ impl Widgets {
                 let val = list.model().unwrap().value(&iter, 6);
                 gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD)
                     .set_text(&val.get::<u32>().unwrap().to_string());
+            }
+        });
+        let list = self.history_list.clone();
+        let relm2 = relm.clone();
+        self.rbf_mi.connect_activate(move |_| {
+            if let Some(iter) = list.selection().selected().map(|(_, iter)| iter) {
+                let val = list.model().unwrap().value(&iter, 1);
+                let txid = Txid::from_hex(val.get::<&str>().unwrap()).unwrap();
+                relm2.stream().emit(Msg::Rbf(txid));
             }
         });
 
