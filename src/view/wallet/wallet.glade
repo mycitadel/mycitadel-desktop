@@ -547,7 +547,7 @@
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="valign">baseline</property>
-                            <property name="label" translatable="yes">0.0000</property>
+                            <property name="label" translatable="yes">0</property>
                             <attributes>
                               <attribute name="foreground" value="#777776767b7b"/>
                             </attributes>
@@ -563,7 +563,6 @@
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="valign">baseline</property>
-                            <property name="label" translatable="yes">9783</property>
                             <property name="selectable">True</property>
                             <attributes>
                               <attribute name="scale" value="2"/>
@@ -897,6 +896,9 @@
                         <property name="model">history_store</property>
                         <property name="reorderable">True</property>
                         <property name="search-column">5</property>
+                        <child internal-child="selection">
+                          <object class="GtkTreeSelection"/>
+                        </child>
                         <child>
                           <object class="GtkTreeViewColumn">
                             <property name="clickable">True</property>
@@ -1038,6 +1040,9 @@
                         <property name="reorderable">True</property>
                         <property name="search-column">5</property>
                         <property name="tooltip-column">0</property>
+                        <child internal-child="selection">
+                          <object class="GtkTreeSelection"/>
+                        </child>
                         <child>
                           <object class="GtkTreeViewColumn">
                             <property name="resizable">True</property>
@@ -1126,6 +1131,9 @@
                         <property name="model">address_store</property>
                         <property name="reorderable">True</property>
                         <property name="search-column">0</property>
+                        <child internal-child="selection">
+                          <object class="GtkTreeSelection"/>
+                        </child>
                         <child>
                           <object class="GtkTreeViewColumn">
                             <property name="clickable">True</property>

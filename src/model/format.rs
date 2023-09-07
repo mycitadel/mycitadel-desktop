@@ -47,21 +47,21 @@ pub fn display_accounting_amount(
         (0, 0) => {
             label1.set_text("");
             label2.set_text("");
-            label3.set_text(&format!("0.{:01$}", "", zeros));
+            label3.set_text(&format!("0.{:01$}", 0, zeros));
         }
         (0, _) => {
-            label1.set_text(&format!("0.{:01$}", "", zeros));
+            label1.set_text(&format!("0.{:01$}", 0, zeros));
             label2.set_text(&remain);
             label3.set_text("");
         }
         (_, 0) => {
             label1.set_text("");
             label2.set_text(&format!("{}", int));
-            label3.set_text(&format!(".{:0<1$}", "", precision as usize));
+            label3.set_text(&format!(".{:01$}", 0, precision as usize));
         }
         (_, _) => {
             label1.set_text("");
-            label2.set_text(&format!("{}.{}", int, remain));
+            label2.set_text(&format!("{}.{:02$}", int, remain, zeros));
             label3.set_text("");
         }
     }
