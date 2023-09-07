@@ -13,7 +13,9 @@ use std::collections::BTreeSet;
 use std::ffi::OsStr;
 
 use baid58::Baid58;
+use bitcoin::hashes::hex::FromHex;
 use bitcoin::hashes::Hash;
+use bitcoin::Txid;
 use bpro::{
     AddressSummary, ElectrumSec, ElectrumServer, HistoryEntry, OnchainStatus, UtxoTxid, WalletState,
 };
@@ -23,9 +25,9 @@ use gladis::Gladis;
 use gtk::gdk_pixbuf::Pixbuf;
 use gtk::prelude::*;
 use gtk::{
-    gdk, Adjustment, ApplicationWindow, Button, CheckButton, HeaderBar, Image, Label, ListStore,
-    Menu, MenuItem, RadioMenuItem, SortColumn, SortType, SpinButton, Spinner, Statusbar, TextView,
-    TreeView,
+    gdk, Adjustment, ApplicationWindow, Button, CellRendererText, CheckButton, HeaderBar, Image,
+    Label, ListStore, Menu, MenuItem, RadioMenuItem, SortColumn, SortType, SpinButton, Spinner,
+    Statusbar, TextView, TreeView,
 };
 use relm::Relm;
 use wallet::hd::SegmentIndexes;
@@ -108,6 +110,7 @@ pub struct Widgets {
     hist_copy_amount_mi: MenuItem,
     hist_copy_balance_mi: MenuItem,
     hist_copy_height_mi: MenuItem,
+    description: CellRendererText,
 
     address_menu: Menu,
     addr_copy_mi: MenuItem,
@@ -306,6 +309,18 @@ impl Widgets {
             }
         });
 
+        //let descr_col = self.history_list.column(3).unwrap();
+        let sender = relm.stream().clone();
+        let model = self.history_list.model().unwrap();
+        let store = self.history_store.clone();
+        self.description.connect_edited(move |_, path, s| {
+            let iter = model.iter(&path).unwrap();
+            let val = model.value(&iter, 1);
+            let txid = val.get::<&str>().unwrap();
+            store.set_value(&iter, 7, &s.into());
+            sender.emit(Msg::EditLabel(Txid::from_hex(txid).unwrap(), s.to_string()));
+        });
+
         connect!(
             relm,
             self.fiat_usd,
@@ -498,7 +513,6 @@ impl Widgets {
             balance += item.balance();
             let btc = format!("{:+.08}", item.balance() as f64 / 100_000_000.0);
             let btc_balance = format!("{:.08}", balance as f64 / 100_000_000.0);
-            let descr_color = gdk::RGBA::new(80.0 / 255.0, 80.0 / 255.0, 80.0 / 255.0, 1.0);
             let date = match item.onchain.status {
                 OnchainStatus::Blockchain(height) => item
                     .onchain
@@ -521,10 +535,8 @@ impl Widgets {
                 (4, &date),
                 (5, &item.color()),
                 (6, &sort),
-                // TODO: Use description
-                (7, &baid.mnemonic()),
-                // TODO: Change color depending on the presence of description
-                (8, &descr_color),
+                (7, &item.comment.as_ref().map(|cmt| &cmt.label)),
+                (8, &baid.mnemonic()),
             ]);
         }
     }

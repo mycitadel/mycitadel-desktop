@@ -371,6 +371,13 @@ impl Update for Component {
             Msg::ExchangeRefresh(msg) => {
                 self.handle_exchange(msg);
             }
+            Msg::EditLabel(txid, label) => {
+                self.model
+                    .wallet_mut()
+                    .set_comment(txid, label)
+                    .expect("txid must be known");
+                self.save();
+            }
             Msg::Refresh => {
                 self.electrum_worker.sync();
             }

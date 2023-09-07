@@ -16,6 +16,7 @@ mod widget;
 
 use std::collections::BTreeSet;
 
+use bitcoin::Txid;
 use bpro::{ElectrumSec, ElectrumServer, Signer};
 use relm::StreamHandle;
 pub(super) use view_model::ViewModel;
@@ -41,6 +42,7 @@ pub enum Msg {
     Pay(pay::Msg),
     Fiat(Fiat),
     Refresh,
+    EditLabel(Txid, String),
     InvoiceAmountToggle(bool),
     InvoiceIndexToggle(bool),
     InvoiceAmount(f64),
