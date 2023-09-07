@@ -509,6 +509,10 @@ impl Widgets {
             };
             let txid = item.onchain.txid;
             let baid = Baid58::with("txid", txid.into_inner());
+            let mut sort = item.onchain.status.into_u32();
+            if sort == 0 {
+                sort = u32::MAX;
+            }
             self.history_store.insert_with_values(None, &[
                 (0, &item.icon_name()),
                 (1, &txid.to_string()),
@@ -516,7 +520,7 @@ impl Widgets {
                 (3, &btc_balance),
                 (4, &date),
                 (5, &item.color()),
-                (6, &item.onchain.status.into_u32()),
+                (6, &sort),
                 // TODO: Use description
                 (7, &baid.mnemonic()),
                 // TODO: Change color depending on the presence of description
