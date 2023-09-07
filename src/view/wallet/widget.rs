@@ -595,7 +595,7 @@ impl Widgets {
         self.balance_cents_lbl.set_text(cents);
 
         self.volume_lbl
-            .set_text(&format!("₿ {:.02}", state.volume as f64 / 100_000_000.0));
+            .set_text(&format!("₿ {:.}", (state.volume as f64 / 100_000_000.0)));
     }
 
     pub fn update_fiat(&self, fiat: Fiat) {

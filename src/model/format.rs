@@ -40,28 +40,29 @@ pub fn display_accounting_amount(
     let pow = 10u64.pow(precision as u32);
     let int = amount / pow;
     let fract = amount - int * pow;
-    let remain = format!("{fract}").trim_end_matches('0').to_string();
+    let f = format!("{:01$}", fract, precision as usize);
+    let remain = f.trim_start_matches('0');
     let zeros = precision as usize - remain.len();
 
     match (int, fract) {
-        (0, 0) => {
-            label1.set_text("");
-            label2.set_text("");
-            label3.set_text(&format!("0.{:01$}", 0, zeros));
-        }
         (0, _) => {
             label1.set_text(&format!("0.{:01$}", 0, zeros));
-            label2.set_text(&remain);
+            label2.set_text(remain);
             label3.set_text("");
         }
         (_, 0) => {
             label1.set_text("");
             label2.set_text(&format!("{}", int));
-            label3.set_text(&format!(".{:01$}", 0, precision as usize));
+            label3.set_text(".0");
         }
         (_, _) => {
             label1.set_text("");
-            label2.set_text(&format!("{}.{:02$}", int, remain, zeros));
+            label2.set_text(&format!(
+                "{}.{:0<2$}",
+                int,
+                remain.trim_end_matches('0'),
+                zeros
+            ));
             label3.set_text("");
         }
     }
