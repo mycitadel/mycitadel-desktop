@@ -978,13 +978,14 @@
                         <child>
                           <object class="GtkTreeViewColumn">
                             <property name="resizable">True</property>
-                            <property name="title" translatable="yes">Amount</property>
+                            <property name="title" translatable="yes">Amount, ₿</property>
                             <property name="clickable">True</property>
                             <property name="reorderable">True</property>
                             <property name="sort-column-id">2</property>
                             <child>
                               <object class="GtkCellRendererText" id="amount">
                                 <property name="alignment">right</property>
+                                <property name="family">monospace</property>
                                 <property name="weight">600</property>
                               </object>
                               <attributes>
@@ -997,13 +998,14 @@
                         <child>
                           <object class="GtkTreeViewColumn">
                             <property name="resizable">True</property>
-                            <property name="title" translatable="yes">Balance</property>
+                            <property name="title" translatable="yes">Balance, ₿</property>
                             <property name="clickable">True</property>
                             <property name="reorderable">True</property>
                             <property name="sort-column-id">3</property>
                             <child>
                               <object class="GtkCellRendererText" id="balance">
                                 <property name="alignment">right</property>
+                                <property name="family">monospace</property>
                               </object>
                               <attributes>
                                 <attribute name="text">3</attribute>
@@ -1085,13 +1087,14 @@
                         <child>
                           <object class="GtkTreeViewColumn">
                             <property name="resizable">True</property>
-                            <property name="title" translatable="yes">Value</property>
+                            <property name="title" translatable="yes">Value, ₿</property>
                             <property name="clickable">True</property>
                             <property name="reorderable">True</property>
                             <property name="sort-column-id">2</property>
                             <child>
                               <object class="GtkCellRendererText" id="value2">
                                 <property name="alignment">right</property>
+                                <property name="family">monospace</property>
                               </object>
                               <attributes>
                                 <attribute name="text">2</attribute>
@@ -1209,13 +1212,15 @@
                         <child>
                           <object class="GtkTreeViewColumn">
                             <property name="resizable">True</property>
-                            <property name="title" translatable="yes">Volume</property>
+                            <property name="title" translatable="yes">Volume, ₿</property>
                             <property name="clickable">True</property>
                             <property name="reorderable">True</property>
                             <property name="sort-column-id">2</property>
                             <child>
                               <object class="GtkCellRendererText" id="volume">
                                 <property name="alignment">right</property>
+                                <property name="family">monospace</property>
+                                <property name="foreground-rgba">rgb(119,118,123)</property>
                               </object>
                               <attributes>
                                 <attribute name="text">2</attribute>
@@ -1226,13 +1231,14 @@
                         <child>
                           <object class="GtkTreeViewColumn">
                             <property name="resizable">True</property>
-                            <property name="title" translatable="yes">Balance</property>
+                            <property name="title" translatable="yes">Balance, ₿</property>
                             <property name="clickable">True</property>
                             <property name="reorderable">True</property>
                             <property name="sort-column-id">1</property>
                             <child>
                               <object class="GtkCellRendererText" id="balance2">
                                 <property name="alignment">right</property>
+                                <property name="family">monospace</property>
                                 <property name="weight">600</property>
                               </object>
                               <attributes>
@@ -1564,10 +1570,7 @@
                   <object class="GtkLabel">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
-                    <property name="label" translatable="yes">Balance</property>
-                    <attributes>
-                      <attribute name="weight" value="bold"/>
-                    </attributes>
+                    <property name="label" translatable="yes">Total tx volume:</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -1576,7 +1579,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkLabel" id="balance_lbl">
+                  <object class="GtkLabel" id="volume_lbl">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <property name="margin-left">3</property>

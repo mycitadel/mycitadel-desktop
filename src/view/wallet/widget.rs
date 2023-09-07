@@ -120,7 +120,7 @@ pub struct Widgets {
 
     status_bar: Statusbar,
     status_lbl: Label,
-    balance_lbl: Label,
+    volume_lbl: Label,
     lastblock_lbl: Label,
     height_lbl: Label,
     network_lbl: Label,
@@ -586,7 +586,8 @@ impl Widgets {
         self.balance_fiat_lbl.set_text(fiat);
         self.balance_cents_lbl.set_text(cents);
 
-        self.balance_lbl.set_text(&format!("{} sat", state.balance));
+        self.volume_lbl
+            .set_text(&format!("₿ {:.02}", state.volume as f64 / 100_000_000.0));
     }
 
     pub fn update_fiat(&self, fiat: Fiat) {
