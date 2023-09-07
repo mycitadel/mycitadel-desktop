@@ -965,7 +965,7 @@
                             <property name="sort-column-id">1</property>
                             <child>
                               <object class="GtkCellRendererText" id="description">
-                                <property name="ellipsize">middle</property>
+                                <property name="ellipsize">end</property>
                               </object>
                               <attributes>
                                 <attribute name="text">7</attribute>
@@ -1076,7 +1076,9 @@
                               <object class="GtkCellRendererText" id="txid2">
                                 <property name="ellipsize">middle</property>
                                 <property name="family">monospace</property>
+                                <property name="scale">0.80</property>
                                 <property name="width-chars">66</property>
+                                <property name="foreground-rgba">rgb(154,153,150)</property>
                               </object>
                               <attributes>
                                 <attribute name="text">1</attribute>
