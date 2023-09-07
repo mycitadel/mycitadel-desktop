@@ -35,6 +35,7 @@ once_cell = "1.10.0"
 chrono = "0.4.19"
 urlencoding = "2.1.0"
 ureq = { version = "2.4.0", features = ["json"] }
+baid58 = "0.4.4"
 
 amplify = "3.14.2"
 bitcoin = "0.29.2"

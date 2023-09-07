@@ -12,6 +12,8 @@
 use std::collections::BTreeSet;
 use std::ffi::OsStr;
 
+use baid58::Baid58;
+use bitcoin::hashes::Hash;
 use bpro::{
     AddressSummary, ElectrumSec, ElectrumServer, HistoryEntry, OnchainStatus, UtxoTxid, WalletState,
 };
@@ -505,16 +507,18 @@ impl Widgets {
                     .unwrap_or_else(|| format!("{height}")),
                 OnchainStatus::Mempool => s!("mempool"),
             };
+            let txid = item.onchain.txid;
+            let baid = Baid58::with("txid", txid.into_inner());
             self.history_store.insert_with_values(None, &[
                 (0, &item.icon_name()),
-                (1, &item.onchain.txid.to_string()),
+                (1, &txid.to_string()),
                 (2, &btc),
                 (3, &btc_balance),
                 (4, &date),
                 (5, &item.color()),
                 (6, &item.onchain.status.into_u32()),
                 // TODO: Use description
-                (7, &item.onchain.txid.to_string()),
+                (7, &baid.mnemonic()),
                 // TODO: Change color depending on the presence of description
                 (8, &descr_color),
             ]);
