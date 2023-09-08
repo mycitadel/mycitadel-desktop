@@ -1,11 +1,11 @@
 app: mycitadel
 
 ingredients:
-  dist: bullseye
+  dist: bookworm
   sources:
     - deb http://debian.ethz.ch/debian/ bullseye main contrib non-free
   debs:
-    - /home/orlovsky/repos/mycitadel_1.4.0-1_amd64.deb
+    - /home/orlovsky/repos/mycitadel_1.5.0-1_amd64.deb
 
 script:
   - cp ./usr/share/applications/io.mycitadel.Wallet.desktop mycitadel.desktop
