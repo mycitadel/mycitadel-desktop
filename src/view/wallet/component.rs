@@ -159,6 +159,9 @@ impl Component {
 
         let input_value = prevouts.iter().map(|p| p.amount).sum::<u64>();
         if let Some(vout) = output_max {
+            if output_value + fee as u64 > input_value {
+                return Err(pay::Error::NoFundsForFee);
+            }
             let max_value = input_value - output_value - fee as u64;
             txouts[vout as usize].value = max_value;
             output_value += max_value;

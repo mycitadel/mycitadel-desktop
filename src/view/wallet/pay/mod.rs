@@ -71,8 +71,11 @@ pub enum Error {
     #[from]
     PsbtConstruct(psbt::construct::Error),
 
-    /// Unable to compute proper fee
+    /// Unable to compute proper fee.
     FeeFailure,
+
+    /// The wallet lacks funds to pay for the transaction fees.
+    NoFundsForFee,
 
     /// Multiple outputs have flag "MAX" set.
     MultipleMaxOutputs,
