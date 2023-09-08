@@ -6,7 +6,6 @@ use gladis::Gladis;
 use glib::subclass::prelude::*;
 use gtk::prelude::*;
 use gtk::{glib, Button, Dialog, ListBox, MessageDialog};
-use hwi::types::HWIChain;
 use hwi::HWIClient;
 use relm::{Channel, Relm, Sender, Update, Widget};
 use wallet::hd::{Bip43, DerivationStandard, HardenedIndex, SegmentIndexes};
@@ -93,7 +92,6 @@ impl Update for Component {
             }
             Msg::SetNetwork(network) => {
                 self.model.network = network;
-                eprintln!("Applied {} network", self.model.network);
             }
             Msg::Devices(result) => {
                 self.widgets.refresh_dlg.hide();
@@ -132,11 +130,7 @@ impl Update for Component {
                 let testnet = self.model.network.is_testnet();
                 let sender = self.sender.clone();
                 let hwi = self.model.hwi[&fingerprint].device.clone();
-                let chain = match self.model.network {
-                    PublicNetwork::Mainnet => HWIChain::Main,
-                    PublicNetwork::Testnet => HWIChain::Test,
-                    PublicNetwork::Signet => HWIChain::Signet,
-                };
+                let chain = bitcoin::Network::from(self.model.network).into();
                 std::thread::spawn(move || {
                     let msg = match HWIClient::get_client(&hwi, false, chain)
                         .and_then(|client| client.get_xpub(&derivation, testnet))

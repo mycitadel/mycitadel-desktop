@@ -103,6 +103,7 @@ pub struct ViewModel {
     stream: StreamHandle<Msg>,
 
     pub descriptor_classes: BTreeSet<DescriptorClass>,
+    // TODO: Remove; unused and a bad practice
     pub support_multiclass: bool,
     pub network: PublicNetwork,
     pub signers: Vec<Signer>,
@@ -112,7 +113,6 @@ pub struct ViewModel {
     // Data provided by the parent window
     pub new_wallet: bool,
     pub template: Option<WalletTemplate>,
-    pub export_lnpbp: bool,
 
     // Non-persisting / dynamic data for this window
     pub active_signer: Option<Signer>,
@@ -124,7 +124,7 @@ impl TryFrom<&ViewModel> for WalletSettings {
     type Error = DescriptorError;
 
     fn try_from(model: &ViewModel) -> Result<Self, Self::Error> {
-        WalletSettings::with(
+        WalletSettings::with_unchecked(
             model.signers.clone(),
             model.spending_model.spending_conditions(),
             model.descriptor_classes.clone(),
@@ -150,7 +150,6 @@ impl ViewModel {
             template: None,
             descriptor_classes: bset![DescriptorClass::SegwitV0],
             support_multiclass: false,
-            export_lnpbp: false,
             new_wallet: true,
         }
     }
@@ -172,7 +171,6 @@ impl ViewModel {
         self.electrum_model = ElectrumModel::new(template.network);
         self.template = Some(template);
 
-        self.export_lnpbp = false;
         self.active_signer = None;
         self.devices = empty!();
         self.descriptor = None;
@@ -201,7 +199,6 @@ impl ViewModel {
             .reset_conditions(settings.spending_conditions());
         self.electrum_model = settings.electrum().clone().into();
 
-        self.export_lnpbp = true;
         self.template = None;
         self.active_signer = None;
         self.devices = empty!();
@@ -343,14 +340,14 @@ impl ViewModel {
         std::thread::spawn(move || {
             match ElectrumClient::from_config(&url, config).and_then(|client| client.ping()) {
                 Err(err) => {
-                    eprintln!("failure: {}", err);
+                    eprintln!("failure: {err}");
                     sender
                         .send(ElectrumMsg::Failure(err.to_string()))
-                        .expect("channel broken");
+                        .expect("channel is broken");
                 }
                 Ok(_) => {
                     eprintln!("success");
-                    sender.send(ElectrumMsg::Ok).expect("channel broken");
+                    sender.send(ElectrumMsg::Ok).expect("channel is broken");
                 }
             }
         });

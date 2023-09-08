@@ -62,6 +62,41 @@
         </screenshot>
     </screenshots>
     <releases>
+        <release version="1.5.0" date="2023-09-13">
+            <description>
+                <p>MyCitadel 1.5 ships with a number of usability improvements, bugfixes and
+                   improved hardware wallet support.</p>
+
+                <p><em>UI improvements</em></p>
+                <ul>
+                  <li>Add custom labels for the operation history</li>
+                  <li>Supply historical operations with easy-to-read mnemonics (when an explicit
+                      label is not given)</li>
+                  <li>Simplify wallet balance reporting (dashboard)</li>
+                  <li>Introduce Bitcoin and satoshi symbols</li>
+                  <li>Improved fonts and colors for the transaction, coins and address lists</li>
+                  <li>Simplify descriptor export screen in settings window</li>
+                </ul>
+
+                <p><em>Hardware wallets</em></p>
+                <ul>
+                  <li>Update HWI to 2.3.1</li>
+                  <li>Fix connectivity with BitBox02 running v4.39 firmware</li>
+                </ul>
+
+                <p><em>Bugfixes</em></p>
+                <ul>
+                  <li>Remove GTK warnings</li>
+                  <li>Fix Electrum server connectivity test</li>
+                  <li>Fixed overflow in payment composer happening when the wallet lacks funds
+                      for paying fees</li>
+                  <li>Fixed invalid error about absent beneficiary</li>
+                  <li>Display mempool transactions in the top of the history</li>
+                  <li>Fix invalid fee computing in some scenarios</li>
+                </ul>
+            </description>
+            <url>https://github.com/mycitadel/mycitadel-desktop/releases/tag/v1.5.0</url>
+        </release>
         <release version="1.4.0" date="2023-07-11">
             <description>
                 <p>MyCitadel 1.4 ships with a number of usability improvements, bugfixes and new

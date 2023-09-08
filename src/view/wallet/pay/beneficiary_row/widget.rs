@@ -100,8 +100,9 @@ impl RowWidgets {
 
         beneficiary
             .bind_property("amount", &self.address_fld, "primary_icon_name")
-            .transform_to(move |_binding, value: u64| {
-                if value == 0 {
+            .transform_to(move |binding, value: u64| {
+                let address_fld: Entry = binding.target().unwrap().downcast().unwrap();
+                if address_fld.text().is_empty() && value > 0 {
                     Some("dialog-error-symbolic".to_value())
                 } else {
                     None
@@ -111,8 +112,9 @@ impl RowWidgets {
             .build();
         beneficiary
             .bind_property("amount", &self.address_fld, "primary_icon_tooltip_text")
-            .transform_to(move |_binding, value: u64| {
-                if value == 0 {
+            .transform_to(move |binding, value: u64| {
+                let address_fld: Entry = binding.target().unwrap().downcast().unwrap();
+                if address_fld.text().is_empty() && value > 0 {
                     Some("Payment without beneficiary address".to_value())
                 } else {
                     None

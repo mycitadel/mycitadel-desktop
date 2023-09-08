@@ -1,3 +1,32 @@
+mycitadel (1.5.0-1) unstable; urgency=medium
+
+  [ UI improvements ]
+
+  * Add custom labels for the operation history
+  * Supply historical operations with easy-to-read mnemonics (when an explicit
+    label is not given)
+  * Simplify wallet balance reporting (dashboard)
+  * Introduce Bitcoin and satoshi symbols
+  * Improved fonts and colors for the transaction, coins and address lists
+  * Simplify descriptor export screen in settings window
+
+  [ Hardware wallets ]
+
+  * Update HWI to 2.3.1
+  * Fix connectivity with BitBox02 running v4.39 firmware
+
+  [ Bugfixes ]
+
+  * Remove GTK warnings
+  * Fix Electrum server connectivity test
+  * Fixed overflow in payment composer happening when the wallet lacks funds
+    for paying fees
+  * Fixed invalid error about absent beneficiary
+  * Display mempool transactions in the top of the history
+  * Fix invalid fee computing in some scenarios
+
+ -- Dr Maxim Orlovsky <orlovsky@mycitadel.io>  Wed, 13 Sep 2023 12:10:00 +0200
+
 mycitadel (1.4.0-1) unstable; urgency=medium
 
   [ UI improvements ]

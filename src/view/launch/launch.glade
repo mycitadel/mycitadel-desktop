@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.38.2 -->
+<!-- Generated with glade 3.40.0 -->
 <interface>
   <requires lib="gtk+" version="3.24"/>
   <object class="GtkAdjustment" id="hwcount_adj">
@@ -176,7 +176,7 @@
                         <property name="visible">True</property>
                         <property name="sensitive">False</property>
                         <property name="can-focus">True</property>
-                        <property name="tooltip-text" translatable="yes">RGB support will be shipped soon</property>
+                        <property name="tooltip-text" translatable="yes">Wallet should support RGB smart contracts</property>
                         <property name="margin-start">13</property>
                       </object>
                       <packing>
@@ -188,9 +188,8 @@
                     <child>
                       <object class="GtkLabel">
                         <property name="visible">True</property>
-                        <property name="sensitive">False</property>
                         <property name="can-focus">False</property>
-                        <property name="tooltip-text" translatable="yes">RGB support will be shipped soon</property>
+                        <property name="tooltip-text" translatable="yes">Wallet should support RGB smart contracts</property>
                         <property name="label" translatable="yes">Use RGB</property>
                       </object>
                       <packing>
@@ -203,7 +202,7 @@
                   <packing>
                     <property name="expand">False</property>
                     <property name="fill">False</property>
-                    <property name="position">1</property>
+                    <property name="position">0</property>
                   </packing>
                 </child>
                 <child>
@@ -212,7 +211,7 @@
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <child>
-                      <object class="GtkListBoxRow">
+                      <object class="GtkListBoxRow" id="watchonly_row">
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="selectable">False</property>
@@ -277,7 +276,7 @@
                       </object>
                     </child>
                     <child>
-                      <object class="GtkListBoxRow">
+                      <object class="GtkListBoxRow" id="singlesig_row">
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="selectable">False</property>
@@ -346,7 +345,7 @@
                       </object>
                     </child>
                     <child>
-                      <object class="GtkListBoxRow">
+                      <object class="GtkListBoxRow" id="hodling_row">
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="selectable">False</property>
@@ -415,7 +414,7 @@
                       </object>
                     </child>
                     <child>
-                      <object class="GtkListBoxRow">
+                      <object class="GtkListBoxRow" id="multisig_row">
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="selectable">False</property>
@@ -520,7 +519,7 @@
                       </object>
                     </child>
                     <child>
-                      <object class="GtkListBoxRow">
+                      <object class="GtkListBoxRow" id="company_row">
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="selectable">False</property>
@@ -589,7 +588,7 @@
                       </object>
                     </child>
                     <child>
-                      <object class="GtkListBoxRow">
+                      <object class="GtkListBoxRow" id="custom_row">
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="selectable">False</property>
@@ -658,7 +657,7 @@
                       </object>
                     </child>
                     <child>
-                      <object class="GtkListBoxRow">
+                      <object class="GtkListBoxRow" id="lightning_row">
                         <property name="visible">True</property>
                         <property name="sensitive">False</property>
                         <property name="can-focus">False</property>
@@ -733,7 +732,7 @@
                   <packing>
                     <property name="expand">False</property>
                     <property name="fill">True</property>
-                    <property name="position">2</property>
+                    <property name="position">1</property>
                   </packing>
                 </child>
               </object>

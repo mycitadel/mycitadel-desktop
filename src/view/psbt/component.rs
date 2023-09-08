@@ -19,11 +19,9 @@ use electrum_client::ElectrumApi;
 use gladis::Gladis;
 use gtk::prelude::ListModelExt;
 use gtk::{ApplicationWindow, MessageType};
-use hwi::types::HWIChain;
 use hwi::HWIClient;
 use miniscript::psbt::PsbtExt;
 use relm::{init, Cast, Channel, Relm, Sender, StreamHandle, Update, Widget};
-use wallet::onchain::PublicNetwork;
 
 use super::sign_row::Signing;
 use super::{xpriv_dlg, ModelParam, Msg, SignMsg, ViewModel, Widgets};
@@ -68,11 +66,7 @@ impl Component {
 
         let psbt = self.model.psbt().clone().into();
         let sender = self.signer_sender.clone();
-        let chain = match self.model.network() {
-            PublicNetwork::Mainnet => HWIChain::Main,
-            PublicNetwork::Testnet => HWIChain::Test,
-            PublicNetwork::Signet => HWIChain::Signet,
-        };
+        let chain = bitcoin::Network::from(self.model.network()).into();
         thread::spawn(move || {
             let device = match HWIClient::enumerate().ok().and_then(|devices| {
                 devices

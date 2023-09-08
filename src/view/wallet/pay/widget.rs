@@ -55,10 +55,10 @@ impl Widgets {
     pub fn init_ui(&self, model: &wallet::ViewModel) {
         self.header_bar.set_subtitle(Some(&format!(
             "{:.08} BTC available",
-            model.as_wallet().state().balance as f64 / 100_000_000.0
+            model.wallet().state().balance as f64 / 100_000_000.0
         )));
 
-        let fees = model.as_wallet().ephemerals().fees;
+        let fees = model.wallet().ephemerals().fees;
         self.fee_adj.set_upper(fees.0 as f64 * 2.0);
         self.fee_adj.set_lower(fees.2 as f64 / 10.0);
 

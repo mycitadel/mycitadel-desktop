@@ -17,8 +17,8 @@ use gladis::Gladis;
 use gtk::gdk_pixbuf::Pixbuf;
 use gtk::prelude::*;
 use gtk::{
-    Adjustment, ApplicationWindow, Button, Image, InfoBar, ListBox, Notebook, RecentChooserWidget,
-    ResponseType, Switch,
+    Adjustment, ApplicationWindow, Button, Image, InfoBar, ListBox, ListBoxRow, Notebook,
+    RecentChooserWidget, ResponseType, Switch,
 };
 use relm::Relm;
 use wallet::descriptors::DescriptorClass;
@@ -37,8 +37,16 @@ pub struct Widgets {
     hwcount_adj: Adjustment,
     taproot_swch: Switch,
     testnet_swch: Switch,
-    rgb_swch: Switch,
+
     create_box: ListBox,
+    watchonly_row: ListBoxRow,
+    singlesig_row: ListBoxRow,
+    hodling_row: ListBoxRow,
+    multisig_row: ListBoxRow,
+    company_row: ListBoxRow,
+    custom_row: ListBoxRow,
+    lightning_row: ListBoxRow,
+
     import_box: ListBox,
     open_box: ListBox,
     recent: RecentChooserWidget,
@@ -82,8 +90,8 @@ impl Widgets {
         };
         let network = self.network();
         match index {
-            0 => WalletTemplate::singlesig(class, network, false),
-            1 => WalletTemplate::singlesig(class, network, true),
+            0 => WalletTemplate::singlesig(class, network, false, false),
+            1 => WalletTemplate::singlesig(class, network, true, false),
             2 => WalletTemplate::hodling(class, network, 4, Requirement::Allow, Requirement::Allow),
             3 => {
                 let count = self.hwcount_adj.value() as u16;

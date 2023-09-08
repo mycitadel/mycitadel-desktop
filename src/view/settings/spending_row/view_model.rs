@@ -85,7 +85,7 @@ impl From<&ConditionInner> for TimelockReq {
                     *inner.after_day.borrow(),
                 )
                 .expect("invalid date");
-                TimelockReq::AfterDate(DateTime::from_utc(
+                TimelockReq::AfterDate(DateTime::from_naive_utc_and_offset(
                     date.and_hms_opt(0, 0, 0).expect("hardcoded time"),
                     Utc,
                 ))

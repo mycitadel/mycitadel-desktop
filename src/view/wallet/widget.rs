@@ -12,6 +12,10 @@
 use std::collections::BTreeSet;
 use std::ffi::OsStr;
 
+use baid58::Baid58;
+use bitcoin::hashes::hex::FromHex;
+use bitcoin::hashes::Hash;
+use bitcoin::Txid;
 use bpro::{
     AddressSummary, ElectrumSec, ElectrumServer, HistoryEntry, OnchainStatus, UtxoTxid, WalletState,
 };
@@ -21,16 +25,17 @@ use gladis::Gladis;
 use gtk::gdk_pixbuf::Pixbuf;
 use gtk::prelude::*;
 use gtk::{
-    gdk, Adjustment, ApplicationWindow, Button, CheckButton, Entry, HeaderBar, Image, Label,
-    ListStore, Menu, MenuItem, Popover, RadioMenuItem, SortColumn, SortType, SpinButton, Spinner,
-    Statusbar, TreeView,
+    gdk, Adjustment, ApplicationWindow, Button, CellRendererText, CheckButton, HeaderBar, Image,
+    Label, ListStore, Menu, MenuItem, RadioMenuItem, SortColumn, SortType, SpinButton, Spinner,
+    Statusbar, TextView, TreeView,
 };
 use relm::Relm;
 use wallet::hd::SegmentIndexes;
 
-use super::{pay, ElectrumState, Msg, ViewModel};
-use crate::model::UI as UIColorTrait;
-use crate::view::{launch, APP_ICON, APP_ICON_TOOL};
+use super::{ElectrumState, Msg, ViewModel};
+use crate::model::{display_accounting_amount, FormatDate, UI as UIColorTrait};
+use crate::view::wallet::pay;
+use crate::view::{launch, APP_ICON};
 use crate::worker::exchange::{Exchange, Fiat};
 
 trait UI {
@@ -62,36 +67,34 @@ pub struct Widgets {
     window: ApplicationWindow,
 
     header_bar: HeaderBar,
-    logo_img: Image,
     new_btn: Button,
     open_btn: Button,
     settings_btn: Button,
-    pay_btn: Button,
     redefine_mi: MenuItem,
     import_mi: MenuItem,
     settings_mi: MenuItem,
     launcher_mi: MenuItem,
     about_mi: MenuItem,
 
-    balance_btc_lbl: Label,
-    balance_sat_lbl: Label,
+    refresh_btn: Button,
+    refresh_spin: Spinner,
+    refresh_img: Image,
+
+    paybtc_btn: Button,
+
+    balance_lead_lbl: Label,
+    balance_tail_lbl: Label,
+    balance_zero_lbl: Label,
     balance_fiat_lbl: Label,
-    volume_btc_lbl: Label,
-    volume_sat_lbl: Label,
-    volume_fiat_lbl: Label,
-    txcount_lbl: Label,
+    balance_cents_lbl: Label,
+    fiat_name_lbl: Label,
+    value_lbl: Label,
 
     exchange_lbl: Label,
     fiat_usd: RadioMenuItem,
     fiat_eur: RadioMenuItem,
     fiat_chf: RadioMenuItem,
     fiat_pair_lbl: Label,
-    fiat_name1_lbl: Label,
-    fiat_name2_lbl: Label,
-
-    refresh_btn: Button,
-    refresh_spin: Spinner,
-    refresh_img: Image,
 
     history_store: ListStore,
     utxo_store: ListStore,
@@ -103,9 +106,11 @@ pub struct Widgets {
 
     history_menu: Menu,
     hist_copy_txid_mi: MenuItem,
+    hist_copy_desc_mi: MenuItem,
     hist_copy_amount_mi: MenuItem,
     hist_copy_balance_mi: MenuItem,
     hist_copy_height_mi: MenuItem,
+    description: CellRendererText,
 
     address_menu: Menu,
     addr_copy_mi: MenuItem,
@@ -120,7 +125,7 @@ pub struct Widgets {
 
     status_bar: Statusbar,
     status_lbl: Label,
-    balance_lbl: Label,
+    volume_lbl: Label,
     lastblock_lbl: Label,
     height_lbl: Label,
     network_lbl: Label,
@@ -128,7 +133,7 @@ pub struct Widgets {
     connection_img: Image,
     electrum_spin: Spinner,
 
-    invoice_popover: Popover,
+    // BTC invoice popover
     amount_chk: CheckButton,
     amount_stp: SpinButton,
     amount_adj: Adjustment,
@@ -136,7 +141,8 @@ pub struct Widgets {
     index_stp: SpinButton,
     index_adj: Adjustment,
     index_img: Image,
-    address_fld: Entry,
+    addr_text: TextView,
+    copy_addr_btn: Button,
 }
 
 impl Widgets {
@@ -153,7 +159,7 @@ impl Widgets {
         connect!(relm, self.settings_btn, connect_clicked(_), Msg::Settings);
         connect!(
             relm,
-            self.pay_btn,
+            self.paybtc_btn,
             connect_clicked(_),
             Msg::Pay(pay::Msg::Show)
         );
@@ -218,6 +224,13 @@ impl Widgets {
         self.hist_copy_txid_mi.connect_activate(move |_| {
             if let Some(iter) = list.selection().selected().map(|(_, iter)| iter) {
                 let val = list.model().unwrap().value(&iter, 1);
+                gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).set_text(val.get::<&str>().unwrap());
+            }
+        });
+        let list = self.history_list.clone();
+        self.hist_copy_desc_mi.connect_activate(move |_| {
+            if let Some(iter) = list.selection().selected().map(|(_, iter)| iter) {
+                let val = list.model().unwrap().value(&iter, 7);
                 gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).set_text(val.get::<&str>().unwrap());
             }
         });
@@ -296,6 +309,18 @@ impl Widgets {
             }
         });
 
+        //let descr_col = self.history_list.column(3).unwrap();
+        let sender = relm.stream().clone();
+        let model = self.history_list.model().unwrap();
+        let store = self.history_store.clone();
+        self.description.connect_edited(move |_, path, s| {
+            let iter = model.iter(&path).unwrap();
+            let val = model.value(&iter, 1);
+            let txid = val.get::<&str>().unwrap();
+            store.set_value(&iter, 7, &s.into());
+            sender.emit(Msg::EditLabel(Txid::from_hex(txid).unwrap(), s.to_string()));
+        });
+
         connect!(
             relm,
             self.fiat_usd,
@@ -340,9 +365,12 @@ impl Widgets {
             Msg::InvoiceIndex(adj.value() as u32)
         );
 
-        self.address_fld.connect_icon_press(|entry, _, _| {
-            let val = entry.text();
-            gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).set_text(&val);
+        let invoice_text = self.addr_text.clone();
+        self.copy_addr_btn.connect_clicked(move |_| {
+            let buffer = invoice_text.buffer().unwrap();
+            let (start, end) = buffer.bounds();
+            let text = buffer.text(&start, &end, false).unwrap().to_string();
+            gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).set_text(&text);
         });
 
         connect!(
@@ -353,17 +381,16 @@ impl Widgets {
         );
     }
 
-    pub fn init_ui(&self, model: &ViewModel) {
+    pub fn init_ui(&mut self, model: &mut ViewModel) {
         let settings = model.as_settings();
 
         let icon = Pixbuf::from_read(APP_ICON).expect("app icon is missed");
         self.window.set_icon(Some(&icon));
 
-        let img = Pixbuf::from_read(APP_ICON_TOOL).expect("small app icon is missed");
-        self.logo_img.set_pixbuf(Some(&img));
-
         self.header_bar
             .set_title(model.path().file_name().and_then(OsStr::to_str));
+        self.header_bar
+            .set_subtitle(Some(&format!("{}", settings.core())));
         let network = settings.network().to_string();
         self.network_lbl
             .set_text(&(network[0..1].to_uppercase() + &network[1..]));
@@ -383,9 +410,11 @@ impl Widgets {
         self.update_invoice(model);
     }
 
-    pub fn update_invoice(&self, model: &ViewModel) {
+    pub fn update_invoice(&self, model: &mut ViewModel) { self.update_btc_invoice(model); }
+
+    fn update_btc_invoice(&self, model: &mut ViewModel) {
         let invoice = model.as_invoice();
-        let wallet = model.as_wallet();
+        let wallet = model.wallet();
         let next_index = wallet.next_default_index();
         let address = wallet.indexed_address(invoice.index.unwrap_or(next_index));
         let index_reuse = invoice.index.unwrap_or(next_index) >= next_index;
@@ -409,8 +438,7 @@ impl Widgets {
             ),
             None => address.to_string(),
         };
-
-        self.address_fld.set_text(&invoice_str);
+        self.addr_text.buffer().unwrap().set_text(&invoice_str);
     }
 
     pub fn update_electrum_server(&self, electrum: &ElectrumServer) {
@@ -447,7 +475,7 @@ impl Widgets {
                 self.connection_img.set_icon_name(Some(sec.icon_name()));
                 self.connection_img.set_tooltip_text(Some(sec.tooltip()));
                 self.connection_img.set_visible(true);
-                self.pay_btn.set_sensitive(true);
+                self.paybtc_btn.set_sensitive(true);
             }
             ElectrumState::Error(err) => {
                 self.refresh_btn.set_sensitive(true);
@@ -459,7 +487,7 @@ impl Widgets {
                     .set_icon_name(Some("emblem-important-symbolic"));
                 self.connection_img.set_tooltip_text(Some(&err));
                 self.connection_img.set_visible(true);
-                self.pay_btn.set_sensitive(false);
+                self.paybtc_btn.set_sensitive(false);
 
                 self.status_lbl.set_text("Error from electrum server");
             }
@@ -470,7 +498,8 @@ impl Widgets {
     pub fn update_last_block(&mut self, last_block: &HeaderNotification) {
         let ts = last_block.header.time;
         let naive = NaiveDateTime::from_timestamp_opt(ts as i64, 0).expect("invalid block time");
-        let dt = DateTime::<chrono::Local>::from(DateTime::<Utc>::from_utc(naive, Utc));
+        let dt =
+            DateTime::<chrono::Local>::from(DateTime::<Utc>::from_naive_utc_and_offset(naive, Utc));
         let time = dt.time();
         self.lastblock_lbl
             .set_text(&format!("{}", time.format("%-I:%M %p")));
@@ -492,35 +521,38 @@ impl Widgets {
                     .unwrap_or_else(|| format!("{height}")),
                 OnchainStatus::Mempool => s!("mempool"),
             };
+            let txid = item.onchain.txid;
+            let baid = Baid58::with("txid", txid.into_inner());
+            let mut sort = item.onchain.status.into_u32();
+            if sort == 0 {
+                sort = u32::MAX;
+            }
             self.history_store.insert_with_values(None, &[
                 (0, &item.icon_name()),
-                (1, &item.onchain.txid.to_string()),
+                (1, &txid.to_string()),
                 (2, &btc),
                 (3, &btc_balance),
                 (4, &date),
                 (5, &item.color()),
-                (6, &item.onchain.status.into_u32()),
+                (6, &sort),
+                (7, &item.comment.as_ref().map(|cmt| &cmt.label)),
+                (8, &baid.mnemonic()),
             ]);
         }
+    }
+
+    pub fn update_outpoints(&mut self, model: &mut ViewModel) {
+        self.update_utxos(model.wallet().utxos());
     }
 
     pub fn update_utxos(&mut self, utxos: &BTreeSet<UtxoTxid>) {
         self.utxo_store.clear();
         for item in utxos {
-            let btc = format_btc_value(item.value);
-            let date = match item.onchain.status {
-                OnchainStatus::Blockchain(height) => item
-                    .onchain
-                    .date_time()
-                    .map(|dt| dt.format("%F %H:%M").to_string())
-                    .unwrap_or_else(|| format!("{height}")),
-                OnchainStatus::Mempool => s!("mempool"),
-            };
             self.utxo_store.insert_with_values(None, &[
                 (0, &item.addr_src.address.to_string()),
-                (1, &item.onchain.txid.to_string()),
-                (2, &btc),
-                (3, &date),
+                (1, &format!("{}:{}", item.onchain.txid, item.vout)),
+                (2, &format_btc_value(item.value)),
+                (3, &item.onchain.format_date()),
                 (4, &item.onchain.status.into_u32()),
             ]);
         }
@@ -532,8 +564,8 @@ impl Widgets {
             let balance = format_btc_value(info.balance);
             let volume = format_btc_value(info.volume);
             let terminal = info.terminal_string();
-            let terminal_sort =
-                (info.addr_src.index.first_index() as u64) | ((info.addr_src.change as u64) << 32);
+            let terminal_sort = (info.addr_src.index.first_index() as u64)
+                | ((info.addr_src.change.first_index() as u64) << 32);
             let style = self.address_list.style_context();
             let addr_color = match (info.balance == 0, info.volume == 0) {
                 (true, true) => style.lookup_color("theme_text_color").unwrap(),
@@ -554,31 +586,38 @@ impl Widgets {
         }
     }
 
-    pub fn update_state(&self, state: WalletState, tx_count: usize, exchange_rate: f64) {
-        self.balance_lbl
-            .set_text(&format!("{} sat", state.balance.to_string()));
-        self.balance_btc_lbl
-            .set_text(&format!("{:.4}", state.balance_btc()));
-        self.balance_sat_lbl.set_text(&state.balance.to_string());
-        self.volume_btc_lbl
-            .set_text(&format!("{:.2}", state.volume_btc()));
-        self.volume_sat_lbl.set_text(&state.volume.to_string());
-        self.txcount_lbl.set_text(&tx_count.to_string());
+    pub fn update_balance(&self, model: &mut ViewModel) { self.update_btc_balance(model); }
 
-        self.balance_fiat_lbl
-            .set_text(&format!("{:.2}", state.balance_btc() * exchange_rate));
-        self.volume_fiat_lbl
-            .set_text(&format!("{:.2}", state.volume_btc() * exchange_rate));
+    pub fn update_btc_balance(&self, model: &mut ViewModel) {
+        let wallet = model.wallet();
+        let state = wallet.state();
+        let exchange_rate = model.exchange_rate;
+
+        display_accounting_amount(
+            state.balance,
+            8,
+            &self.balance_lead_lbl,
+            &self.balance_tail_lbl,
+            &self.balance_zero_lbl,
+        );
+
+        let s = format!("{:.02}", state.balance_btc() * exchange_rate);
+        let (fiat, cents) = s.split_once('.').expect("formatting produces decimal");
+        self.balance_fiat_lbl.set_text(fiat);
+        self.balance_cents_lbl.set_text(cents);
+
+        self.volume_lbl
+            .set_text(&format!("₿ {:.}", (state.volume as f64 / 100_000_000.0)));
     }
 
     pub fn update_fiat(&self, fiat: Fiat) {
         self.fiat_pair_lbl.set_text(fiat.pair());
-        self.fiat_name1_lbl.set_text(fiat.fiat());
-        self.fiat_name2_lbl.set_text(fiat.fiat());
+        self.fiat_name_lbl.set_text(fiat.symbol());
 
         self.exchange_lbl.set_text(&"...");
         self.balance_fiat_lbl.set_text("?");
-        self.volume_fiat_lbl.set_text("?");
+        self.balance_cents_lbl.set_text("");
+        //self.volume_fiat_lbl.set_text("?");
     }
 
     pub fn update_exchange_rate(
@@ -592,17 +631,21 @@ impl Widgets {
 
         if exchange_rate > 0.0 {
             self.exchange_lbl.set_text(&format!("{:.0}", exchange_rate));
-            self.balance_fiat_lbl
-                .set_text(&format!("{:.2}", state.balance_btc() * exchange_rate));
-            self.volume_fiat_lbl
-                .set_text(&format!("{:.2}", state.volume_btc() * exchange_rate));
+
+            let s = format!("{:.02}", state.balance_btc() * exchange_rate);
+            let (fiat, cents) = s.split_once('.').expect("formatting produces decimal");
+            self.balance_fiat_lbl.set_text(fiat);
+            self.balance_cents_lbl.set_text(cents);
+            //self.volume_fiat_lbl
+            //    .set_text(&format!("{:.2}", state.volume_btc() * exchange_rate));
         }
     }
 
     pub fn update_exchange_error(&self, _err: String) {
         self.exchange_lbl.set_text(&"n/a");
         self.balance_fiat_lbl.set_text("n/a");
-        self.volume_fiat_lbl.set_text("n/a");
+        self.balance_cents_lbl.set_text("");
+        //self.volume_fiat_lbl.set_text("n/a");
     }
 }
 
