@@ -164,6 +164,7 @@ for the check to finish</property>
             <property name="label" translatable="yes">Close</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
+            <property name="can-default">True</property>
             <property name="receives-default">True</property>
           </object>
         </child>
@@ -172,6 +173,7 @@ for the check to finish</property>
             <property name="label" translatable="yes">Rescan devices</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
+            <property name="can-default">True</property>
             <property name="receives-default">True</property>
             <property name="image">refresh_img</property>
             <property name="always-show-image">True</property>
