@@ -76,7 +76,7 @@
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <property name="halign">start</property>
-                    <property name="label" translatable="yes">Ivana Kupaly (v1.4.0)</property>
+                    <property name="label" translatable="yes">Blazing Venus (v1.5.0)</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
