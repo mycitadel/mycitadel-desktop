@@ -113,14 +113,14 @@ impl Component {
         let change_index = wallet.next_change_index();
 
         let fee_rate = self.model.fee_rate();
-        let mut fee = 0;
-        let mut next_fee = DUST_RELAY_TX_FEE;
+        let mut fee = DUST_RELAY_TX_FEE;
+        let mut prev_fee = 0;
         let mut prevouts = bset! {};
         let satisfaciton_weights = descriptor.max_satisfaction_weight()? as f32;
         let mut cycle_lim = 0usize;
         let mut vsize = 0.0f32;
-        while fee <= DUST_RELAY_TX_FEE && fee != next_fee {
-            fee = next_fee;
+        while fee != prev_fee {
+            prev_fee = fee;
             if output_max.is_some() {
                 prevouts = wallet
                     .utxos()
@@ -150,7 +150,7 @@ impl Component {
                 output: txouts.clone(),
             };
             vsize = tx.vsize() as f32 + satisfaciton_weights / WITNESS_SCALE_FACTOR as f32;
-            next_fee = (fee_rate * vsize).ceil() as u32;
+            fee = DUST_RELAY_TX_FEE.max((fee_rate * vsize).ceil() as u32);
             cycle_lim += 1;
             if cycle_lim > 6 {
                 return Err(pay::Error::FeeFailure);
