@@ -23,6 +23,7 @@ mycitadel (1.5.0-1) unstable; urgency=medium
     for paying fees
   * Fixed invalid error about absent beneficiary
   * Display mempool transactions in the top of the history
+  * Fix invalid fee computing in some scenarios
 
  -- Dr Maxim Orlovsky <orlovsky@mycitadel.io>  Wed, 13 Sep 2023 12:10:00 +0200
 

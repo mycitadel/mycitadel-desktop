@@ -92,6 +92,7 @@
                       for paying fees</li>
                   <li>Fixed invalid error about absent beneficiary</li>
                   <li>Display mempool transactions in the top of the history</li>
+                  <li>Fix invalid fee computing in some scenarios</li>
                 </ul>
             </description>
             <url>https://github.com/mycitadel/mycitadel-desktop/releases/tag/v1.5.0</url>
