@@ -22,6 +22,7 @@ extern crate relm;
 extern crate relm_derive;
 extern crate bitcoin_hwi as hwi;
 #[cfg(feature = "serde")]
+#[macro_use]
 extern crate serde_crate as serde;
 
 extern crate glade as gladis;
