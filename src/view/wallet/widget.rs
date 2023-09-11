@@ -70,6 +70,7 @@ pub struct Widgets {
     new_btn: Button,
     open_btn: Button,
     settings_btn: Button,
+    export_history_mi: MenuItem,
     redefine_mi: MenuItem,
     import_mi: MenuItem,
     settings_mi: MenuItem,
@@ -164,6 +165,12 @@ impl Widgets {
             Msg::Pay(pay::Msg::Show)
         );
         connect!(relm, self.refresh_btn, connect_clicked(_), Msg::Refresh);
+        connect!(
+            relm,
+            self.export_history_mi,
+            connect_activate(_),
+            Msg::ExportHistory
+        );
         connect!(relm, self.redefine_mi, connect_activate(_), Msg::Duplicate);
         connect!(relm, self.import_mi, connect_activate(_), Msg::Import);
         connect!(relm, self.settings_mi, connect_activate(_), Msg::Settings);
@@ -513,14 +520,7 @@ impl Widgets {
             balance += item.balance();
             let btc = format!("{:+.08}", item.balance() as f64 / 100_000_000.0);
             let btc_balance = format!("{:.08}", balance as f64 / 100_000_000.0);
-            let date = match item.onchain.status {
-                OnchainStatus::Blockchain(height) => item
-                    .onchain
-                    .date_time()
-                    .map(|dt| dt.format("%F %H:%M").to_string())
-                    .unwrap_or_else(|| format!("{height}")),
-                OnchainStatus::Mempool => s!("mempool"),
-            };
+            let date = item.onchain.format_date();
             let txid = item.onchain.txid;
             let baid = Baid58::with("txid", txid.into_inner());
             let mut sort = item.onchain.status.into_u32();

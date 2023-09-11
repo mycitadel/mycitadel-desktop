@@ -34,6 +34,7 @@ pub enum Msg {
     Open,
     Close,
     About,
+    ExportHistory,
     Duplicate,
     Import,
     Launch(launch::Msg),

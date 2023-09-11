@@ -32,7 +32,7 @@ use wallet::lex_order::lex_order::LexOrder;
 use super::pay::beneficiary_row::Beneficiary;
 use super::pay::FeeRate;
 use super::{pay, ElectrumState, Msg, ViewModel, Widgets};
-use crate::view::{error_dlg, launch, settings, NotificationBoxExt};
+use crate::view::{error_dlg, file_open_dlg, launch, settings, NotificationBoxExt};
 use crate::worker::{electrum, exchange, ElectrumWorker, ExchangeWorker};
 
 pub struct Component {
@@ -354,6 +354,16 @@ impl Update for Component {
                 self.launcher_stream
                     .as_ref()
                     .map(|stream| stream.emit(launch::Msg::ShowPage(launch::Page::Import)));
+            }
+            Msg::ExportHistory => {
+                if let Some(path) = file_open_dlg(
+                    Some(self.widgets.as_root()),
+                    "Export history",
+                    "Comma-separated values",
+                    "*.csv",
+                ) {
+                    match self.model.export_history(path) {}
+                }
             }
             Msg::Close => self.close(),
             Msg::About => {

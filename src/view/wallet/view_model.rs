@@ -10,11 +10,16 @@
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
 use std::collections::BTreeSet;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
-use bpro::{file, DescriptorError, ElectrumServer, FileDocument, Signer, Wallet, WalletSettings};
+use bitcoin::Txid;
+use bpro::{
+    file, DescriptorError, ElectrumServer, FileDocument, HistoryEntry, Signer, Wallet,
+    WalletSettings,
+};
 use wallet::descriptors::DescriptorClass;
 use wallet::hd::UnhardenedIndex;
+use crate::model::FormatDate;
 
 use super::pay::beneficiary_row::BeneficiaryModel;
 use crate::worker::exchange::{Exchange, Fiat};
@@ -91,5 +96,35 @@ impl ViewModel {
         } else {
             None
         })
+    }
+
+    pub fn export_history(&self, path: impl AsRef<Path>) {
+        #[derive(Serialize, Deserialize)]
+        #[serde(crate = serde_crate)]
+        struct Entry {
+            pub timestamp: String,
+            pub height: u32,
+            pub txid: Txid,
+            pub label: String,
+            pub amount: u64,
+            pub balance: u64,
+            pub fee: u64,
+            pub fee_rate: u64,
+        }
+
+        impl From<HistoryEntry> for Entry {
+            fn from(entry: HistoryEntry) -> Self { Entry {
+                timestamp: entry.onchain.format_date(),
+                height: entry.onchain.status.into_u32(),
+                txid: entry.onchain.txid,
+                label: entry.comment.map(|c| c.label).unwrap_or_default(),
+                amount: entry.,
+                balance: 0,
+                fee: 0,
+                fee_rate: 0,
+            } }
+        }
+
+        let history: Vec<_> = self.model.wallet().history().iter().collect();
     }
 }
