@@ -14,7 +14,6 @@ use std::path::PathBuf;
 
 use bpro::{Requirement, WalletTemplate};
 use gladis::Gladis;
-use gtk::gdk_pixbuf::Pixbuf;
 use gtk::prelude::*;
 use gtk::{
     Adjustment, ApplicationWindow, Button, InfoBar, ListBox, ListBoxRow, Notebook,
@@ -25,7 +24,6 @@ use wallet::descriptors::DescriptorClass;
 use wallet::onchain::PublicNetwork;
 
 use super::{Msg, Page};
-use crate::view::APP_ICON;
 
 #[derive(Clone, Gladis)]
 pub struct Widgets {
@@ -64,10 +62,7 @@ impl Widgets {
     pub fn to_root(&self) -> ApplicationWindow { self.window.clone() }
     pub fn as_root(&self) -> &ApplicationWindow { &self.window }
 
-    pub fn init_ui(&self) {
-        let icon = Pixbuf::from_read(APP_ICON).expect("app icon is missed");
-        self.window.set_icon(Some(&icon));
-    }
+    pub fn init_ui(&self) {}
 
     fn is_taproot(&self) -> bool { self.taproot_swch.is_active() }
 

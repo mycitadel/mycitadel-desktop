@@ -22,7 +22,6 @@ use bpro::{
 use chrono::{DateTime, NaiveDateTime, Utc};
 use electrum_client::HeaderNotification;
 use gladis::Gladis;
-use gtk::gdk_pixbuf::Pixbuf;
 use gtk::prelude::*;
 use gtk::{
     gdk, Adjustment, ApplicationWindow, Button, CellRendererText, CheckButton, HeaderBar, Image,
@@ -34,8 +33,8 @@ use wallet::hd::SegmentIndexes;
 
 use super::{ElectrumState, Msg, ViewModel};
 use crate::model::{display_accounting_amount, FormatDate, UI as UIColorTrait};
+use crate::view::launch;
 use crate::view::wallet::pay;
-use crate::view::{launch, APP_ICON};
 use crate::worker::exchange::{Exchange, Fiat};
 
 trait UI {
@@ -386,9 +385,6 @@ impl Widgets {
 
     pub fn init_ui(&mut self, model: &mut ViewModel) {
         let settings = model.as_settings();
-
-        let icon = Pixbuf::from_read(APP_ICON).expect("app icon is missed");
-        self.window.set_icon(Some(&icon));
 
         self.header_bar
             .set_title(model.path().file_name().and_then(OsStr::to_str));

@@ -16,8 +16,6 @@ pub mod psbt;
 pub mod settings;
 pub mod wallet;
 
-pub const APP_ICON: &[u8] = include_bytes!("../../res/applogo-big.png");
-
 use std::path::PathBuf;
 
 use gtk::prelude::*;

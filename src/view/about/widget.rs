@@ -10,13 +10,11 @@
 // <https://www.gnu.org/licenses/agpl-3.0-standalone.html>.
 
 use gladis::Gladis;
-use gtk::gdk_pixbuf::Pixbuf;
 use gtk::prelude::*;
 use gtk::{gdk, Dialog, Entry, Image};
 use relm::Relm;
 
 use super::{Msg, ViewModel};
-use crate::view::APP_ICON;
 
 // Create the structure that holds the widgets used in the view.
 #[derive(Clone, Gladis)]
@@ -27,10 +25,7 @@ pub struct Widgets {
 }
 
 impl Widgets {
-    pub fn init_ui(&self, _model: &ViewModel) {
-        let icon = Pixbuf::from_read(APP_ICON).expect("small app icon is missed");
-        self.logo_img.set_pixbuf(Some(&icon));
-    }
+    pub fn init_ui(&self, _model: &ViewModel) {}
 
     pub fn show(&self) { self.dialog.show() }
     pub fn hide(&self) { self.dialog.hide() }

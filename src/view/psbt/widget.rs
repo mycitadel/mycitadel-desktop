@@ -17,7 +17,6 @@ use bitcoin::blockdata::constants::WITNESS_SCALE_FACTOR;
 use bitcoin::Address;
 use bitcoin_scripts::address::AddressFormat;
 use gladis::Gladis;
-use gtk::gdk_pixbuf::Pixbuf;
 use gtk::prelude::*;
 use gtk::{
     gdk, ApplicationWindow, Button, Dialog, Entry, Expander, HeaderBar, Label, LevelBar, ListBox,
@@ -28,10 +27,10 @@ use relm::Relm;
 use wallet::onchain::PublicNetwork;
 
 use super::{Msg, ViewModel};
+use crate::view::launch;
 use crate::view::launch::Page;
 use crate::view::psbt::sign_row;
 use crate::view::psbt::sign_row::SigningModel;
-use crate::view::{launch, APP_ICON};
 
 // Create the structure that holds the widgets used in the view.
 #[derive(Clone, Gladis)]
@@ -76,10 +75,7 @@ pub struct Widgets {
 }
 
 impl Widgets {
-    pub fn init_ui(&self) {
-        let icon = Pixbuf::from_read(APP_ICON).expect("app icon is missed");
-        self.window.set_icon(Some(&icon));
-    }
+    pub fn init_ui(&self) {}
 
     pub fn update_ui(&self, model: &ViewModel) {
         let psbt: &Psbt = model.psbt();
