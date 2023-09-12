@@ -31,7 +31,8 @@ use crate::worker::{electrum, exchange};
 #[derive(Msg)]
 pub enum Msg {
     New,
-    Open,
+    OpenWallet,
+    OpenPsbt,
     Close,
     About,
     Duplicate,

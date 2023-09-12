@@ -70,6 +70,8 @@ pub struct Widgets {
     new_btn: Button,
     open_btn: Button,
     settings_btn: Button,
+
+    open_psbt_mi: MenuItem,
     redefine_mi: MenuItem,
     import_mi: MenuItem,
     settings_mi: MenuItem,
@@ -155,7 +157,7 @@ impl Widgets {
 
     pub(super) fn connect(&self, relm: &Relm<super::Component>) {
         connect!(relm, self.new_btn, connect_clicked(_), Msg::New);
-        connect!(relm, self.open_btn, connect_clicked(_), Msg::Open);
+        connect!(relm, self.open_btn, connect_clicked(_), Msg::OpenWallet);
         connect!(relm, self.settings_btn, connect_clicked(_), Msg::Settings);
         connect!(
             relm,
@@ -164,6 +166,7 @@ impl Widgets {
             Msg::Pay(pay::Msg::Show)
         );
         connect!(relm, self.refresh_btn, connect_clicked(_), Msg::Refresh);
+        connect!(relm, self.open_psbt_mi, connect_activate(_), Msg::OpenPsbt);
         connect!(relm, self.redefine_mi, connect_activate(_), Msg::Duplicate);
         connect!(relm, self.import_mi, connect_activate(_), Msg::Import);
         connect!(relm, self.settings_mi, connect_activate(_), Msg::Settings);

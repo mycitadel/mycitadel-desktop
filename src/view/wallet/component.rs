@@ -334,10 +334,15 @@ impl Update for Component {
                     .as_ref()
                     .map(|stream| stream.emit(launch::Msg::ShowPage(launch::Page::Template)));
             }
-            Msg::Open => {
+            Msg::OpenWallet => {
                 self.launcher_stream
                     .as_ref()
                     .map(|stream| stream.emit(launch::Msg::Wallet));
+            }
+            Msg::OpenPsbt => {
+                self.launcher_stream
+                    .as_ref()
+                    .map(|stream| stream.emit(launch::Msg::Psbt(None)));
             }
             Msg::Duplicate => {
                 let settings = self.model.to_settings();
