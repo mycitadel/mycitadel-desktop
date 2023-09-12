@@ -99,7 +99,7 @@ developer libraries. This operation should be done only once and is OS-specific.
 - For Debian Linux, please do
     ```console
     $ sudo apt update && \
-      sudo apt install -y build-essentials git cargo pkg-config libgtk-3-dev python3-dev
+      sudo apt install -y build-essential git cargo pkg-config libgtk-3-dev python3-dev
     ```
   
     If you'd like to build debian package for your machine, please also install
