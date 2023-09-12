@@ -17,7 +17,7 @@ use gladis::Gladis;
 use gtk::gdk_pixbuf::Pixbuf;
 use gtk::prelude::*;
 use gtk::{
-    Adjustment, ApplicationWindow, Button, Image, InfoBar, ListBox, ListBoxRow, Notebook,
+    Adjustment, ApplicationWindow, Button, InfoBar, ListBox, ListBoxRow, Notebook,
     RecentChooserWidget, ResponseType, Switch,
 };
 use relm::Relm;
@@ -25,12 +25,11 @@ use wallet::descriptors::DescriptorClass;
 use wallet::onchain::PublicNetwork;
 
 use super::{Msg, Page};
-use crate::view::{APP_ICON, APP_ICON_TOOL};
+use crate::view::APP_ICON;
 
 #[derive(Clone, Gladis)]
 pub struct Widgets {
     window: ApplicationWindow,
-    logo_img: Image,
     info_bar: InfoBar,
     about_btn: Button,
     pages: Notebook,
@@ -68,9 +67,6 @@ impl Widgets {
     pub fn init_ui(&self) {
         let icon = Pixbuf::from_read(APP_ICON).expect("app icon is missed");
         self.window.set_icon(Some(&icon));
-
-        let img = Pixbuf::from_read(APP_ICON_TOOL).expect("small app icon is missed");
-        self.logo_img.set_pixbuf(Some(&img));
     }
 
     fn is_taproot(&self) -> bool { self.taproot_swch.is_active() }

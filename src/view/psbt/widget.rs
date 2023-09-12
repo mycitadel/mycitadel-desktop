@@ -20,8 +20,8 @@ use gladis::Gladis;
 use gtk::gdk_pixbuf::Pixbuf;
 use gtk::prelude::*;
 use gtk::{
-    gdk, ApplicationWindow, Button, Dialog, Entry, Expander, HeaderBar, Image, Label, LevelBar,
-    ListBox, ListStore, MenuItem, RadioMenuItem, TextView, TreeView,
+    gdk, ApplicationWindow, Button, Dialog, Entry, Expander, HeaderBar, Label, LevelBar, ListBox,
+    ListStore, MenuItem, RadioMenuItem, TextView, TreeView,
 };
 use miniscript::{Legacy, Miniscript, Segwitv0};
 use relm::Relm;
@@ -31,7 +31,7 @@ use super::{Msg, ViewModel};
 use crate::view::launch::Page;
 use crate::view::psbt::sign_row;
 use crate::view::psbt::sign_row::SigningModel;
-use crate::view::{launch, APP_ICON, APP_ICON_TOOL};
+use crate::view::{launch, APP_ICON};
 
 // Create the structure that holds the widgets used in the view.
 #[derive(Clone, Gladis)]
@@ -39,7 +39,6 @@ pub struct Widgets {
     window: ApplicationWindow,
 
     header_bar: HeaderBar,
-    logo_img: Image,
     save_btn: Button,
     publish_btn: Button,
 
@@ -80,9 +79,6 @@ impl Widgets {
     pub fn init_ui(&self) {
         let icon = Pixbuf::from_read(APP_ICON).expect("app icon is missed");
         self.window.set_icon(Some(&icon));
-
-        let img = Pixbuf::from_read(APP_ICON_TOOL).expect("small app icon is missed");
-        self.logo_img.set_pixbuf(Some(&img));
     }
 
     pub fn update_ui(&self, model: &ViewModel) {

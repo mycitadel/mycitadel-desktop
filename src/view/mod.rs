@@ -17,7 +17,6 @@ pub mod settings;
 pub mod wallet;
 
 pub const APP_ICON: &[u8] = include_bytes!("../../res/applogo-big.png");
-pub const APP_ICON_TOOL: &[u8] = include_bytes!("../../res/applogo.png");
 
 use std::path::PathBuf;
 
